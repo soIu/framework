@@ -1,0 +1,4 @@
+PouchDB = require('pouchdb-core')
+PouchDB.plugin(require('pouchdb-adapter-memory'))
+PouchDB.plugin(require('relational-pouch'))
+db = PouchDB('test', {'adapter': 'memory'})

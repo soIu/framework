@@ -1,0 +1,10 @@
+from pouchdb import db
+class Model():
+    _name = 'undefined'
+    _inherit = False
+
+    def schema(self):
+        return {'singular': self._name, 'plural': self._name}
+
+    def __init__(self):
+        db.setSchema([self.schema()])
