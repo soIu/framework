@@ -7,7 +7,5 @@ class SaleOrder(models.Model):
     _fields['name'] = fields.Char(string="Sale Order", required=True)
 
 sale = SaleOrder()
-record = sale.read()
-record.name = 'Test'
-sale.update(record)
-print(record)
+sale.name = 2
+console.log(sale.name)

@@ -13,6 +13,10 @@ class Model():
         db.setSchema([self.schema()])
         for key in keys(self._fields):
             self._values[key] = None
+            v"""Object.defineProperty(self, key, {
+            get: function() {return self._values[key]},
+            set: function(value) {self._values[key] = self.adapt(key, value)},
+            })"""
         v'Object.freeze(self)'
         v'Object.freeze(self._fields)'
         v'Object.seal(self._values)'
