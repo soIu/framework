@@ -1,8 +1,10 @@
 import orm.models as models
 class SaleOrder(models.Model):
     _name = 'sale.order'
-    _fields = {}
 
+    _fields = {}
     _fields['name'] = 'Test'
 
-print(SaleOrder()._inherit)
+sale = SaleOrder()
+sale._fields.test = 'test'
+print(sale._values)

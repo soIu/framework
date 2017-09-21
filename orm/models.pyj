@@ -2,9 +2,16 @@ from pouchdb import db
 class Model():
     _name = 'undefined'
     _inherit = False
+    _fields = {}
+    _values = {}
 
     def schema(self):
         return {'singular': self._name, 'plural': self._name}
 
     def __init__(self):
         db.setSchema([self.schema()])
+        for key in Object.keys(self._fields):
+            self._values[key] = None
+        v'Object.freeze(self)'
+        v'Object.freeze(self._fields)'
+        v'Object.seal(self._values)'
