@@ -1,0 +1,43 @@
+from tools import merge
+def Char(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    return merge({'type': 'char'}, {attribute: args[attribute] for attribute in attributes})
+
+Text = Char #For now fields.Text will be the same like fields.Char
+
+def Integer(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    return merge({'type': 'integer'}, {attribute: args[attribute] for attribute in attributes})
+
+def Float(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    return merge({'type': 'float'}, {attribute: args[attribute] for attribute in attributes})
+
+#While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
+
+def Boolean(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    return merge({'type': 'boolean'}, {attribute: args[attribute] for attribute in attributes})
+
+def Binary(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    return merge({'type': 'binary'}, {attribute: args[attribute] for attribute in attributes})
+
+#Boolean will be stored True or False and Binary will be stored as base64 (btoa and atob), or should we store it with just plain Buffer/Blob? (remember https://pouchdb.com/faq.html#data_types not all browsers support storing Blob)
+
+#Still tinkering with Many2one, One2many, One2one, and Many2many implementation in relational-pouch

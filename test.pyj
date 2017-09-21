@@ -1,10 +1,13 @@
 import orm.models as models
+import orm.fields as fields
 class SaleOrder(models.Model):
     _name = 'sale.order'
 
     _fields = {}
-    _fields['name'] = 'Test'
+    _fields['name'] = fields.Char(string="Sale Order", required=True)
 
 sale = SaleOrder()
-sale._fields.test = 'test'
-print(sale._values)
+record = sale.read()
+record.name = 'Test'
+sale.update(record)
+print(record)

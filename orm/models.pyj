@@ -1,3 +1,4 @@
+from tools import keys, checkBase64
 from pouchdb import db
 class Model():
     _name = 'undefined'
@@ -10,8 +11,37 @@ class Model():
 
     def __init__(self):
         db.setSchema([self.schema()])
-        for key in Object.keys(self._fields):
+        for key in keys(self._fields):
             self._values[key] = None
         v'Object.freeze(self)'
         v'Object.freeze(self._fields)'
         v'Object.seal(self._values)'
+
+    def read(self):
+        return self._values
+
+    def adapt(self, key, value):
+        if self._fields[key].type in ['char', 'text']:
+           value = String(value)
+        elif self._fields[key].type == 'integer':
+           value = parseInt(value)
+        elif self._fields[key].type == 'float':
+           value = parseFloat(value)
+        elif self._fields[key].type == 'boolean':
+           if value in ['true', 'True']:
+              value = True
+           elif value in ['false', 'False']:
+              value = False
+           elif type(value) == String:
+              return Exception("Not a valid Boolean")
+           else:
+              value = Boolean(value)
+        elif self._fields[key].type == 'binary':
+           if not checkBase64(value):
+              return Exception("Not a valid base64")
+        return value
+
+    def update(self, values):
+        for key in keys(values):
+            value = self.adapt(key, values[key])
+            self._values[key] = value
