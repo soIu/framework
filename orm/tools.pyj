@@ -13,6 +13,13 @@ def merge(*args):
         Object.assign(target, object)
     return target
 
+def dict(entries):
+    #This is a function to imitate python's dict function that create a dict from a key-value pair
+    object = {}
+    for entry in entries:
+        object[entry[0]] = entry[1]
+    return object
+
 def checkBase64(string):
     try:
        return btoa(atob(string)) == string

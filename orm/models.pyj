@@ -1,4 +1,5 @@
-from tools import keys, checkBase64
+import fields
+from tools import keys, dict, checkBase64
 from pouchdb import db
 class Model():
     _name = 'undefined'
@@ -6,12 +7,21 @@ class Model():
     _fields = {}
     _values = {}
 
-    def schema(self):
-        return {'singular': self._name, 'plural': self._name}
-
     def __init__(self):
-        db.setSchema([self.schema()])
+        schema = {'singular': self._name, 'plural': self._name}
+        #Reserved fields
+        self._fields['id'] = fields.Char(string="ID")
         for key in keys(self._fields):
+            if self._fields[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
+               if not schema.relations:
+                  schema.relations = {}
+               type = 'belongsTo'
+               if self._fields[key].type in ['one2many', 'many2many']:
+                  type = 'hasMany'
+               if self._fields[key].type != 'one2many':
+                  schema.relations[key] = {type: self._fields[key].relation}
+               else:
+                  schema.relations[key] = {type: {'type': self._fields[key].relation, 'options': {'queryInverse': self._fields[key].inverse}}}
             self._values[key] = None
             v"""Object.defineProperty(self, key, {
             get: function() {return self._values[key]},
@@ -20,17 +30,24 @@ class Model():
         v'Object.freeze(self)'
         v'Object.freeze(self._fields)'
         v'Object.seal(self._values)'
+        db.setSchema([schema])
 
     def read(self):
         return self._values
 
     def adapt(self, key, value):
-        if self._fields[key].type in ['char', 'text']:
+        if key == 'id':
+           value = self._fields[key].value
+        elif self._fields[key].type in ['char', 'text']:
            value = String(value)
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
+           if isNaN(value):
+              return Exception("Not a valid Number")
         elif self._fields[key].type == 'float':
            value = parseFloat(value)
+           if isNaN(value):
+              return Exception("Not a valid Number")
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
@@ -43,6 +60,16 @@ class Model():
         elif self._fields[key].type == 'binary':
            if not checkBase64(value):
               return Exception("Not a valid base64")
+        elif self._fields[key].type in ['many2one', 'one2one']:
+           if isinstance(value, models.Model):
+              value = value.id
+           else:
+              value = parseInt(value)
+              if isNaN(value):
+                 return Exception("Not a valid ID")
+        elif self._fields[key].type == 'selection':
+           if not value in dict(self._fields[key].selection):
+              return Exception("Incorrect value")
         return value
 
     def update(self, values):

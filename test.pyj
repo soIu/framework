@@ -3,9 +3,8 @@ import orm.fields as fields
 class SaleOrder(models.Model):
     _name = 'sale.order'
 
-    _fields = {}
     _fields['name'] = fields.Char(string="Sale Order", required=True)
 
 sale = SaleOrder()
 sale.name = 2
-console.log(sale.name)
+console.log(sale.id)
