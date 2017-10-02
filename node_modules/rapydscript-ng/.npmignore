@@ -1,0 +1,9 @@
+# use glob syntax
+*~
+*.swp
+*.tmp
+*.orig
+*.pyj-cached
+node_modules
+dev
+self.cpuprofile

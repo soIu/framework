@@ -1,0 +1,27 @@
+def keys(object):
+    return Object.keys(object)
+
+def merge(*args):
+    #new = {}
+    #for object in args:
+    #    for key in keys(object):
+    #        new[key] = object[key]
+    #return new
+    #This is a standard operation for merging objects, but for now we will use Object.assign
+    target = args[0]
+    for object in args[1:]:
+        Object.assign(target, object)
+    return target
+
+def dict(entries):
+    #This is a function to imitate python's dict function that create a dict from a key-value pair
+    object = {}
+    for entry in entries:
+        object[entry[0]] = entry[1]
+    return object
+
+def checkBase64(string):
+    try:
+       return btoa(atob(string)) == string
+    except:
+       return False
