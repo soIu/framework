@@ -76,3 +76,8 @@ class Model():
         for key in keys(values):
             value = self.adapt(key, values[key])
             self._values[key] = value
+
+    def create(self, values={})
+        if not values:
+           values = self.read()
+        db.rel.save(self._name, values)
