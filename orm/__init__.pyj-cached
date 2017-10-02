@@ -1,23 +1,20 @@
 {
 	"version": "11f4892304465d65e022681312abc87bd57b6b4f",
-	"signature": "deea8b21d24d008562ca3d6aa676dba4e6f86b0e",
+	"signature": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
 	"classes": {},
 	"baselib": {},
 	"nonlocalvars": [],
-	"imported_module_ids": [
-		"models",
-		"fields"
-	],
+	"imported_module_ids": [],
 	"exports": [],
 	"outputs": {
-		"beautify:true keep_docstrings:true js_version:5": "        var models = ρσ_modules.models;\n\n        var fields = ρσ_modules.fields;\n\n",
-		"beautify:true keep_docstrings:true js_version:6": "        var models = ρσ_modules.models;\n\n        var fields = ρσ_modules.fields;\n\n",
-		"beautify:true keep_docstrings:false js_version:5": "        var models = ρσ_modules.models;\n\n        var fields = ρσ_modules.fields;\n\n",
-		"beautify:true keep_docstrings:false js_version:6": "        var models = ρσ_modules.models;\n\n        var fields = ρσ_modules.fields;\n\n",
-		"beautify:false keep_docstrings:true js_version:5": "var models=ρσ_modules.models;var fields=ρσ_modules.fields",
-		"beautify:false keep_docstrings:true js_version:6": "var models=ρσ_modules.models;var fields=ρσ_modules.fields",
-		"beautify:false keep_docstrings:false js_version:5": "var models=ρσ_modules.models;var fields=ρσ_modules.fields",
-		"beautify:false keep_docstrings:false js_version:6": "var models=ρσ_modules.models;var fields=ρσ_modules.fields"
+		"beautify:true keep_docstrings:true js_version:5": "\n",
+		"beautify:true keep_docstrings:true js_version:6": "\n",
+		"beautify:true keep_docstrings:false js_version:5": "\n",
+		"beautify:true keep_docstrings:false js_version:6": "\n",
+		"beautify:false keep_docstrings:true js_version:5": "",
+		"beautify:false keep_docstrings:true js_version:6": "",
+		"beautify:false keep_docstrings:false js_version:5": "",
+		"beautify:false keep_docstrings:false js_version:6": ""
 	},
 	"discard_asserts": false
 }
