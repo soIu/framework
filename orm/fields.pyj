@@ -1,5 +1,5 @@
 #TODO fields.Date and fields.Datetime
-from tools import merge
+from orm.tools import merge
 def Char(**args):
     for required in ['string']:
         if required not in args:
