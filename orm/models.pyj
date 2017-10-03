@@ -1,4 +1,4 @@
-import fields
+import orm.fields as fields
 from tools import keys, dict, checkBase64
 from pouchdb import db
 class Model():
@@ -10,6 +10,7 @@ class Model():
     def __init__(self):
         schema = {'singular': self._name, 'plural': self._name}
         #Reserved fields
+        console.log(fields)
         self._fields['id'] = fields.Char(string="ID")
         for key in keys(self._fields):
             if self._fields[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
@@ -76,3 +77,8 @@ class Model():
         for key in keys(values):
             value = self.adapt(key, values[key])
             self._values[key] = value
+
+    def create(self, values={}):
+        if not values:
+           values = self.read()
+        db.rel.save(self._name, values)

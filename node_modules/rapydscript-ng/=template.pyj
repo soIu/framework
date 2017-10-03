@@ -1,5 +1,0 @@
-# vim:fileencoding=utf-8
-# License: BSD Copyright: %YEAR%, %USER% <%MAIL%>
-from __python__ import hash_literals
-
-%HERE%
