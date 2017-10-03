@@ -1,5 +1,5 @@
 import orm.fields as fields
-from tools import keys, dict, checkBase64
+from orm.tools import keys, dict, checkBase64
 from pouchdb import db
 class Model():
     _name = 'undefined'
