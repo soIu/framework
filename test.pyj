@@ -8,4 +8,5 @@ class SaleOrder(models.Model):
 
 sale = SaleOrder()
 sale.name = 2
-console.log(sale.id)
+sale.create()
+console.log(sale)
