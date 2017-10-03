@@ -5,6 +5,8 @@
     "pouchdb-core": "^6.3.4",
     "pouchdb-mapreduce": "^6.3.4",
     "rapydscript-ng": "^0.7.18",
-    "relational-pouch": "^2.1.0"
+    "relational-pouch": "^2.1.0",
+    "restify": "^6.0.1",
+    "restify-cors-middleware": "^1.0.1"
   }
 }

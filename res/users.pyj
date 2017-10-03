@@ -1,0 +1,18 @@
+import orm.models as models
+import orm.fields as fields
+class ResUsers(models.Model):
+    _name = 'res.users'
+
+    _fields = {}
+    _fields['name'] = fields.Char(string="Name", required=True)
+    _fields['login'] = fields.Char(string="Username/Email", required=True)
+    _fields['password'] = fields.Char(string="Password")
+
+admin = ResUsers()
+admin.name = 'Administrator'
+admin.login = 'admin'
+admin.password = 'r4pyd'
+console.log(admin.login)
+admin.create()
+
+console.log(admin)

@@ -1,0 +1,32 @@
+import res.users
+#from orm.pouchdb import db
+from pouchdb import db
+
+restify = require('restify')
+server = restify.createServer()
+
+cors = require('restify-cors-middleware')({'origins': ['*']})
+
+server.pre(cors.preflight)
+server.use(cors.actual)
+server.use(restify.plugins.bodyParser({'mapParams': True}))
+
+params = {}
+
+server.post('/api/login', 
+def (request, result):
+    request.accepts('application/json')
+    print(request.params)
+    if request.params.login not in [None, False, undefined]:
+       v'params = request.params'
+       db.rel.find('res.users').then(login)
+    return result.send({'status': 'error'})
+)
+
+def login(record):
+    for user in record['res.users']:
+        console.log(user)
+        if user.login == params.login and user.password == params.password:
+           return result.send({'status': 'success'})
+
+server.listen(8069)
