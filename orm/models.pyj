@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import keys, dict, checkBase64
+from orm.tools import keys, dict, checkBase64, empty
 from orm.pouchdb import db
 class Model():
     _name = 'undefined'
@@ -76,10 +76,10 @@ class Model():
 
     def update(self, values):
         for key in keys(values):
-            value = self.adapt(key, values[key])
-            self._values[key] = value
+            #value = self.adapt(key, values[key])
+            self[key] = value
 
-    def create(self, values={}):
-        if not values:
+    def create(self, values=False):
+        if empty(values):
            values = self.read()
         db.rel.save(self._name, values)

@@ -25,3 +25,12 @@ def checkBase64(string):
        return btoa(atob(string)) == string
     except:
        return False
+
+def empty(object):
+    if object in ['', False, None]:
+       return True
+    object = String(object)
+    if object == '{}':
+       return True
+    elif object == '[]':
+       return True

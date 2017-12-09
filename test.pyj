@@ -9,3 +9,4 @@ class SaleOrder(models.Model):
 sale = SaleOrder()
 sale.name = 2
 console.log(sale.name)
+sale.create()
