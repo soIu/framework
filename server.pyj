@@ -1,6 +1,5 @@
 import res.users
-#from orm.pouchdb import db
-from pouchdb import db
+from orm.pouchdb import db
 
 restify = require('restify')
 server = restify.createServer()
@@ -11,22 +10,29 @@ server.pre(cors.preflight)
 server.use(cors.actual)
 server.use(restify.plugins.bodyParser({'mapParams': True}))
 
-params = {}
-
-server.post('/api/login', 
-def (request, result):
+server.post('/api/login', [
+def (request, result, next):
     request.accepts('application/json')
     print(request.params)
+    params = request.params
+    result.response = {'status': 'error'}
     if request.params.login not in [None, False, undefined]:
-       v'params = request.params'
-       db.rel.find('res.users').then(login)
-    return result.send({'status': 'error'})
-)
+       db.rel.find('res.users').then(
+       def(record):
+          for user in record['res.users']:
+              console.log(user)
+              if user.login == params.login and user.password == params.password:
+                 result.response = {'status': 'success'}
+              else:
+                 result.response = {'status': 'denied'}
+              next()
+    )
+    else:
+       next()
+,
 
-def login(record):
-    for user in record['res.users']:
-        console.log(user)
-        if user.login == params.login and user.password == params.password:
-           return result.send({'status': 'success'})
+def (request, result, next):
+    return result.send(result.response)
+])
 
 server.listen(8069)
