@@ -10,28 +10,26 @@ class Model():
     def __init__(self):
         schema = {'singular': self._name, 'plural': self._name}
         #Reserved fields
-        self.id = fields.Char(string="ID")
-        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor']]:
-            if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
+        self._fields['id'] = fields.Char(string="ID")
+        for key in [for key in ]:
+            if self._fields[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
                if not schema.relations:
                   schema.relations = {}
                type = 'belongsTo'
-               if self[key].type in ['one2many', 'many2many']:
+               if self._fields[key].type in ['one2many', 'many2many']:
                   type = 'hasMany'
-               if self[key].type != 'one2many':
-                  schema.relations[key] = {type: self[key].relation}
+               if self._fields[key].type != 'one2many':
+                  schema.relations[key] = {type: self._fields[key].relation}
                else:
-                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'queryInverse': self[key].inverse}}}
-            self._fields[key] = self[key]
-            self[key] = None
+                  schema.relations[key] = {type: {'type': self._fields[key].relation, 'options': {'queryInverse': self._fields[key].inverse}}}
             self._values[key] = None
             v"""Object.defineProperty(self, key, {
             get: function() {return self._values[key]},
             set: function(value) {self._values[key] = self.adapt(key, value)},
             })"""
-        v'Object.seal(self)'
+        v'Object.freeze(self)'
         v'Object.freeze(self._fields)'
-        #v'Object.seal(self._values)'
+        v'Object.seal(self._values)'
         db.setSchema([schema])
 
     def read(self):
