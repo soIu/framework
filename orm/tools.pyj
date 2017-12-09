@@ -27,7 +27,7 @@ def checkBase64(string):
        return False
 
 def empty(object):
-    if object in ['', False, None]:
+    if object in ['', False, None, undefined]:
        return True
     object = String(object)
     if object == '{}':
