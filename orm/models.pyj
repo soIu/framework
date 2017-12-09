@@ -31,7 +31,7 @@ class Model():
             })"""
         v'Object.seal(self)'
         v'Object.freeze(self._fields)'
-        #v'Object.seal(self._values)'
+        v'Object.seal(self._values)'
         db.setSchema([schema])
 
     def read(self):
