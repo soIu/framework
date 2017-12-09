@@ -1,6 +1,6 @@
 import orm.fields as fields
 from orm.tools import keys, dict, checkBase64
-from pouchdb import db
+from orm.pouchdb import db
 class Model():
     _name = 'undefined'
     _inherit = False
