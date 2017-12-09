@@ -1,12 +1,11 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 class SaleOrder(models.Model):
     _name = 'sale.order'
 
-    _fields = {}
-    _fields['name'] = fields.Char(string="Sale Order", required=True)
+    name = fields.Char(string="Sale Order", required=True)
 
 sale = SaleOrder()
 sale.name = 2
-sale.create()
-console.log(sale)
+console.log(sale.name)
