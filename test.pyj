@@ -7,5 +7,4 @@ class SaleOrder(models.Model):
 
 sale = SaleOrder()
 sale.name = 2
-sale2 = sale.env['sale.order'].browse()
-console.log(sale2)
+console.log(sale.name)

@@ -85,4 +85,4 @@ def Data(**args):
         if required not in args:
            return Exception("Required argument " + required + " not found")
     attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
-    return merge({'type': 'char'}, {attribute: args[attribute] or None for attribute in attributes})
+    return merge({'type': 'data'}, {attribute: args[attribute] or None for attribute in attributes})

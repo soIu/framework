@@ -8,10 +8,11 @@ class Model():
     _name = 'undefined'
     _inherit = False
     _fields = {}
-    #_values = {}
+    _values = {}
 
-    def __init__(self, _is_env=False):
+    def __init__(self, _is_env=False, _is_singleton=True):
         self._is_env = _is_env
+        self._is_singleton = _is_singleton
         if empty(env[self._name]):
            env[self._name] = True
            v'env[self._name] = new self.constructor(_is_env=true)'
@@ -21,10 +22,21 @@ class Model():
         self.env = env
         schema = {'singular': self._name, 'plural': self._name}
         #Reserved fields
-        self.id = fields.Char(string="ID")
+        if self._is_singleton:
+           self.id = None
+           self._fields['id'] = fields.Char(string="ID")
+           self._id = None
+           self._fields['_id'] = fields.Char(string="ID (Raw)")
+           self.rev = None
+           self._fields['rev'] = fields.Char(string="DB Revision Number")
+           self._rev = None
+           self._fields['_rev'] = fields.Char(string="DB Revision Number")
+        else:
+           self.ids = []
+           self._fields['ids'] = fields.Data(string="IDs")
         for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env']]:
-            if key in self._fields:
-               self[key] = self._fields[key]
+            #if key in self._fields:
+            #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
                if not schema.relations:
                   schema.relations = {}
@@ -36,25 +48,43 @@ class Model():
                else:
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'queryInverse': self[key].inverse}}}
             self._fields[key] = self[key]
-            self[key] = self._fields[key].default
-            #self._values[key] = None
-            """Object.defineProperty(self, key, {
-            get: function() {return self._values[key]},
-            set: function(value) {self._values[key] = self.adapt(key, value)},
-            })"""
+            #self[key] = self._fields[key].default
+            if self._is_singleton:
+               self._values[key] = self._fields[key].default
+               v"""Object.defineProperty(self, key, {
+               get: function() {return self._values[key]},
+               set: function(value) {self._values[key] = self.adapt(key, value)},
+               })"""
         #Disabling seal and freeze altogether because they cause bugs
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
         db.setSchema([schema])
 
-    def browse(self):
-        v'return new self.constructor()'
+    def browse(self, ids=False):
+        if empty(ids):
+           v'return new self.constructor()'
+        elif ids.constructor == String:
+           self = self.browse()
+           db.get(ids).then(
+           def (record):
+               self.id = ids
+               self._values = record
+           )
+        elif ids.constructor == Array:
+           #self = self.browse()
+           v'var self = new self.constructor(_is_singleton=False)'
+           db.rel.find(self._name, ids).then(
+           def (record):
+               self.ids = ids
+               self._values = record[self._name]
+           )
+        return self
 
     def read(self):
         if self._is_env:
            return {}
-        return {key: self.adapt(key, self[key]) for key in keys(self._fields)}
+        return self._values#{key: self.adapt(key, self[key]) for key in keys(self._fields)}
 
     def adapt(self, key, value):
         if self._is_env:
@@ -100,17 +130,48 @@ class Model():
         if self._is_env:
            return        
         for key in keys(values):
-            #value = self.adapt(key, values[key])
-            self[key] = value
+            value = self.adapt(key, values[key])
+            if self._is_singleton:
+               self._values[key] = value
+            else:
+               for object in self._values:
+                   object[key] = value       
 
     def create(self, values=False):
         if empty(values):
            values = self.read()
         else:
            merge(self.read(), values)
-        db.rel.save(self._name, values)
-        result = self
         if self._is_env:
-           result = self.browse()
-           result.update(values)
-        return result
+           self = self.browse()
+           self.update(values)
+        del values['id']
+        db.rel.save(self._name, values).then(
+        def (record):
+            self.id = record[self._name][0].id
+        )
+        return self
+
+    def write(self, values=False):
+        if empty(self.id) and empty(self.ids):
+           return
+        if empty(values):
+           if not self._is_singleton:
+              return
+           values = self.read()
+        else:
+           #merge(self.read(), values)
+           self.update(values)
+           values = self.read()
+        if self._is_singleton:
+           #Maybe I'll use bulkDocs for revision checking instead of getting it
+           db.get(self.id).then(
+           def (record):
+               return db.put(merge({'_id': record._id, '_rev': record._rev}, values))
+           )
+        else:
+           db.bulkDocs(values).then(
+           def (record):
+               self._values = record
+           )
+        return self
