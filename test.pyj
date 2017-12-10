@@ -1,6 +1,5 @@
 import orm.models as models
 import orm.fields as fields
-import orm.tools as tools
 class SaleOrder(models.Model):
     _name = 'sale.order'
 
@@ -8,5 +7,5 @@ class SaleOrder(models.Model):
 
 sale = SaleOrder()
 sale.name = 2
-console.log(sale.name)
-sale.create()
+sale2 = sale.env['sale.order'].browse()
+console.log(sale2)

@@ -1,17 +1,30 @@
 import orm.fields as fields
 from orm.tools import keys, dict, checkBase64, empty
 from orm.pouchdb import db
+
+env = {}
+
 class Model():
     _name = 'undefined'
     _inherit = False
     _fields = {}
     #_values = {}
 
-    def __init__(self):
+    def __init__(self, _is_env=False):
+        self._is_env = _is_env
+        if empty(env[self._name]):
+           env[self._name] = True
+           v'env[self._name] = new self.constructor(_is_env=true)'
+           env[self._name]._is_env = True
+        if self._is_env:
+           return
+        self.env = env
         schema = {'singular': self._name, 'plural': self._name}
         #Reserved fields
         self.id = fields.Char(string="ID")
-        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor']]:
+        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env']]:
+            if key in self._fields:
+               self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
                if not schema.relations:
                   schema.relations = {}
@@ -23,21 +36,29 @@ class Model():
                else:
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'queryInverse': self[key].inverse}}}
             self._fields[key] = self[key]
-            self[key] = None
+            self[key] = self._fields[key].default
             #self._values[key] = None
             """Object.defineProperty(self, key, {
             get: function() {return self._values[key]},
             set: function(value) {self._values[key] = self.adapt(key, value)},
             })"""
-        v'Object.seal(self)'
-        v'Object.freeze(self._fields)'
+        #Disabling seal and freeze altogether because they cause bugs
+        #v'Object.seal(self)'
+        #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
         db.setSchema([schema])
 
+    def browse(self):
+        v'return new self.constructor()'
+
     def read(self):
-        return {key: self[key] for key in keys(self._fields)}
+        if self._is_env:
+           return {}
+        return {key: self.adapt(key, self[key]) for key in keys(self._fields)}
 
     def adapt(self, key, value):
+        if self._is_env:
+           return
         if key == 'id':
            value = self._fields[key].value
         elif self._fields[key].type in ['char', 'text']:
@@ -62,19 +83,22 @@ class Model():
         elif self._fields[key].type == 'binary':
            if not checkBase64(value):
               return Exception("Not a valid base64")
-        elif self._fields[key].type in ['many2one', 'one2one']:
+        elif self._fields[key].type == 'selection':
+           if not value in dict(self._fields[key].selection):
+              return Exception("Incorrect value")
+        return value
+        #This is not Odoo I forgot
+        '''elif self._fields[key].type in ['many2one', 'one2one']:
            if isinstance(value, models.Model):
               value = value.id
            else:
               value = parseInt(value)
               if isNaN(value):
-                 return Exception("Not a valid ID")
-        elif self._fields[key].type == 'selection':
-           if not value in dict(self._fields[key].selection):
-              return Exception("Incorrect value")
-        return value
+                 return Exception("Not a valid ID")'''
 
     def update(self, values):
+        if self._is_env:
+           return        
         for key in keys(values):
             #value = self.adapt(key, values[key])
             self[key] = value
@@ -82,4 +106,11 @@ class Model():
     def create(self, values=False):
         if empty(values):
            values = self.read()
+        else:
+           merge(self.read(), values)
         db.rel.save(self._name, values)
+        result = self
+        if self._is_env:
+           result = self.browse()
+           result.update(values)
+        return result
