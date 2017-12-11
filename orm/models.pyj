@@ -9,6 +9,7 @@ class Model():
     _inherit = False
     _fields = {}
     _values = {}
+    _related = {}
 
     def __init__(self, _is_env=False, _is_singleton=True):
         self._is_env = _is_env
@@ -24,11 +25,11 @@ class Model():
         #Reserved fields
         if self._is_singleton:
            self.id = None
-           self._fields['id'] = fields.Char(string="ID")
+           self._fields['id'] = fields.Char(string="ID", related='_id', store=True)
            self._id = None
            self._fields['_id'] = fields.Char(string="ID (Raw)")
            self.rev = None
-           self._fields['rev'] = fields.Char(string="DB Revision Number")
+           self._fields['rev'] = fields.Char(string="DB Revision Number", related='_rev', store=True)
            self._rev = None
            self._fields['_rev'] = fields.Char(string="DB Revision Number")
         else:
@@ -50,6 +51,10 @@ class Model():
             self._fields[key] = self[key]
             #self[key] = self._fields[key].default
             if self._is_singleton:
+               if not empty(self._fields[key].related):
+                  if empty(self._related[self._fields[key].related]):
+                     self._related[self._fields[key].related] = []
+                  self._related[self._fields[key].related].push(key)
                self._values[key] = self._fields[key].default
                v"""Object.defineProperty(self, key, {
                get: function() {return self._values[key]},
@@ -73,11 +78,60 @@ class Model():
            )
         elif ids.constructor == Array:
            #self = self.browse()
-           v'var self = new self.constructor(_is_singleton=False)'
+           v'var self = new self.constructor(false, false)'
            db.rel.find(self._name, ids).then(
            def (record):
                self.ids = ids
                self._values = record[self._name]
+           )
+        return self
+
+    def search(self, *args, **options):
+        def query(record):
+            results = []
+            for arg in args:
+                if arg == '|':
+                   continue
+                if arg[1] == '=':
+                   results.push(record[arg[0]] == arg[2])
+                elif arg[1] == '>':
+                   results.push(record[arg[0]] > arg[2])
+                elif arg[1] == '>=':
+                   results.push(record[arg[0]] >= arg[2])
+                elif arg[1] == '<':
+                   results.push(record[arg[0]] < arg[2])
+                elif arg[1] == '<=':
+                   results.push(record[arg[0]] <= arg[2])
+                elif arg[1] == 'in':
+                   results.push(record[arg[0]] in arg[2])
+            if empty(args):
+               return True
+            elif args[0] == '|':
+               return results.some(
+               def (result):
+                   return result == True
+               )
+            else:
+               return results.every( 
+               def (result):
+                   return result == True
+               )
+        if options['limit'] == 1:
+           self = self.browse()
+           db.rel.find(self._name).then(
+           def (records):
+               record = records[self._name].find(query)
+               self.id = record.id
+               self._values = record
+               console.log(self)
+           )
+        else:
+           v'var self = new self.constructor(false, false)'
+           db.rel.find(self._name).then(
+           def (records):
+               self._values = records[self._name].filter(query)
+               self.ids = [value.id for value in self._values]
+               console.log(self)
            )
         return self
 
@@ -89,9 +143,9 @@ class Model():
     def adapt(self, key, value):
         if self._is_env:
            return
-        if key == 'id':
-           value = self._fields[key].value
-        elif self._fields[key].type in ['char', 'text']:
+        #if key == 'id':
+        #   value = self._fields[key].value
+        if self._fields[key].type in ['char', 'text']:
            value = String(value)
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
@@ -116,6 +170,13 @@ class Model():
         elif self._fields[key].type == 'selection':
            if not value in dict(self._fields[key].selection):
               return Exception("Incorrect value")
+        #Related operation
+        if self._fields[key].store:
+           if not empty(self._fields[key].related):
+              self._values[self._fields[key].related] = value
+           if not empty(self._related[key]):
+              for field in self._related[key]:
+                  self._values[field] = value
         return value
         #This is not Odoo I forgot
         '''elif self._fields[key].type in ['many2one', 'one2one']:
@@ -175,3 +236,17 @@ class Model():
                self._values = record
            )
         return self
+
+    def unlink(self):
+        if empty(self.id) and empty(self.ids):
+           return
+        if self._is_singleton:
+           db.get(self.id).then(
+           def (record):
+               db.remove(record)
+           )
+        else:
+           for value in self._values:
+               value['_deleted'] = True
+           db.bulkDocs(self._values)
+        return True

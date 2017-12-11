@@ -4,7 +4,7 @@ def Char(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'char'}, {attribute: args[attribute] or None for attribute in attributes})
 
 Text = Char #For now fields.Text will be the same like fields.Char
@@ -13,14 +13,14 @@ def Integer(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'integer'}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Float(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'float'}, {attribute: args[attribute] or None for attribute in attributes})
 
 #While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
@@ -29,14 +29,14 @@ def Boolean(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'boolean'}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Binary(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'binary'}, {attribute: args[attribute] or None for attribute in attributes})
 
 #Boolean will be stored True or False and Binary will be stored as base64 (btoa and atob), or should we store it with just plain Buffer/Blob? (remember https://pouchdb.com/faq.html#data_types not all browsers support storing Blob)
@@ -45,7 +45,7 @@ def Many2one(relation, **args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'many2one', 'relation': relation}, {attribute: args[attribute] or None for attribute in attributes})
 
 
@@ -53,7 +53,7 @@ def One2many(relation, inverse, **args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'one2many', 'relation': relation, 'inverse': inverse}, {attribute: args[attribute] or None for attribute in attributes})
 
 
@@ -61,7 +61,7 @@ def Many2many(relation, **args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'many2many', 'relation': relation}, {attribute: args[attribute] or None for attribute in attributes})
 
 
@@ -69,14 +69,14 @@ def One2one(relation, **args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'one2one', 'relation': relation}, {attribute: args[attribute] or None for attribute in attributes})
 
-def Selection(selection, **args):
+def Selection(*selection, **args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'selection', 'selection': selection}, {attribute: args[attribute] or None for attribute in attributes})
 
 #Add fields.Data for storing JSON
@@ -84,5 +84,5 @@ def Data(**args):
     for required in ['string']:
         if required not in args:
            return Exception("Required argument " + required + " not found")
-    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store']
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'data'}, {attribute: args[attribute] or None for attribute in attributes})
