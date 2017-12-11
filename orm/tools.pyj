@@ -35,6 +35,16 @@ def empty(object):
     elif object == '[]':
        return True
 
+def exist(object):
+    if object in ['', False, None, undefined, 0.0]:
+       return False
+    object = String(object)
+    if object == '{}':
+       return False
+    elif object == '[]':
+       return False
+    return True
+
 #Polyfill Array.find
 v"""if (!Array.prototype.find) {
   Object.defineProperty(Array.prototype, 'find', {

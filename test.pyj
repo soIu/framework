@@ -7,6 +7,14 @@ class SaleOrder(models.Model):
 
 sale = SaleOrder()
 sale.name = 2
-sale.create()
-sale.search()
-console.log(sale)
+sale.update()
+sale.create().then(
+def (result):
+    sale.create().then(
+    def ():
+        sale.search([]).then(
+        def (result):
+            console.log(result)
+        )
+    )
+)

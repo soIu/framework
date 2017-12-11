@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import keys, dict, checkBase64, empty
+from orm.tools import keys, dict, checkBase64, empty, merge
 from orm.pouchdb import db
 
 env = {}
@@ -23,19 +23,16 @@ class Model():
         self.env = env
         schema = {'singular': self._name, 'plural': self._name}
         #Reserved fields
+        reserved = ['id', '_id', 'rev', '_rev']
         if self._is_singleton:
-           self.id = None
-           self._fields['id'] = fields.Char(string="ID", related='_id', store=True)
-           self._id = None
-           self._fields['_id'] = fields.Char(string="ID (Raw)")
-           self.rev = None
-           self._fields['rev'] = fields.Char(string="DB Revision Number", related='_rev', store=True)
-           self._rev = None
-           self._fields['_rev'] = fields.Char(string="DB Revision Number")
+           self.id = fields.Char(string="ID", related='_id', store=True)
+           self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
+           self._id = fields.Char(string="ID (Raw)")
+           self._rev = fields.Char(string="DB Revision Number")
         else:
-           self.ids = []
-           self._fields['ids'] = fields.Data(string="IDs")
-        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env']]:
+           self.ids = fields.Data(string="IDs")
+           reserved = ['ids']
+        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved):
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
@@ -49,17 +46,30 @@ class Model():
                else:
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'queryInverse': self[key].inverse}}}
             self._fields[key] = self[key]
-            #self[key] = self._fields[key].default
             if self._is_singleton:
                if not empty(self._fields[key].related):
                   if empty(self._related[self._fields[key].related]):
                      self._related[self._fields[key].related] = []
                   self._related[self._fields[key].related].push(key)
-               self._values[key] = self._fields[key].default
-               v"""Object.defineProperty(self, key, {
-               get: function() {return self._values[key]},
-               set: function(value) {self._values[key] = self.adapt(key, value)},
-               })"""
+               self[key] = self._fields[key].default
+               self._values[key] = self[key]
+               #Once more disable getter and setter, massive bugs
+               """Object.defineProperty(self, key, {
+               'get': def(): return self._values[key]
+               ,
+               'set': def(value): self._values[key] = self.adapt(key, value)
+               }})"""
+        Object.defineProperty(self, 'values', {
+        'get': def (): return self._values
+        ,
+        'set': def (value):
+                   if self._is_singleton:
+                      self._values = merge(self._values, value)
+                      for key in keys(self._fields):
+                          self[key] = self.adapt(key, value[key])
+                   else:
+                      self._values = value
+        })
         #Disabling seal and freeze altogether because they cause bugs
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
@@ -67,30 +77,36 @@ class Model():
         db.setSchema([schema])
 
     def browse(self, ids=False):
+        result = self
         if empty(ids):
            v'return new self.constructor()'
-        elif ids.constructor == String:
-           self = self.browse()
-           db.get(ids).then(
-           def (record):
-               self.id = ids
-               self._values = record
-           )
         elif ids.constructor == Array:
-           #self = self.browse()
-           v'var self = new self.constructor(false, false)'
-           db.rel.find(self._name, ids).then(
+           #result = self.browse()
+           if ids.length > 1:
+              v'var result = new self.constructor(false, false)'
+              return db.rel.find(result._name, ids).then(
+              def (record):
+                  result.ids = ids
+                  result.values = record[result._name]
+                  return result
+              )
+           else:
+              ids = ids[0]
+        if ids.constructor == String:
+           result = self.browse()
+           return db.get(ids).then(
            def (record):
-               self.ids = ids
-               self._values = record[self._name]
+               result.id = ids
+               result.values = record
+               return result
            )
-        return self
+        return result
 
     def search(self, *args, **options):
         def query(record):
             results = []
             for arg in args:
-                if arg == '|':
+                if arg in ['|', []]:
                    continue
                 if arg[1] == '=':
                    results.push(record[arg[0]] == arg[2])
@@ -104,7 +120,7 @@ class Model():
                    results.push(record[arg[0]] <= arg[2])
                 elif arg[1] == 'in':
                    results.push(record[arg[0]] in arg[2])
-            if empty(args):
+            if empty(args) or empty(args[0]):
                return True
             elif args[0] == '|':
                return results.some(
@@ -116,24 +132,31 @@ class Model():
                def (result):
                    return result == True
                )
-        if options['limit'] == 1:
-           self = self.browse()
-           db.rel.find(self._name).then(
+        result = self.browse()
+        if options.limit == 1:
+           return db.rel.find(result._name).then(
            def (records):
-               record = records[self._name].find(query)
-               self.id = record.id
-               self._values = record
-               console.log(self)
+               record = records[result._name].find(query)
+               result.id = record.id
+               result.values = record
+               return result
            )
         else:
-           v'var self = new self.constructor(false, false)'
-           db.rel.find(self._name).then(
+           return db.rel.find(result._name).then(
            def (records):
-               self._values = records[self._name].filter(query)
-               self.ids = [value.id for value in self._values]
-               console.log(self)
+               v'var result = new self.constructor(false, false)'
+               if records[result._name].length > 1:
+                  result.values = records[result._name].filter(query)
+                  result.ids = [value.id for value in result._values]
+                  return result
+               else:
+                  result = self.browse()
+                  record = records[result._name].find(query)
+                  result.id = record.id
+                  result.values = record
+                  return result
            )
-        return self
+        return result
 
     def read(self):
         if self._is_env:
@@ -146,7 +169,10 @@ class Model():
         #if key == 'id':
         #   value = self._fields[key].value
         if self._fields[key].type in ['char', 'text']:
-           value = String(value)
+           if value == None:
+              value = ""
+           else:
+              value = String(value)
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
@@ -173,9 +199,11 @@ class Model():
         #Related operation
         if self._fields[key].store:
            if not empty(self._fields[key].related):
+              self[self._fields[key].related] = value
               self._values[self._fields[key].related] = value
            if not empty(self._related[key]):
               for field in self._related[key]:
+                  self[field] = value
                   self._values[field] = value
         return value
         #This is not Odoo I forgot
@@ -187,9 +215,14 @@ class Model():
               if isNaN(value):
                  return Exception("Not a valid ID")'''
 
-    def update(self, values):
+    def update(self, values=False):
         if self._is_env:
-           return        
+           return
+        if empty(values):
+           if self._is_singleton:
+              values = {key: self[key] for key in keys(self._fields)}
+           else:
+              values = {}
         for key in keys(values):
             value = self.adapt(key, values[key])
             if self._is_singleton:
@@ -199,6 +232,7 @@ class Model():
                    object[key] = value       
 
     def create(self, values=False):
+        self.update()
         if empty(values):
            values = self.read()
         else:
@@ -207,15 +241,16 @@ class Model():
            self = self.browse()
            self.update(values)
         del values['id']
-        db.rel.save(self._name, values).then(
+        return db.rel.save(self._name, values).then(
         def (record):
             self.id = record[self._name][0].id
         )
-        return self
+        #return self
 
     def write(self, values=False):
         if empty(self.id) and empty(self.ids):
            return
+        self.update()
         if empty(values):
            if not self._is_singleton:
               return
@@ -233,7 +268,7 @@ class Model():
         else:
            db.bulkDocs(values).then(
            def (record):
-               self._values = record
+               self.values = record
            )
         return self
 
