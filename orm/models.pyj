@@ -1,17 +1,46 @@
 import orm.fields as fields
-from orm.tools import keys, dict, checkBase64, empty
+from orm.tools import exist, keys, merge, dict, checkBase64
 from orm.pouchdb import db
+
+env = {}
+schemas = {}
+
 class Model():
     _name = 'undefined'
     _inherit = False
     _fields = {}
-    #_values = {}
+    _values = {}
+    _related = {}
 
-    def __init__(self):
+    def __init__(self, _is_env=False, _is_singleton=True):
+        self._is_env = _is_env
+        self._is_singleton = _is_singleton
+        if 'Model' not in env:
+           env['Model'] = Model
+        if 'context' not in env:
+            env['context'] = {}
+        if not exist(env[self._name]):
+           env[self._name] = True
+           v'env[self._name] = new self.constructor(_is_env=true)'
+           env[self._name]._is_env = True
+        if self._is_env:
+           return
+        self.env = env
         schema = {'singular': self._name, 'plural': self._name}
+        schemas[self._name] = schema
         #Reserved fields
-        self.id = fields.Char(string="ID")
-        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor']]:
+        reserved = ['id', '_id', 'rev', '_rev']
+        if self._is_singleton:
+           self.id = fields.Char(string="ID", related='_id', store=True)
+           self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
+           self._id = fields.Char(string="ID (Raw)")
+           self._rev = fields.Char(string="DB Revision Number")
+        else:
+           self.ids = fields.Data(string="IDs")
+           reserved = ['ids']
+        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved):
+            #if key in self._fields:
+            #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
                if not schema.relations:
                   schema.relations = {}
@@ -19,29 +48,137 @@ class Model():
                if self[key].type in ['one2many', 'many2many']:
                   type = 'hasMany'
                if self[key].type != 'one2many':
-                  schema.relations[key] = {type: self[key].relation}
+                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': True}}}
                else:
-                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'queryInverse': self[key].inverse}}}
+                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': True, 'queryInverse': self[key].inverse}}}
             self._fields[key] = self[key]
-            self[key] = None
-            #self._values[key] = None
-            """Object.defineProperty(self, key, {
-            get: function() {return self._values[key]},
-            set: function(value) {self._values[key] = self.adapt(key, value)},
-            })"""
-        v'Object.seal(self)'
-        v'Object.freeze(self._fields)'
+            if self._is_singleton:
+               if exist(self._fields[key].related):
+                  if not exist(self._related[self._fields[key].related]):
+                     self._related[self._fields[key].related] = []
+                  self._related[self._fields[key].related].push(key)
+               self[key] = self._fields[key].default
+               self._values[key] = self[key]
+               #Once more disable getter and setter, massive bugs
+               """Object.defineProperty(self, key, {
+               'get': def(): return self._values[key]
+               ,
+               'set': def(value): self._values[key] = self.adapt(key, value)
+               }})"""
+        Object.defineProperty(self, 'values', {
+        'get': def (): return self._values
+        ,
+        'set': def (value):
+                   if self._is_singleton:
+                      self._values = merge(self._values, value)
+                      for key in keys(self._fields):
+                          self[key] = self.adapt(key, value[key])
+                   else:
+                      self._values = value
+        })
+        #Disabling seal and freeze altogether because they cause bugs
+        #v'Object.seal(self)'
+        #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
-        db.setSchema([schema])
+        db.setSchema([schemas[key] for key in keys(schemas)])
+
+    def browse(self, ids=False):
+        result = self
+        if not exist(ids):
+           v'return new self.constructor()'
+        elif type(ids) in [ρσ_list_constructor, Array]:
+           #result = self.browse()
+           if ids.length > 1:
+              v'var result = new self.constructor(false, false)'
+              return db.rel.find(result._name, ids).then(
+              def (record):
+                  result.ids = ids
+                  result.values = record[result._name]
+                  return result
+              )
+           else:
+              ids = ids[0]
+        if type(ids) == String:
+           result = self.browse()
+           return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
+           def (record):
+               result.id = ids
+               result.values = record
+               return result
+           )
+        return result
+
+    def search(self, *args, **options):
+        def query(record):
+            results = []
+            for arg in args:
+                if arg in ['|', []]:
+                   continue
+                if arg[1] == '=':
+                   results.push(record[arg[0]] == arg[2])
+                elif arg[1] == '>':
+                   results.push(record[arg[0]] > arg[2])
+                elif arg[1] == '>=':
+                   results.push(record[arg[0]] >= arg[2])
+                elif arg[1] == '<':
+                   results.push(record[arg[0]] < arg[2])
+                elif arg[1] == '<=':
+                   results.push(record[arg[0]] <= arg[2])
+                elif arg[1] == 'in':
+                   results.push(record[arg[0]] in arg[2])
+            if not exist(args) or not exist(args[0]):
+               return True
+            elif args[0] == '|':
+               return results.some(
+               def (result):
+                   return result == True
+               )
+            else:
+               return results.every( 
+               def (result):
+                   return result == True
+               )
+        result = self.browse()
+        if options.limit == 1:
+           return db.rel.find(result._name).then(
+           def (records):
+               record = records[result._name].find(query)
+               result.id = record.id
+               result.values = record
+               return result
+           )
+        else:
+           return db.rel.find(result._name).then(
+           def (records):
+               v'var result = new self.constructor(false, false)'
+               if records[result._name].length > 1:
+                  result.values = records[result._name].filter(query)
+                  result.ids = [value.id for value in result._values]
+                  return result
+               else:
+                  result = self.browse()
+                  record = records[result._name].find(query)
+                  result.id = record.id
+                  result.values = record
+                  return result
+           )
+        return result
 
     def read(self):
-        return {key: self[key] for key in keys(self._fields)}
+        if self._is_env:
+           return {}
+        return self._values#{key: self.adapt(key, self[key]) for key in keys(self._fields)}
 
     def adapt(self, key, value):
-        if key == 'id':
-           value = self._fields[key].value
-        elif self._fields[key].type in ['char', 'text']:
-           value = String(value)
+        if self._is_env:
+           return
+        #if key == 'id':
+        #   value = self._fields[key].value
+        if self._fields[key].type in ['char', 'text']:
+           if value == None:
+              value = ""
+           else:
+              value = String(value)
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
@@ -62,24 +199,114 @@ class Model():
         elif self._fields[key].type == 'binary':
            if not checkBase64(value):
               return Exception("Not a valid base64")
-        elif self._fields[key].type in ['many2one', 'one2one']:
-           if isinstance(value, models.Model):
-              value = value.id
-           else:
-              value = parseInt(value)
-              if isNaN(value):
-                 return Exception("Not a valid ID")
         elif self._fields[key].type == 'selection':
            if not value in dict(self._fields[key].selection):
               return Exception("Incorrect value")
+        elif self._fields[key].type in ['date', 'datetime']:
+           if type(value) == Date:
+              value = value.toISOString()
+           elif type(value) == String:
+              try:
+                  value = v'new Date(value).toISOString()'
+              except:
+                  return Exception("Can't parse Date")
+           else:
+              return Exception("Can't parse Date")
+           if self._fields[key].type == 'date':
+              value = value.split('T')[0] + 'T00:00:00.000Z'
+        elif self._fields[key].type in ['many2one', 'one2one']:
+           if not exist(value):
+              return None
+           elif v'value instanceof env.Model' == True:
+              value = value.id
+           elif type(value) in [ρσ_list_constructor, Array] and value.length > 0:
+                value = value[0]
+        elif self._fields[key].type in ['many2many', 'one2many']:
+           if not exist(value):
+              return []
+           elif v'value instanceof env.Model' == True:
+              value = value.ids
+        #Related operation
+        if self._fields[key].store:
+           if exist(self._fields[key].related):
+              self[self._fields[key].related] = value
+              self._values[self._fields[key].related] = value
+           if exist(self._related[key]):
+              for field in self._related[key]:
+                  self[field] = value
+                  self._values[field] = value
         return value
 
-    def update(self, values):
+    def update(self, values=False):
+        if self._is_env:
+           return
+        if not exist(values):
+           if self._is_singleton:
+              values = {key: self[key] for key in keys(self._fields)}
+           else:
+              values = {}
         for key in keys(values):
-            #value = self.adapt(key, values[key])
-            self[key] = value
+            value = self.adapt(key, values[key])
+            if self._is_singleton:
+               self._values[key] = value
+            else:
+               for object in self._values:
+                   object[key] = value       
 
     def create(self, values=False):
-        if empty(values):
+        self.update()
+        if not exist(values):
            values = self.read()
-        db.rel.save(self._name, values)
+        else:
+           merge(self.read(), values)
+        if self._is_env:
+           self = self.browse()
+           self.update(values)
+        del values['id']
+        return db.rel.save(self._name, values).then(
+        def (record):
+            self.values = record[self._name][0]
+            return self
+        )
+        #return self
+
+    def write(self, values=False):
+        if not exist(self.id) and not exist(self.ids):
+           return
+        self.update()
+        if not exist(values):
+           if not self._is_singleton:
+              return
+           values = self.read()
+        else:
+           #merge(self.read(), values)
+           self.update(values)
+           values = self.read()
+        if self._is_singleton:
+           #Maybe I'll use bulkDocs for revision checking instead of getting it
+           db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
+           def (record):
+               return db.put(merge(values, {'_id': record._id, '_rev': record._rev}))
+           )
+        else:
+           for value in values:
+               value._id = db.rel.makeDocID({'type': self._name, 'id': value.id})
+           db.bulkDocs(values).then(
+           def (record):
+               self.values = record
+           )
+        return self
+
+    def unlink(self):
+        if not exist(self.id) and not exist(self.ids):
+           return
+        if self._is_singleton:
+           db.get(self.id).then(
+           def (record):
+               db.remove(record)
+           )
+        else:
+           for value in self._values:
+               value['_deleted'] = True
+           db.bulkDocs(self._values)
+        return True
