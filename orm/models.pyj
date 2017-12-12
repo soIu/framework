@@ -265,7 +265,6 @@ class Model():
         del values['id']
         return db.rel.save(self._name, values).then(
         def (record):
-            console.log(record)
             self.values = record[self._name][0]
             return self
         )
