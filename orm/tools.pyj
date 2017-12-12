@@ -29,7 +29,7 @@ def checkBase64(string):
 def empty(object):
     if object in ['', False, None, undefined]:
        return True
-    object = String(object)
+    object = str(object)
     if object == '{}':
        return True
     elif object == '[]':
@@ -38,7 +38,7 @@ def empty(object):
 def exist(object):
     if object in ['', False, None, undefined, 0.0]:
        return False
-    object = String(object)
+    object = str(object)
     if object == '{}':
        return False
     elif object == '[]':

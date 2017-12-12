@@ -1,14 +1,32 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
+class ResPartner(models.Model):
+    _name = 'res.partner'
+
+    name = fields.Char(string="Name", required=True)
+
+ResPartner()
+
 class SaleOrder(models.Model):
     _name = 'sale.order'
 
     name = fields.Char(string="Sale Order", required=True)
+    partner_id = fields.Many2one('res.partner', string="Customer")
 
-sale = SaleOrder()
-sale.name = 2
-sale.update()
-sale.create().then(
+SaleOrder()
+
+models.env['res.partner'].create({'name': 'Test'}).then(
+def (self):
+    sale_id = self.env['sale.order'].browse()
+    sale_id.name = 2
+    sale_id.partner_id = self
+    sale_id.create().then(
+    def (result):
+        console.log(result)
+    )
+)
+"""sale.create().then(
 def (result):
     sale.create().then(
     def ():
@@ -17,4 +35,4 @@ def (result):
             console.log(result)
         )
     )
-)
+)"""
