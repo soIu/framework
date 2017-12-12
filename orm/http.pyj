@@ -1,0 +1,32 @@
+from orm.models import env
+from orm.tools import exist, keys
+
+port = 8069
+
+restify = require('restify')
+server = restify.createServer()
+
+cors = require('restify-cors-middleware')({'origins': ['*']})
+
+server.pre(cors.preflight)
+server.use(cors.actual)
+server.use(restify.plugins.bodyParser({'mapParams': True}))
+
+_controllers = {}
+
+def route(routing, *method):
+    return def ():
+               if routing not in _controllers:
+                  _controllers[routing] = []
+               _controllers[routing].push(method)
+               #return method(False, False, False)
+
+class Controller():
+
+    def __init__(self):
+        for key in keys(_controllers):
+            server.post(key, _controllers[key])
+
+    def run(self):
+        console.log('Running on port ' + port)
+        server.listen(port)
