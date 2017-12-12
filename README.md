@@ -14,9 +14,11 @@ After years developing applications with *magic* MVC and ORM included with it, I
 To install just do `npm install` on the module directory
 
 To test the ORM read the test.pyj file, if you know Odoo you should feel familiar with the code.
+
 To execute it `node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`, or if you encounter bugs remove the cache too `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`
 
 To test the Framework read the server.pyj file, its the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
+
 To execute it `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x server.pyj`
 
 # What's In-progress
