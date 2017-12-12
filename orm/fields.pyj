@@ -79,6 +79,20 @@ def Selection(*selection, **args):
     attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'selection', 'selection': selection}, {attribute: args[attribute] or None for attribute in attributes})
 
+def Date(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
+    return merge({'type': 'date'}, {attribute: args[attribute] or None for attribute in attributes})
+
+def Datetime(**args):
+    for required in ['string']:
+        if required not in args:
+           return Exception("Required argument " + required + " not found")
+    attributes = ['string', 'required', 'readonly', 'default', 'compute', 'store', 'related']
+    return merge({'type': 'datetime'}, {attribute: args[attribute] or None for attribute in attributes})
+
 #Add fields.Data for storing JSON
 def Data(**args):
     for required in ['string']:

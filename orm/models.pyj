@@ -202,6 +202,18 @@ class Model():
         elif self._fields[key].type == 'selection':
            if not value in dict(self._fields[key].selection):
               return Exception("Incorrect value")
+        elif self._fields[key].type in ['date', 'datetime']:
+           if type(value) == Date:
+              value = value.toISOString()
+           elif type(value) == String:
+              try:
+                  value = v'new Date(value).toISOString()'
+              except:
+                  return Exception("Can't parse Date")
+           else:
+              return Exception("Can't parse Date")
+           if self._fields[key].type == 'date':
+              value = value.split('T')[0] + 'T00:00:00.000Z'
         elif self._fields[key].type in ['many2one', 'one2one']:
            if not exist(value):
               return None
