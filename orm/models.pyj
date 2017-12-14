@@ -351,7 +351,7 @@ class Model():
            self.update(values)
            values = self.read()
         if is_client:
-           return ajax('post', 'json', url + '/api/write', {'model': self._name, 'values': values}).then(
+           return ajax('post', 'json', url + '/api/write', {'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
            def (result):
                self.values = result.values
                return self
@@ -380,7 +380,7 @@ class Model():
         if not exist(self.id) and not exist(self.ids):
            return
         if is_client:
-           return ajax('post', 'json', url + '/api/unlink', {'model': self._name, 'id': self.id}).then(
+           return ajax('post', 'json', url + '/api/unlink', {'model': self._name, 'ids': [record.id for record in self]}).then(
            def (result):
                return True
            ).catch(
