@@ -1,8 +1,7 @@
-v'var PouchDB'
-if PouchDB == undefined:
+if require:
    PouchDB = require('pouchdb-core')
    PouchDB.plugin(require('pouchdb-adapter-memory'))
    PouchDB.plugin(require('relational-pouch'))
    db = PouchDB('cache', {'adapter': 'memory'})
 else:
-   db = PouchDB('main')
+   db = window.PouchDB('main')
