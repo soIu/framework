@@ -1,14 +1,15 @@
-import res.users
+import res.modules
 import orm.http as http
 from orm.models import env
 from orm.tools import exist
 
-@http.route('/api/login',
+http.route('/api/login',
 def (request, result, next):
     request.accepts('application/json')
     request.env = env
     result.response = {'status': 'error'}
-    params = request.params
+    params = http.parse(request.params)
+    console.log(params)
     if exist(request.params.login):
        request.env['res.users'].search(['login', '=', params.login], ['password', '=', params.password]).then(
        def (user_id):
@@ -26,7 +27,131 @@ def (request, result, next):
 def (request, result, next):
     return result.send(result.response)
 )
-def api_login():
-    return
+
+http.route('/api/browse',
+def (request, result, next):
+    request.accepts('application/json')
+    request.env = env
+    result.response = {'status': 'error'}
+    params = http.parse(request.params)
+    if exist(request.params):
+       request.env[params.model].browse(params.ids).then(
+       def (record):
+           result.response = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
+
+http.route('/api/search',
+def (request, result, next):
+    request.accepts('application/json')
+    request.env = env
+    result.response = {'status': 'error'}
+    params = http.parse(request.params)
+    if exist(request.params):
+       request.env[params.model].search(*params.args).then(
+       def (record):
+           result.response = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
+
+http.route('/api/create',
+def (request, result, next):
+    request.accepts('application/json')
+    request.env = env
+    result.response = {'status': 'error'}
+    params = http.parse(request.params)
+    if exist(request.params):
+       request.env[params.model].create(params.values).then(
+       def (record):
+           result.response = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
+
+http.route('/api/write',
+def (request, result, next):
+    request.accepts('application/json')
+    request.env = env
+    result.response = {'status': 'error'}
+    params = http.parse(request.params)
+    if exist(request.params):
+       request.env[params.model].browse(params.ids).then(
+       def (record):
+           record.write(params.values).then(
+           def (record):
+               result.response = {'status': 'success', 'values': record.values}
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
+
+http.route('/api/unlink',
+def (request, result, next):
+    request.accepts('application/json')
+    request.env = env
+    result.response = {'status': 'error'}
+    params = http.parse(request.params)
+    if exist(request.params):
+       request.env[params.model].browse(params.ids).then(
+       def (record):
+           record.unlink().then(
+           def ():
+               result.response = {'status': 'success'}
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
 
 http.Controller().run()

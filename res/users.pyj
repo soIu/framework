@@ -12,4 +12,3 @@ admin.name = 'Administrator'
 admin.login = 'admin'
 admin.password = 'r4pyd'
 admin.create()
-console.log(admin.read())

@@ -12,14 +12,23 @@ server.pre(cors.preflight)
 server.use(cors.actual)
 server.use(restify.plugins.bodyParser({'mapParams': True}))
 
+def parse(params):
+    for key in keys(params):
+        try:
+            params[key] = JSON.parse(params[key])
+        except:
+            pass
+    return params
+
 _controllers = {}
 
 def route(routing, *method):
-    return def ():
-               if routing not in _controllers:
-                  _controllers[routing] = []
-               _controllers[routing].push(method)
-               #return method(False, False, False)
+    def apply():
+        if routing not in _controllers:
+           _controllers[routing] = []
+           _controllers[routing].push(method)
+    apply()
+    return def(): return
 
 class Controller():
 
