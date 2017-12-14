@@ -63,7 +63,7 @@ def parseURI(data):
 def ajax(type, dataType, url, data):
     return Promise(
     def (resolve, reject):
-        xhr = new XMLHttpRequest()
+        xhr = new XMLHTTPRequest()
         xhr.open(type, url, True)
         xhr.onload = resolve
         xhr.onerror = reject
@@ -74,7 +74,7 @@ def ajax(type, dataType, url, data):
         xhr.send(data)
     )
 
-#XMLHttpRequest for node.js
+#
 v"""/**
  * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
  *
