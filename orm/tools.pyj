@@ -88,11 +88,11 @@ v"""/**
  * @license MIT
  */
 
+if (client === false) {
 var Url = require("url");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
 
-if (client === false) {
 var XMLHttpRequest = function() {
   "use strict";
 
