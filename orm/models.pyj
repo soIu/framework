@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, dict, checkBase64
+from orm.tools import exist, keys, merge, dict, checkBase64, client, url, ajax
 from orm.pouchdb import db
 
 env = {}
@@ -76,6 +76,7 @@ class Model():
                              self[key] = self.adapt(key, value[key])
                    else:
                       self._values = value
+                      self.ids = [object.id for object in value]
         })
         Object.defineProperty(self, 'length', {'get':
         def (): 
@@ -104,17 +105,28 @@ class Model():
             lists.push(result)
         return lists
 
-    def browse(self, ids=False):
+    def browse(self, ids=False, is_singleton=True, is_client=client):
         result = self
         if not exist(ids):
-           v'return new self.constructor()'
+           v'return new self.constructor(false, is_singleton)'
+        elif is_client:
+           return ajax('post', 'json', url + '/api/browse', {'model': self._name, 'ids': ids}).then(
+           def (result):
+               new = self.browse()
+               new.values = result.values
+               return new
+           ).catch(
+           def (error):
+               console.log(error)
+               return self.browse(ids, is_client=False)
+           )
         elif type(ids) in [ρσ_list_constructor, Array]:
            #result = self.browse()
            if ids.length > 1:
               v'var result = new self.constructor(false, false)'
               return db.rel.find(result._name, ids).then(
               def (record):
-                  result.ids = ids
+                  #result.ids = ids
                   result.values = record[result._name]
                   return result
               )
@@ -124,13 +136,24 @@ class Model():
            result = self.browse()
            return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
            def (record):
-               result.id = ids
+               #result.id = ids
                result.values = record
                return result
            )
         return result
 
     def search(self, *args, **options):
+        if exist(options.is_client):
+           return ajax('post', 'json', url + '/api/search', {'model': self._name, 'args': args}).then(
+           def (result):
+               new = self.browse(is_singleton=False)
+               new.values = result.values
+               return new
+           ).catch(
+           def (error):
+               console.log(error)
+               return self.search(args, is_client=False)
+           )
         def query(record):
             results = []
             for arg in args:
@@ -165,7 +188,7 @@ class Model():
            return db.rel.find(result._name).then(
            def (records):
                record = records[result._name].find(query)
-               result.id = record.id
+               #result.id = record.id
                result.values = record
                return result
            )
@@ -175,12 +198,12 @@ class Model():
                v'var result = new self.constructor(false, false)'
                if records[result._name].length > 1:
                   result.values = records[result._name].filter(query)
-                  result.ids = [value.id for value in result._values]
+                  #result.ids = [value.id for value in result._values]
                   return result
                else:
                   result = self.browse()
                   record = records[result._name].find(query)
-                  result.id = record.id
+                  #result.id = record.id
                   result.values = record
                   return result
            )
@@ -287,7 +310,7 @@ class Model():
                method(records[index], next)
         method(records[index], next)
 
-    def create(self, values=False):
+    def create(self, values=False, is_client=client):
         self.update()
         if not exist(values):
            values = self.read()
@@ -296,6 +319,17 @@ class Model():
         if self._is_env:
            self = self.browse()
            self.update(values)
+        if is_client:
+           return ajax('post', 'json', url + '/api/create', {'model': self._name, 'values': values}).then(
+           def (result):
+               self.values = result.values
+               return self
+           ).catch(
+           def (error):
+               console.log(error)
+               return Exception("There is some error")
+               #return self.create(values, is_client=False)
+           )
         del values['id']
         return db.rel.save(self._name, values).then(
         def (record):
@@ -304,7 +338,7 @@ class Model():
         )
         #return self
 
-    def write(self, values=False):
+    def write(self, values=False, is_client=client):
         if not exist(self.id) and not exist(self.ids):
            return
         self.update()
@@ -316,6 +350,17 @@ class Model():
            #merge(self.read(), values)
            self.update(values)
            values = self.read()
+        if is_client:
+           return ajax('post', 'json', url + '/api/write', {'model': self._name, 'values': values}).then(
+           def (result):
+               self.values = result.values
+               return self
+           ).catch(
+           def (error):
+               console.log(error)
+               #return self.write(values, is_client=False)
+               return Exception("There are some error")
+           )
         if self._is_singleton:
            #Maybe I'll use bulkDocs for revision checking instead of getting it
            db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
@@ -331,9 +376,19 @@ class Model():
            )
         return self
 
-    def unlink(self):
+    def unlink(self, is_client=client):
         if not exist(self.id) and not exist(self.ids):
            return
+        if is_client:
+           return ajax('post', 'json', url + '/api/unlink', {'model': self._name, 'id': self.id}).then(
+           def (result):
+               return True
+           ).catch(
+           def (error):
+               console.log(error)
+               #return self.unlink(is_client=False)
+               return False
+           )
         if self._is_singleton:
            db.get(self.id).then(
            def (record):

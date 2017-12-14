@@ -45,6 +45,35 @@ def exist(object):
        return False
     return True
 
+array = [ρσ_list_constructor, Array]
+
+client = False
+url = False
+
+def parseURI(data):
+    array = []
+    for key in keys(data):
+        if type(data[key]) in array or type(data) == Object:
+           data[key] = JSON.stringify(data[key])
+        elif data[key] == '':
+           data[key] = None
+        array.push(encodeURIComponent(key)+ '=' + encodeURIComponent(data[key]))
+    return array.join('&')
+
+def ajax(type, dataType, url, data):
+    return Promise(
+    def (resolve, reject):
+        xhr = new XMLHTTPRequest()
+        xhr.open(type, url, True)
+        xhr.onload = resolve
+        xhr.onerror = reject
+        xhr.responseType = dataType
+        if exist(data):
+           data = parseURI(data)
+           xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        xhr.send(data)
+    )
+
 #Polyfill Array.find
 v"""if (!Array.prototype.find) {
   Object.defineProperty(Array.prototype, 'find', {
