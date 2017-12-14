@@ -88,8 +88,7 @@ v"""/**
  * @license MIT
  */
 
-if (client === false) {
-var require;
+if (typeof module !== 'undefined' && module.exports) {
 var Url = require("url");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
