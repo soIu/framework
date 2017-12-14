@@ -92,7 +92,8 @@ var Url = require("url");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
 
-exports.XMLHttpRequest = function() {
+if (client === false) {
+var XMLHttpRequest = function() {
   "use strict";
 
   /**
@@ -271,7 +272,7 @@ exports.XMLHttpRequest = function() {
       throw new Error("INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN");
     }
     if (!isAllowedHttpHeader(header)) {
-      console.warn("Refused to set unsafe header \"" + header + "\"");
+      console.warn('Refused to set unsafe header "' + header + '"');
       return;
     }
     if (sendFlag) {
@@ -316,7 +317,7 @@ exports.XMLHttpRequest = function() {
     for (var i in response.headers) {
       // Cookie headers are excluded
       if (i !== "set-cookie" && i !== "set-cookie2") {
-        result += i + ": " + response.headers[i] + "\r\n";
+        result += i + ": " + response.headers[i] + "\\r\\n";
       }
     }
     return result.substr(0, result.length - 2);
@@ -694,7 +695,7 @@ exports.XMLHttpRequest = function() {
       }
     }
   };
-};"""
+};}"""
 
 #Polyfill Array.find
 v"""if (!Array.prototype.find) {
