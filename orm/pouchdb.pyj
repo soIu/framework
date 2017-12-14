@@ -1,7 +1,8 @@
-if require:
-   PouchDB = require('pouchdb-core')
-   PouchDB.plugin(require('pouchdb-adapter-memory'))
-   PouchDB.plugin(require('relational-pouch'))
-   db = PouchDB('cache', {'adapter': 'memory'})
-else:
-   db = window.PouchDB('main')
+try:
+    PouchDB = require('pouchdb-core')
+    PouchDB.plugin(require('pouchdb-adapter-memory'))
+    PouchDB.plugin(require('relational-pouch'))
+    db = PouchDB('cache', {'adapter': 'memory'})
+except:
+    PouchDB = window.PouchDB
+    db = PouchDB('main')
