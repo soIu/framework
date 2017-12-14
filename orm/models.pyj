@@ -273,7 +273,18 @@ class Model():
                self._values[key] = value
             else:
                for object in self._values:
-                   object[key] = value   
+                   object[key] = value
+
+    def queue(self, method):
+        if not self._is_singleton:
+           records = self.__iter__()
+           index = 0
+           def next():
+               if index > 0:
+                  index += 1
+               if index < records.length:
+                  method(records[index], next)
+           method(records[index], next)
 
     def create(self, values=False):
         self.update()
