@@ -112,9 +112,9 @@ class Model():
         elif is_client:
            return ajax('post', 'json', url + '/api/browse', {'model': self._name, 'ids': ids}).then(
            def (result):
-               new = self.browse()
-               new.values = result.values
-               return new
+               record = self.browse()
+               record.values = result.values
+               return record
            ).catch(
            def (error):
                console.log(error)
@@ -146,9 +146,9 @@ class Model():
         if exist(options.is_client):
            return ajax('post', 'json', url + '/api/search', {'model': self._name, 'args': args}).then(
            def (result):
-               new = self.browse(is_singleton=False)
-               new.values = result.values
-               return new
+               record = self.browse(is_singleton=False)
+               record.values = result.values
+               return record
            ).catch(
            def (error):
                console.log(error)
