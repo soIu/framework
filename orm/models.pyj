@@ -106,7 +106,6 @@ class Model():
         return lists
 
     def browse(self, ids=False, is_singleton=True, is_client=client):
-        result = self
         if not exist(ids):
            v'return new self.constructor(false, is_singleton)'
         elif is_client:
