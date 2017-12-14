@@ -72,15 +72,37 @@ class Model():
                    if self._is_singleton:
                       self._values = merge(self._values, value)
                       for key in keys(self._fields):
-                          self[key] = self.adapt(key, value[key])
+                          if key in value:
+                             self[key] = self.adapt(key, value[key])
                    else:
                       self._values = value
+        })
+        Object.defineProperty(self, 'length', {'get':
+        def (): 
+            if self._is_env:
+               return 0
+            elif self._is_singleton:
+               return 1
+            else:
+               return self._values.length
         })
         #Disabling seal and freeze altogether because they cause bugs
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
         db.setSchema([schemas[key] for key in keys(schemas)])
+
+    def __iter__(self):
+        if self._is_env:
+           return []
+        elif self._is_singleton:
+           return [self]
+        lists = []
+        for value in self.values:
+            result = self.browse()
+            result.values = value
+            lists.push(result)
+        return lists
 
     def browse(self, ids=False):
         result = self
@@ -251,7 +273,7 @@ class Model():
                self._values[key] = value
             else:
                for object in self._values:
-                   object[key] = value       
+                   object[key] = value   
 
     def create(self, values=False):
         self.update()

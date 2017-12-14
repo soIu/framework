@@ -4,9 +4,9 @@ After years developing applications with *magic* MVC and ORM included with it, I
 # Purpose of this project
 - Creating an ORM for PouchDB/CouchDB which is a non-relational database or simply called NoSQL (except PouchDB that can be configured to use SQLite, etc), with a fabulous sync feature (https://pouchdb.com/guides/replication.html), offline capabilities, revision management, and performance. One more thing, ITS JSON!! (ORM Repo https://github.com/rafi16jan/pouchdb-orm) Ready ✓
 
-- Build a *not so magic* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA but who knows, I need advice. (Framework Repo https://github.com/rafi16jan/rapyd-framework) In-progress •
+- Build a *not so magic* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA, but I still need recommendation. (Framework Repo https://github.com/rafi16jan/rapyd-framework) In-progress •
 
-- Use RapydScript (Python transpiler to Javascript, currently ES5 for compatibilty) in server-side (Node.js) and client-side, because Python's slogan "readability counts" is true. I managed to build full-customized ERP based on customer's needs with Odoo. With a horrible performance... Done ✓
+- Use RapydScript (Python transpiler to Javascript, currently ES5 for compatibilty) in server-side (Node.js) and client-side, because Python's slogan "readability counts" is true. I managed to build full-customized ERP based on customer's needs with Odoo. But the performance is not good. Done ✓
 
 - So we will have Python's readabilty, Javascript's JIT Compiler performance, and NoSQL concurreny with sync! If you have experiences with concurrent user greater than 150-200 you'll know how without sync two requests writing to the same record can make conflicts.
 
@@ -17,7 +17,7 @@ To test the ORM read the test.pyj file, if you know Odoo you should feel familia
 
 To execute it `node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`, or if you encounter bugs remove the cache too `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`
 
-To test the Framework read the server.pyj file, its the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
+To test the Framework read the server.pyj file, it is the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
 
 To execute it `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x server.pyj`
 
