@@ -1,6 +1,7 @@
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
+import ir
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -9,6 +10,8 @@ class ResUsers(models.Model):
     password = fields.Char(string="Password")
 
 ResUsers()
+
+ir.ui.menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'}
 
 if not tools.configuration.client:
    def create_admin():
