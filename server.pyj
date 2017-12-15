@@ -3,6 +3,8 @@ import orm.http as http
 from orm.models import env
 from orm.tools import exist
 
+client_js = require('child_process').execSync("node ./node_modules/.bin/rapydscript client.pyj").toString()
+
 http.route('/api/login',
 def (request, result, next):
     request.accepts('application/json')
