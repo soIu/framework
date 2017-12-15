@@ -1,9 +1,24 @@
 import res.modules
 import orm.http as http
 from orm.models import env
-from orm.tools import exist
+from orm.tools import exist, configuration
 
-client_js = require('child_process').execSync("node ./node_modules/.bin/rapydscript client.pyj").toString()
+client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript client.pyj').toString()
+
+configuration.master_password = 'yourpassword'
+crypto = require('crypto')
+cipher = crypto.createCipher('aes-256-cbc', configuration.master_password)
+decipher = crypto.createDecipher('aes-256-cbc', configuration.master_password)
+
+def encrypt(string):
+    string = cipher.update(string, 'utf-8', 'hex')
+    string += cipher.update.final('hex')
+    return string
+
+def decrypt(string):
+    string = decipher.update(string, 'hex', 'utf-8')
+    string += decipher.update.final('utf-8')
+    return string
 
 http.route('/api/login',
 def (request, result, next):
@@ -12,9 +27,15 @@ def (request, result, next):
     result.response = {'status': 'error'}
     params = http.parse(request.params)
     if exist(request.params.login):
+       if params.encrypted == True:
+          params.login, params.password = decrypt(params.login), decrypt(params.password)
        request.env['res.users'].search(['login', '=', params.login], ['password', '=', params.password]).then(
        def (user_id):
            result.response = {'status': 'success'}
+           if params.authentication = True:
+              result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
+           if params.client_js == True:
+              result.response['client_js'] = client_js
            next()
        ).catch(
        def (error):
@@ -31,10 +52,9 @@ def (request, result, next):
 
 http.route('/api/browse',
 def (request, result, next):
-    request.accepts('application/json')
-    request.env = env
-    result.response = {'status': 'error'}
-    params = http.parse(request.params)
+    if result.response.status != 'success':
+       next()
+    params = request.params
     if exist(request.params):
        request.env[params.model].browse(params.ids).then(
        def (record):
@@ -55,10 +75,9 @@ def (request, result, next):
 
 http.route('/api/search',
 def (request, result, next):
-    request.accepts('application/json')
-    request.env = env
-    result.response = {'status': 'error'}
-    params = http.parse(request.params)
+    if result.response.status != 'success':
+       next()
+    params = request.params
     if exist(request.params):
        request.env[params.model].search(*params.args).then(
        def (record):
@@ -79,10 +98,9 @@ def (request, result, next):
 
 http.route('/api/create',
 def (request, result, next):
-    request.accepts('application/json')
-    request.env = env
-    result.response = {'status': 'error'}
-    params = http.parse(request.params)
+    if result.response.status != 'success':
+       next()
+    params = request.params
     if exist(request.params):
        request.env[params.model].create(params.values).then(
        def (record):
@@ -103,10 +121,9 @@ def (request, result, next):
 
 http.route('/api/write',
 def (request, result, next):
-    request.accepts('application/json')
-    request.env = env
-    result.response = {'status': 'error'}
-    params = http.parse(request.params)
+    if result.response.status != 'success':
+       next()
+    params = request.params
     if exist(request.params):
        request.env[params.model].browse(params.ids).then(
        def (record):
@@ -130,10 +147,9 @@ def (request, result, next):
 
 http.route('/api/unlink',
 def (request, result, next):
-    request.accepts('application/json')
-    request.env = env
-    result.response = {'status': 'error'}
-    params = http.parse(request.params)
+    if result.response.status != 'success':
+       next()
+    params = request.params
     if exist(request.params):
        request.env[params.model].browse(params.ids).then(
        def (record):

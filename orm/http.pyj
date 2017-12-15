@@ -26,7 +26,7 @@ def route(routing, *method):
     def apply():
         if routing not in _controllers:
            _controllers[routing] = []
-           _controllers[routing].push(method)
+           _controllers[routing].concat(method)
     apply()
     return def(): return
 
@@ -34,6 +34,8 @@ class Controller():
 
     def __init__(self):
         for key in keys(_controllers):
+            if key != '/api/login':
+               _controllers[key] = [_controllers['/api/login'][0]].concat(_controllers[key])
             server.post(key, _controllers[key])
 
     def run(self):
