@@ -687,7 +687,10 @@ var XMLHttpRequest = function() {
       }
     }
   };
-};}"""
+};
+}else{
+var XMLHttpRequest = window.XMLHttpRequest;
+}"""
 
 def ajax(type, dataType, url, data):
     return Promise(
