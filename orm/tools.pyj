@@ -693,6 +693,8 @@ var XMLHttpRequest = window.XMLHttpRequest;
 }"""
 
 def ajax(type, dataType, url, data):
+    if exist(data):
+       data = parseURI(data)
     return Promise(
     def (resolve, reject):
         xhr = XMLHttpRequest()
@@ -700,9 +702,7 @@ def ajax(type, dataType, url, data):
         xhr.onload = def(): resolve(this.response)
         xhr.onerror = reject
         xhr.responseType = dataType
-        if exist(data):
-           data = parseURI(data)
-           xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         xhr.send(data)
     )
 
