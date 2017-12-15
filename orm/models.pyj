@@ -109,7 +109,7 @@ class Model():
         if not exist(ids):
            v'return new self.constructor(false, is_singleton)'
         elif is_client:
-           return ajax('post', 'json', configuration.url + '/api/browse', {'model': self._name, 'ids': ids}).then(
+           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': ids}).then(
            def (result):
                record = self.browse()
                record.values = result.values
@@ -145,7 +145,7 @@ class Model():
         if not exist(options.is_client):
            options.is_client = configuration.client
         if exist(options.is_client):
-           return ajax('post', 'json', configuration.url + '/api/search', {'model': self._name, 'args': args}).then(
+           return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'args': args}).then(
            def (result):
                record = self.browse(is_singleton=False)
                record.values = result.values
@@ -321,7 +321,7 @@ class Model():
            self = self.browse()
            self.update(values)
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/create', {'model': self._name, 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'values': values}).then(
            def (result):
                self.values = result.values
                return self
@@ -352,7 +352,7 @@ class Model():
            self.update(values)
            values = self.read()
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/write', {'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
            def (result):
                self.values = result.values
                return self
@@ -381,7 +381,7 @@ class Model():
         if not exist(self.id) and not exist(self.ids):
            return
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/unlink', {'model': self._name, 'ids': [record.id for record in self]}).then(
+           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': [record.id for record in self]}).then(
            def (result):
                return True
            ).catch(
