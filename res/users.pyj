@@ -1,5 +1,6 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -7,8 +8,19 @@ class ResUsers(models.Model):
     login = fields.Char(string="Username/Email", required=True)
     password = fields.Char(string="Password")
 
-admin = ResUsers()
-admin.name = 'Administrator'
-admin.login = 'admin'
-admin.password = 'r4pyd'
-admin.create()
+ResUsers()
+
+if not tools.configuration.client:
+   def create_admin():
+       models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': 'r4pyd'}).then(
+       def (record):
+            models.env.user = record
+       )
+   models.env['res.users'].search([]).then(
+   def (records):
+       if records.length < 1:
+          create_admin()
+   ).catch(
+   def (error):
+       create_admin()
+   )
