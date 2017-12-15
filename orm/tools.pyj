@@ -47,8 +47,14 @@ def exist(object):
 
 array = [ρσ_list_constructor, Array]
 
-client = False
-url = False
+configuration = {}
+configuration.client = False
+configuration.url = False
+
+v"""
+if (typeof window !== 'undefined' && typeof window.HTMLBodyElement !== 'undefined') {configuration.client = true}
+else {configuration.client = false}
+"""
 
 def parseURI(data):
     array = []
@@ -59,20 +65,6 @@ def parseURI(data):
            data[key] = None
         array.push(encodeURIComponent(key)+ '=' + encodeURIComponent(data[key]))
     return array.join('&')
-
-def ajax(type, dataType, url, data):
-    return Promise(
-    def (resolve, reject):
-        xhr = new XMLHttpRequest()
-        xhr.open(type, url, True)
-        xhr.onload = resolve
-        xhr.onerror = reject
-        xhr.responseType = dataType
-        if exist(data):
-           data = parseURI(data)
-           xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-        xhr.send(data)
-    )
 
 #XMLHttpRequest for node.js
 v"""/**
@@ -88,7 +80,7 @@ v"""/**
  * @license MIT
  */
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof window === 'undefined') {
 var Url = require("url");
 var spawn = require("child_process").spawn;
 var fs = require("fs");
@@ -696,6 +688,20 @@ var XMLHttpRequest = function() {
     }
   };
 };}"""
+
+def ajax(type, dataType, url, data):
+    return Promise(
+    def (resolve, reject):
+        xhr = XMLHttpRequest()
+        xhr.open(type, url, True)
+        xhr.onload = resolve
+        xhr.onerror = reject
+        xhr.responseType = dataType
+        if exist(data):
+           data = parseURI(data)
+           xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        xhr.send(data)
+    )
 
 #Polyfill Array.find
 v"""if (!Array.prototype.find) {

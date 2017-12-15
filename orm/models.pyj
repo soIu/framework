@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, dict, checkBase64, client, url, ajax
+from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax
 from orm.pouchdb import db
 
 env = {}
@@ -105,11 +105,11 @@ class Model():
             lists.push(result)
         return lists
 
-    def browse(self, ids=False, is_singleton=True, is_client=client):
+    def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
            v'return new self.constructor(false, is_singleton)'
         elif is_client:
-           return ajax('post', 'json', url + '/api/browse', {'model': self._name, 'ids': ids}).then(
+           return ajax('post', 'json', configuration.url + '/api/browse', {'model': self._name, 'ids': ids}).then(
            def (result):
                record = self.browse()
                record.values = result.values
@@ -143,7 +143,7 @@ class Model():
 
     def search(self, *args, **options):
         if exist(options.is_client):
-           return ajax('post', 'json', url + '/api/search', {'model': self._name, 'args': args}).then(
+           return ajax('post', 'json', configuration.url + '/api/search', {'model': self._name, 'args': args}).then(
            def (result):
                record = self.browse(is_singleton=False)
                record.values = result.values
@@ -309,7 +309,7 @@ class Model():
                method(records[index], next)
         method(records[index], next)
 
-    def create(self, values=False, is_client=client):
+    def create(self, values=False, is_client=configuration.client):
         self.update()
         if not exist(values):
            values = self.read()
@@ -319,7 +319,7 @@ class Model():
            self = self.browse()
            self.update(values)
         if is_client:
-           return ajax('post', 'json', url + '/api/create', {'model': self._name, 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/create', {'model': self._name, 'values': values}).then(
            def (result):
                self.values = result.values
                return self
@@ -337,7 +337,7 @@ class Model():
         )
         #return self
 
-    def write(self, values=False, is_client=client):
+    def write(self, values=False, is_client=configuration.client):
         if not exist(self.id) and not exist(self.ids):
            return
         self.update()
@@ -350,7 +350,7 @@ class Model():
            self.update(values)
            values = self.read()
         if is_client:
-           return ajax('post', 'json', url + '/api/write', {'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/write', {'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
            def (result):
                self.values = result.values
                return self
@@ -375,11 +375,11 @@ class Model():
            )
         return self
 
-    def unlink(self, is_client=client):
+    def unlink(self, is_client=configuration.client):
         if not exist(self.id) and not exist(self.ids):
            return
         if is_client:
-           return ajax('post', 'json', url + '/api/unlink', {'model': self._name, 'ids': [record.id for record in self]}).then(
+           return ajax('post', 'json', configuration.url + '/api/unlink', {'model': self._name, 'ids': [record.id for record in self]}).then(
            def (result):
                return True
            ).catch(
