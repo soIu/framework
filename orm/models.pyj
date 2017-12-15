@@ -142,6 +142,8 @@ class Model():
         return result
 
     def search(self, *args, **options):
+        if not exist(options.is_client):
+           options.is_client = configuration.client
         if exist(options.is_client):
            return ajax('post', 'json', configuration.url + '/api/search', {'model': self._name, 'args': args}).then(
            def (result):
