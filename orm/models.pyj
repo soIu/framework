@@ -222,7 +222,7 @@ class Model():
            if value == None:
               value = ""
            else:
-              value = String(value)
+              value = v'String(value)'
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):

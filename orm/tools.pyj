@@ -697,7 +697,7 @@ def ajax(type, dataType, url, data):
     def (resolve, reject):
         xhr = XMLHttpRequest()
         xhr.open(type, url, True)
-        xhr.onload = resolve
+        xhr.onload = def(): resolve(this.response)
         xhr.onerror = reject
         xhr.responseType = dataType
         if exist(data):
