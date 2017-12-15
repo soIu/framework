@@ -3,8 +3,8 @@ import orm.models as models
 import orm.tools as tools
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
 
-tools.client = True
-tools.url = "http://localhost:8069"
+#tools.configuration.client = True
+tools.configuration.url = "http://localhost:8069"
 
 window.models = models
 window.tools = tools
