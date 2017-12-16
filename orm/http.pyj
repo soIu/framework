@@ -36,7 +36,6 @@ class Controller():
         for key in keys(_controllers):
             if key != '/api/login':
                _controllers[key].unshift(_controllers['/api/login'][0][0])
-            console.log(_controllers)
             server.post(key, _controllers[key])
 
     def run(self):
