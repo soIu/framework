@@ -7,17 +7,17 @@ client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscr
 
 configuration.master_password = 'yourpassword'
 crypto = require('crypto')
-cipher = crypto.createCipher('aes-256-cbc', configuration.master_password)
-decipher = crypto.createDecipher('aes-256-cbc', configuration.master_password)
 
 def encrypt(string):
+    cipher = crypto.createCipher('aes-256-cbc', configuration.master_password)
     string = cipher.update(string, 'utf-8', 'hex')
-    string += cipher.update.final('hex')
+    string += cipher.final('hex')
     return string
 
 def decrypt(string):
+    decipher = crypto.createDecipher('aes-256-cbc', configuration.master_password)
     string = decipher.update(string, 'hex', 'utf-8')
-    string += decipher.update.final('utf-8')
+    string += decipher.final('utf-8')
     return string
 
 http.route('/api/login',
@@ -39,6 +39,7 @@ def (request, result, next):
            next()
        ).catch(
        def (error):
+           console.log(error)
            result.response = {'status': 'denied'}
            next()
        )
