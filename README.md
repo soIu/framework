@@ -15,11 +15,13 @@ To install just do `npm install` on the module directory
 
 To test the ORM read the test.pyj file, if you know Odoo you should feel familiar with the code.
 
-To execute it `node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`, or if you encounter bugs remove the cache too `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x test.pyj`
+To execute it `node ./node_modules/.bin/rapydscript -x test.pyj`, or if you encounter bugs remove the cache too `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -x test.pyj`
 
 To test the Framework read the server.pyj file, it is the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
 
-To execute it `rm -rf orm/*.pyj-cached && node ./node_modules/.bin/rapydscript -p orm/ -x server.pyj`
+To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -x server.pyj`
+
+The webclient is on client folder, put it on nginx or something else or simply open it on a browser. It should work.
 
 # What's In-progress
 So lately I've been requested to finish this project so I worked on it. And now the plain ORM is ready for use (although not tested heavily). Now I'm developing the PWA for the client side. In the future I'll made the documentation for all APIs and ORM logic, but for now I'll just point the fundamentals.
