@@ -324,6 +324,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'values': values}).then(
            def (result):
                self.values = result.values
+               self.browse(self.id)
                return self
            ).catch(
            def (error):
@@ -355,6 +356,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
            def (result):
                self.values = result.values
+               self.browse(self.id)
                return self
            ).catch(
            def (error):
