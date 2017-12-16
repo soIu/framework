@@ -1,7 +1,7 @@
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
-import ir
+from ir.ui import menu
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -11,14 +11,15 @@ class ResUsers(models.Model):
 
 ResUsers()
 
-ir.ui.menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
+menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
+
+def create_admin():
+    models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': 'r4pyd'}).then(
+    def (record):
+        models.env.user = record
+    )
 
 if not tools.configuration.client:
-   def create_admin():
-       models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': 'r4pyd'}).then(
-       def (record):
-            models.env.user = record
-       )
    models.env['res.users'].search([]).then(
    def (records):
        if records.length < 1:

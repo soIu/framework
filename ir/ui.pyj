@@ -1,16 +1,16 @@
 from orm.models import schemas
 import orm.tools as tools
 
-if not exist(tools.menu):
+if not tools.exist(tools.menu):
    tools.menu = {}
 
 menu = {}
-menu.add = def (args): 
+menu.add = def add(args): 
                if 'id' in args and 'string' in args:
                   if args.id in tools.menu:
                      return
                   if 'parent' in args:
-                     if args.parent not in tools.menu
+                     if args.parent not in tools.menu:
                         return
                   if 'model' in args:
                      if args.model not in schemas:
@@ -19,11 +19,11 @@ menu.add = def (args):
 
 menu.add({'id': 'settings', 'string': 'Settings'})
 
-if not exist(tools.view):
+if not tools.exist(tools.view):
    tools.view = {}
 
 view = {}
-view.add = def (args):
+view.add = def add(args):
                if 'id' in args:
                   if args.id in tools.view:
                      return
