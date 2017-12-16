@@ -35,8 +35,7 @@ def (request, result, next):
            if params.authentication = True:
               result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
               result.response.user = user_id.values
-           if params.client_js == True:
-              result.response['client_js'] = client_js
+              result.response.client_js = client_js
            next()
        ).catch(
        def (error):

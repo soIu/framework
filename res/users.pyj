@@ -11,7 +11,7 @@ class ResUsers(models.Model):
 
 ResUsers()
 
-ir.ui.menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'}
+ir.ui.menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
 
 if not tools.configuration.client:
    def create_admin():
