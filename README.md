@@ -2,9 +2,9 @@
 After years developing applications with *magic* MVC and ORM included with it, I started to think even though these ORM Frameworks and relational-databases are powerful. They lack some important points that needs to be fixed.
 
 # Purpose of this project
-- Creating an ORM for PouchDB/CouchDB which is a non-relational database or simply called NoSQL (except PouchDB that can be configured to use SQLite, etc), with a fabulous sync feature (https://pouchdb.com/guides/replication.html), offline capabilities, revision management, and performance. One more thing, ITS JSON!! (ORM Repo https://github.com/rafi16jan/pouchdb-orm) Ready ✓
+- Creating an ORM for PouchDB/CouchDB which is a non-relational database or simply called NoSQL (except PouchDB that can be configured to use SQLite, etc), with a fabulous sync feature (https://pouchdb.com/guides/replication.html), offline capabilities, revision management, and performance. One more thing, ITS JSON!! (ORM Repo https://github.com/rafi16jan/pouchdb-orm) Done ✓
 
-- Build a *not so magic* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA, but I still need recommendation. (Framework Repo https://github.com/rafi16jan/rapyd-framework) In-progress •
+- Build a *not so magic* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA, but I still need recommendation. (Framework Repo https://github.com/rafi16jan/rapyd-framework) Ready ✓
 
 - Use RapydScript (Python transpiler to Javascript, currently ES5 for compatibilty) in server-side (Node.js) and client-side, because Python's slogan "readability counts" is true. I managed to build full-customized ERP based on customer's needs with Odoo. But the performance is not good. Done ✓
 
@@ -21,7 +21,7 @@ To test the Framework read the server.pyj file, it is the file that contains the
 
 To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -x server.pyj`
 
-The webclient is on client folder, put it on nginx or something else or simply open it on a browser. It should work.
+The Webclient is on client folder, put it on nginx or something else or simply open it on a browser. It should work.
 
 # What's In-progress
 So lately I've been requested to finish this project so I worked on it. And now the plain ORM is ready for use (although not tested heavily). Now I'm developing the PWA for the client side. In the future I'll made the documentation for all APIs and ORM logic, but for now I'll just point the fundamentals.
@@ -33,6 +33,14 @@ So lately I've been requested to finish this project so I worked on it. And now 
 - The database that will be created is both on server-side and client-side. Multi databases on server-side and single database on the client-side for offline use. With this scenario user can first save changes on the device and then upload it when he wants (or internet coverage). So no data-loss.
 
 - Even though this framework is designed to mimic Odoo, there are **differences**. Odoo is Python while this is Javascript that written on Python's syntax. So, learn about anonymous function, asynchronous operation (Promises, Callback), and any other else about Javascript.
+
+- All client aspects (Menu, List, Form) are only declared on the server, the rendering, processing, will be performed on client. In my Webclient, I provided some functions to help the process.
+
+- The client ORM should be loaded after login. So if you want to build your own Webclient sent POST request to /api/login and evaluate the client_js argument on the returned JSON.
+
+- The client ORM declare some global variables. tools, models, and db. The DB variable is not server's database object, but the client's.
+
+- If you are a hardcore Javascript developer (especially ES6). I know my Webclient isn't good, but I doesn't have time to learn ES6 so I can't waste more time to delay the project. Just build a Webclient yourself if you want to help. I really apreciate it.
 
 # What's still undecided
 - Wether to use original Rapydscript https://github.com/atsepkov/RapydScript rather than https://github.com/kovidgoyal/rapydscript-ng (for now I use rapydscript-ng)
