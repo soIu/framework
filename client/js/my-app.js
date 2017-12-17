@@ -28,11 +28,10 @@ myApp.onPageInit('login_settings', function (page) {
 });
 
 myApp.onPageInit('index', function (page) {
-  if (page.name === 'index' && menuLoaded === false) {
+  if (page.name === 'index') {
     if (typeof tools === 'undefined') {return}
-    menuLoaded = true;
     loadApp();
-    keys = Object.keys(tools.menu);
+    var keys = Object.keys(tools.menu);
     for (var key in keys) {
       var menu = tools.menu[keys[key]];
       var ul = document.createElement('ul');
@@ -46,7 +45,7 @@ myApp.onPageInit('index', function (page) {
                     '</div>'+
                   '</a>';
       if (tools.exist(menu.model) === true) {
-        li.children[0].onclick = function () {loadPage(menu.model + '.list')};
+        li.children[0].onclick = function () {loadPage(mainView, menu.model + '.list')};
       }
       var div = false;
       for (var child in menu.childs.as_array()) {
@@ -64,27 +63,41 @@ myApp.onPageInit('index', function (page) {
                     '</div>'+
                   '</a>';
         if (tools.exist(child_menu.model) === true) {
-          div.children[0].onclick = function () {loadPage(child_menu.model + '.list')};
+          div.children[0].onclick = function () {loadPage(mainView, child_menu.model + '.list')};
         }
       }
       document.getElementById('menu').append(ul);
+    }
+    keys = Object.keys(tools.view);
+    for (key in keys) {
+      var views = tools.view[keys[key]];
+      console.log(views);
+      if (tools.exist(views.tree) === true) {
+        var tree = new DOMParser().parseFromString(views.tree, 'text/xml').children[0];
+        var template = document.getElementById('template_list');
+        var list = document.createElement('template');
+        var model = keys[key];
+        list.id = model + '.list';
+        list.innerHTML = template.innerHTML.replace('template_list', model+'.list').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
+        document.getElementsByTagName('body')[0].append(list);
+      }
     }
     doneApp();
   }
 });
 
 loginCount = 0;
-menuLoaded = false;
 
 function startApp(view) {
   db = PouchDB('main');
   db.get('session').then(function (record) {
     setLocal('rapyd_server_url', record.url);
+    eval(record.client_js);
     tools.configuration.url = record.url;
     models.env.user = models.env['res.users'].browse();
-    models.env.user.id = response.values.id;
-    models.env.user.login = response.login;
-    models.env.user.password = response.password;
+    models.env.user.id = record.id;
+    models.env.user.login = record.login;
+    models.env.user.password = record.password;
     checkLoginValid(view);
   }).catch(function (error) {
     if (getLocal('rapyd_server_url') === null) {
@@ -342,15 +355,15 @@ function doLogin(view, args) {
     return doAjax('post', 'json', getLocal('rapyd_server_url') + '/api/login', args).then(function (response) {
       if (response.status === 'success') {
         db.get('session').then(function (doc) {
-          db.put({_id: doc._id, _rev: doc._rev, url: getLocal('rapyd_server_url'), login: response.login, password: response.password});
+          db.put({_id: doc._id, _rev: doc._rev, url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js});
         }).catch(function (error) {
-          db.put({_id: 'session', url: getLocal('rapyd_server_url'), login: response.login, password: response.password});
+          db.put({_id: 'session', url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js});
           myApp.alert('Login success!');
         });
         eval(response.client_js);
         tools.configuration.url = getLocal('rapyd_server_url');
         models.env.user = models.env['res.users'].browse();
-        models.env.user.id = response.user.id;
+        models.env.user.id = response.id;
         models.env.user.login = response.login;
         models.env.user.password = response.password;
         //models.env.user.values = response.values;

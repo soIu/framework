@@ -13,14 +13,14 @@ ResUsers()
 
 menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
 
-view.add({'model': 'res.users', 'mode': 'tree', 'arch': """
+view.add({'model': 'res.users', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="login"/>
 </tree>
 """})
 
-view.add({'model': 'res.users', 'mode': 'form', 'arch': """
+view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header></header>
     <sheet>

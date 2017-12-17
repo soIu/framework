@@ -27,6 +27,13 @@ view.add = def add(args):
                if 'model' in args and 'mode' in args and 'arch' in args:
                   if args.model not in schemas:
                      return
+                  if not tools.exist(args.string):
+                     args.string = ""
+                     for key in tools.menu:
+                         if tools.exist(tools.menu[key].model) and tools.menu[key].model == args.model:
+                            args.string = tools.menu[key].string
+                            break
                   if args.model not in tools.view:
                      tools.view[args.model] = {}
                   tools.view[args.model][args.mode] = args.arch
+                  tools.view[args.model].string = args.string

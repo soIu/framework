@@ -34,7 +34,7 @@ def (request, result, next):
            result.response = {'status': 'success'}
            if params.authentication = True:
               result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
-              result.response.user = user_id.values
+              result.response.id = user_id.id
               result.response.client_js = client_js
            next()
        ).catch(

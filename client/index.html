@@ -11,7 +11,6 @@
     <title>App</title>
     <link rel="stylesheet" href="css/material-icon.css">
     <link rel="stylesheet" href="css/material.teal-purple.min.css">
-    <script defer src="js/material.min.js"></script>
     <!-- Path to Framework7 Library CSS, Material Theme -->
     <link rel="stylesheet" href="css/framework7.material.min.css">
     <!-- Path to Framework7 color related styles, Material Theme -->
@@ -76,6 +75,7 @@
     <script type="text/javascript" src="js/framework7.js"></script>
     <!-- Path to your app js-->
     <script type="text/javascript" src="js/my-app.js"></script>
+    <script type="text/javascript" src="js/material.min.js"></script>
     <!-- Customization -->
     
     <template id="index">
@@ -182,6 +182,72 @@
               </div>
             </div>
           </div>
+    </template>
+    
+    <template id="template_list">
+      
+          <div data-page="template_list" class="page">
+ 
+            <!-- Top Navbar. In Material theme it should be inside of the page-->
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a class="back link icon-only"><i class="icon icon-back"></i></a>
+                </div>
+                <div class="center">Template</div>
+              </div>
+            </div>
+ 
+            <!-- Scrollable page content -->
+            <div class="page-content" style="padding-top: 56px">
+              
+              <div class="data-table data-table-init card" style="width: 100%;margin: 0">
+                <!-- Card Header -->
+                <div class="card-header" style="height: 120px">
+                  <!-- Table title -->
+                  <div class="data-table-title">
+                    Template
+                    <br>
+                    <div class="button button-fill button-raised" onclick="createUser('template_model')" style="margin-top: 15px;">Create</div>
+                  </div>
+                  <!-- Table actions -->
+                  <div class="data-table-actions">
+                    <!--<a class="link icon-only"><i class="icon f7-icons"></i></a>
+                    <a class="link icon-only"><i class="icon f7-icons"></i></a>-->
+                  </div>
+                </div>
+                <!-- Card Content -->
+                <div class="card-content">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="checkbox-cell">
+                          <label class="form-checkbox">
+                            <input type="checkbox"><i></i>
+                          </label>
+                        </th>
+                        <th class="label-cell">Desert (100g serving)</th>
+                        <th class="numeric-cell">Calories</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="checkbox-cell">
+                          <label class="form-checkbox">
+                            <input type="checkbox"><i></i>
+                          </label>
+                        </td>
+                        <td class="label-cell">Frozen yogurt</td>
+                        <td class="numeric-cell">159</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+      
     </template>
     
   </body>
