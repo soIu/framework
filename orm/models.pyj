@@ -85,6 +85,8 @@ class Model():
             if self._is_env:
                return 0
             elif self._is_singleton:
+               if not exist(self.id):
+                  return 0
                return 1
             else:
                return self._values.length
