@@ -68,15 +68,15 @@ class Model():
         Object.defineProperty(self, 'values', {
         'get': def (): return self._values
         ,
-        'set': def (value):
+        'set': def (newvalue):
                    if self._is_singleton:
-                      self._values = merge(self._values, value)
+                      self._values = merge(self._values, newvalue)
                       for key in self._fields:
-                          if key in value:
-                             self[key] = self.adapt(key, value[key])
+                          if key in newvalue:
+                             self[key] = self.adapt(key, newvalue[key])
                    else:
-                      self._values = value
-                      self.ids = [object.id for object in value]
+                      self._values = newvalue
+                      self.ids = [object.id for object in newvalue]
         })
         Object.defineProperty(self, 'length', {'get':
         def (): 
