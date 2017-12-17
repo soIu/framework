@@ -23,9 +23,9 @@ class Model():
            env[self._name] = True
            v'env[self._name] = new self.constructor(_is_env=true)'
            env[self._name]._is_env = True
+        self.env = env
         if self._is_env:
            return
-        self.env = env
         schema = {'singular': self._name, 'plural': self._name}
         schemas[self._name] = schema
         #Reserved fields
