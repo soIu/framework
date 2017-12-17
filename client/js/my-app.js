@@ -98,6 +98,7 @@ function startApp(view) {
     models.env.user.id = record.id;
     models.env.user.login = record.login;
     models.env.user.password = record.password;
+    reloadPage(view, 'index');
     checkLoginValid(view);
   }).catch(function (error) {
     if (getLocal('rapyd_server_url') === null) {
@@ -337,6 +338,8 @@ function checkLoginValid(view) {
       if (response.status !== 'success') {
         checkLogin(view);
       }
+    }).catch(function (error) {
+      checkLogin(view);
     });
   }).catch(function (error) {
     checkLogin(view);
@@ -378,6 +381,8 @@ function doLogin(view, args) {
         loginCount = 0;
       }
       return response;
+    }).catch(function (error) {
+      console.log(error);
     });
   }
 }
