@@ -80,6 +80,36 @@ myApp.onPageInit('index', function (page) {
         list.id = model + '.list';
         list.innerHTML = template.innerHTML.replace('template_list', model+'.list').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
         document.getElementsByTagName('body')[0].append(list);
+        myApp.onPageInit(model+'.list', function() {
+          var page = document.querySelector("div[data-page='res.users.list']");
+          var headers = page.getElementsByClassName('table-headers')[0];
+          var values = page.getElementsByClassName('table-values')[0];
+          var tbody = page.getElementsByTagName('tbody')[0];
+          for (var field in Array.prototype.slice.call(tree.children)) {
+            field = tree.children[field];
+            var th = document.createElement('th');
+            th.className = 'label-cell';
+            th.innerHTML = models.env[model]._fields[field.attributes.name.value].string;
+            headers.append(th);
+          }
+          models.env[model].search([]).then(function (records) {
+            console.log(records);
+            records = records.__iter__();
+            for (var record in records.as_array()) {
+              record = records[record];
+              var tr = values.cloneNode(true);
+              for (var field in Array.prototype.slice.call(tree.children)) {
+                field = tree.children[field];
+                var td = document.createElement('td');
+                td.className = 'label-cell';
+                td.innerHTML = record[field.attributes.name.value];
+                tr.append(td);
+              }
+              tbody.append(tr);
+            }
+            values.parentElement.removeChild(values);
+          });
+        });
       }
     }
     doneApp();
@@ -98,7 +128,8 @@ function startApp(view) {
     models.env.user.id = record.id;
     models.env.user.login = record.login;
     models.env.user.password = record.password;
-    reloadPage(view, 'index');
+    //models.env.user.client_js = record.client_js;
+    //reloadPage(view, 'index');
     checkLoginValid(view);
   }).catch(function (error) {
     if (getLocal('rapyd_server_url') === null) {
@@ -338,9 +369,9 @@ function checkLoginValid(view) {
       if (response.status !== 'success') {
         checkLogin(view);
       }
-    }).catch(function (error) {
+    })/*.catch(function (error) {
       checkLogin(view);
-    });
+    })*/;
   }).catch(function (error) {
     checkLogin(view);
   });
@@ -382,7 +413,7 @@ function doLogin(view, args) {
       }
       return response;
     }).catch(function (error) {
-      console.log(error);
+      reloadPage(view, 'index');
     });
   }
 }
