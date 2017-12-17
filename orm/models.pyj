@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax
+from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax, array
 from orm.pouchdb import db
 
 env = {}
@@ -71,7 +71,7 @@ class Model():
         'set': def (value):
                    if self._is_singleton:
                       self._values = merge(self._values, value)
-                      for key in keys(self._fields):
+                      for key in self._fields:
                           if key in value:
                              self[key] = self.adapt(key, value[key])
                    else:
@@ -111,7 +111,7 @@ class Model():
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': ids}).then(
            def (result):
-               record = self.browse()
+               record = self.browse(is_singleton=type(result) not in tools.array)
                record.values = result.values
                return record
            ).catch(
@@ -147,7 +147,7 @@ class Model():
         if exist(options.is_client):
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'args': args}).then(
            def (result):
-               record = self.browse(is_singleton=False)
+               record = self.browse(is_singleton=type(result) not in tools.array)
                record.values = result.values
                return record
            ).catch(
