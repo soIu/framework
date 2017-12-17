@@ -1,7 +1,7 @@
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
-from ir.ui import menu
+from ir.ui import menu, view
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -12,6 +12,28 @@ class ResUsers(models.Model):
 ResUsers()
 
 menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
+
+view.add({'model': 'res.users', 'mode': 'tree', 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="login"/>
+</tree>
+"""})
+
+view.add({'model': 'res.users', 'mode': 'form', 'arch': """
+<form>
+    <header></header>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="login"/>
+        </group>
+    </sheet>
+    <footer></footer>
+</form>
+"""})
 
 def create_admin():
     models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': 'r4pyd'}).then(

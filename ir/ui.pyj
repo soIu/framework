@@ -15,7 +15,7 @@ menu.add = def add(args):
                   if 'model' in args:
                      if args.model not in schemas:
                         return
-                  tools.menu[args.id] = tools.merge({'parent': False, 'model': False, 'view_id': False}, args)
+                  tools.menu[args.id] = tools.merge({'parent': False, 'childs': [], 'model': False, 'view_id': False}, args)
 
 menu.add({'id': 'settings', 'string': 'Settings'})
 
@@ -24,10 +24,9 @@ if not tools.exist(tools.view):
 
 view = {}
 view.add = def add(args):
-               if 'id' in args:
-                  if args.id in tools.view:
+               if 'model' in args and 'mode' in args and 'arch' in args:
+                  if args.model not in schemas:
                      return
-                  if 'model' in args:
-                     if args.model not in schemas:
-                        return
-                  tools.view[args.id] = args
+                  if args.model not in tools.view:
+                     tools.view[args.model] = {}
+                  tools.view[args.model][args.mode] = args.arch
