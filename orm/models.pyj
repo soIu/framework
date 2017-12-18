@@ -123,6 +123,10 @@ class Model():
                       records.write(record.values, is_client=False)
                    else:
                       db.rel.save(record._name, record.values)
+               ).catch(
+               def (error):
+                   console.log(error)
+                   db.rel.save(record._name, record.values)
                )
                return record
            ).catch(
@@ -165,7 +169,7 @@ class Model():
            def (result):
                record = self.browse(is_singleton=type(result.values) not in tools.array)
                record.values = result.values
-               self.browse([rec.id for rec in record])
+               self.browse([rec.id for rec in record.__iter__()])
                return record
            ).catch(
            def (error):
@@ -376,7 +380,7 @@ class Model():
            self.update(values)
            values = self.read()
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self], 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}).then(
            def (result):
                self.values = result.values
                self.browse(self.id)
@@ -406,7 +410,7 @@ class Model():
         if not exist(self.id) and not exist(self.ids):
            return
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self]}).then(
+           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()]}).then(
            def (result):
                return True
            ).catch(
