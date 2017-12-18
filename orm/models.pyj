@@ -122,10 +122,14 @@ class Model():
                    if records.length > 0:
                       records.write(result.values, is_client=False)
                    else:
+                      del result.values.rev
+                      del result.values._rev
                       db.rel.save(record._name, result.values)
                ).catch(
                def (error):
                    console.log(error)
+                   del result.values.rev
+                   del result.values._rev
                    db.rel.save(record._name, result.values)
                )
                return record
