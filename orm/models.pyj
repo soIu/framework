@@ -124,12 +124,14 @@ class Model():
                    else:
                       del result.values.rev
                       del result.values._rev
+                      del result.values._id
                       db.rel.save(record._name, result.values)
                ).catch(
                def (error):
                    console.log(error)
                    del result.values.rev
                    del result.values._rev
+                   del result.values._id
                    db.rel.save(record._name, result.values)
                )
                return record
@@ -338,11 +340,11 @@ class Model():
         records = self.__iter__()
         index = 0
         def next():
-            if index > 0:
-               index += 1
+            index += 1
             if index < records.length:
-               method(records[index], next)
-        method(records[index], next)
+               return method(records[index], next)
+            return self
+        return method(records[index], next)
 
     def create(self, values=False, is_client=configuration.client):
         self.update()
@@ -398,18 +400,30 @@ class Model():
                return Exception("There are some error")
            )
         if self._is_singleton:
-           #Maybe I'll use bulkDocs for revision checking instead of getting it
-           db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
+           return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
            def (record):
-               return db.put(merge(values, {'_id': record._id, '_rev': record._rev}))
+               #return db.put(merge(values, {'_id': record._id, '_rev': record._rev}))
+               del values._id
+               del values._rev
+               del values.rev
+               values.rev = record._rev
+               return db.rel.save(self._name, values)
            )
         else:
-           for value in values:
-               value._id = db.rel.makeDocID({'type': self._name, 'id': value.id})
-           db.bulkDocs(values).then(
-           def (record):
-               self.values = record
+           return self.queue(
+           def (record, next):
+               return record.write().then(
+               def (result):
+                   return next()
+               )
            )
+           #for value in values:
+           #    values._id = db.rel.makeDocID({'type': self._name, 'id': value.id})
+           #Turn out bulkDocs and db.put doesn't work on realational-pouch
+           #return db.bulkDocs(values).then(
+           #def (record):
+           #    self.values = record
+           #)
         return self
 
     def unlink(self, is_client=configuration.client):
