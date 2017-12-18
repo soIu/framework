@@ -80,7 +80,7 @@ def (request, result, next):
        next()
     params = request.params
     if exist(request.params):
-       request.env[params.model].search(*params.args).then(
+       request.env[params.model].search(*params.args, limit=params.options.limit, index=params.options.index).then(
        def (record):
            result.response = {'status': 'success', 'values': record.values}
            next()

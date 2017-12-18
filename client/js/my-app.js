@@ -31,6 +31,7 @@ myApp.onPageInit('index', function (page) {
   if (page.name === 'index') {
     if (typeof tools === 'undefined') {return}
     loadApp();
+    Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80});
     var keys = Object.keys(tools.menu);
     for (var key in keys) {
       var menu = tools.menu[keys[key]];
@@ -67,6 +68,7 @@ myApp.onPageInit('index', function (page) {
         }
       }
       document.getElementById('menu').append(ul);
+      delete tools.menu[keys[key]];
     }
     keys = Object.keys(tools.view);
     for (key in keys) {
@@ -81,6 +83,7 @@ myApp.onPageInit('index', function (page) {
         list.innerHTML = template.innerHTML.replace('template_list', model+'.list').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
         document.getElementsByTagName('body')[0].append(list);
         myApp.onPageInit(model+'.list', function() {
+          models.env.context.active_id = null;
           var page = document.querySelector("div[data-page='res.users.list']");
           var headers = page.getElementsByClassName('table-headers')[0];
           var values = page.getElementsByClassName('table-values')[0];
@@ -98,6 +101,7 @@ myApp.onPageInit('index', function (page) {
             for (var record in records.as_array()) {
               record = records[record];
               var tr = values.cloneNode(true);
+              tr.onclick = function () {models.env.context.active_id = record;loadPage(mainView, model+'.form')};
               for (var field in Array.prototype.slice.call(tree.children)) {
                 field = tree.children[field];
                 var td = document.createElement('td');
@@ -111,6 +115,7 @@ myApp.onPageInit('index', function (page) {
           });
         });
       }
+      delete tools.view[keys[key]];
     }
     doneApp();
   }
