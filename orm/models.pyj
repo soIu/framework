@@ -117,6 +117,13 @@ class Model():
            def (result):
                record = self.browse(is_singleton=type(result.values) not in tools.array)
                record.values = result.values
+               self.browse(ids=ids, is_client=False).then(
+               def (records):
+                   if records.length > 0:
+                      records.write(record.values, is_client=False)
+                   else:
+                      db.rel.save(record._name, record.values)
+               )
                return record
            ).catch(
            def (error):
@@ -158,6 +165,7 @@ class Model():
            def (result):
                record = self.browse(is_singleton=type(result.values) not in tools.array)
                record.values = result.values
+               self.browse([rec.id for rec in record])
                return record
            ).catch(
            def (error):
@@ -408,7 +416,7 @@ class Model():
                return False
            )
         if self._is_singleton:
-           db.get(self.id).then(
+           db.get(db.rel.makeDocID({'type': result._name, 'id': self.id})).then(
            def (record):
                db.remove(record)
            )
