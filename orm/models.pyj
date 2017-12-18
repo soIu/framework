@@ -120,13 +120,13 @@ class Model():
                self.browse(ids=ids, is_client=False).then(
                def (records):
                    if records.length > 0:
-                      records.write(record.values, is_client=False)
+                      records.write(result.values, is_client=False)
                    else:
-                      db.rel.save(record._name, record.values)
+                      db.rel.save(record._name, result.values)
                ).catch(
                def (error):
                    console.log(error)
-                   db.rel.save(record._name, record.values)
+                   db.rel.save(record._name, result.values)
                )
                return record
            ).catch(
