@@ -122,10 +122,14 @@ class Model():
                    if records.length > 0:
                       records.write(result.values, is_client=False)
                    else:
+                      del result.values.rev
+                      del result.values._rev
                       db.rel.save(record._name, result.values)
                ).catch(
                def (error):
                    console.log(error)
+                   del result.values.rev
+                   del result.values._rev
                    db.rel.save(record._name, result.values)
                )
                return record
@@ -222,9 +226,9 @@ class Model():
                v'var result = new self.constructor(false, false)'
                if records[result._name].length > 1:
                   result.values = records[result._name].filter(query)
-                  if type(options.limit) == Number:
+                  if exist(options.limit) and type(options.limit) == Number:
                      start = 0
-                     if type(options.index) == Number:
+                     if exist(options.index) and type(options.index) == Number:
                         start = options.index * options.limit
                         options.limit = (options.index + 1) * options.limit
                      result.values = result.values.slice(start, options.limit)
