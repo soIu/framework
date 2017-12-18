@@ -151,8 +151,8 @@ class Model():
            return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
            def (record):
                #result.id = ids
-               result.id = db.rel.parseDocID(record._id)
-               result.rev = record.rev
+               record.data.id = db.rel.parseDocID(record._id).id
+               record.data.rev = record._rev
                result.values = record.data
                return result
            )
