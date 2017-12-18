@@ -153,6 +153,7 @@ class Model():
         if exist(self.env.context.active_index):
            options.index = self.env.context.active_index
         if exist(options.is_client):
+           del options.is_client
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}).then(
            def (result):
                record = self.browse(is_singleton=type(result.values) not in tools.array)
