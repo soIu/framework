@@ -56,7 +56,6 @@ myApp.onPageInit('index', function (page) {
           li.append(div);
         }
         var child_menu = menu.childs[child];
-        console.log(child_menu);
         div.innerHTML +=
                   '<a class="item-content">'+
                     '<div class="item-inner">'+
@@ -73,7 +72,6 @@ myApp.onPageInit('index', function (page) {
     keys = Object.keys(tools.view);
     for (key in keys) {
       var views = tools.view[keys[key]];
-      console.log(views);
       if (tools.exist(views.tree) === true) {
         var tree = new DOMParser().parseFromString(views.tree, 'text/xml').children[0];
         var template = document.getElementById('template_list');
@@ -96,7 +94,6 @@ myApp.onPageInit('index', function (page) {
             headers.append(th);
           }
           models.env[model].search([]).then(function (records) {
-            console.log(records);
             records = records.__iter__();
             for (var record in records.as_array()) {
               record = records[record];
