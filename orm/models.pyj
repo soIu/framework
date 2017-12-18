@@ -148,6 +148,10 @@ class Model():
     def search(self, *args, **options):
         if options.is_client == undefined:
            options.is_client = configuration.client
+        if exist(self.env.context.active_limit):
+           options.limit = self.env.context.active_limit
+        if exist(self.env.context.active_index):
+           options.index = self.env.context.active_index
         if exist(options.is_client):
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args}).then(
            def (result):
