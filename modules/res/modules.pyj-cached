@@ -1,0 +1,23 @@
+{
+	"version": "11f4892304465d65e022681312abc87bd57b6b4f",
+	"signature": "23e78d0683b4724fcdeb24680539fdc27da511d1",
+	"classes": {},
+	"baselib": {},
+	"nonlocalvars": [],
+	"imported_module_ids": [
+		"res.users",
+		"res.partner"
+	],
+	"exports": [],
+	"outputs": {
+		"beautify:true keep_docstrings:true js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
+		"beautify:true keep_docstrings:true js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
+		"beautify:true keep_docstrings:false js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
+		"beautify:true keep_docstrings:false js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
+		"beautify:false keep_docstrings:true js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
+		"beautify:false keep_docstrings:true js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
+		"beautify:false keep_docstrings:false js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
+		"beautify:false keep_docstrings:false js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]"
+	},
+	"discard_asserts": false
+}

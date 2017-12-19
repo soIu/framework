@@ -22,7 +22,6 @@ view.add({'model': 'res.users', 'mode': 'tree', 'string': False, 'arch': """
 
 view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
 <form>
-    <header></header>
     <sheet>
         <group>
             <field name="name"/>
@@ -31,7 +30,6 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
             <field name="login"/>
         </group>
     </sheet>
-    <footer></footer>
 </form>
 """})
 

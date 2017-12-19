@@ -1,4 +1,4 @@
-import res.modules
+import modules.modules
 import orm.models as models
 import orm.tools as tools
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's

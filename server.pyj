@@ -1,9 +1,9 @@
-import res.modules
+import modules.modules
 import orm.http as http
 from orm.models import env
 from orm.tools import exist, configuration
 
-client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript client.pyj').toString()
+client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
 
 configuration.master_password = 'yourpassword'
 crypto = require('crypto')
