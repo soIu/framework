@@ -31,7 +31,7 @@ myApp.onPageInit('index', function (page) {
   if (page.name === 'index') {
     if (typeof tools === 'undefined') {return}
     loadApp();
-    Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80});
+    Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80, active_model: false});
     var keys = Object.keys(tools.menu);
     for (var key in keys) {
       if (loadedMenus.indexOf(keys[key]) > -1) {continue}
@@ -72,6 +72,7 @@ myApp.onPageInit('index', function (page) {
     }
     keys = Object.keys(tools.view);
     for (key in keys) {
+      if (loadedViews.indexOf(keys[key]) > -1) {continue}
       var views = tools.view[keys[key]];
       if (tools.exist(views.tree) === true) {
         var tree = new DOMParser().parseFromString(views.tree, 'text/xml').children[0];
@@ -83,6 +84,7 @@ myApp.onPageInit('index', function (page) {
         document.getElementsByTagName('body')[0].append(list);
         myApp.onPageInit(model+'.list', function() {
           models.env.context.active_id = null;
+          models.env.context.active_model = model;
           var page = document.querySelector("div[data-page='"+model+".list']");
           var headers = page.getElementsByClassName('table-headers')[0];
           var values = page.getElementsByClassName('table-values')[0];
@@ -94,7 +96,7 @@ myApp.onPageInit('index', function (page) {
             th.innerHTML = models.env[model]._fields[field.attributes.name.value].string;
             headers.append(th);
           }
-          models.env[model].search([]).then(function (records) {
+          function render(records) {
             loadApp();
             records = records.__iter__();
             for (var record in records.as_array()) {
@@ -113,7 +115,15 @@ myApp.onPageInit('index', function (page) {
             }
             values.remove();//.parentElement.removeChild(values);
             doneApp();
-          });
+          }
+          var unsaved_ids = [];
+          if (hasKey(models.env.context.unsaved, model) === true) {
+            unsaved_ids = Object.keys(models.env.context.unsaved[model]);
+          }
+          models.env[model].search(['id', 'not in', unsaved_ids]).then(render);
+          if (tools.exist(unsaved_ids) === true) {
+            models.env[model].browse(unsaved_ids, false).then(render);
+          }
         });
       }
       if (tools.exist(views.form) === true) {
@@ -125,6 +135,7 @@ myApp.onPageInit('index', function (page) {
         view.innerHTML = template.innerHTML.replace('template_form', model+'.form').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
         document.getElementsByTagName('body')[0].append(view);
         myApp.onPageInit(model+'.form', function() {
+          models.env.context.active_model = model;
           var page = document.querySelector("div[data-page='"+model+".form']");
           var content = page.querySelector('.form-content');
           var header = page.querySelector('header').cloneNode(true);
@@ -174,13 +185,21 @@ myApp.onPageInit('index', function (page) {
           }
           render(content, form.children, true);
           if (tools.exist(models.env.context.active_id) === true) {
-            for (var index in fields) {
+            page.querySelector('.form-label').innerHTML = "/ " + models.env.context.active_id.name;
+            if (hasKey(models.env.context.unsaved, model) === true && hasKey(models.env.context.unsaved[model], models.env.context.active_id.id) === true) {
+              page.querySelector('.button-upload').style.display = 'inline-block';
+            }
+          }
+          for (var index in fields) {
+            if (tools.exist(models.env.context.active_id) === true) {
               setValue(fields[index], models.env.context.active_id[fields[index]]);
             }
-            page.querySelector('.form-label').innerHTML = "/ " + models.env.context.active_id.name;
+            document.getElementById(fields[index]).disabled = true;
+            document.getElementById(fields[index]).className = 'input-field';
           }
         });
       }
+      loadedViews.push(keys[key]);
     }
     doneApp();
   }
@@ -188,6 +207,7 @@ myApp.onPageInit('index', function (page) {
 
 loginCount = 0;
 loadedMenus = [];
+loadedViews = [];
 
 function startApp(view) {
   db = PouchDB('main');
@@ -195,6 +215,7 @@ function startApp(view) {
     setLocal('rapyd_server_url', record.url);
     eval(record.client_js);
     tools.configuration.url = record.url;
+    models.env.context.unsaved = record.unsaved;
     models.env.user = models.env['res.users'].browse();
     models.env.user.id = record.id;
     models.env.user.login = record.login;
@@ -412,6 +433,20 @@ function hasClass(element, cls) {
     return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
 }
 
+function hasKey(object, key) {
+  if (object === undefined | null | false) {
+    return false;
+  }
+  return Object.keys(object).indexOf(key) > -1;
+}
+
+function hasValue(object, key) {
+  if (object === undefined | null | false) {
+    return false;
+  }
+  return object.indexOf(key) > -1;
+}
+
 function showImage(image, id) {
   if (image.value !== "") {
     getFile(image.files[0]).then(function(result) {
@@ -461,9 +496,9 @@ function doLogin(view, args) {
     return doAjax('post', 'json', getLocal('rapyd_server_url') + '/api/login', args).then(function (response) {
       if (response.status === 'success') {
         db.get('session').then(function (doc) {
-          db.put({_id: doc._id, _rev: doc._rev, url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js});
+          db.put({_id: doc._id, _rev: doc._rev, url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js, unsaved: doc.unsaved});
         }).catch(function (error) {
-          db.put({_id: 'session', url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js});
+          db.put({_id: 'session', url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js, unsaved: {}});
           myApp.alert('Login success!');
         });
         eval(response.client_js);
@@ -497,6 +532,70 @@ function doLogout(view) {
     myApp.alert('You logged out.');
   }).catch(function (error) {
     console.log(error);
+  });
+}
+
+function editRecord() {
+  if (tools.exist(models.env.context.active_id) === false) {
+    models.env.context.active_id = models.env[models.env.context.active_model].browse();
+  }
+  var inputs = document.querySelectorAll('input[disabled]');
+  for (var index in inputs) {
+    inputs[index].disabled = false;
+  }
+}
+
+function saveRecord() {
+  var values = {};
+  var inputs = document.querySelectorAll('.input-field');
+  for (var index in Array.prototype.slice.call(inputs)) {
+    inputs[index].disabled = true;
+    values[inputs[index].id] = getValue(inputs[index].id);
+  }
+  if (tools.exist(models.env.context.unsaved) === false) {
+    models.env.context.unsaved = {};
+  }
+  if (tools.exist(models.env.context.active_id.id) === false) {
+    models.env.context.active_id.create(values, false).then(function (result) {
+      if (hasKey(models.env.context.unsaved, models.env.context.active_model) === false) {
+        models.env.context.unsaved[models.env.context.active_model] = {};
+      }
+      models.env.context.unsaved[models.env.context.active_model][result.id] = 'create';
+      updateUnsave();
+    });
+  } else {
+    models.env.context.active_id.write(values, false).then(function (result) {
+      if (hasKey(models.env.context.unsaved, models.env.context.active_model) === false) {
+        models.env.context.unsaved[models.env.context.active_model] = {};
+      }
+      models.env.context.unsaved[models.env.context.active_model][result.id] = 'write';
+      updateUnsave();
+    });
+  }
+}
+
+function uploadRecord() {
+  if (hasKey(models.env.context.unsaved, models.env.context.active_model) === true) {
+    if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'create') {
+      var todelete = models.env.context.active_id;
+      models.env.context.active_id.create().then(function (result) {
+        models.env.context.active_id = result;
+        todelete.unlink(false);
+      });
+      delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
+      updateUnsave();
+    }
+    else if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'write') {
+      models.env.context.active_id.write();
+      delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
+      updateUnsave();
+    }
+  }
+}
+
+function updateUnsave() {
+  db.get('session').then(function (doc) {
+    db.put(Object.assign(doc, {unsaved: models.env.context.unsaved}));
   });
 }
 
