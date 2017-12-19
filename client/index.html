@@ -208,7 +208,7 @@
                   <div class="data-table-title">
                     Template
                     <br>
-                    <div class="button button-fill button-raised" onclick="createRecord('template_model')" style="margin-top: 15px;">Create</div>
+                    <div class="button button-fill button-raised" onclick="loadPage(mainView, 'template_model.form');document.querySelector('.button-edit').click()" style="margin-top: 15px;">Create</div>
                   </div>
                   <!-- Table actions -->
                   <div class="data-table-actions">
@@ -246,28 +246,28 @@
       
     </template>
     
-    <template id="res.users.form">
+    <template id="template_form">
       
-          <div data-page="res.users.form" class="page">
+          <div data-page="template_form" class="page">
             
             <div class="navbar">
               <div class="navbar-inner">
                 <div class="left">
                   <a class="back link icon-only"><i class="icon icon-back"></i></a>
                 </div>
-                <div class="center">Users</div>
+                <div class="center">Template</div>
               </div>
             </div>
             
-            <div class="page-content" style="padding-top: 56px">
+            <div class="page-content form-content" style="padding-top: 56px">
               
               <div class="data-table" style="width: 100%;margin: 0">
                 <!-- Card Header -->
                 <div class="card-header" style="height: 120px">
                   <!-- Table title -->
                   <div class="data-table-title">
-                    Users
-                    <a style="color: rgb(102, 102, 102);font-weight: 350;">/ New</a>
+                    Template
+                    <a class="form-label" style="color: rgb(102, 102, 102);font-weight: 350;">/ New</a>
                     <br>
                     <div class="button button-fill button-raised button-edit" onclick="this.style.display = 'none';document.querySelector('.button-save').style.display = 'inline-block';editRecord('template_model')" style="margin-top: 15px;">Edit</div>
                     <div class="button button-fill button-raised button-save" onclick="this.style.display = 'none';document.querySelector('.button-upload').style.display = 'inline-block';saveRecord('template_model')" style="display:none ;margin-top: 15px;">Save</div>
@@ -280,48 +280,29 @@
                   </div>
                 </div>
               </div>
+              <header class="data-table" style="margin: 0;padding: 10px;background-color: #8F8F8F"></header>
             
-              <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid" style="min-height: 250px;margin-top: 20px">
+              <div class="form-sheet demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid" style="min-height: 250px;margin-top: 20px">
                 
                 <div class="list-block" style="margin: 0px;">
 
-                  <div style="float: left;margin-bottom: 50px;">
+                  <div class="left-group" style="float: left;margin-bottom: 50px;">
 
-                    <div class="item-content">
+                    <div class="form-field item-content">
                       <div class="item-inner">
-                        <div class="item-title label">Name</div>
+                        <div class="item-title label"></div>
                         <div class="item-input">
-                          <input type="text" id="name">
+                          <input type="text">
                         </div>
                       </div>
                     </div>
                     
-                    <div class="item-content">
-                      <div class="item-inner">
-                        <div class="item-title label">Full Name</div>
-                        <div class="item-input">
-                          <input type="text" id="display_name">
-                        </div>
-                      </div>
-                    </div>
-                    
-                  </div>
-                  
-                  <div style="float: left;margin-bottom: 50px;">
-                    
-                    <div class="item-content" style="float: left">
-                      <div class="item-inner">
-                        <div class="item-title label">Username/Email</div>
-                        <div class="item-input">
-                          <input type="text" id="login">
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
 
                 </div>
               </div>
+              
+              <footer class="card" style="margin: 0; padding: 20px;min-height: 30%;margin-top: 30px"></footer>
               
             </div>
             

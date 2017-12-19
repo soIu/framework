@@ -34,6 +34,7 @@ myApp.onPageInit('index', function (page) {
     Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80});
     var keys = Object.keys(tools.menu);
     for (var key in keys) {
+      if (loadedMenus.indexOf(keys[key]) > -1) {continue}
       var menu = tools.menu[keys[key]];
       var ul = document.createElement('ul');
       var li = document.createElement('li');
@@ -67,7 +68,7 @@ myApp.onPageInit('index', function (page) {
         }
       }
       document.getElementById('menu').append(ul);
-      delete tools.menu[keys[key]];
+      loadedMenus.push(keys[key]);
     }
     keys = Object.keys(tools.view);
     for (key in keys) {
@@ -82,7 +83,7 @@ myApp.onPageInit('index', function (page) {
         document.getElementsByTagName('body')[0].append(list);
         myApp.onPageInit(model+'.list', function() {
           models.env.context.active_id = null;
-          var page = document.querySelector("div[data-page='res.users.list']");
+          var page = document.querySelector("div[data-page='"+model+".list']");
           var headers = page.getElementsByClassName('table-headers')[0];
           var values = page.getElementsByClassName('table-values')[0];
           var tbody = page.getElementsByTagName('tbody')[0];
@@ -94,31 +95,99 @@ myApp.onPageInit('index', function (page) {
             headers.append(th);
           }
           models.env[model].search([]).then(function (records) {
+            loadApp();
             records = records.__iter__();
             for (var record in records.as_array()) {
               record = records[record];
               var tr = values.cloneNode(true);
-              tr.onclick = function () {models.env.context.active_id = record;loadPage(mainView, model+'.form')};
+              var onclick = function () {models.env.context.active_id = record;loadPage(mainView, model+'.form')};
               for (var field in Array.prototype.slice.call(tree.children)) {
                 field = tree.children[field];
                 var td = document.createElement('td');
                 td.className = 'label-cell';
                 td.innerHTML = record[field.attributes.name.value];
+                td.onclick = onclick;
                 tr.append(td);
               }
               tbody.append(tr);
             }
-            values.parentElement.removeChild(values);
+            values.remove();//.parentElement.removeChild(values);
+            doneApp();
           });
         });
       }
-      delete tools.view[keys[key]];
+      if (tools.exist(views.form) === true) {
+        var form = new DOMParser().parseFromString(views.form, 'text/xml').children[0];
+        var template = document.getElementById('template_form');
+        var view = document.createElement('template');
+        var model = keys[key];
+        view.id = model + '.form';
+        view.innerHTML = template.innerHTML.replace('template_form', model+'.form').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
+        document.getElementsByTagName('body')[0].append(view);
+        myApp.onPageInit(model+'.form', function() {
+          var page = document.querySelector("div[data-page='"+model+".form']");
+          var content = page.querySelector('.form-content');
+          var header = page.querySelector('header').cloneNode(true);
+          page.querySelector('header').remove();
+          var footer = page.querySelector('footer').cloneNode(true);
+          page.querySelector('footer').remove();
+          var field = page.querySelector('.form-field').cloneNode(true);
+          var group = document.createElement('div');
+          group.style.float = 'left';
+          group.style['margin-bottom'] = '50px';
+          var sheet = page.querySelector('.form-sheet').cloneNode(false);
+          sheet.append(page.querySelector('.list-block').cloneNode(false));
+          var sheet_inner = sheet.children[0];
+          page.querySelector('.form-sheet').remove();
+          var fields = [];
+          var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group};//Don't forget to add your custom tag here if you want to make customizations
+          function render(parent, children, group_left) {
+            if (hasClass(parent, 'form-sheet') === true) {
+              parent = parent.children[0];
+            }
+            for (var index in Array.prototype.slice.call(children)) {
+              var tag = children[index].tagName;
+              var element = children[index];
+              if (Object.keys(definedTags).indexOf(tag) > -1) {
+                var element = definedTags[tag].cloneNode(true);
+                if (tag === 'group') {
+                  if (group_left === true) {
+                    element.className = 'left-group';
+                    group_left = false;
+                  } else {
+                    group_left = true;
+                  }
+                }
+                else if (tag === 'field') {
+                  var input = element.querySelector('input');
+                  input.id = children[index].attributes.name.value;
+                  var label = element.querySelector('.label');
+                  label.innerHTML = models.env[model]._fields[input.id].string;
+                  fields.push(input.id);
+                }
+              }
+              parent.append(element);
+              if (typeof children[index].children === 'object' && children[index].children.length > 0) {
+                render(element, children[index].children, group_left);
+              }
+            }
+          }
+          render(content, form.children, true);
+          if (tools.exist(models.env.context.active_id) === true) {
+            for (var index in fields) {
+              setValue(fields[index], models.env.context.active_id[fields[index]]);
+            }
+            page.querySelector('.form-label').innerHTML = "/ " + models.env.context.active_id.name;
+          }
+        });
+      }
     }
     doneApp();
   }
 });
 
 loginCount = 0;
+loadedMenus = [];
 
 function startApp(view) {
   db = PouchDB('main');
@@ -203,6 +272,7 @@ function doSleep(milliseconds) {
 }
 
 function loadPage(view, page) {
+  console.log(page);
   myApp.closePanel();
   view.router.loadContent(document.getElementById(page).innerHTML);
 }
@@ -429,3 +499,21 @@ function doLogout(view) {
     console.log(error);
   });
 }
+
+//Polyfills
+(function (arr) {
+  arr.forEach(function (item) {
+    if (item.hasOwnProperty('remove')) {
+      return;
+    }
+    Object.defineProperty(item, 'remove', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: function remove() {
+        if (this.parentNode !== null)
+          this.parentNode.removeChild(this);
+      }
+    });
+  });
+})([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
