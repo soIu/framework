@@ -4,8 +4,8 @@ After years developing applications with *magic* MVC and ORM included with it, I
 Now Framework is on Beta Stage!
 
 # Screenshots
-![alt text](https://lh4.googleusercontent.com/jHCmq7XCcnsjFoi9EShtMtO5AtKdz8A2nhLDcSgL-EQpYwlLGVj69ctQwBH5KAVIMLvz4CnfKl0m-Q=w1158-h542-rw)
-![alt text](https://lh3.googleusercontent.com/F8BBv8GbQZ-n5j9nJ17iOTLPNZoqhmP5FToZqP9UPPr7hp3yFACxzXFufZaZCJnT5nkRtz-uBfm3BQ=w1158-h542-rw)
+![alt text](https://lh5.googleusercontent.com/jjKApIho6jh1RV8p8pEnsgum6Xjl1LTM283F6gRx5B_jfrgyRpxb5B5HD4K1OT7IbobcuZ2Q46_BkQ=w1158-h542-rw)
+![alt text](https://lh6.googleusercontent.com/1-45YF9cZp6NfkbFmDBOQNI5OcbsWQYiA0GnDnJlNK8hmBNAQ1NIISLAxlItf-VRLzmHEj5BvdQ_hQ=w1158-h542-rw)
 ![alt text](https://lh4.googleusercontent.com/71FiPagZfKehgwPgnOfY95Kjfkj94DLmWHd7EPWBzDt2zSPwGYC8FxLasnA45M6HQ46XsiJj9b0iOA=w1158-h542-rw)
 ![alt text](https://lh3.googleusercontent.com/IlN0V8vS__yWdw807BGCtebzY4I0kf4ALeADje8BugrY5y4SlV1WaPYARoRnS5Tw-vtHndQsD28ltw=w1158-h542-rw)
 ![alt text](https://lh3.googleusercontent.com/jEsj2ZySDfzMs5AOvpIc-kstbLr-gTNDNLp2zHvUJaQH6rQ625GgQXK3Go9JTWBUEBYLteNbSVgS2g=w1158-h542-rw)
