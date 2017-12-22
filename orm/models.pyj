@@ -98,7 +98,7 @@ class Model():
         db.setSchema([schemas[key] for key in keys(schemas)])
 
     def __iter__(self):
-        if self._is_env:
+        if self._is_env or self.length < 1:
            return []
         elif self._is_singleton:
            return [self]
