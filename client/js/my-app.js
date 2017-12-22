@@ -33,8 +33,8 @@ myApp.onPageInit('index', function (page) {
     loadApp();
     Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80, active_model: false});
     var keys = Object.keys(tools.menu);
-    for (var key in keys) {
-      if (loadedMenus.indexOf(keys[key]) > -1) {continue}
+    var render_menu = function (key) {
+      if (loadedMenus.indexOf(keys[key]) > -1) {return}
       var menu = tools.menu[keys[key]];
       var ul = document.createElement('ul');
       var li = document.createElement('li');
@@ -69,16 +69,19 @@ myApp.onPageInit('index', function (page) {
       }
       document.getElementById('menu').append(ul);
       loadedMenus.push(keys[key]);
+    };
+    for (var key in keys) {
+      render_menu(key);
     }
     keys = Object.keys(tools.view);
-    for (key in keys) {
-      if (loadedViews.indexOf(keys[key]) > -1) {continue}
+    var render_views = function (key) {
+      if (loadedViews.indexOf(keys[key]) > -1) {return}
       var views = tools.view[keys[key]];
+      var model = keys[key];
       if (tools.exist(views.tree) === true) {
         var tree = new DOMParser().parseFromString(views.tree, 'text/xml').children[0];
         var template = document.getElementById('template_list');
         var list = document.createElement('template');
-        var model = keys[key];
         list.id = model + '.list';
         list.innerHTML = template.innerHTML.replace('template_list', model+'.list').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
         document.getElementsByTagName('body')[0].append(list);
@@ -130,7 +133,6 @@ myApp.onPageInit('index', function (page) {
         var form = new DOMParser().parseFromString(views.form, 'text/xml').children[0];
         var template = document.getElementById('template_form');
         var view = document.createElement('template');
-        var model = keys[key];
         view.id = model + '.form';
         view.innerHTML = template.innerHTML.replace('template_form', model+'.form').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
         document.getElementsByTagName('body')[0].append(view);
@@ -200,6 +202,9 @@ myApp.onPageInit('index', function (page) {
         });
       }
       loadedViews.push(keys[key]);
+    };
+    for (key in keys) {
+      render_views(key);
     }
     doneApp();
   }
