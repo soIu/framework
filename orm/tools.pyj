@@ -1,4 +1,11 @@
-def keys(object):
+def keys(object, sort=False):
+    if exist(sort):
+       object = [{key: object[key][sort]} for key in object]
+       object.sort(
+       def (a, b):
+           return a[sort] - b[sort]
+       )
+       return [Object.keys(item)[0] for item in object]
     return Object.keys(object)
 
 def merge(*args):
