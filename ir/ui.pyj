@@ -15,9 +15,9 @@ menu.add = def add(args):
                   if 'model' in args:
                      if args.model not in schemas:
                         return
-                  tools.menu[args.id] = tools.merge({'parent': False, 'childs': [], 'model': False, 'view_id': False}, args)
+                  tools.menu[args.id] = tools.merge({'parent': False, 'childs': [], 'model': False, 'view_id': False, 'sequence': 1}, args)
 
-menu.add({'id': 'settings', 'string': 'Settings'})
+menu.add({'id': 'settings', 'string': 'Settings', 'sequence': 1000})
 
 if not tools.exist(tools.view):
    tools.view = {}

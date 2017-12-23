@@ -32,7 +32,7 @@ myApp.onPageInit('index', function (page) {
     if (typeof tools === 'undefined') {return}
     loadApp();
     Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80, active_model: false});
-    var keys = Object.keys(tools.menu);
+    var keys = tools.keys(tools.menu, 'sequence').as_array();
     var render_menu = function (key) {
       if (loadedMenus.indexOf(keys[key]) > -1) {return}
       var menu = tools.menu[keys[key]];
@@ -57,15 +57,17 @@ myApp.onPageInit('index', function (page) {
           li.append(div);
         }
         var child_menu = menu.childs[child];
+        var onclick = '';
+        if (tools.exist(child_menu.model) === true) {
+          onclick = "loadPage(mainView, "+"'"+child_menu.model+".list"+"'"+")";
+          //div.children[child].onclick = function () {loadPage(mainView, child_menu.model + '.list')};
+        }
         div.innerHTML +=
-                  '<a class="item-content">'+
+                  '<a class="item-content" onclick="'+onclick+'">'+
                     '<div class="item-inner">'+
                       '<div class="item-title">'+child_menu.string+'</div>'+
                     '</div>'+
                   '</a>';
-        if (tools.exist(child_menu.model) === true) {
-          div.children[0].onclick = function () {loadPage(mainView, child_menu.model + '.list')};
-        }
       }
       document.getElementById('menu').append(ul);
       loadedMenus.push(keys[key]);
@@ -481,9 +483,9 @@ function checkLoginValid(view) {
       if (response.status !== 'success') {
         checkLogin(view);
       }
-    })/*.catch(function (error) {
+    }).catch(function (error) {
       checkLogin(view);
-    })*/;
+    });
   }).catch(function (error) {
     checkLogin(view);
   });

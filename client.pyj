@@ -10,6 +10,10 @@ for key in tools.menu:
     if tools.exist(tools.menu[key].parent):
        if tools.menu[key].parent in tools.menu:
           tools.menu[tools.menu[key].parent].childs.push(tools.menu[key])
+          tools.menu[tools.menu[key].parent].childs.sort(
+          def (a, b):
+              return a.sequence - b.sequence
+          )
        del tools.menu[key]
 
 window.models = models
