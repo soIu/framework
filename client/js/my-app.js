@@ -175,7 +175,22 @@ myApp.onPageInit('index', function (page) {
                 }
                 else if (tag === 'field') {
                   var input = element.querySelector('input');
-                  input.id = children[index].attributes.name.value;
+                  var field_name = children[index].attributes.name.value;
+                  var field_object = models.env[model]._fields[field_name];
+                  if (field_object.type === 'integer') {
+                    input.type = 'number';
+                  }
+                  else if (field_object.type === 'date') {
+                    input.type = 'date';
+                  }
+                  else if (field_object.type === 'datetime') {
+                    input.type = 'datetime-local';
+                  }
+                  else if (field_object.type === 'boolean') {
+                    input.type = 'checkbox';
+                  }
+                  //TO-DO Binary, Selection, and relationals
+                  input.id = field_name;
                   var label = element.querySelector('.label');
                   label.innerHTML = models.env[model]._fields[input.id].string;
                   fields.push(input.id);
@@ -410,6 +425,13 @@ function setValue(id, value) {
   }
 }
 
+function setValues(values) {
+  var keys = Object.keys(values);
+  for (var key in keys) {
+    setValue(keys[key], values[keys[key]]);
+  }
+}
+
 function getLocal(key) {
   return localStorage.getItem(key);
 }
@@ -569,6 +591,7 @@ function saveRecord() {
       }
       models.env.context.unsaved[models.env.context.active_model][result.id] = 'create';
       updateUnsave();
+      setValues(result.values);
     });
   } else {
     models.env.context.active_id.write(values, false).then(function (result) {
@@ -577,6 +600,7 @@ function saveRecord() {
       }
       models.env.context.unsaved[models.env.context.active_model][result.id] = 'write';
       updateUnsave();
+      setValues(result.values);
     });
   }
 }
@@ -588,12 +612,15 @@ function uploadRecord() {
       models.env.context.active_id.create().then(function (result) {
         models.env.context.active_id = result;
         todelete.unlink(false);
+        setValues(result.values);
       });
       delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
       updateUnsave();
     }
     else if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'write') {
-      models.env.context.active_id.write();
+      models.env.context.active_id.write().then(function (result) {
+        setValues(result.values);
+      });
       delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
       updateUnsave();
     }

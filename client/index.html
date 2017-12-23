@@ -269,9 +269,9 @@
                     Template
                     <a class="form-label" style="color: rgb(102, 102, 102);font-weight: 350;">/ New</a>
                     <br>
-                    <div class="button button-fill button-raised button-edit" onclick="this.style.display = 'none';document.querySelector('.button-save').style.display = 'inline-block';editRecord('template_model')" style="margin-top: 15px;">Edit</div>
-                    <div class="button button-fill button-raised button-save" onclick="this.style.display = 'none';document.querySelector('.button-upload').style.display = 'inline-block';document.querySelector('.button-edit').style.display = 'inline-block';saveRecord('template_model')" style="display:none ;margin-top: 15px;">Save</div>
-                    <div class="button button-fill button-raised button-upload" onclick="this.style.display = 'none';document.querySelector('.button-edit').style.display = 'inline-block';uploadRecord('template_model')" style="display:none ;margin-top: 15px;">Upload</div>
+                    <div class="button button-fill button-raised button-edit" onclick="editRecord('template_model');this.style.display = 'none';document.querySelector('.button-save').style.display = 'inline-block'" style="margin-top: 15px;">Edit</div>
+                    <div class="button button-fill button-raised button-save" onclick="saveRecord('template_model');this.style.display = 'none';document.querySelector('.button-upload').style.display = 'inline-block';document.querySelector('.button-edit').style.display = 'inline-block'" style="display:none ;margin-top: 15px;">Save</div>
+                    <div class="button button-fill button-raised button-upload" onclick="uploadRecord('template_model');this.style.display = 'none';document.querySelector('.button-edit').style.display = 'inline-block'" style="display:none ;margin-top: 15px;">Upload</div>
                   </div>
                   <!-- Table actions -->
                   <div class="data-table-actions">
