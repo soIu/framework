@@ -187,7 +187,7 @@ class Model():
         def query(record):
             results = []
             for arg in args:
-                if arg in ['|', []]:
+                if str(arg) in ['|', '[]']:
                    continue
                 if arg[1] == '=':
                    results.push(record[arg[0]] == arg[2])
@@ -201,6 +201,10 @@ class Model():
                    results.push(record[arg[0]] <= arg[2])
                 elif arg[1] == 'in':
                    results.push(record[arg[0]] in arg[2])
+                elif arg[1] == 'like':
+                   results.push(arg[2] in record[arg[0]])
+                elif arg[1] == 'ilike':
+                   results.push(str(arg[2]).toLowerCase() in str(record[arg[0]]).toLowerCase())
             if not exist(args) or not exist(args[0]):
                return True
             elif args[0] == '|':
@@ -215,6 +219,11 @@ class Model():
                )
         result = self.browse()
         if options.limit == 1:
+           if options.index > 0:
+              return Promise(
+              def (resolve, reject):
+                  resolve(result)
+              )
            return db.rel.find(result._name).then(
            def (records):
                record = records[result._name].find(query)
@@ -227,17 +236,21 @@ class Model():
            def (records):
                v'var result = new self.constructor(false, false)'
                if records[result._name].length > 1:
-                  result.values = records[result._name].filter(query)
+                  values = records[result._name].filter(query)
                   if exist(options.limit) and type(options.limit) == Number:
                      start = 0
                      if exist(options.index) and type(options.index) == Number:
                         start = options.index * options.limit
                         options.limit = (options.index + 1) * options.limit
-                     result.values = result.values.slice(start, options.limit)
+                     result.values = values.slice(start, options.limit)
+                  else:
+                     result.values = values
                   #result.ids = [value.id for value in result._values]
                   return result
                else:
                   result = self.browse()
+                  if options.index > 0:
+                     return result
                   record = records[result._name].find(query)
                   #result.id = record.id
                   result.values = record
