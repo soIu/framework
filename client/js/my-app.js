@@ -16,6 +16,8 @@ var myApp = new Framework7({
 
 // Export selectors engine
 var $$ = Dom7;
+jQuery = $$;
+$ = $$; //Fake Jquery
 
 // Add view
 var mainView = myApp.addView('.view-main', {
@@ -177,6 +179,7 @@ myApp.onPageInit('index', function (page) {
                   var input = element.querySelector('input');
                   var field_name = children[index].attributes.name.value;
                   var field_object = models.env[model]._fields[field_name];
+                  input.id = field_name;
                   if (field_object.type === 'integer') {
                     input.type = 'number';
                   }
@@ -189,11 +192,38 @@ myApp.onPageInit('index', function (page) {
                   else if (field_object.type === 'boolean') {
                     input.type = 'checkbox';
                   }
+                  else if (field_object.type === 'one2one' || field_object.type === 'many2one') {
+                    new Selectivity.Inputs.Single({
+                      element: input,
+                      allowClear: true,
+                      ajax: {
+                          url: tools.configuration.url,
+                          minimumInputLength: 0,
+                          params: function (term, offset) {return {}},
+                          placeholder: 'Search',
+                          fetch: function (url, init, query) {
+                              models.env.context.active_index = query.offset;
+                              return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function (records) {
+                                  var result = [];
+                                  records = records.__iter__();
+                                  for (var record in records.as_array()) {
+                                      result.push({id: records[record].id, text: records[record].name});
+                                  }
+                                  return {results: result, more: true};
+                              });
+                          },
+                      }
+                    });
+                    input.removeAttribute('id');
+                    input.removeAttribute('class');
+                    input.removeAttribute('tabindex');
+                    input.children[0].children[0].id = field_name;
+                    input.children[0].children[0].className += ' input-field';
+                  }
                   //TO-DO Binary, Selection, and relationals
-                  input.id = field_name;
                   var label = element.querySelector('.label');
-                  label.innerHTML = models.env[model]._fields[input.id].string;
-                  fields.push(input.id);
+                  label.innerHTML = models.env[model]._fields[field_name].string;
+                  fields.push(field_name);
                 }
               }
               parent.append(element);
@@ -230,6 +260,7 @@ myApp.onPageInit('index', function (page) {
 loginCount = 0;
 loadedMenus = [];
 loadedViews = [];
+currentPage = 'index';
 
 function startApp(view) {
   db = PouchDB('main');
@@ -315,16 +346,18 @@ function doSleep(milliseconds) {
 }
 
 function loadPage(view, page) {
-  console.log(page);
+  currentPage = page;
   myApp.closePanel();
   view.router.loadContent(document.getElementById(page).innerHTML);
 }
 
 function reloadPage(view, page) {
+  currentPage = page;
   view.router.reloadContent(document.getElementById(page).innerHTML)
 }
 
 function reloadPreviousPage(view, page) {
+  currentPage = page;
   document.getElementsByClassName('page-on-left')[0].remove();
   view.router.reloadPreviousContent(document.getElementById(page).innerHTML);
 }
@@ -493,7 +526,8 @@ function showImage(image, id) {
 
 function checkLogin(view) {
   loginCount = 0;
-  db.get('session').catch(function (error) {
+  db.get('session')
+  .catch(function (error) {
     reloadPage(view, 'login');
   });
 }
@@ -549,7 +583,9 @@ function doLogin(view, args) {
       }
       return response;
     }).catch(function (error) {
-      reloadPage(view, 'index');
+      loginCount = 0;
+      myApp.alert("Can't connect to server");
+      reloadPage(view, currentPage);
     });
   }
 }

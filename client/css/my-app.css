@@ -20,6 +20,7 @@
 
 .item-input {
   margin-right: 150px;
+  font-size: inherit !important;
 }
 
 .button {
@@ -30,4 +31,8 @@
   .left-group {
     margin-right: 150px;
   }
+}
+
+.fa-remove {
+  color: #212121;
 }
