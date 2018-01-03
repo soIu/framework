@@ -200,7 +200,7 @@ myApp.onPageInit('index', function (page) {
                           url: tools.configuration.url,
                           minimumInputLength: 0,
                           params: function (term, offset) {return {}},
-                          placeholder: 'Search',
+                          placeholder: '',
                           fetch: function (url, init, query) {
                               models.env.context.active_index = query.offset;
                               return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function (records) {
@@ -220,7 +220,24 @@ myApp.onPageInit('index', function (page) {
                     input.children[0].children[0].id = field_name;
                     input.children[0].children[0].className += ' input-field';
                   }
-                  //TO-DO Binary, Selection, and relationals
+                  else if (field_object.type === 'selection') {
+                    var items = [];
+                    for (var selection in field_object.selection.as_array()) {
+                      items.push({id: field_object.selection[selection][0], text: field_object.selection[selection][1]});
+                    }
+                    new Selectivity.Inputs.Single({
+                      element: input,
+                      allowClear: true,
+                      items: items,
+                      placeholder: '',
+                    });
+                    input.removeAttribute('id');
+                    input.removeAttribute('class');
+                    input.removeAttribute('tabindex');
+                    input.children[0].children[0].id = field_name;
+                    input.children[0].children[0].className += ' input-field';
+                  }
+                  //TO-DO Binary, and relationals (one2many, many2many)
                   var label = element.querySelector('.label');
                   label.innerHTML = models.env[model]._fields[field_name].string;
                   fields.push(field_name);

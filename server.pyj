@@ -5,7 +5,10 @@ from orm.tools import exist, configuration
 
 client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
 
-configuration.master_password = 'yourpassword'
+#configuration.master_password = 'yourpassword'
+configuration = process.env
+if exist(configuration.port):
+   http.port = configuration.port
 crypto = require('crypto')
 
 def encrypt(string):
