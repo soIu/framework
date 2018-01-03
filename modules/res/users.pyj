@@ -33,18 +33,20 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
 </form>
 """})
 
-def create_admin():
-    models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': 'r4pyd'}).then(
-    def (record):
-        models.env.user = record
-    )
+admin_password = 'r4pyd'
 
-if not tools.configuration.client:
-   models.env['res.users'].search([]).then(
-   def (records):
-       if records.length < 1:
-          create_admin()
-   ).catch(
-   def (error):
-       create_admin()
-   )
+def check_admin():
+    def create_admin():
+        models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': admin_password}).then(
+        def (record):
+            models.env.user = record
+        )
+    if not tools.configuration.client:
+       models.env['res.users'].search([]).then(
+       def (records):
+           if records.length < 1:
+              create_admin()
+       ).catch(
+       def (error):
+           create_admin()
+       )

@@ -193,6 +193,9 @@ myApp.onPageInit('index', function (page) {
                     input.type = 'checkbox';
                   }
                   else if (field_object.type === 'one2one' || field_object.type === 'many2one') {
+                    var new_input = document.createElement('div');
+                    input.parentElement.replaceChild(new_input, input);
+                    input = new_input;
                     new Selectivity.Inputs.Single({
                       element: input,
                       allowClear: true,
@@ -209,18 +212,22 @@ myApp.onPageInit('index', function (page) {
                                   for (var record in records.as_array()) {
                                       result.push({id: records[record].id, text: records[record].name});
                                   }
+                                  models.env.context.active_index = 0;
                                   return {results: result, more: true};
                               });
                           },
                       }
                     });
-                    input.removeAttribute('id');
-                    input.removeAttribute('class');
+                    /*input.removeAttribute('id');
+                    input.removeAttribute('class');*/
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
                     input.children[0].children[0].className += ' input-field';
                   }
                   else if (field_object.type === 'selection') {
+                    var new_input = document.createElement('div');
+                    input.parentElement.replaceChild(new_input, input);
+                    input = new_input;
                     var items = [];
                     for (var selection in field_object.selection.as_array()) {
                       items.push({id: field_object.selection[selection][0], text: field_object.selection[selection][1]});
@@ -231,8 +238,8 @@ myApp.onPageInit('index', function (page) {
                       items: items,
                       placeholder: '',
                     });
-                    input.removeAttribute('id');
-                    input.removeAttribute('class');
+                    /*input.removeAttribute('id');
+                    input.removeAttribute('class');*/
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
                     input.children[0].children[0].className += ' input-field';
@@ -280,7 +287,7 @@ loadedViews = [];
 currentPage = 'index';
 
 function startApp(view) {
-  db = PouchDB('main');
+  db = PouchDB('local');
   db.get('session').then(function (record) {
     setLocal('rapyd_server_url', record.url);
     eval(record.client_js);

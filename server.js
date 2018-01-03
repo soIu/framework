@@ -6,4 +6,4 @@ if (conf !== '') {
 if (process.argv[2] === '--clear-cache') {
     command = 'rm -f */*.pyj-cached && ' + command;
 }
-require('child_process').execSync(command);
+require('child_process').execSync(command, {stdio:[0, 1, 2]});

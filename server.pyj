@@ -2,11 +2,15 @@ import modules.modules
 import orm.http as http
 from orm.models import env
 from orm.tools import exist, configuration
+from res.users import check_admin, password
+
+configuration = require('process').env
+
+password = configuration.admin_password
+check_admin()
 
 client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
 
-#configuration.master_password = 'yourpassword'
-configuration = process.env
 if exist(configuration.port):
    http.port = configuration.port
 crypto = require('crypto')
