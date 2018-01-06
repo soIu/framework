@@ -223,6 +223,40 @@ myApp.onPageInit('index', function (page) {
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
                     input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].style.display = 'none';
+                  }
+                  else if (field_object.type === 'one2many' || field_object.type === 'many2many') {
+                    var new_input = document.createElement('div');
+                    input.parentElement.replaceChild(new_input, input);
+                    input = new_input;
+                    new Selectivity.Inputs.Multiple({
+                      element: input,
+                      allowClear: true,
+                      ajax: {
+                          url: tools.configuration.url,
+                          minimumInputLength: 0,
+                          params: function (term, offset) {return {}},
+                          placeholder: '',
+                          fetch: function (url, init, query) {
+                              models.env.context.active_index = query.offset;
+                              return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function (records) {
+                                  var result = [];
+                                  records = records.__iter__();
+                                  for (var record in records.as_array()) {
+                                      result.push({id: records[record].id, text: records[record].name});
+                                  }
+                                  models.env.context.active_index = 0;
+                                  return {results: result, more: true};
+                              });
+                          },
+                      }
+                    });
+                    /*input.removeAttribute('id');
+                    input.removeAttribute('class');*/
+                    input.removeAttribute('tabindex');
+                    input.children[0].children[0].id = field_name;
+                    input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].style.display = 'none';
                   }
                   else if (field_object.type === 'selection') {
                     var new_input = document.createElement('div');
@@ -243,6 +277,7 @@ myApp.onPageInit('index', function (page) {
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
                     input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].style.display = 'none';
                   }
                   //TO-DO Binary, and relationals (one2many, many2many)
                   var label = element.querySelector('.label');
