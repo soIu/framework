@@ -2,11 +2,11 @@ import modules.modules
 import orm.http as http
 from orm.models import env
 from orm.tools import exist, configuration
-from res.users import check_admin, password
+from res.users import check_admin, admin_password
 
 configuration = require('process').env
 
-password = configuration.admin_password
+admin_password = configuration.admin_password
 check_admin()
 
 client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
