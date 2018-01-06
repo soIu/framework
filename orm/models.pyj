@@ -95,7 +95,10 @@ class Model():
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
-        db.setSchema([schemas[key] for key in keys(schemas)])
+        try:
+           db.setSchema([schemas[key] for key in schemas])
+        except:
+           pass
 
     def __iter__(self):
         if self._is_env or self.length < 1:
@@ -261,7 +264,7 @@ class Model():
     def read(self):
         if self._is_env:
            return {}
-        return self._values#{key: self.adapt(key, self[key]) for key in keys(self._fields)}
+        return self._values#{key: self.adapt(key, self[key]) for key in self._fields}
 
     def adapt(self, key, value):
         if self._is_env:
@@ -336,10 +339,10 @@ class Model():
            return
         if not exist(values):
            if self._is_singleton:
-              values = {key: self[key] for key in keys(self._fields)}
+              values = {key: self[key] for key in self._fields}
            else:
               values = {}
-        for key in keys(values):
+        for key in values:
             value = self.adapt(key, values[key])
             if self._is_singleton:
                self._values[key] = value

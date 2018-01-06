@@ -11,7 +11,7 @@ def keys(object, sort=False):
 def merge(*args):
     #new = {}
     #for object in args:
-    #    for key in keys(object):
+    #    for key in object:
     #        new[key] = object[key]
     #return new
     #This is a standard operation for merging objects, but for now we will use Object.assign
@@ -65,7 +65,7 @@ else {configuration.client = false}
 
 def parseURI(data):
     array = []
-    for key in keys(data):
+    for key in data:
         if type(data[key]) in array or type(data) == Object:
            data[key] = JSON.stringify(data[key])
         elif data[key] == '':
