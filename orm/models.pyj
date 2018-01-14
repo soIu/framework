@@ -272,7 +272,7 @@ class Model():
         #if key == 'id':
         #   value = self._fields[key].value
         if self._fields[key].type in ['char', 'text']:
-           if value in [None, False, undefined]:
+           if not exist(value):
               value = ""
            else:
               value = v'String(value)'
@@ -297,12 +297,12 @@ class Model():
            if not checkBase64(value):
               return Exception("Not a valid base64")
         elif self._fields[key].type == 'selection':
-           if value in [False, None, undefined]:
+           if not exist(value):
               value = None
            elif not value in dict(self._fields[key].selection):
               return Exception("Incorrect value")
         elif self._fields[key].type in ['date', 'datetime']:
-           if value in [False, None, undefined]:
+           if not exist(value):
               value = None
            elif type(value) == Date:
               value = value.toISOString()
@@ -313,7 +313,7 @@ class Model():
                   return Exception("Can't parse Date")
            else:
               return Exception("Can't parse Date")
-           if self._fields[key].type == 'date':
+           if exist(value) and self._fields[key].type == 'date':
               value = value.split('T')[0] + 'T00:00:00.000Z'
         elif self._fields[key].type in ['many2one', 'one2one']:
            if not exist(value):
