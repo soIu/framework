@@ -430,7 +430,10 @@ class Model():
                del values._rev
                del values.rev
                values.rev = record._rev
-               return db.rel.save(self._name, values)
+               return db.rel.save(self._name, values).then(
+               def (result):
+                   return self
+               )
            )
         else:
            return self.queue(
