@@ -272,7 +272,7 @@ class Model():
         #if key == 'id':
         #   value = self._fields[key].value
         if self._fields[key].type in ['char', 'text']:
-           if value == None:
+           if value in [None, False, undefined]:
               value = ""
            else:
               value = v'String(value)'
@@ -287,7 +287,7 @@ class Model():
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
-           elif value in ['false', 'False']:
+           elif value in ['false', 'False', None, undefined]:
               value = False
            elif type(value) == String:
               return Exception("Not a valid Boolean")
@@ -297,10 +297,14 @@ class Model():
            if not checkBase64(value):
               return Exception("Not a valid base64")
         elif self._fields[key].type == 'selection':
-           if not value in dict(self._fields[key].selection):
+           if value in [False, None, undefined]:
+              value = None
+           elif not value in dict(self._fields[key].selection):
               return Exception("Incorrect value")
         elif self._fields[key].type in ['date', 'datetime']:
-           if type(value) == Date:
+           if value in [False, None, undefined]:
+              value = None
+           elif type(value) == Date:
               value = value.toISOString()
            elif type(value) == String:
               try:
@@ -320,7 +324,7 @@ class Model():
                 value = value[0]
         elif self._fields[key].type in ['many2many', 'one2many']:
            if not exist(value):
-              return []
+              value = []
            elif v'value instanceof env.Model' == True:
               value = value.ids
         #Related operation
