@@ -204,6 +204,8 @@ class Model():
                    results.push(record[arg[0]] <= arg[2])
                 elif arg[1] == 'in':
                    results.push(record[arg[0]] in arg[2])
+                elif arg[1] == 'not in':
+                   results.push(record[arg[0]] not in arg[2])
                 elif arg[1] == 'like':
                    results.push(arg[2] in record[arg[0]])
                 elif arg[1] == 'ilike':
