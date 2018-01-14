@@ -466,7 +466,7 @@ class Model():
                return False
            )
         if self._is_singleton:
-           db.get(db.rel.makeDocID({'type': result._name, 'id': self.id})).then(
+           db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
            def (record):
                db.remove(record)
            )
