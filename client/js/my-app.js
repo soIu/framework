@@ -33,7 +33,7 @@ myApp.onPageInit('index', function (page) {
   if (page.name === 'index') {
     if (typeof tools === 'undefined') {return}
     loadApp();
-    Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80, active_model: false});
+    models.env.context = Object.assign(models.env.context, {active_id: null, active_ids: [], active_index: 0, active_limit: 80, active_model: false});
     var keys = tools.keys(tools.menu, 'sequence').as_array();
     var render_menu = function (key) {
       if (loadedMenus.indexOf(keys[key]) > -1) {return}
@@ -103,6 +103,10 @@ myApp.onPageInit('index', function (page) {
             th.innerHTML = models.env[model]._fields[field.attributes.name.value].string;
             headers.append(th);
           }
+          var unsaved_ids = [];
+          if (hasKey(models.env.context.unsaved, model) === true) {
+            unsaved_ids = Object.keys(models.env.context.unsaved[model]);
+          }
           function render(records) {
             loadApp();
             records = records.__iter__();
@@ -123,11 +127,7 @@ myApp.onPageInit('index', function (page) {
             values.remove();//.parentElement.removeChild(values);
             doneApp();
           }
-          var unsaved_ids = [];
-          if (hasKey(models.env.context.unsaved, model) === true) {
-            unsaved_ids = Object.keys(models.env.context.unsaved[model]);
-          }
-          models.env[model].search(['id', 'not in', unsaved_ids]).then(render);
+          models.env[model].search('id', 'not in', unsaved_ids).then(render);
           if (tools.exist(unsaved_ids) === true) {
             models.env[model].browse(unsaved_ids, false).then(render);
           }
@@ -162,11 +162,11 @@ myApp.onPageInit('index', function (page) {
             if (hasClass(parent, 'form-sheet') === true) {
               parent = parent.children[0];
             }
-            for (var index in Array.prototype.slice.call(children)) {
+            function render_child(index) {
               var tag = children[index].tagName;
               var element = children[index];
               if (Object.keys(definedTags).indexOf(tag) > -1) {
-                var element = definedTags[tag].cloneNode(true);
+                element = definedTags[tag].cloneNode(true);
                 if (tag === 'group') {
                   if (group_left === true) {
                     element.className = 'left-group';
@@ -196,7 +196,7 @@ myApp.onPageInit('index', function (page) {
                     var new_input = document.createElement('div');
                     input.parentElement.replaceChild(new_input, input);
                     input = new_input;
-                    new Selectivity.Inputs.Single({
+                    selectivityFields[model+'.'+field_name] = new Selectivity.Inputs.Single({
                       element: input,
                       allowClear: true,
                       ajax: {
@@ -222,14 +222,14 @@ myApp.onPageInit('index', function (page) {
                     input.removeAttribute('class');*/
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
-                    input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].className += ' selectivity-single-input';
                     input.children[0].children[0].style.display = 'none';
                   }
                   else if (field_object.type === 'one2many' || field_object.type === 'many2many') {
                     var new_input = document.createElement('div');
                     input.parentElement.replaceChild(new_input, input);
                     input = new_input;
-                    new Selectivity.Inputs.Multiple({
+                    selectivityFields[model+'.'+field_name] = new Selectivity.Inputs.Multiple({
                       element: input,
                       allowClear: true,
                       ajax: {
@@ -255,18 +255,29 @@ myApp.onPageInit('index', function (page) {
                     input.removeAttribute('class');*/
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
-                    input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].className += ' selectivity-multi-input';
                     input.children[0].children[0].style.display = 'none';
+                    var open_close = document.createElement('i');
+                    open_close.className = 'fa fa-sort-desc selectivity-caret';
+                    open_close.onclick = function() {
+                      if (hasClass(open_close.parentElement.parentElement, 'open')) {
+                        selectivityFields[model+'.'+field_name].close();
+                      }
+                      else {
+                        selectivityFields[model+'.'+field_name].open();
+                      }
+                    }
+                    input.children[0].children[0].insertAdjacentElement('beforebegin', open_close);
                   }
                   else if (field_object.type === 'selection') {
                     var new_input = document.createElement('div');
                     input.parentElement.replaceChild(new_input, input);
                     input = new_input;
                     var items = [];
-                    for (var selection in field_object.selection.as_array()) {
+                    for (var selection in field_object.selection) {
                       items.push({id: field_object.selection[selection][0], text: field_object.selection[selection][1]});
                     }
-                    new Selectivity.Inputs.Single({
+                    selectivityFields[model+'.'+field_name] = new Selectivity.Inputs.Single({
                       element: input,
                       allowClear: true,
                       items: items,
@@ -276,7 +287,7 @@ myApp.onPageInit('index', function (page) {
                     input.removeAttribute('class');*/
                     input.removeAttribute('tabindex');
                     input.children[0].children[0].id = field_name;
-                    input.children[0].children[0].className += ' input-field';
+                    input.children[0].children[0].className += ' selectivity-single-input';
                     input.children[0].children[0].style.display = 'none';
                   }
                   //TO-DO Binary, and relationals (one2many, many2many)
@@ -289,6 +300,9 @@ myApp.onPageInit('index', function (page) {
               if (typeof children[index].children === 'object' && children[index].children.length > 0) {
                 render(element, children[index].children, group_left);
               }
+            }
+            for (var index in Array.prototype.slice.call(children)) {
+              render_child(index);
             }
           }
           render(content, form.children, true);
@@ -303,7 +317,7 @@ myApp.onPageInit('index', function (page) {
               setValue(fields[index], models.env.context.active_id[fields[index]]);
             }
             document.getElementById(fields[index]).disabled = true;
-            document.getElementById(fields[index]).className = 'input-field';
+            document.getElementById(fields[index]).className += ' input-field';
           }
         });
       }
@@ -320,6 +334,7 @@ loginCount = 0;
 loadedMenus = [];
 loadedViews = [];
 currentPage = 'index';
+selectivityFields = {};
 
 function startApp(view) {
   db = PouchDB('local');
@@ -462,6 +477,9 @@ function getValue(id) {
     if (element.type === 'checkbox') {
       return element.checked;
     }
+    else if (hasValue(element.className, 'selectivity')) {
+      return selectivityFields[models.env.context.active_model+'.'+id].getValue()
+    }
     return element.value;
   }
   else {
@@ -511,8 +529,37 @@ function setValue(id, value) {
   if (element !== null) {
     if (element.type === 'checkbox') {
       element.checked = value;
+    }
+    else if (hasValue(element.className, 'selectivity-single')) {
+      if (tools.exist(value) === false) {
+        selectivityFields[models.env.context.active_model+'.'+id].clear();
+        return;
+      } else if (models.env[models.env.context.active_model]._fields[id].type === 'selection') {
+        selectivityFields[models.env.context.active_model+'.'+id].setValue(value);
+        return;
+      }
+      return models.env[models.env[models.env.context.active_model]._fields[id].relation].browse(value).then(function (result) {
+        selectivityFields[models.env.context.active_model+'.'+id].setData({id: value, text: result.name});
+      });
+    }
+    else if (hasValue(element.className, 'selectivity-multi')) {
+      if (tools.exist(value) === false) {
+        selectivityFields[models.env.context.active_model+'.'+id].clear();
+        return;
+      }
+      return models.env[models.env[models.env.context.active_model]._fields[id].relation].browse(value).then(function (result) {
+        var values = [];
+        records = result.__iter__();
+        for (var record in records.as_array()) {
+          values.push({id: records[record].id, text: records[record].name});
+        }
+        selectivityFields[models.env.context.active_model+'.'+id].setData(values);
+      });
     } else {
-     element.value = value; 
+      if (models.env[models.env.context.active_model]._fields[id].type === 'date') {
+        value = value.split('T')[0];
+      }
+      element.value = value; 
     }
   }
 }
@@ -624,6 +671,7 @@ function doLogin(view, args) {
           myApp.alert('Login success!');
         });
         eval(response.client_js);
+        client_js = response.client_js;
         tools.configuration.url = getLocal('rapyd_server_url');
         models.env.user = models.env['res.users'].browse();
         models.env.user.id = response.id;
@@ -659,7 +707,7 @@ function doLogout(view) {
   });
 }
 
-function editRecord() {
+function editRecord(button) {
   if (tools.exist(models.env.context.active_id) === false) {
     models.env.context.active_id = models.env[models.env.context.active_model].browse();
   }
@@ -667,9 +715,12 @@ function editRecord() {
   for (var index in inputs) {
     inputs[index].disabled = false;
   }
+  if (button !== undefined) {
+    button.style.display = 'none';document.querySelector('.button-save').style.display = 'inline-block';
+  }
 }
 
-function saveRecord() {
+function saveRecord(button) {
   var values = {};
   var inputs = document.querySelectorAll('.input-field');
   for (var index in Array.prototype.slice.call(inputs)) {
@@ -698,9 +749,12 @@ function saveRecord() {
       setValues(result.values);
     });
   }
+  if (button !== undefined) {
+    button.style.display = 'none';document.querySelector('.button-upload').style.display = 'inline-block';document.querySelector('.button-edit').style.display = 'inline-block';
+  }
 }
 
-function uploadRecord() {
+function uploadRecord(button) {
   if (hasKey(models.env.context.unsaved, models.env.context.active_model) === true) {
     if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'create') {
       var todelete = models.env.context.active_id;
@@ -720,12 +774,54 @@ function uploadRecord() {
       updateUnsave();
     }
   }
+  if (button !== undefined) {
+    button.style.display = 'none';document.querySelector('.button-edit').style.display = 'inline-block';
+  }
 }
 
 function updateUnsave() {
   db.get('session').then(function (doc) {
     db.put(Object.assign(doc, {unsaved: models.env.context.unsaved}));
   });
+}
+
+function showTable(input) {
+  var table = 
+'<div class="mdl-cell">'+
+'	<table class="mdl-data-table  mdl-shadow--2dp">'+
+'		<thead>'+
+'			<tr>'+
+'				<th>Column 1</th>'+
+'				<th>'+
+'					<i style="vertical-align: bottom;" class="table-add material-icons md-24" onclick="addTable(this)">&#xe03b;</i>'+
+'				</th>'+
+'			</tr>'+
+'		</thead>'+
+'		<tbody>'+
+'			<tr class="hide line-default">'+
+'				<td>'+
+'					<div contenteditable="" style="width: 100%; height: 100%; outline: 0px solid transparent;">Cell 1</div>'+
+'				</td>'+
+'				<td>'+
+'					<i style="vertical-align: bottom;" class="table-remove material-icons md-24" onclick="removeTable(this)">&#xe15d;</i>'+
+'				</td>'+
+'			</tr>'+
+'		</tbody>'+
+'	</table>'+
+'</div>';
+  input.parentElement.parentElement.parentElement.parentElement.insertAdjacentHTML('afterend', table);
+}
+
+function addTable(element) {
+  clone = element.parentElement.parentElement.parentElement.parentElement.querySelector('.line-default').cloneNode(true);
+  append = element.parentElement.parentElement.parentElement.parentElement.querySelector('tbody').appendChild(clone);
+  append.removeAttribute('id');
+  append.removeAttribute('class');
+  append.setAttribute('class', 'line');
+}
+
+function removeTable(table) {
+  table.parentElement.parentElement.remove();
 }
 
 //Polyfills

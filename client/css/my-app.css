@@ -27,6 +27,10 @@
   display: inline-block;
 }
 
+.hide {
+  display: none;
+}
+
 @media screen and (min-width: 1000px) {
   .left-group {
     margin-right: 150px;
