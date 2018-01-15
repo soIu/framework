@@ -8,11 +8,15 @@ schemas = {}
 class Model():
     _name = 'undefined'
     _inherit = False
-    _fields = {}
-    _values = {}
-    _related = {}
+    #_fields = {}
+    #_values = {}
+    #_related = {}
+    #This JSON objects turnout having the same id, separating them on class initiation
 
     def __init__(self, _is_env=False, _is_singleton=True):
+        self._fields = {}
+        self._values = {}
+        self._related = {}
         self._is_env = _is_env
         self._is_singleton = _is_singleton
         if 'Model' not in env:
@@ -65,6 +69,7 @@ class Model():
                ,
                'set': def(value): self._values[key] = self.adapt(key, value)
                }})"""
+        self.env[self._name]._fields = self._fields
         Object.defineProperty(self, 'values', {
         'get': def (): return self._values
         ,
@@ -378,6 +383,7 @@ class Model():
            self = self.browse()
            self.update(values)
         if is_client:
+           console.log(values)
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}).then(
            def (result):
                self.values = result.values
