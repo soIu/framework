@@ -459,6 +459,7 @@ class Model():
                values.rev = record._rev
                return db.rel.save(self._name, values).then(
                def (result):
+                   self.values = values
                    return self
                )
            )
