@@ -5,6 +5,14 @@ from orm.pouchdb import db
 env = {}
 schemas = {}
 
+def queryInverse(type, records, fields, _fields):
+    for record in records[type]:
+        for field in fields:
+            record[field] = []
+            for result in records[_fields[field].relation]:
+                if result[_fields[field].inverse] == record.id:
+                   record[field].push(result.id)
+
 class Model():
     _name = 'undefined'
     _inherit = False
@@ -17,6 +25,7 @@ class Model():
         self._fields = {}
         self._values = {}
         self._related = {}
+        self._one2many_fields = []
         self._is_env = _is_env
         self._is_singleton = _is_singleton
         if 'Model' not in env:
@@ -53,8 +62,11 @@ class Model():
                   type = 'hasMany'
                if self[key].type != 'one2many':
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False}}} #Turning async into false since one2many doesn't work
+                  self._one2many_fields.push(key)
                else:
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False, 'queryInverse': self[key].inverse}}}
+               if type == 'belongsTo':
+                  db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
             self._fields[key] = self[key]
             if self._is_singleton:
                if exist(self._fields[key].related):
@@ -154,6 +166,7 @@ class Model():
               v'var result = new self.constructor(false, false)'
               return db.rel.find(result._name, ids).then(
               def (record):
+                  queryInverse(self._name, record, self._one2many_fields, self._fields)
                   #result.ids = ids
                   result.values = record[result._name]
                   return result
@@ -162,12 +175,14 @@ class Model():
               ids = ids[0]
         if type(ids) == String:
            result = self.browse()
-           return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
+           #return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
+           return db.rel.find(result._name, ids).then(
            def (record):
+               queryInverse(result._name, record, result._one2many_fields, result._fields)
                #result.id = ids
-               record.data.id = db.rel.parseDocID(record._id).id
-               record.data.rev = record._rev
-               result.values = record.data
+               #record.data.id = db.rel.parseDocID(record._id).id
+               #record.data.rev = record._rev
+               result.values = record[result._name][0]#.data
                return result
            )
         return result
@@ -236,6 +251,7 @@ class Model():
               )
            return db.rel.find(result._name).then(
            def (records):
+               queryInverse(result._name, records, result._one2many_fields, result._fields)
                record = records[result._name].find(query)
                #result.id = record.id
                result.values = record
@@ -245,6 +261,7 @@ class Model():
            return db.rel.find(result._name).then(
            def (records):
                v'var result = new self.constructor(false, false)'
+               queryInverse(result._name, records, result._one2many_fields, result._fields)
                if records[result._name].length > 1:
                   values = records[result._name].filter(query)
                   if exist(options.limit) and type(options.limit) == Number:
@@ -401,7 +418,7 @@ class Model():
         del values['_rev']
         return db.rel.save(self._name, values).then(
         def (record):
-            self.values = record[self._name][0]
+            #self.values = record[self._name][0]
             return self
         )
         #return self
