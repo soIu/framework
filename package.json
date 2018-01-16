@@ -3,6 +3,7 @@
     "pouchdb-adapter-http": "^6.3.4",
     "pouchdb-adapter-memory": "^6.3.4",
     "pouchdb-core": "^6.3.4",
+    "pouchdb-find": "^6.4.1",
     "pouchdb-mapreduce": "^6.3.4",
     "rapydscript-ng": "^0.7.18",
     "relational-pouch": "^2.1.0",
