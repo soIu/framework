@@ -166,7 +166,7 @@ class Model():
               v'var result = new self.constructor(false, false)'
               return db.rel.find(result._name, ids).then(
               def (record):
-                  queryInverse(self._name, record, self._one2many_fields, self._fields)
+                  queryInverse(result._name, record, result._one2many_fields, result._fields)
                   #result.ids = ids
                   result.values = record[result._name]
                   return result
