@@ -418,7 +418,8 @@ class Model():
         del values['_rev']
         return db.rel.save(self._name, values).then(
         def (record):
-            #self.values = record[self._name][0]
+            queryInverse(self._name, record, self._one2many_fields, self._fields)
+            self.values = record[self._name][0]
             return self
         )
         #return self
