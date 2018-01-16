@@ -63,9 +63,9 @@ class Model():
                   type = 'hasMany'
                if self[key].type != 'one2many':
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False}}} #Turning async into false since one2many doesn't work
-                  self._one2many_fields.push(key)
                else:
                   schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False, 'queryInverse': self[key].inverse}}}
+                  self._one2many_fields.push(key)
                if type == 'belongsTo':
                   db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
             self._fields[key] = self[key]
