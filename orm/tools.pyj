@@ -43,6 +43,14 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def exception(string):
+    console.log(string)
+
+def warning(string, offline=False):
+    if offline:
+       console.log('You are offline')
+    console.log(string)
+
 array = [ρσ_list_constructor, Array]
 
 configuration = {}
@@ -690,15 +698,25 @@ var XMLHttpRequest = function() {
 var XMLHttpRequest = window.XMLHttpRequest;
 }"""
 
+def ajax_load():
+    return
+
+def ajax_resolve(resolve, xhr):
+    resolve(xhr.response)
+
+def ajax_reject(reject, xhr):
+    reject(xhr.statusText)
+
 def ajax(type, dataType, url, data):
+    ajax_load()
     if exist(data):
        data = parseURI(data)
     return Promise(
     def (resolve, reject):
         xhr = XMLHttpRequest()
         xhr.open(type, url, True)
-        xhr.onload = def(): resolve(this.response)
-        xhr.onerror = reject
+        xhr.onload = def(): ajax_resolve(resolve, this)
+        xhr.onerror = def(): ajax_reject(reject, this)
         xhr.responseType = dataType
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         xhr.send(data)

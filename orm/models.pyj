@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax, array
+from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax, array, exception, warning
 from orm.pouchdb import db
 
 env = {}
@@ -159,7 +159,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               console.log(error)
+               warning(error, offline=True)
                return self.browse(ids, is_client=False)
            )
         elif type(ids) in [ρσ_list_constructor, Array]:
@@ -206,7 +206,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               console.log(error)
+               warning(error, offline=True)
                return self.search(args, is_client=False)
            )
         def query(record):
@@ -402,7 +402,6 @@ class Model():
            self = self.browse()
            self.update(values)
         if is_client:
-           console.log(values)
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}).then(
            def (result):
                self.values = result.values
@@ -410,7 +409,7 @@ class Model():
                return self
            ).catch(
            def (error):
-               console.log(error)
+               exception(error)
                return Exception("There is some error")
                #return self.create(values, is_client=False)
            )
@@ -446,7 +445,7 @@ class Model():
                return self
            ).catch(
            def (error):
-               console.log(error)
+               exception(error)
                #return self.write(values, is_client=False)
                return Exception("There are some error")
            )
@@ -490,7 +489,7 @@ class Model():
                return True
            ).catch(
            def (error):
-               console.log(error)
+               warning(error, offline=True)
                #return self.unlink(is_client=False)
                return False
            )
