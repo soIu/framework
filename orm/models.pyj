@@ -381,13 +381,13 @@ class Model():
                    object[key] = value
 
     def queue(self, method):
-        if self._is_env:
+        if self._is_env or not exist(self):
            return
         records = self.__iter__()
-        index = 0
+        v'var index = 0'
         def next():
-            index += 1
-            if index < records.length:
+            v'index += 1'
+            if index < records.length and exist(records[index]):
                return method(records[index], next)
             return self
         return method(records[index], next)
