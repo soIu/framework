@@ -47,8 +47,8 @@ def exception(string):
     console.log(string)
 
 def warning(string, offline):
-    if offline == undefined:
-       offline = False
+    #if offline == undefined:
+    #   offline = False
     if offline:
        console.log('You are offline')
     console.log(string)
