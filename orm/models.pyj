@@ -159,7 +159,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               warning(error, offline=True)
+               warning(error, True)
                return self.browse(ids, is_client=False)
            )
         elif type(ids) in [ρσ_list_constructor, Array]:
@@ -206,7 +206,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               warning(error, offline=True)
+               warning(error, True)
                return self.search(args, is_client=False)
            )
         def query(record):
@@ -489,7 +489,7 @@ class Model():
                return True
            ).catch(
            def (error):
-               warning(error, offline=True)
+               warning(error, True)
                #return self.unlink(is_client=False)
                return False
            )
