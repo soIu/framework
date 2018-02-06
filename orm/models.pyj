@@ -104,7 +104,7 @@ class Model():
             if self._is_env:
                return 0
             elif self._is_singleton:
-               if not exist(self.id) or not exist(self.value):
+               if not exist(self.id) or not exist(self.values):
                   return 0
                return 1
             else:
