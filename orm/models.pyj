@@ -52,7 +52,8 @@ class Model():
         else:
            self.ids = fields.Data(string="IDs")
            reserved = ['ids']
-        for key in [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved):
+        valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved)
+        for key in valid_fields:
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
@@ -103,7 +104,7 @@ class Model():
             if self._is_env:
                return 0
             elif self._is_singleton:
-               if not exist(self.id):
+               if not exist(self.id) or not exist(self.value):
                   return 0
                return 1
             else:

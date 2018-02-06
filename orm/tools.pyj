@@ -33,24 +33,15 @@ def checkBase64(string):
     except:
        return False
 
-def empty(object):
-    if object in ['', False, None, undefined]:
-       return True
-    object = str(object)
-    if object == '{}':
-       return True
-    elif object == '[]':
-       return True
-
 def exist(object):
-    if object in ['', False, None, undefined, 0.0]:
+    if object in ['', False, None, undefined, 0.0, {}, []]:
        return False
-    object = str(object)
-    if object == '{}':
-       return False
-    elif object == '[]':
-       return False
+    elif v'typeof object == "object"' and v'typeof object.length == "number"':
+       return object.length > 0
     return True
+
+def empty(object):
+    return exist(object) == False
 
 array = [ρσ_list_constructor, Array]
 
