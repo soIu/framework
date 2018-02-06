@@ -31,23 +31,24 @@ http.route('/api/login',
 def (request, result, next):
     request.accepts('application/json')
     request.env = env
-    result.response = {'status': 'error'}
+    result.response = {'status': 'denied'}
     params = http.parse(request.params)
     if exist(request.params.login):
        if params.encrypted == True:
           params.login, params.password = decrypt(params.login), decrypt(params.password)
-       request.env['res.users'].search(['login', '=', params.login], ['password', '=', params.password]).then(
+       request.env['res.users'].search(['login', '=', params.login], ['password', '=', params.password], limit=1).then(
        def (user_id):
-           result.response = {'status': 'success'}
-           if params.authentication = True:
-              result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
-              result.response.id = user_id.id
-              result.response.client_js = client_js
+           if exist(user_id):
+              result.response = {'status': 'success'}
+              if params.authentication = True:
+                 result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
+                 result.response.id = user_id.id
+                 result.response.client_js = client_js
            next()
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'denied'}
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:
@@ -94,6 +95,7 @@ def (request, result, next):
        ).catch(
        def (error):
            console.log(error)
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:
@@ -117,6 +119,7 @@ def (request, result, next):
        ).catch(
        def (error):
            console.log(error)
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:
@@ -143,6 +146,7 @@ def (request, result, next):
        ).catch(
        def (error):
            console.log(error)
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:
@@ -169,6 +173,7 @@ def (request, result, next):
        ).catch(
        def (error):
            console.log(error)
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:
@@ -195,6 +200,7 @@ def (request, result, next):
        ).catch(
        def (error):
            console.log(error)
+           result.response = {'status': 'error', 'error': error}
            next()
        )
     else:

@@ -23,6 +23,13 @@
   font-size: inherit !important;
 }
 
+/*.tree-input {
+     width: 100%; 
+     box-sizing: border-box;
+     -webkit-box-sizing:border-box;
+     -moz-box-sizing: border-box;
+}*/
+
 .button {
   display: inline-block;
 }
@@ -37,6 +44,9 @@
   }
 }
 
-.fa-remove {
-  color: #212121;
+.selectivity-single-selected-item-remove {
+  color: #212121 !important;
+}
+.selectivity-multiple-selected-item-remove {
+  color: #fff !important;
 }

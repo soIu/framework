@@ -113,7 +113,7 @@ myApp.onPageInit('index', function (page) {
             for (var record in records.as_array()) {
               record = records[record];
               var tr = values.cloneNode(true);
-              var onclick = function () {models.env.context.active_id = record;loadPage(mainView, model+'.form')};
+              var onclick = function () {models.env.context.active_id = record;models.env.context.active_ids = [record.id];loadPage(mainView, model+'.form')};
               for (var field in Array.prototype.slice.call(tree.children)) {
                 field = tree.children[field];
                 var td = document.createElement('td');
@@ -148,6 +148,8 @@ myApp.onPageInit('index', function (page) {
           page.querySelector('header').remove();
           var footer = page.querySelector('footer').cloneNode(true);
           page.querySelector('footer').remove();
+          var button = document.createElement('div');
+          button.className = 'button button-fill button-raised';
           var field = page.querySelector('.form-field').cloneNode(true);
           var group = document.createElement('div');
           group.style.float = 'left';
@@ -157,7 +159,7 @@ myApp.onPageInit('index', function (page) {
           var sheet_inner = sheet.children[0];
           page.querySelector('.form-sheet').remove();
           var fields = [];
-          var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group};//Don't forget to add your custom tag here if you want to make customizations
+          var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group, 'button': button};//Don't forget to add your custom tag here if you want to make customizations
           function render(parent, children, group_left) {
             if (hasClass(parent, 'form-sheet') === true) {
               parent = parent.children[0];
@@ -165,6 +167,7 @@ myApp.onPageInit('index', function (page) {
             function render_child(index) {
               var tag = children[index].tagName;
               var element = children[index];
+              var input = element;
               if (Object.keys(definedTags).indexOf(tag) > -1) {
                 element = definedTags[tag].cloneNode(true);
                 if (tag === 'group') {
@@ -175,8 +178,14 @@ myApp.onPageInit('index', function (page) {
                     group_left = true;
                   }
                 }
+                else if (tag === 'button') {
+                  var button = children[index];
+                  element.innerHTML = button.attributes.string.value;
+                  element.style.marginRight = '5px';
+                  element.onclick = function() {models.env.context.active_id[button.attributes.name.value]()};
+                }
                 else if (tag === 'field') {
-                  var input = element.querySelector('input');
+                  input = element.querySelector('input');
                   var field_name = children[index].attributes.name.value;
                   var field_object = models.env[model]._fields[field_name];
                   input.id = field_name;
@@ -199,6 +208,7 @@ myApp.onPageInit('index', function (page) {
                     selectivityFields[model+'.'+field_name] = new Selectivity.Inputs.Single({
                       element: input,
                       allowClear: true,
+                      readOnly: true,
                       ajax: {
                           url: tools.configuration.url,
                           minimumInputLength: 0,
@@ -206,7 +216,7 @@ myApp.onPageInit('index', function (page) {
                           placeholder: '',
                           fetch: function (url, init, query) {
                               models.env.context.active_index = query.offset;
-                              return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function (records) {
+                              return models.env[field_object.relation].search('name', 'ilike', query.term).then(function (records) {
                                   var result = [];
                                   records = records.__iter__();
                                   for (var record in records.as_array()) {
@@ -232,6 +242,7 @@ myApp.onPageInit('index', function (page) {
                     selectivityFields[model+'.'+field_name] = new Selectivity.Inputs.Multiple({
                       element: input,
                       allowClear: true,
+                      readOnly: true,
                       ajax: {
                           url: tools.configuration.url,
                           minimumInputLength: 0,
@@ -239,7 +250,7 @@ myApp.onPageInit('index', function (page) {
                           placeholder: '',
                           fetch: function (url, init, query) {
                               models.env.context.active_index = query.offset;
-                              return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function (records) {
+                              return models.env[field_object.relation].search('name', 'ilike', query.term).then(function (records) {
                                   var result = [];
                                   records = records.__iter__();
                                   for (var record in records.as_array()) {
@@ -282,6 +293,7 @@ myApp.onPageInit('index', function (page) {
                       allowClear: true,
                       items: items,
                       placeholder: '',
+                      readOnly: true,
                     });
                     /*input.removeAttribute('id');
                     input.removeAttribute('class');*/
@@ -298,6 +310,11 @@ myApp.onPageInit('index', function (page) {
               }
               parent.append(element);
               if (typeof children[index].children === 'object' && children[index].children.length > 0) {
+                if (children[index].children[0].tagName === 'tree') {
+                  //showTable(input, children[index].children[0], models.env[model]._fields[children[index].attributes.name.value].relation);
+                  //To-DO fields.push();
+                  return;
+                }
                 render(element, children[index].children, group_left);
               }
             }
@@ -318,6 +335,9 @@ myApp.onPageInit('index', function (page) {
             }
             document.getElementById(fields[index]).disabled = true;
             document.getElementById(fields[index]).className += ' input-field';
+            /*if (hasKey(selectivityFields, models.env.context.active_model+'.'+fields[index]) === true) {
+              selectivityFields[models.env.context.active_model+'.'+fields[index]].setOptions({readOnly: true});
+            }*/
           }
         });
       }
@@ -340,7 +360,7 @@ function startApp(view) {
   db = PouchDB('local');
   db.get('session').then(function (record) {
     setLocal('rapyd_server_url', record.url);
-    eval(record.client_js);
+    loadORM(record.client_js);
     tools.configuration.url = record.url;
     models.env.context.unsaved = record.unsaved;
     models.env.user = models.env['res.users'].browse();
@@ -393,12 +413,11 @@ function doAjax(type, dataType, url, data) {
     xhr = new XMLHttpRequest();
     xhr.open(type, url, true);
     xhr.onload = function () {
-      console.log(this.response);
       resolve(this.response);
       doneApp();
     };
-    xhr.onerror = function (error) {
-      reject(error);
+    xhr.onerror = function () {
+      reject(this.statusText);
       doneApp();
     };
     if (dataType === undefined) {
@@ -556,7 +575,7 @@ function setValue(id, value) {
         selectivityFields[models.env.context.active_model+'.'+id].setData(values);
       });
     } else {
-      if (models.env[models.env.context.active_model]._fields[id].type === 'date') {
+      if (models.env[models.env.context.active_model]._fields[id].type === 'date' && tools.exist(value) === true) {
         value = value.split('T')[0];
       }
       element.value = value; 
@@ -630,6 +649,41 @@ function showImage(image, id) {
   }
 }
 
+function loadORM(client_js) {
+  function forceReplace(codes) {
+    for (var code in codes) {
+      code = codes[code];
+      client_js = client_js.split(code).join('window.tools.' + code);
+    }
+  }
+  forceReplace(['exception(error', 'warning(error', 'ajax_load(data)', 'ajax_resolve(resolve, this', 'ajax_reject(reject, this']);
+  eval(client_js);
+  tools.exception = function (error) {
+    console.log(error);
+    myApp.alert('There are some error');
+  };
+  tools.warning = function (error, offline) {
+    if (offline === undefined) {
+      offline = false;
+    }
+    console.log(error);
+    if (offline === true) {
+      myApp.addNotification({message: 'You are offline, using local data', hold: 1000});
+    }
+  };
+  tools.ajax_load = function () {
+    loadApp();
+  };
+  tools.ajax_resolve = function (resolve, xhr) {
+    doneApp();
+    resolve(xhr.response);
+  };
+  tools.ajax_reject = function (reject, xhr) {
+    doneApp();
+    reject(xhr.statusText);
+  };
+}
+
 function checkLogin(view) {
   loginCount = 0;
   db.get('session')
@@ -670,8 +724,7 @@ function doLogin(view, args) {
           db.put({_id: 'session', url: getLocal('rapyd_server_url'), login: response.login, password: response.password, id: response.id, client_js: response.client_js, unsaved: {}});
           myApp.alert('Login success!');
         });
-        eval(response.client_js);
-        client_js = response.client_js;
+        loadORM(response.client_js);
         tools.configuration.url = getLocal('rapyd_server_url');
         models.env.user = models.env['res.users'].browse();
         models.env.user.id = response.id;
@@ -681,6 +734,7 @@ function doLogin(view, args) {
         loginCount = 0;
         reloadPage(view, 'index');
       } else {
+        console.log(response);
         var alert = 'Username/Password wrong, relogin';
         if (response.status !== 'denied') {
           alert = 'Either you encrypted data is invalid or there have been an error';
@@ -691,6 +745,7 @@ function doLogin(view, args) {
       return response;
     }).catch(function (error) {
       loginCount = 0;
+      console.log(error);
       myApp.alert("Can't connect to server");
       reloadPage(view, currentPage);
     });
@@ -711,9 +766,15 @@ function editRecord(button) {
   if (tools.exist(models.env.context.active_id) === false) {
     models.env.context.active_id = models.env[models.env.context.active_model].browse();
   }
-  var inputs = document.querySelectorAll('input[disabled]');
+  var inputs = document.querySelectorAll('.input-field');
   for (var index in inputs) {
     inputs[index].disabled = false;
+    if (hasKey(selectivityFields, models.env.context.active_model+'.'+inputs[index].id) === true) {
+      var id = inputs[index].id;
+      var field = selectivityFields[models.env.context.active_model+'.'+inputs[index].id];
+      field.setOptions({readOnly: false});
+      field.el.querySelector('input').id = id;//.children[0].children[0].id = id;
+    }
   }
   if (button !== undefined) {
     button.style.display = 'none';document.querySelector('.button-save').style.display = 'inline-block';
@@ -725,6 +786,12 @@ function saveRecord(button) {
   var inputs = document.querySelectorAll('.input-field');
   for (var index in Array.prototype.slice.call(inputs)) {
     inputs[index].disabled = true;
+    if (hasKey(selectivityFields, models.env.context.active_model+'.'+inputs[index].id) === true) {
+      var id = inputs[index].id;
+      var field = selectivityFields[models.env.context.active_model+'.'+inputs[index].id];
+      field.setOptions({readOnly: true});
+      field.el.querySelector('input').id = id;//.children[0].children[0].id = id;
+    }
     values[inputs[index].id] = getValue(inputs[index].id);
   }
   if (tools.exist(models.env.context.unsaved) === false) {
@@ -785,13 +852,14 @@ function updateUnsave() {
   });
 }
 
-function showTable(input) {
+function showTable(input, tree, model) {
+  var id = input.id;
   var table = 
-'<div class="mdl-cell">'+
-'	<table class="mdl-data-table  mdl-shadow--2dp">'+
+'<div class="mdl-cell item-content">'+
+'	<table class="mdl-data-table">'+
 '		<thead>'+
-'			<tr>'+
-'				<th>Column 1</th>'+
+'			<tr class="columns">'+
+'				<th class="hide column-default"></th>'+
 '				<th>'+
 '					<i style="vertical-align: bottom;" class="table-add material-icons md-24" onclick="addTable(this)">&#xe03b;</i>'+
 '				</th>'+
@@ -799,8 +867,9 @@ function showTable(input) {
 '		</thead>'+
 '		<tbody>'+
 '			<tr class="hide line-default">'+
-'				<td>'+
-'					<div contenteditable="" style="width: 100%; height: 100%; outline: 0px solid transparent;">Cell 1</div>'+
+'				<td class="hide column-row-default">'+
+'					<div contenteditable style="width: 100%; height: 100%; outline: 0px solid transparent;"></div>'+
+//'					<input type="text">'+
 '				</td>'+
 '				<td>'+
 '					<i style="vertical-align: bottom;" class="table-remove material-icons md-24" onclick="removeTable(this)">&#xe15d;</i>'+
@@ -809,13 +878,26 @@ function showTable(input) {
 '		</tbody>'+
 '	</table>'+
 '</div>';
-  input.parentElement.parentElement.parentElement.parentElement.insertAdjacentHTML('afterend', table);
+  input.parentElement.parentElement.parentElement.parentElement.parentElement.insertAdjacentHTML('afterend', table);
+  table = input.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector('table');
+  var column_default = table.querySelector('th.column-default');
+  var column_row_default = table.querySelector('td.column-row-default');
+  for (var index in Array.prototype.slice.call(tree.children)) {
+    var field = tree.children[index];
+    var column = column_default.cloneNode(true);
+    var column_row = column_row_default.cloneNode(true);
+    column.removeAttribute('class');
+    column.innerHTML = models.env[model]._fields[field.attributes.name.value].string;
+    column_row.removeAttribute('class');
+    column_row.children[0].className = field.attributes.name.value + ' tree-input';
+    column_default.parentElement.lastChild.insertAdjacentElement('beforebegin', column);
+    column_row_default.parentElement.lastChild.insertAdjacentElement('beforebegin', column_row);
+  }
 }
 
 function addTable(element) {
   clone = element.parentElement.parentElement.parentElement.parentElement.querySelector('.line-default').cloneNode(true);
   append = element.parentElement.parentElement.parentElement.parentElement.querySelector('tbody').appendChild(clone);
-  append.removeAttribute('id');
   append.removeAttribute('class');
   append.setAttribute('class', 'line');
 }
