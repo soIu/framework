@@ -1,0 +1,90 @@
+import orm.models as models
+import orm.tools as tools
+
+def server(method, write=True):
+    def ajax():
+        v'var self = this'
+        if not tools.configuration.client:
+           self[method.name] = method
+           result = self[method.name]()
+           if write and v'result instanceof models.Model' == True:
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': models.env.context.active_model, 'ids': models.env.context.active_ids, 'method': method.name}).then(
+        def (result):
+            models.env.context.active_id.values = result.values
+            models.env[models.env.context.active_model].browse(models.env.context.active_ids)
+            return models.env.context.active_id
+        ).catch(
+        def (error):
+            console.log(error)
+            return Exception("There are some error")
+        )
+    return ajax
+
+def client(method, write=True):
+    def ajax():
+        v'var self = this'
+        if not tools.configuration.client:
+           self[method.name] = method
+           result = self[method.name]()
+           if write and v'result instanceof models.Model' == True: 
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': models.env.context.active_model, 'ids': models.env.context.active_ids, 'method': method.name}).then(
+        def (result):
+            models.env.context.active_id.values = result.values
+            models.env[models.env.context.active_model].browse(models.env.context.active_ids)
+            return models.env.context.active_id
+        ).catch(
+        def (error):
+            console.log(error)
+            return method()
+            #return Exception("There are some error")
+        )
+    return ajax
+
+def strict(method, write=True):
+    def ajax():
+        v'var self = this'
+        if v"typeof window === 'undefined'" == True:
+           self[method.name] = method
+           result = self[method.name]()
+           if write and v'result instanceof models.Model' == True: 
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': models.env.context.active_model, 'ids': models.env.context.active_ids, 'method': method.name}).then(
+        def (result):
+            models.env.context.active_id.values = result.values
+            models.env[models.env.context.active_model].browse(models.env.context.active_ids)
+            return models.env.context.active_id
+        ).catch(
+        def (error):
+            console.log(error)
+            return Exception("There are some error")
+        )
+    return ajax

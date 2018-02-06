@@ -87,7 +87,7 @@ def (request, result, next):
        next()
     params = request.params
     if exist(request.params):
-       request.env[params.model].search(*params.args, limit=params.options.limit, index=params.options.index).then(
+       request.env[params.model].search(params.args, limit=params.options.limit, index=params.options.index).then(
        def (record):
            result.response = {'status': 'success', 'values': record.values}
            next()
@@ -164,6 +164,32 @@ def (request, result, next):
            record.unlink().then(
            def ():
                result.response = {'status': 'success'}
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, result, next):
+    return result.send(result.response)
+)
+
+http.route('/api/methods',
+def (request, result, next):
+    if result.response.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].browse(params.ids).then(
+       def (record):
+           record[params.method]().then(
+           def (record):
+               result.response = {'status': 'success', 'values': record.values}
                next()
            )
        ).catch(
