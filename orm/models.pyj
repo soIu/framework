@@ -38,6 +38,9 @@ class Model():
            v'env[self._name] = new self.constructor(_is_env=true)'
            env[self._name]._is_env = True
         self.env = env
+        for key in Object.getOwnPropertyNames(self.constructor.prototype):
+            if exist(self[key]) and type(self[key]) == Function:
+               self[key]._model_name = self._name
         if self._is_env:
            return
         schema = {'singular': self._name, 'plural': self._name}
@@ -54,6 +57,8 @@ class Model():
            reserved = ['ids']
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved)
         for key in valid_fields:
+            if not exist(self[key]) or (type(self[key]) == Object and 'compute' not in self[key]):
+               continue
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
