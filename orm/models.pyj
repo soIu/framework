@@ -35,11 +35,13 @@ class Model():
            if not exist(self._name):
               self._name = self._inherit
            new = self
-           self = self.env[self._inherit]
+           self = env[new._inherit]
            self._name = new._name
            self._is_env = False
+           if tools.exist(env[self._name]):
+              del env[self._name]
         for key in Object.getOwnPropertyNames(constructor.prototype):
-            if exist(self._inherit) and new != False and new[key]:
+            if exist(new._inherit) and key != '_inherit' and new != False and new[key]:
                self[key] = new[key]
             if exist(self[key]) and type(self[key]) == Function:
                self[key]._model_name = self._name
