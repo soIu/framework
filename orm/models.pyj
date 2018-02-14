@@ -36,6 +36,7 @@ class Model():
               self._name = self._inherit
            new = self
            self = self.env[self._inherit]
+           self._name = new._name
            self._is_env = False
         for key in Object.getOwnPropertyNames(constructor.prototype):
             if exist(self._inherit) and new != False and new[key]:
