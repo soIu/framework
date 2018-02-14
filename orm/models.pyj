@@ -15,7 +15,7 @@ def queryInverse(type, records, fields, _fields):
     return records
 
 class Model():
-    _name = 'undefined'
+    _name = undefined
     _inherit = False
     #_fields = {}
     #_values = {}
@@ -29,6 +29,19 @@ class Model():
         self._one2many_fields = []
         self._is_env = _is_env
         self._is_singleton = _is_singleton
+        constructor = self.constructor
+        new = False
+        if exist(self._inherit):
+           if not exist(self._name):
+              self._name = self._inherit
+           new = self
+           self = self.env[self._inherit]
+           self._is_env = False
+        for key in Object.getOwnPropertyNames(constructor.prototype):
+            if exist(self._inherit) and new != False and new[key]:
+               self[key] = new[key]
+            if exist(self[key]) and type(self[key]) == Function:
+               self[key]._model_name = self._name
         if 'Model' not in env:
            env['Model'] = Model
         if 'context' not in env:
@@ -38,9 +51,6 @@ class Model():
            v'env[self._name] = new self.constructor(_is_env=true)'
            env[self._name]._is_env = True
         self.env = env
-        for key in Object.getOwnPropertyNames(self.constructor.prototype):
-            if exist(self[key]) and type(self[key]) == Function:
-               self[key]._model_name = self._name
         if self._is_env:
            return
         schema = {'singular': self._name, 'plural': self._name}
