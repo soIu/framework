@@ -32,16 +32,16 @@ class Model():
         if exist(self._inherit):
            if not exist(self._name):
               self._name = self._inherit
-           new = self
-           self = env[new._inherit]
-           self._name = new._name
+           newmodel = self
+           self = env[newmodel._inherit]
+           self._name = newmodel._name
            self._is_env = False
            if tools.exist(env[self._name]):
               del env[self._name]
            self[key].inherited_constructor = self.constructor
-           for key in Object.getOwnPropertyNames(new.constructor.prototype):
-               if exist(new._inherit) and key not in ['_inherit', 'inherited_constructor', 'values']:
-                  self[key] = new[key]
+           for key in Object.getOwnPropertyNames(newmodel.constructor.prototype):
+               if exist(newmodel._inherit) and key not in ['_inherit', 'inherited_constructor', 'values']:
+                  self[key] = newmodel[key]
         if 'Model' not in env:
            env['Model'] = Model
         if 'context' not in env:
