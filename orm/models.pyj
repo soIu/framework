@@ -67,7 +67,7 @@ class Model():
            reserved = ['ids']
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved)
         for key in valid_fields:
-            if not exist(self[key]) or (type(self[key]) == Object and 'compute' not in self[key]):
+            if not exist(self[key]) or type(self[key]) == Object and 'compute' not in self[key]:
                continue
             #if key in self._fields:
             #   self[key] = self._fields[key]
