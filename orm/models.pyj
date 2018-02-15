@@ -29,8 +29,6 @@ class Model():
         self._one2many_fields = []
         self._is_env = _is_env
         self._is_singleton = _is_singleton
-        constructor = self.constructor
-        new = False
         if exist(self._inherit):
            if not exist(self._name):
               self._name = self._inherit
@@ -40,11 +38,10 @@ class Model():
            self._is_env = False
            if tools.exist(env[self._name]):
               del env[self._name]
-        for key in Object.getOwnPropertyNames(constructor.prototype):
-            if exist(new._inherit) and key != '_inherit' and new != False and new[key]:
-               self[key] = new[key]
-            if exist(self[key]) and type(self[key]) == Function:
-               self[key]._model_name = self._name
+           self[key].inherited_constructor = self.constructor
+           for key in Object.getOwnPropertyNames(new.constructor.prototype):
+               if exist(new._inherit) and key not in ['_inherit', 'inherited_constructor', 'values']:
+                  self[key] = new[key]
         if 'Model' not in env:
            env['Model'] = Model
         if 'context' not in env:
@@ -148,6 +145,11 @@ class Model():
             result.values = value
             lists.push(result)
         return lists
+
+    def __super__(self):
+        inherited = v'new self.inherited_constructor(self._is_env, self._is_singleton)'
+        inherited.values = self.values
+        return inherited
 
     def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
