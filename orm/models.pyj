@@ -5,8 +5,8 @@ from orm.pouchdb import db
 env = {}
 schemas = {}
 
-def queryInverse(type, records, fields, _fields):
-    for record in records[type]:
+def queryInverse(field_type, records, fields, _fields):
+    for record in records[field_type]:
         for field in fields:
             record[field] = []
             for result in records[_fields[field].relation]:
@@ -67,20 +67,20 @@ class Model():
            reserved = ['ids']
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved)
         for key in valid_fields:
-            if not exist(self[key]) or type(self[key]) == Object and 'compute' not in self[key]:
+            if not exist(self[key]) or (type(self[key]) == Object and 'compute' not in self[key]):
                continue
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
                if not schema.relations:
                   schema.relations = {}
-               type = 'belongsTo'
+               relation = 'belongsTo'
                if self[key].type in ['one2many', 'many2many']:
-                  type = 'hasMany'
+                  relation = 'hasMany'
                if self[key].type != 'one2many':
-                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False}}} #Turning async into false since one2many doesn't work
+                  schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': False}}} #Turning async into false since one2many doesn't work
                else:
-                  schema.relations[key] = {type: {'type': self[key].relation, 'options': {'async': False, 'queryInverse': self[key].inverse}}}
+                  schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': False, 'queryInverse': self[key].inverse}}}
                   self._one2many_fields.push(key)
                if type == 'belongsTo':
                   db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
