@@ -45,9 +45,9 @@ def One2one(relation, string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'one2one', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
-def Selection(*selection, string, **args):
+def Selection(*selection, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
-    return merge({'type': 'selection', 'selection': selection, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
+    return merge({'type': 'selection', 'selection': selection, 'string': args.string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Date(string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
