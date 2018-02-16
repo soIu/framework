@@ -1,0 +1,56 @@
+.preloader-indicator-modal {
+  border-radius: 25px;
+}
+
+.mdl-card__title-text {
+  font-weight: inherit;
+}
+
+.navbar {
+  background-color: #875a7b !important;
+}
+
+.label {
+  font-size: 15px !important;
+}
+
+.item-title {
+  font-size: 16px;
+}
+
+.item-input {
+  margin-right: 150px;
+  font-size: inherit !important;
+}
+
+/*.tree-input {
+     width: 100%; 
+     box-sizing: border-box;
+     -webkit-box-sizing:border-box;
+     -moz-box-sizing: border-box;
+}*/
+
+.button {
+  display: inline-block;
+}
+
+.hide {
+  display: none;
+}
+
+@media screen and (min-width: 1000px) {
+  .left-group {
+    margin-right: 150px;
+  }
+}
+
+.selectivity-multiple-input-container {
+  min-width: 200px;
+}
+
+.selectivity-single-selected-item-remove {
+  color: #212121 !important;
+}
+.selectivity-multiple-selected-item-remove {
+  color: #fff !important;
+}

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Required meta tags-->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- Color theme for statusbar -->
+    <meta name="theme-color" content="#875a7b">
+    <!-- Your app title -->
+    <title>App</title>
+    <link rel="stylesheet" href="css/material.teal-purple.min.css">
+    <!-- Path to Framework7 Library CSS, Material Theme -->
+    <link rel="stylesheet" href="css/framework7.material.min.css">
+    <!-- Path to Framework7 color related styles, Material Theme -->
+    <link rel="stylesheet" href="css/framework7.material.colors.min.css">
+    <!-- Path to your custom app styles-->
+    <link rel="stylesheet" href="css/selectivity.min.css">
+    <link rel="stylesheet" href="css/my-app.css">
+    <link href="css/material-icons.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+  </head>
+  <body class="theme-teal" onload="startApp(mainView);">
+    
+    <div class="panel-overlay"></div>
+    
+    <div class="panel panel-left panel-cover">
+      <div class="content-block">
+        
+        <!--<div class="item-content">
+          <div class="button button-raised" onclick="uploadData(mainView);">Upload Data</div>
+        </div>
+        
+        <div class="item-content" style="margin-top: 30px;">
+          <div class="button button-raised" onclick="getData(mainView);">Download Data</div>
+        </div>-->
+        
+        <span class="mdl-layout-title">Menu</span>
+        
+        <div id="menu" class="list-block accordion-list inset">
+          
+          <!--<ul>
+              <li class="accordion-item">
+                  <a class="item-link item-content">
+                    <div class="item-inner">
+                      <div class="item-title">Settings</div>
+                    </div>
+                  </a>
+                  <div class="accordion-item-content">
+                    <a class="item-content" onclick="loadPage(mainView, 'login_settings')">
+                      <div class="item-inner">
+                        <div class="item-title">Users</div>
+                      </div>
+                    </a>
+                  </div>
+              </li>
+          </ul>-->
+        </div>
+        
+        <div class="button button-fill button-raised" onclick="doLogout(mainView);myApp.closePanel()">Logout</div>
+        
+      </div>
+    </div>
+    
+    <!-- Views -->
+    <div class="views">
+      <!-- Your main view, should have "view-main" class -->
+      <div class="view view-main">
+        <!-- Pages container, because we use fixed navbar and toolbar, it has additional appropriate classes-->
+        <div  class="pages navbar-fixed toolbar-fixed">
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="js/pouchdb.min.js"></script>
+    <script type="text/javascript" src="js/pouchdb.relational-pouch.min.js"></script>
+    <!-- Path to Framework7 Library JS-->
+    <script type="text/javascript" src="js/framework7.js"></script>
+    <!-- Path to your app js-->
+    <script type="text/javascript" src="js/my-app.js"></script>
+    <script type="text/javascript" src="js/fetch.min.js"></script>
+    <script type="text/javascript" src="js/selectivity.min.js"></script>
+    <script type="text/javascript" src="js/material.min.js"></script>
+    <!-- Customization -->
+    
+    <template id="index">
+      
+          <div data-page="index" class="page">
+ 
+            <!-- Top Navbar. In Material theme it should be inside of the page-->
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a href="#" data-panel="left" class="open-panel link icon-only">
+                    <i class="icon icon-bars"></i>
+                  </a>
+                </div>
+                <div class="center">Home</div>
+                <!--<div class="right">
+                  <a href="#" data-panel="left" class="open-panel link icon-only">
+                    <i class="icon icon-bars"></i>
+                  </a>
+                </div>-->
+              </div>
+            </div>
+ 
+            <!-- Scrollable page content -->
+            <div class="page-content">
+              
+              
+                
+            </div>
+          </div>
+      
+    </template>
+    
+    <template id="login">
+          <div data-page="login" class="page">
+            
+            <div class="mdl-layout mdl-js-layout" style="align-items: center; justify-contents: center;">
+              <main class="mdl-layout__content" style="padding: 60px; flex: none;">
+                <div class="mdl-card mdl-shadow--6dp">
+                  
+                  <div class="mdl-card__title mdl-color--primary mdl-color-text--white">
+                    <h2 class="mdl-card__title-text">Login</h2>
+                  </div>
+                  
+                  <div class="mdl-card__supporting-text">
+                    <form action="#">
+                      <div class="mdl-textfield mdl-js-textfield">
+                        <input class="mdl-textfield__input" type="text" id="login" placeholder="Username/Email"/>
+                        <label class="mdl-textfield__label" for="username"></label>
+                      </div>
+                      <div class="mdl-textfield mdl-js-textfield">
+                        <input class="mdl-textfield__input" type="password" id="password" placeholder="Password"/>
+                        <label class="mdl-textfield__label" for="password"></label>
+                      </div>
+                    </form>
+                  </div>
+                  
+                  <div class="mdl-card__actions mdl-card--border">
+                    <button onclick="doLogin(mainView, getValues(['login', 'password']))" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Login</button>
+                    <button onclick="loadPage(mainView, 'login_settings')" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Settings</button>
+                  </div>
+                  
+                </div>
+              </main>
+            </div>
+            
+          </div>
+    </template>
+    
+    <template id="login_settings">
+          <div data-page="login_settings" class="page">
+ 
+            <!-- Top Navbar. In Material theme it should be inside of the page-->
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a class="back link icon-only"><i class="icon icon-back"></i></a>
+                </div>
+                <div class="center">Settings</div>
+              </div>
+            </div>
+ 
+            <!-- Scrollable page content -->
+            <div class="page-content">
+              <div class="list-block" style="margin: 0px;">
+                <div>
+                  
+                  <div>
+                    <div class="item-content">
+                      <div class="item-inner">
+                        <div class="item-title label">Server URL</div>
+                        <div class="item-input">
+                          <input type="text" id="url" value="getLocal('rapyd_server_url')">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="item-content" style="margin-top: 10px;">
+                    <div class="button button-fill button-raised" onclick="setLocal('rapyd_server_url', getValue('url'));mainView.router.back()">Apply</div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+    </template>
+    
+    <template id="template_list">
+      
+          <div data-page="template_list" class="page">
+ 
+            <!-- Top Navbar. In Material theme it should be inside of the page-->
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a class="back link icon-only"><i class="icon icon-back"></i></a>
+                </div>
+                <div class="center">Template</div>
+              </div>
+            </div>
+ 
+            <!-- Scrollable page content -->
+            <div class="page-content" style="padding-top: 56px">
+              
+              <div class="data-table data-table-init card" style="width: 100%;margin: 0">
+                <!-- Card Header -->
+                <div class="card-header" style="height: 120px">
+                  <!-- Table title -->
+                  <div class="data-table-title">
+                    Template
+                    <br>
+                    <div class="button button-fill button-raised" onclick="loadPage(mainView, 'template_model.form');" style="margin-top: 15px;">Create</div>
+                  </div>
+                  <!-- Table actions -->
+                  <div class="data-table-actions">
+                    <!--<a class="link icon-only"><i class="icon f7-icons"></i></a>
+                    <a class="link icon-only"><i class="icon f7-icons"></i></a>-->
+                  </div>
+                </div>
+                <!-- Card Content -->
+                <div class="card-content">
+                  <table>
+                    <thead>
+                      <tr class="table-headers">
+                        <th class="checkbox-cell">
+                          <label class="form-checkbox">
+                            <input type="checkbox"><i></i>
+                          </label>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="table-values">
+                        <td class="checkbox-cell">
+                          <label class="form-checkbox">
+                            <input type="checkbox"><i></i>
+                          </label>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+            </div>
+          </div>
+      
+    </template>
+    
+    <template id="template_form">
+      
+          <div data-page="template_form" class="page">
+            
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left" onclick="reloadPreviousPage(mainView, 'template_model.list')">
+                  <a class="back link icon-only"><i class="icon icon-back"></i></a>
+                </div>
+                <div class="center">Template</div>
+              </div>
+            </div>
+            
+            <div class="page-content form-content" style="padding-top: 56px">
+              
+              <div class="data-table" style="width: 100%;margin: 0">
+                <!-- Card Header -->
+                <div class="card-header" style="height: 120px">
+                  <!-- Table title -->
+                  <div class="data-table-title">
+                    Template
+                    <a class="form-label" style="color: rgb(102, 102, 102);font-weight: 350;">/ New</a>
+                    <br>
+                    <div class="button button-fill button-raised button-edit" onclick="editRecord(this)" style="margin-top: 15px;">Edit</div>
+                    <div class="button button-fill button-raised button-save" onclick="saveRecord(this)" style="display:none ;margin-top: 15px;">Save</div>
+                    <div class="button button-fill button-raised button-upload" onclick="uploadRecord(this)" style="display:none ;margin-top: 15px;">Upload</div>
+                  </div>
+                  <!-- Table actions -->
+                  <div class="data-table-actions">
+                    <!--<a class="link icon-only"><i class="icon f7-icons"></i></a>
+                    <a class="link icon-only"><i class="icon f7-icons"></i></a>-->
+                  </div>
+                </div>
+              </div>
+              <header class="data-table" style="margin: 0;padding: 10px;background-color: #8F8F8F"></header>
+            
+              <div class="form-sheet demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid" style="min-height: 250px;margin-top: 20px">
+                
+                <div class="list-block" style="margin: 0px;">
+
+                  <div class="left-group" style="float: left;margin-bottom: 50px;">
+
+                    <div class="form-field item-content">
+                      <div class="item-inner">
+                        <div class="item-title label"></div>
+                        <div class="item-input">
+                          <input type="text">
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+
+                </div>
+              </div>
+              
+              <footer class="card" style="margin: 0; padding: 20px;min-height: 30%;margin-top: 30px"></footer>
+              
+            </div>
+            
+          </div>
+          
+    </template>
+    
+  </body>
+</html>
