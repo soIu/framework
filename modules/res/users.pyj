@@ -19,7 +19,7 @@ class ResUsers(models.Model):
 
 ResUsers()
 
-menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users'})
+menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users', 'sequence': 1})
 
 view.add({'model': 'res.users', 'mode': 'tree', 'string': False, 'arch': """
 <tree>

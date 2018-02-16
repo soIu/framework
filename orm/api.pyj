@@ -1,10 +1,21 @@
 import orm.models as models
 import orm.tools as tools
 
-def server(method, write=True):
-    def ajax():
+def server(method, write=True, iterate=True):
+    def wrap():
         v'var self = this'
         if not tools.configuration.client:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name]().then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
            self[method.name] = method
            result = self[method.name]()
            if write and v'result instanceof models.Model' == True:
@@ -28,12 +39,23 @@ def server(method, write=True):
             console.log(error)
             return Exception("There are some error")
         )
-    return ajax
+    return wrap
 
-def client(method, write=True):
-    def ajax():
+def client(method, write=True, iterate=True):
+    def wrap():
         v'var self = this'
         if not tools.configuration.client:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name]().then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
            self[method.name] = method
            result = self[method.name]()
            if write and v'result instanceof models.Model' == True: 
@@ -55,15 +77,27 @@ def client(method, write=True):
         ).catch(
         def (error):
             console.log(error)
-            return method()
+            self[method.name] = method
+            return self[method.name]()
             #return Exception("There are some error")
         )
-    return ajax
+    return wrap
 
-def strict(method, write=True):
-    def ajax():
+def strict(method, write=True, iterate=True):
+    def wrap():
         v'var self = this'
         if v"typeof window === 'undefined'" == True:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name]().then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
            self[method.name] = method
            result = self[method.name]()
            if write and v'result instanceof models.Model' == True: 
@@ -87,4 +121,33 @@ def strict(method, write=True):
             console.log(error)
             return Exception("There are some error")
         )
-    return ajax
+    return wrap
+
+#if not tools.exist(tools.onchanges):
+#   tools.onchanges = {}
+
+def onchange(method, *fields):
+    method._onchange_fields = fields
+    def wrap():
+        v'var self = this'
+        self[method.name] = method
+        result = self[method.name]()
+        if not tools.exist(result):
+           result = self
+        return result
+    return wrap
+
+def get_onchanges(self):
+    onchanges = {}
+    for key in Object.getOwnPropertyNames(self):
+        if tools.exist(self[key]) and type(self[key]) == Function and tools.exist(self[key]._onchange_fields):
+           for field in self[key]._onchange_fields:
+               if not tools.exist(onchanges[field]):
+                  onchanges[field] = []
+               onchanges[field].push(self[key].name)
+    return onchanges
+
+tools.get_onchanges = get_onchanges
+
+#I plan to make depends to listen at adapt or write, not really sure. Maybe for now I'll make it the same as onchange
+depends = onchange

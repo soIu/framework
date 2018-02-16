@@ -109,9 +109,9 @@ myApp.onPageInit('index', function (page) {
           }
           function render(records) {
             loadApp();
-            records = records.__iter__();
-            for (var record in records.as_array()) {
-              record = records[record];
+            //records = records.__iter__();
+            records.queue(function (record, next) {
+              //record = records[record];
               var tr = values.cloneNode(true);
               var onclick = function () {models.env.context.active_id = record;models.env.context.active_ids = [record.id];loadPage(mainView, model+'.form')};
               for (var field in Array.prototype.slice.call(tree.children)) {
@@ -123,7 +123,8 @@ myApp.onPageInit('index', function (page) {
                 tr.append(td);
               }
               tbody.append(tr);
-            }
+              next();
+            });
             values.remove();//.parentElement.removeChild(values);
             doneApp();
           }
@@ -189,6 +190,7 @@ myApp.onPageInit('index', function (page) {
                   var field_name = children[index].attributes.name.value;
                   var field_object = models.env[model]._fields[field_name];
                   input.id = field_name;
+                  //input.onclick = function () {onchangeField(field_name)};
                   if (field_object.type === 'integer') {
                     input.type = 'number';
                   }
@@ -302,7 +304,7 @@ myApp.onPageInit('index', function (page) {
                     input.children[0].children[0].className += ' selectivity-single-input';
                     input.children[0].children[0].style.display = 'none';
                   }
-                  //TO-DO Binary, and relationals (one2many, many2many)
+                  //TO-DO Binary
                   var label = element.querySelector('.label');
                   label.innerHTML = models.env[model]._fields[field_name].string;
                   fields.push(field_name);
@@ -372,7 +374,7 @@ function startApp(view) {
     checkLoginValid(view);
   }).catch(function (error) {
     if (getLocal('rapyd_server_url') === null) {
-      setLocal('rapyd_server_url', 'http://localhost');
+      setLocal('rapyd_server_url', window.location.origin + ':8069');
     }
     reloadPage(view, 'index');
     checkLoginValid(view);
@@ -760,6 +762,18 @@ function doLogout(view) {
   }).catch(function (error) {
     console.log(error);
   });
+}
+
+function onchangeField(field) {
+  if (tools.exist(tools.onchanges[models.env.context.active_model]) === true) {
+    if (tools.exist(tools.onchanges[models.env.context.active_model][field]) === true) {
+      for (var method in tools.onchanges[models.env.context.active_model][field].as_array()) {
+        method = tools.onchanges[models.env.context.active_model][field][method];
+        models.env.context.active_id[method]();
+        //To-do Queue and Update UI values
+      }
+    }
+  }
 }
 
 function editRecord(button) {
