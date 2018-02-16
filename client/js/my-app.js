@@ -161,6 +161,7 @@ myApp.onPageInit('index', function (page) {
           page.querySelector('.form-sheet').remove();
           var fields = [];
           var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group, 'button': button};//Don't forget to add your custom tag here if you want to make customizations
+          var height_left = 0;
           function render(parent, children, group_left) {
             if (hasClass(parent, 'form-sheet') === true) {
               parent = parent.children[0];
@@ -175,8 +176,10 @@ myApp.onPageInit('index', function (page) {
                   if (group_left === true) {
                     element.className = 'left-group';
                     group_left = false;
+                    height_left = element.clientHeight;
                   } else {
                     group_left = true;
+                    element.style.height = height_left + 'px';
                   }
                 }
                 else if (tag === 'button') {
@@ -190,7 +193,7 @@ myApp.onPageInit('index', function (page) {
                   var field_name = children[index].attributes.name.value;
                   var field_object = models.env[model]._fields[field_name];
                   input.id = field_name;
-                  //input.onclick = function () {onchangeField(field_name)};
+                  input.onchange = function () {onchangeField(field_name, model)};
                   if (field_object.type === 'integer') {
                     input.type = 'number';
                   }
@@ -325,12 +328,6 @@ myApp.onPageInit('index', function (page) {
             }
           }
           render(content, form.children, true);
-          if (tools.exist(models.env.context.active_id) === true) {
-            page.querySelector('.form-label').innerHTML = "/ " + models.env.context.active_id.name;
-            if (hasKey(models.env.context.unsaved, model) === true && hasKey(models.env.context.unsaved[model], models.env.context.active_id.id) === true) {
-              page.querySelector('.button-upload').style.display = 'inline-block';
-            }
-          }
           for (var index in fields) {
             if (tools.exist(models.env.context.active_id) === true) {
               setValue(fields[index], models.env.context.active_id[fields[index]]);
@@ -340,6 +337,15 @@ myApp.onPageInit('index', function (page) {
             /*if (hasKey(selectivityFields, models.env.context.active_model+'.'+fields[index]) === true) {
               selectivityFields[models.env.context.active_model+'.'+fields[index]].setOptions({readOnly: true});
             }*/
+          }
+          if (tools.exist(models.env.context.active_id) === true) {
+            page.querySelector('.form-label').innerHTML = "/ " + models.env.context.active_id.name;
+            if (hasKey(models.env.context.unsaved, model) === true && hasKey(models.env.context.unsaved[model], models.env.context.active_id.id) === true) {
+              page.querySelector('.button-upload').style.display = 'inline-block';
+            }
+          }
+          else {
+            page.querySelector('.button-edit').click();
           }
         });
       }
@@ -764,14 +770,14 @@ function doLogout(view) {
   });
 }
 
-function onchangeField(field) {
-  if (tools.exist(tools.onchanges[models.env.context.active_model]) === true) {
-    if (tools.exist(tools.onchanges[models.env.context.active_model][field]) === true) {
-      for (var method in tools.onchanges[models.env.context.active_model][field].as_array()) {
-        method = tools.onchanges[models.env.context.active_model][field][method];
-        models.env.context.active_id[method]();
-        //To-do Queue and Update UI values
-      }
+function onchangeField(field, model) {
+  if (models.env.context.active_model === model) {
+    if (tools.exist(models.env.context.active_onchanges) === false) {
+      models.env.context.active_onchanges = tools.get_onchanges(models.env.context.active_id);
+    }
+    for (var onchange in models.env.context.active_onchanges[field]) {
+      onchange = models.env.context.active_onchanges[field][onchange];
+      models.env.context.active_id[onchange]();
     }
   }
 }
