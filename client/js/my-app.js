@@ -161,8 +161,7 @@ myApp.onPageInit('index', function (page) {
           page.querySelector('.form-sheet').remove();
           var fields = [];
           var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group, 'button': button};//Don't forget to add your custom tag here if you want to make customizations
-          var height_left = 0;
-          function render(parent, children, group_left) {
+          function render(parent, children, group_left, height_left) {
             if (hasClass(parent, 'form-sheet') === true) {
               parent = parent.children[0];
             }
@@ -320,14 +319,14 @@ myApp.onPageInit('index', function (page) {
                   //To-DO fields.push();
                   return;
                 }
-                render(element, children[index].children, group_left);
+                render(element, children[index].children, group_left, height_left);
               }
             }
             for (var index in Array.prototype.slice.call(children)) {
               render_child(index);
             }
           }
-          render(content, form.children, true);
+          render(content, form.children, true, 0);
           for (var index in fields) {
             if (tools.exist(models.env.context.active_id) === true) {
               setValue(fields[index], models.env.context.active_id[fields[index]]);
