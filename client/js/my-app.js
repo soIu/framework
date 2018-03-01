@@ -161,7 +161,7 @@ myApp.onPageInit('index', function (page) {
           page.querySelector('.form-sheet').remove();
           var fields = [];
           var definedTags = {'header': header, 'sheet': sheet, 'sheet_inner': sheet_inner, 'footer': footer, 'field': field, 'group': group, 'button': button};//Don't forget to add your custom tag here if you want to make customizations
-          function render(parent, children, group_left, height_left) {
+          function render(parent, children, group_left, element_left) {
             if (hasClass(parent, 'form-sheet') === true) {
               parent = parent.children[0];
             }
@@ -175,10 +175,11 @@ myApp.onPageInit('index', function (page) {
                   if (group_left === true) {
                     element.className = 'left-group';
                     group_left = false;
-                    height_left = element.clientHeight;
+                    element_left = element;
                   } else {
                     group_left = true;
-                    element.style.height = height_left + 'px';
+                    console.log(element_left);
+                    element.style.height = (element_left.clientHeight + 4) + 'px';
                   }
                 }
                 else if (tag === 'button') {
@@ -319,7 +320,7 @@ myApp.onPageInit('index', function (page) {
                   //To-DO fields.push();
                   return;
                 }
-                render(element, children[index].children, group_left, height_left);
+                render(element, children[index].children, group_left, element_left);
               }
             }
             for (var index in Array.prototype.slice.call(children)) {
@@ -344,7 +345,7 @@ myApp.onPageInit('index', function (page) {
             }
           }
           else {
-            page.querySelector('.button-edit').click();
+            editRecord(page.querySelector('.button-edit'));
           }
         });
       }
@@ -358,6 +359,8 @@ myApp.onPageInit('index', function (page) {
 });
 
 loginCount = 0;
+exceptionCount = 0;
+warningCount = 0;
 loadedMenus = [];
 loadedViews = [];
 currentPage = 'index';
@@ -667,16 +670,30 @@ function loadORM(client_js) {
   eval(client_js);
   tools.exception = function (error) {
     console.log(error);
+    if (exceptionCount !== 0) {
+      return new Promise(function (resolve, reject) {
+        exceptionCount = 0;
+        resolve(true);
+      });
+    }
     myApp.alert('There are some error');
+    exceptionCount = 1;
   };
   tools.warning = function (error, offline) {
     if (offline === undefined) {
       offline = false;
     }
     console.log(error);
+    if (warningCount !== 0) {
+      return new Promise(function (resolve, reject) {
+        warningCount = 0;
+        resolve(true);
+      });
+    }
     if (offline === true) {
       myApp.addNotification({message: 'You are offline, using local data', hold: 1000});
     }
+    warningCount = 1;
   };
   tools.ajax_load = function () {
     loadApp();
@@ -792,7 +809,9 @@ function editRecord(button) {
       var id = inputs[index].id;
       var field = selectivityFields[models.env.context.active_model+'.'+inputs[index].id];
       field.setOptions({readOnly: false});
-      field.el.querySelector('input').id = id;//.children[0].children[0].id = id;
+      var input = field.el.querySelector('input');
+      input.id = id;//.children[0].children[0].id = id;
+      input.className += ' input-field';
     }
   }
   if (button !== undefined) {
@@ -809,7 +828,9 @@ function saveRecord(button) {
       var id = inputs[index].id;
       var field = selectivityFields[models.env.context.active_model+'.'+inputs[index].id];
       field.setOptions({readOnly: true});
-      field.el.querySelector('input').id = id;//.children[0].children[0].id = id;
+      var input = inputs[index];//field.el.querySelector('input');
+      input.id = id;//.children[0].children[0].id = id;
+      input.className += ' input-field';
     }
     values[inputs[index].id] = getValue(inputs[index].id);
   }
