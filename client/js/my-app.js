@@ -1,5 +1,7 @@
 // Initialize your app
-var myApp = new Framework7({
+
+if (typeof myApp === 'undefined') {
+  myApp = new Framework7({
     modalTitle: 'App',
     domCache: true,
     pushState: true,
@@ -12,7 +14,8 @@ var myApp = new Framework7({
     onAjaxComplete: function (xhr) {
         myApp.hideIndicator();
     },
-});
+  });
+}
 
 // Export selectors engine
 var $$ = Dom7;
@@ -178,7 +181,6 @@ myApp.onPageInit('index', function (page) {
                     element_left = element;
                   } else {
                     group_left = true;
-                    console.log(element_left);
                     element.style.height = (element_left.clientHeight + 4) + 'px';
                   }
                 }
@@ -506,12 +508,12 @@ function getValue(id) {
     if (element.type === 'checkbox') {
       return element.checked;
     }
-    else if (hasValue(element.className, 'selectivity')) {
-      return selectivityFields[models.env.context.active_model+'.'+id].getValue()
-    }
     return element.value;
   }
   else {
+    if (selectivityFields[models.env.context.active_model+'.'+id] !== undefined) {
+      return selectivityFields[models.env.context.active_model+'.'+id].getValue()
+    }
     return '';
   }
 }
