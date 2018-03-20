@@ -1,0 +1,56 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+class ResMessage(models.Model):
+    _name = 'res.message'
+
+    name = fields.Char(string="Title", required=True)
+    text = fields.Text(string="Text", required=True)
+    sent = fields.Boolean(string="Sent")
+    sender_id = fields.Many2one('res.users', string="Sender")
+
+    @api.strict
+    def send_message(self):
+        self.sent = True
+        self.env['res.users'].browse(self.sender_id).then(
+        def (result):
+            message = {'message': self.text}
+            if result.length > 0:
+               message['user'] = result.name
+            else:
+               message['user'] = 'Administrator'
+            self.env.context.socket.emit('message', message)
+        ).catch(
+        def (result):
+            self.env.context.socket.emit('message', {'message': self.text, 'user': 'Administrator'})
+        )
+        console.log(self.text)
+        return self
+
+ResMessage()
+
+#menu.add({'id': 'settings_message', 'string': 'Messages', 'parent': 'settings', 'model': 'res.message', 'sequence': 10})
+
+view.add({'model': 'res.message', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+</tree>
+"""})
+
+view.add({'model': 'res.message', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <header>
+        <button name="send_message" string="Send"/>
+    </header>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="sent"/>
+        </group>
+        <group>
+            <field name="text"/>
+        </group>
+    </sheet>
+</form>
+"""})

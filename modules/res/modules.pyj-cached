@@ -1,23 +1,24 @@
 {
 	"version": "11f4892304465d65e022681312abc87bd57b6b4f",
-	"signature": "23e78d0683b4724fcdeb24680539fdc27da511d1",
+	"signature": "14adad7b96cbd0e5ad18d50813903a4f608165a8",
 	"classes": {},
 	"baselib": {},
 	"nonlocalvars": [],
 	"imported_module_ids": [
 		"res.users",
-		"res.partner"
+		"res.partner",
+		"res.message"
 	],
 	"exports": [],
 	"outputs": {
-		"beautify:true keep_docstrings:true js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
-		"beautify:true keep_docstrings:true js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
-		"beautify:true keep_docstrings:false js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
-		"beautify:true keep_docstrings:false js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n",
-		"beautify:false keep_docstrings:true js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
-		"beautify:false keep_docstrings:true js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
-		"beautify:false keep_docstrings:false js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]",
-		"beautify:false keep_docstrings:false js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"]"
+		"beautify:true keep_docstrings:true js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n        var res = ρσ_modules.res;\n        res.message = ρσ_modules[\"res.message\"];\n\n",
+		"beautify:true keep_docstrings:true js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n        var res = ρσ_modules.res;\n        res.message = ρσ_modules[\"res.message\"];\n\n",
+		"beautify:true keep_docstrings:false js_version:5": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n        var res = ρσ_modules.res;\n        res.message = ρσ_modules[\"res.message\"];\n\n",
+		"beautify:true keep_docstrings:false js_version:6": "        var res = ρσ_modules.res;\n        res.users = ρσ_modules[\"res.users\"];\n\n        var res = ρσ_modules.res;\n        res.partner = ρσ_modules[\"res.partner\"];\n\n        var res = ρσ_modules.res;\n        res.message = ρσ_modules[\"res.message\"];\n\n",
+		"beautify:false keep_docstrings:true js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"];var res=ρσ_modules.res;res.message=ρσ_modules[\"res.message\"]",
+		"beautify:false keep_docstrings:true js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"];var res=ρσ_modules.res;res.message=ρσ_modules[\"res.message\"]",
+		"beautify:false keep_docstrings:false js_version:5": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"];var res=ρσ_modules.res;res.message=ρσ_modules[\"res.message\"]",
+		"beautify:false keep_docstrings:false js_version:6": "var res=ρσ_modules.res;res.users=ρσ_modules[\"res.users\"];var res=ρσ_modules.res;res.partner=ρσ_modules[\"res.partner\"];var res=ρσ_modules.res;res.message=ρσ_modules[\"res.message\"]"
 	},
 	"discard_asserts": false
 }

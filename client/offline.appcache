@@ -1,8 +1,8 @@
 CACHE MANIFEST
+# v4
 css/framework7.material.rtl.css
 css/font-awesome.min.css
 css/selectivity.min.css
-css/framework7.material.css
 css/framework7.material.min.css
 css/my-app.css
 css/material.teal-purple.min.css
@@ -23,7 +23,6 @@ fonts/MaterialIcons-Regular.ttf
 img/i-f7-material.png
 img/i-f7-ios.png
 js/framework7.min.js
-js/framework7.js
 js/selectivity.min.js
 js/pouchdb.min.js
 js/material.min.js

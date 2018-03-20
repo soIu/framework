@@ -1,4 +1,5 @@
 import modules.modules
+import modules.controllers
 import orm.http as http
 from orm.models import env
 from orm.tools import exist, configuration

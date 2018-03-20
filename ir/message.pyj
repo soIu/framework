@@ -1,0 +1,43 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+import orm.tools as tools
+from ir.ui import menu, view
+class IrMessage(models.Model):
+    _name = 'ir.message'
+
+    name = fields.Char(string="Title", required=True)
+    text = fields.Text(string="Text", required=True)
+    sent = fields.Boolean(string="Sent")
+
+    @api.strict
+    def send_message(self):
+        self.sent = True
+        return self
+
+IrMessage()
+
+#menu.add({'id': 'settings_message', 'string': 'Messages', 'parent': 'settings', 'model': 'ir.message', 'sequence': 10})
+
+view.add({'model': 'ir.message', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+</tree>
+"""})
+
+view.add({'model': 'ir.message', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <header>
+        <button name="send_message" string="Send"/>
+    </header>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="sent"/>
+        </group>
+        <group>
+            <field name="text"/>
+        </group>
+    </sheet>
+</form>
+"""})

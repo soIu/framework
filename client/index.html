@@ -4,6 +4,7 @@
     <!-- Required meta tags-->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- Color theme for statusbar -->
     <meta name="theme-color" content="#875a7b">
@@ -76,13 +77,14 @@
     <script type="text/javascript" src="js/pouchdb.min.js"></script>
     <script type="text/javascript" src="js/pouchdb.relational-pouch.min.js"></script>
     <!-- Path to Framework7 Library JS-->
-    <script type="text/javascript" src="js/framework7.js"></script>
+    <script type="text/javascript" src="js/framework7.min.js"></script>
     <!-- Path to your app js-->
     <script type="text/javascript" src="js/my-app.js"></script>
     <script>document.write('<script type="text/javascript" src="js/my-app.js?"\><\/script>');</script>
     <script type="text/javascript" src="js/fetch.min.js"></script>
     <script type="text/javascript" src="js/selectivity.min.js"></script>
     <script type="text/javascript" src="js/material.min.js"></script>
+    <script>document.write('<script type="text/javascript" src="'+getLocal('rapyd_server_url')+'/socket.io/socket.io.js"\><\/script>');</script>
     <!-- Customization -->
     
     <template id="index">
@@ -107,9 +109,61 @@
             </div>
  
             <!-- Scrollable page content -->
-            <div class="page-content">
+            <div class="page-content" style="padding-top: 56px">
               
-              
+              <main>
+                <div>
+
+                    <section class="chat-area mdl-grid" style="padding-bottom: 196px">
+                        <div class="mdl-cell mdl-cell--9-col" id="chat-cell">
+                          <div class="chat-list-div">
+                            <ul class="listborder mdl-list messages"></ul>
+                          </div>
+                        </div>
+                        <!--<div class="user-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--2-col mdl-cell--1-offset mdl-cell--hide-phone mdl-cell--hide-tablet" style="margin: 0; min-width: 200px;">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">Users</h2>
+                            </div>
+                            <div class="user-list-div">
+                                <ul class="listborder mdl-list" id="users">
+                                </ul>
+                            </div>
+
+                        </div>-->
+                    </section>
+
+                    <section class="message-area mdl-grid">
+                        <div class="mdl-cell mdl-cell--12-col">
+                            <div class="message-card mdl-card mdl-grid mdl-shadow--2dp" style="min-width: 100%; position: fixed; left: 0; bottom: 0;">
+                                <!--<div class="message-box mdl-cell mdl-cell--11-col">
+                                    <form action="" id="send-message-form">
+                                        <div class="message-field mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                            <input class="mdl-textfield__input" autocomplete="off" type="text" id="send-message-form-input">
+                                            <label class="mdl-textfield__label" for="send-message-form-input">Message</label>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="send-button mdl-cell mdl-cell--1-col">
+                                    <button id="send-message-button" class="mdl-button mdl-button--colored mdl-js-button mdl-button--raised mdl-js-ripple-effect">Send</button>
+                                </div>-->
+                                <div class="list-block">
+                    <div class="item-content">
+                      <div>
+                        <div class="item-input">
+                          <input type="text" placeholder="Message" id="homepage_chat_message">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                                <div class="item-content" style="margin-top: 40px; margin-left: auto; margin-right: 10px;">
+                    <div class="button button-fill button-raised" onclick="models.env['res.message'].create({'sender_id': models.env.user.id, 'text': getValue('homepage_chat_message'), 'name': 'Chat'}).then(function(result) {setValue('homepage_chat_message', ''); if (result.length > 0) result.send_message()})">Send</div>
+                  </div>
+                            </div>
+                            
+                        </div>
+                    </section>
+                </div>
+              </main>
                 
             </div>
           </div>
@@ -182,7 +236,7 @@
                   </div>
                   
                   <div class="item-content" style="margin-top: 10px;">
-                    <div class="button button-fill button-raised" onclick="setLocal('rapyd_server_url', getValue('url'));mainView.router.back()">Apply</div>
+                    <div class="button button-fill button-raised" onclick="setLocal('rapyd_server_url', getValue('url'));window.location.reload()">Apply</div>
                   </div>
                   
                 </div>

@@ -1,0 +1,14 @@
+import orm.http as http
+import orm.models as models
+
+socket = require('socket.io')(http.server.server)
+socket.on('connection',
+def (socket):
+    console.log('A User Connected')
+    socket.on('disconnect',
+    def ():
+        console.log('User Disconnected')
+    )
+)
+
+models.env.context.socket = socket
