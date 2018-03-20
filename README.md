@@ -2,11 +2,12 @@
 After years developing applications with *magic* MVC and ORM included with it, I started to think even though these ORM Frameworks and relational-databases are powerful. They lack some important points that needs to be fixed.
 
 Now Framework is on Beta Stage!
+New Messaging Feature
 
 # Screenshots
 ![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2015.51.42.png?raw=true)
-![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2015.51.54.png?raw=true)
-![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2015.52.10.png?raw=true)
+![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202018-03-20%20at%2021.05.25%20-%20Edited.png?raw=true)
+![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202018-03-20%20at%2021.05.57%20-%20Edited.png?raw=true)
 ![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2016.06.13.png?raw=true)
 ![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2016.06.27.png?raw=true)
 ![alt text](https://github.com/rafi16jan/screenshots/blob/master/rapyd-framework/Screenshot%202017-12-19%20at%2016.06.54.png?raw=true)
@@ -22,9 +23,16 @@ Now Framework is on Beta Stage!
 
 - So we will have Python's readabilty, Javascript's JIT Compiler performance, and NoSQL concurreny with sync! If you have experiences with concurrent user greater than 150-200 you'll know how without sync two requests writing to the same record can make conflicts.
 
-# How to test
+# How to use the Framework
 To install just do `npm install` on the module directory
 
+To run the server, do `node server.js` or pass `--clear-cache` to clear the cache
+
+Modify app.conf to change port or other variables
+
+The Webclient is on client folder, put it on nginx or something else or simply open index.html on a browser, it should work. Or if you're lazy enough you can change local_app variable in app.conf to True. Then, open the server url (don't forget the port).
+
+# How to test (Advanced)
 To test the ORM read the test.pyj file, if you know Odoo you should feel familiar with the code.
 
 To execute it `node ./node_modules/.bin/rapydscript -x test.pyj`, or if you encounter bugs remove the cache too `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -x test.pyj`
@@ -32,8 +40,6 @@ To execute it `node ./node_modules/.bin/rapydscript -x test.pyj`, or if you enco
 To test the Framework read the server.pyj file, it is the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
 
 To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -p modules -x server.pyj`
-
-The Webclient is on client folder, put it on nginx or something else or simply open it on a browser. It should work.
 
 # What's In-progress
 So lately I've been requested to finish this project so I worked on it. And now the plain ORM is ready for use (although not tested heavily). Now I'm developing the PWA for the client side. In the future I'll made the documentation for all APIs and ORM logic, but for now I'll just point the fundamentals.
