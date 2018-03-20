@@ -4,6 +4,7 @@ from orm.pouchdb import db
 
 env = {}
 schemas = {}
+raw_models = {}
 
 def queryInverse(field_type, records, fields, _fields):
     for record in records[field_type]:
@@ -29,19 +30,25 @@ class Model():
         self._one2many_fields = []
         self._is_env = _is_env
         self._is_singleton = _is_singleton
-        if exist(self._inherit):
+        self._inherited_keys = []
+        if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
            newmodel = self
-           self = env[newmodel._inherit]
+           oldconstructor = self.constructor
+           models = raw_models[newmodel._inherit]
+           if oldconstructor not in models:
+              models.push(oldconstructor)
+           for raw_model in models:
+               for key in Object.getOwnPropertyNames(raw_model.prototype):
+                   if key[:2] != '__' and key not in ['_inherit', 'inherited_constructor', 'values']:
+                      self[key] = raw_model.prototype[key]
+                      self._inherited_keys.push(key)
            self._name = newmodel._name
            self._is_env = False
-           if tools.exist(env[self._name]):
+           if exist(env[self._name]) and env[self._name].constructor != self.constructor:
               del env[self._name]
-           self[key].inherited_constructor = self.constructor
-           for key in Object.getOwnPropertyNames(newmodel.constructor.prototype):
-               if exist(newmodel._inherit) and key not in ['_inherit', 'inherited_constructor', 'values']:
-                  self[key] = newmodel[key]
+           #self.inherited_constructor = self.constructor
         if 'Model' not in env:
            env['Model'] = Model
         if 'context' not in env:
@@ -56,18 +63,16 @@ class Model():
         schema = {'singular': self._name, 'plural': self._name}
         schemas[self._name] = schema
         #Reserved fields
-        reserved = ['id', '_id', 'rev', '_rev']
+        reserved = ['id', '_id', 'rev', '_rev', 'ids']
         if self._is_singleton:
            self.id = fields.Char(string="ID", related='_id', store=True)
-           self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
            self._id = fields.Char(string="ID (Raw)")
-           self._rev = fields.Char(string="DB Revision Number")
-        else:
-           self.ids = fields.Data(string="IDs")
-           reserved = ['ids']
-        valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved)
+        self._fields.ids = fields.Data(string="IDs")
+        self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
+        self._rev = fields.Char(string="DB Revision Number")
+        valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
         for key in valid_fields:
-            if not exist(self[key]) or (type(self[key]) == Object and 'compute' not in self[key]):
+            if not exist(self[key]) or type(self[key]) != Object or (type(self[key]) == Object and 'compute' not in self[key]):
                continue
             #if key in self._fields:
             #   self[key] = self._fields[key]
@@ -98,7 +103,28 @@ class Model():
                ,
                'set': def(value): self._values[key] = self.adapt(key, value)
                }})"""
-        self.env[self._name]._fields = self._fields
+        if exist(self._fields):
+           self.env[self._name]._fields = self._fields
+        try:
+           db.setSchema([schemas[key] for key in schemas])
+        except:
+           pass
+        if exist(self._name):
+           if not exist(raw_models[self._name]):
+              raw_models[self._name] = []
+           if self.constructor not in raw_models[self._name]:
+              raw_models[self._name].push(self.constructor)
+        if 'values' in Object.getOwnPropertyNames(self):
+           return
+        Object.defineProperty(self, 'ids', {
+        'get': def ():
+                   if self._is_singleton:
+                      return [self.id]
+                   else:
+                      return [object.id for object in self.values]
+        ,
+        'set': def (): return
+        })
         Object.defineProperty(self, 'values', {
         'get': def (): return self._values
         ,
@@ -112,7 +138,7 @@ class Model():
                              self[key] = self.adapt(key, newvalue[key])
                    else:
                       self._values = newvalue
-                      self.ids = [object.id for object in newvalue]
+                      #self.ids = [object.id for object in newvalue]
         })
         Object.defineProperty(self, 'length', {'get':
         def (): 
@@ -129,10 +155,6 @@ class Model():
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
         #v'Object.seal(self._values)'
-        try:
-           db.setSchema([schemas[key] for key in schemas])
-        except:
-           pass
 
     def __iter__(self):
         if self._is_env or self.length < 1:
@@ -146,10 +168,10 @@ class Model():
             lists.push(result)
         return lists
 
-    def __super__(self):
+    """def __super__(self):
         inherited = v'new self.inherited_constructor(self._is_env, self._is_singleton)'
         inherited.values = self.values
-        return inherited
+        return inherited"""
 
     def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
@@ -157,7 +179,7 @@ class Model():
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}).then(
            def (result):
-               record = self.browse(is_singleton=type(result.values) not in tools.array)
+               record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
                self.browse(ids=ids, is_client=False).then(
                def (records):
@@ -220,7 +242,7 @@ class Model():
            del options.is_client
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}).then(
            def (result):
-               record = self.browse(is_singleton=type(result.values) not in tools.array)
+               record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
                self.browse([rec.id for rec in record.__iter__()])
                return record
