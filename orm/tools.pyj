@@ -67,7 +67,7 @@ else {configuration.client = false}
 def parseURI(data):
     array = []
     for key in data:
-        if type(data[key]) in array or type(data) == Object:
+        if exist(data[key]) and type(data[key]) in array or type(data) == Object:
            data[key] = JSON.stringify(data[key])
         elif data[key] == '':
            data[key] = None
@@ -889,3 +889,16 @@ if (!Array.prototype.some) {
     return false;
   };
 }"""
+
+#Polyfill Object.entries
+v"""if (!Object.entries)
+  Object.entries = function( obj ){
+    var ownProps = Object.keys( obj ),
+        i = ownProps.length,
+        resArray = new Array(i); // preallocate the Array
+    while (i--)
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    
+    return resArray;
+  };
+"""
