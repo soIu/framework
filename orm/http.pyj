@@ -1,7 +1,8 @@
-from orm.models import env
-from orm.tools import exist, keys
+from orm.tools import exist, keys, configuration
 
-port = 8069
+configuration.port = 8069
+
+configuration.local_app = False
 
 restify = require('restify')
 server = restify.createServer()
@@ -37,7 +38,9 @@ class Controller():
             if key != '/api/login':
                _controllers[key].unshift(_controllers['/api/login'][0][0])
             server.post(key, _controllers[key])
+        if configuration.local_app == True:
+           server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'}))
 
     def run(self):
-        console.log('Running on port ' + port)
-        server.listen(port)
+        console.log('Running on port ' + configuration.port)
+        server.listen(configuration.port)

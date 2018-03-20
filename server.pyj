@@ -2,18 +2,16 @@ import modules.modules
 import modules.controllers
 import orm.http as http
 from orm.models import env
-from orm.tools import exist, configuration
+from orm.tools import exist, configuration, merge
 from res.users import check_admin, admin_password
 
-configuration = require('process').env
+configuration = merge(configuration, {key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
 
 admin_password = configuration.admin_password
 check_admin()
 
 client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
 
-if exist(configuration.port):
-   http.port = configuration.port
 crypto = require('crypto')
 
 def encrypt(string):
