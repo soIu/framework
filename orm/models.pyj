@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, dict, checkBase64, configuration, ajax, array, exception, warning
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, exception, warning
 from orm.pouchdb import db
 
 env = {}
@@ -23,13 +23,13 @@ class Model():
     #_related = {}
     #This JSON objects turnout having the same id, separating them on class initiation
 
-    def __init__(self, _is_env=False, _is_singleton=True):
+    def __init__(self, _is_env, _is_singleton):
         self._fields = {}
         self._values = {}
         self._related = {}
         self._one2many_fields = []
-        self._is_env = _is_env
-        self._is_singleton = _is_singleton
+        self._is_env = _is_env if _is_env != undefined else False
+        self._is_singleton = _is_singleton if _is_singleton != undefined else False
         self._inherited_keys = []
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
@@ -173,6 +173,9 @@ class Model():
         inherited.values = self.values
         return inherited"""
 
+    def __view__(self, view, view_type):
+        return view
+
     def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
            v'return new self.constructor(false, is_singleton)'
@@ -231,7 +234,9 @@ class Model():
            )
         return result
 
-    def search(self, *args, **options):
+    def search(self):
+        args = Array.prototype.slice.call(arguments)
+        options = copy(self.env.context)
         if options.is_client == undefined:
            options.is_client = configuration.client
         if exist(self.env.context.active_limit):
@@ -244,12 +249,12 @@ class Model():
            def (result):
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
-               self.browse([rec.id for rec in record.__iter__()])
+               self.browse(record.ids)
                return record
            ).catch(
            def (error):
                warning(error, True)
-               return self.search(args, is_client=False)
+               return self.with_context(is_client=False).search(args)
            )
         def query(record):
             results = []
@@ -545,3 +550,7 @@ class Model():
                value['_deleted'] = True
            db.bulkDocs(self._values)
         return True
+
+    def with_context(self, **kwargs):
+        self.env.context = merge(self.env.context, kwargs)
+        return self

@@ -10,7 +10,7 @@ configuration = merge(configuration, {key: True if value in ['True', 'true'] els
 admin_password = configuration.admin_password
 check_admin()
 
-client_js = require('child_process').execSync('node ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
+client_js = require('child_process').execSync(require('process').execPath + ' ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
 
 crypto = require('crypto')
 
@@ -28,14 +28,15 @@ def decrypt(string):
 
 http.route('/api/login',
 def (request, result, next):
-    request.accepts('application/json')
+    #request.accepts('application/json')
     request.env = env
     result.response = {'status': 'denied'}
+    request.params = Object.assign(request.params, request.query, request.body or {});
     params = http.parse(request.params)
     if exist(request.params.login):
        if params.encrypted == True:
           params.login, params.password = decrypt(params.login), decrypt(params.password)
-       request.env['res.users'].search(['login', '=', params.login], ['password', '=', params.password], limit=1).then(
+       request.env['res.users'].with_context(limit=1).search(['login', '=', params.login], ['password', '=', params.password]).then(
        def (user_id):
            if exist(user_id):
               result.response = {'status': 'success'}
@@ -46,7 +47,7 @@ def (request, result, next):
            next()
        ).catch(
        def (error):
-           console.log(error)
+           console.log(error.stack)
            result.response = {'status': 'error', 'error': error}
            next()
        )
@@ -87,7 +88,8 @@ def (request, result, next):
        next()
     params = request.params
     if exist(request.params):
-       request.env[params.model].search(params.args, limit=params.options.limit, index=params.options.index).then(
+       options = params.options or {}
+       request.env[params.model].with_context(**options).search(params.args).then(
        def (record):
            result.response = {'status': 'success', 'values': record.values}
            next()
@@ -210,4 +212,46 @@ def (request, result, next):
     return result.send(result.response)
 )
 
-http.Controller().run()
+controller = http.Controller()
+if not configuration.serverless:
+   controller.run()
+else:
+   serverless_route = {}
+   for route in http._controllers:
+       #entry = configuration.ENTRY_POINT or configuration.X_GOOGLE_ENTRY_POINT
+       #if exist(entry) and route != entry:
+       #   continue
+       console.log(route)
+       serverless_route[route] = def (request, result, route):
+                            functions = []
+                            (def recurse(methods):
+                                 for method in methods:
+                                     if type(method) == Array:
+                                        recurse(method)
+                                     else:
+                                        functions.push(method)
+                            )(http._controllers[route])
+                            index = 0
+                            def next(arg):
+                                v'if (arg instanceof Error) {throw arg;}'
+                                v'index += 1'
+                                if index < functions.length and exist(functions[index]):
+                                   console.log(functions[index].toString())
+                                   functions[index](request, result, next)
+                            console.log(functions[index].toString())
+                            functions[index](request, result, next)
+   exports.api = def (request, result):
+                     path = request.path
+                     console.log(path)
+                     routing = '/api/'+path.split('/')[1]
+                     route = serverless_route[routing]
+                     if exist(route):
+                        Object.defineProperty(request, 'path', {'get': 
+                        def (): 
+                            if '/web' not in path:
+                               return path
+                            return def (): return path.slice(5)
+                        })
+                        route(request, result, routing)
+                     else:
+                        result.send({'status': 'error', 'error': {'message': 'URL not found'}})

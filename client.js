@@ -6,7 +6,7 @@ var client = require('child_process').execSync(command).toString();
 var conf = require('fs').readFileSync(__dirname + '/app.conf').toString();
 if (conf !== '') {
     conf = conf.split('=').join('":"').split('\n').join('","');
-    conf = '{"' + conf.slice(0, -1) + '}';
+    conf = '{"' + conf.slice(0, -2) + '}';
     conf = JSON.parse(conf);
     client = client.replace('http:\/\/localhost:8069', conf.default_url + ':' + conf.port)
     client = client.replace("PouchDB('main')", "PouchDB('"+conf.client_db+"')")

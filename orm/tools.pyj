@@ -20,6 +20,15 @@ def merge(*args):
         Object.assign(target, object)
     return target
 
+def copy(object):
+    if exist(object):
+       if type(object) == Object:
+          return {key: copy(object[key]) if exist(object[key]) and type(object[key]) in [Object, Array] else object[key] for key in object}
+       elif type(object) == Array:
+          return [copy(value) if exist(value) and type(value) in [Object, Array] else value for value in object]
+    return object
+    
+
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair
     object = {}

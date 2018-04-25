@@ -12,6 +12,7 @@ cors = require('restify-cors-middleware')({'origins': ['*']})
 server.pre(cors.preflight)
 server.use(cors.actual)
 server.use(restify.plugins.bodyParser({'mapParams': True}))
+server.use(restify.plugins.queryParser());
 
 def parse(params):
     for key in keys(params):
@@ -38,8 +39,12 @@ class Controller():
             if key != '/api/login':
                _controllers[key].unshift(_controllers['/api/login'][0][0])
             server.post(key, _controllers[key])
+            server.get(key, _controllers[key])
         if configuration.local_app == True:
-           server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'}))
+           if configuration.serverless != True:
+              server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'}))
+           else:
+              _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'})]
 
     def run(self):
         console.log('Running on port ' + configuration.port)
