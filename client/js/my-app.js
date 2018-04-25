@@ -132,7 +132,7 @@ myApp.onPageInit('index', function(page) {
 
                     function render(records) {
                         loadApp();
-                        //records = records.__iter__();
+                        //records = Array.from(records.__iter__());
                         records.queue(function(record, next) {
                             //record = records[record];
                             var tr = values.cloneNode(true);
@@ -258,7 +258,7 @@ myApp.onPageInit('index', function(page) {
                                                     models.env.context.active_index = query.offset;
                                                     return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function(records) {
                                                         var result = [];
-                                                        //records = records.__iter__();
+                                                        records = Array.from(records.__iter__());
                                                         for (var record in records) {
                                                             result.push({
                                                                 id: records[record].id,
@@ -268,7 +268,7 @@ myApp.onPageInit('index', function(page) {
                                                         models.env.context.active_index = 0;
                                                         return {
                                                             results: result,
-                                                            more: true
+                                                            more: false
                                                         };
                                                     });
                                                 },
@@ -299,7 +299,7 @@ myApp.onPageInit('index', function(page) {
                                                     models.env.context.active_index = query.offset;
                                                     return models.env[field_object.relation].search(['name', 'ilike', query.term]).then(function(records) {
                                                         var result = [];
-                                                        //records = records.__iter__();
+                                                        records = Array.from(records.__iter__());
                                                         for (var record in records) {
                                                             result.push({
                                                                 id: records[record].id,
@@ -309,7 +309,7 @@ myApp.onPageInit('index', function(page) {
                                                         models.env.context.active_index = 0;
                                                         return {
                                                             results: result,
-                                                            more: true
+                                                            more: false
                                                         };
                                                     });
                                                 },
@@ -430,7 +430,7 @@ function startApp(view) {
         checkLoginValid(view);
     }).catch(function(error) {
         if (getLocal('rapyd_server_url') === null) {
-            setLocal('rapyd_server_url', window.location.origin + ':8069');
+            setLocal('rapyd_server_url', window.location.protocol + '//' + window.location.hostname + ':8069');
         }
         reloadPage(view, 'index');
         checkLoginValid(view);
@@ -623,7 +623,7 @@ function setValue(id, value) {
             }
             return models.env[models.env[models.env.context.active_model]._fields[id].relation].browse(value).then(function(result) {
                 var values = [];
-                //records = result.__iter__();
+                records = Array.from(result.__iter__());
                 for (var record in records) {
                     values.push({
                         id: records[record].id,

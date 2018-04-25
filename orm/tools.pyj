@@ -76,8 +76,12 @@ else {configuration.client = false}
 def parseURI(data):
     array = []
     for key in data:
-        if exist(data[key]) and type(data[key]) in array or type(data) == Object:
-           data[key] = JSON.stringify(data[key])
+        if exist(data[key]):
+           if type(data[key]) in array or type(data) == Object:
+              try:
+                  data[key] = JSON.stringify(data[key])
+              except:
+                  pass
         elif data[key] == '':
            data[key] = None
         array.push(encodeURIComponent(key)+ '=' + encodeURIComponent(data[key]))

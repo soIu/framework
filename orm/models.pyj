@@ -552,5 +552,6 @@ class Model():
         return True
 
     def with_context(self, **kwargs):
-        self.env.context = merge(self.env.context, kwargs)
+        for key in kwargs:
+            self.env.context[key] = kwargs[key]
         return self
