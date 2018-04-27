@@ -756,15 +756,24 @@ function loadORM(client_js) {
         doneApp();
         reject(xhr.statusText);
     };
-    try {
-        if (typeof socket === 'undefined') {
-            socket = io(getLocal('rapyd_server_url'));
+    (function connectSocket() {
+        try {
+            if (typeof socket === 'undefined') {
+                /*if (typeof io === 'undefined') {
+                    var script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = getLocal('rapyd_server_url') + '/socket.io/socket.io.js';
+                    document.body.appendChild(script);
+                }*/
+                window.socket = io(getLocal('rapyd_server_url'));
+            }
+            socket.removeAllListeners()
+            socket.on('message', showMessage);
+        } catch (error) {
+            console.log(error);
+            //connectSocket();
         }
-        socket.removeAllListeners()
-        socket.on('message', showMessage);
-    } catch (error) {
-        console.log(error);
-    }
+    })();
 }
 
 function checkLogin(view) {
@@ -780,7 +789,8 @@ function checkLoginValid(view) {
         var args = {
             login: record.login,
             password: record.password,
-            encrypted: true
+            encrypted: true,
+            client_js_time: record.client_js_time
         };
         doLogin(view, args).then(function(response) {
             if (response.status !== 'success') {
@@ -813,7 +823,8 @@ function doLogin(view, args) {
                         login: response.login,
                         password: response.password,
                         id: response.id,
-                        client_js: response.client_js,
+                        client_js: response.client_js || doc.client_js,
+                        client_js_time: response.client_js_time || doc.client_js_time,
                         unsaved: doc.unsaved
                     });
                 }).catch(function(error) {
@@ -824,11 +835,14 @@ function doLogin(view, args) {
                         password: response.password,
                         id: response.id,
                         client_js: response.client_js,
+                        client_js_time: response.client_js_time,
                         unsaved: {}
                     });
                     myApp.alert('Login success!');
                 });
-                loadORM(response.client_js);
+                if (response.client_js) {
+                    loadORM(response.client_js);
+                }
                 tools.configuration.url = getLocal('rapyd_server_url');
                 models.env.user = models.env['res.users'].browse();
                 models.env.user.id = response.id;

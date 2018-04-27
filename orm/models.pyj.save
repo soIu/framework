@@ -182,27 +182,25 @@ class Model():
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}).then(
            def (result):
-               console.log(result)
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
-               if exist(record):
-                  self.browse(ids=ids, is_client=False).then(
-                  def (records):
-                      if exist(records):
-                         records.write(result.values, is_client=False)
-                      else:
-                         del result.values.rev
-                         del result.values._rev
-                         del result.values._id
-                         db.rel.save(record._name, result.values)
-                  ).catch(
-                  def (error):
-                      console.log(error)
+               self.browse(ids=ids, is_client=False).then(
+               def (records):
+                   if records.length > 0:
+                      records.write(result.values, is_client=False)
+                   else:
                       del result.values.rev
                       del result.values._rev
                       del result.values._id
                       db.rel.save(record._name, result.values)
-                  )
+               ).catch(
+               def (error):
+                   console.log(error)
+                   del result.values.rev
+                   del result.values._rev
+                   del result.values._id
+                   db.rel.save(record._name, result.values)
+               )
                return record
            ).catch(
            def (error):
@@ -260,6 +258,7 @@ class Model():
            )
         def query(record):
             results = []
+            console.log(args)
             for arg in args:
                 if not arg or str(arg) in ['|', '[]']:
                    continue

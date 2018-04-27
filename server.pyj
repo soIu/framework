@@ -11,6 +11,7 @@ admin_password = configuration.admin_password
 check_admin()
 
 client_js = require('child_process').execSync(require('process').execPath + ' ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
+client_js_time = Date().toISOString()
 
 crypto = require('crypto')
 
@@ -43,7 +44,9 @@ def (request, result, next):
               if params.authentication = True:
                  result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
                  result.response.id = user_id.id
-                 result.response.client_js = client_js
+                 if not exist(params.client_js_time) or params.client_js_time != client_js_time:
+                    result.response.client_js = client_js
+                    result.response.client_js_time = client_js_time
            next()
        ).catch(
        def (error):
