@@ -946,7 +946,8 @@ function doLogin(view, args) {
                 models.env.user.password = response.password;
                 //models.env.user.values = response.values;
                 loginCount = 0;
-                reloadPage(view, 'index');
+                loadIndex(view.activePage);
+                reloadPage(view, tools.configuration.home_view);
             } else {
                 console.log(response);
                 var alert = 'Username/Password wrong, relogin';

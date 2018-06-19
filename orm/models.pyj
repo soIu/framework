@@ -54,13 +54,13 @@ class Model():
            env['Model'] = Model
         if 'context' not in env:
             env['context'] = {}
-        if not exist(env[self._name]):
+        if self._name not in env:
            env[self._name] = True
-           v'env[self._name] = new self.constructor(_is_env=true)'
-           env[self._name]._is_env = True
+           v'Object.defineProperty(env, self._name, {get: function() {return new self.constructor(true)}})'
+           #env[self._name]._is_env = True
         self.env = env
-        if self._is_env:
-           return
+        #if self._is_env:
+        #   return
         schema = {'singular': self._name, 'plural': self._name}
         schemas[self._name] = schema
         #Reserved fields
@@ -104,8 +104,8 @@ class Model():
                ,
                'set': def(value): self._values[key] = self.adapt(key, value)
                }})"""
-        if exist(self._fields):
-           self.env[self._name]._fields = self._fields
+        #if exist(self._fields):
+        #   self.env[self._name]._fields = self._fields
         try:
            db.setSchema([schemas[key] for key in schemas])
         except:
@@ -159,15 +159,15 @@ class Model():
 
     def __iter__(self):
         if self._is_env or self.length < 1:
-           return []
+           return iter([])
         elif self._is_singleton:
-           return [self]
+           return iter([self])
         lists = []
         for value in self.values:
             result = self.browse()
             result.values = value
             lists.push(result)
-        return lists
+        return iter(lists)
 
     """def __super__(self):
         inherited = v'new self.inherited_constructor(self._is_env, self._is_singleton)'
@@ -190,12 +190,23 @@ class Model():
                   self.browse(ids=ids, is_client=False).then(
                   def (records):
                       if exist(records):
-                         records.write(result.values, is_client=False)
+                         for record in records:
+                             values = {}
+                             if not records._is_singleton:
+                                result.values = [result.values]
+                             for value in result.values:
+                                 if value.id == record.id:
+                                    values = value
+                                    break
+                             record.write(values, is_client=False)
                       else:
-                         del result.values.rev
-                         del result.values._rev
-                         del result.values._id
-                         db.rel.save(record._name, result.values)
+                         if records._is_singleton:
+                            result.values = [result.values]
+                         for value in result.values:
+                             del value.rev
+                             del value._rev
+                             del value._id
+                             db.rel.save(records._name, value)
                   ).catch(
                   def (error):
                       console.log(error)
@@ -252,7 +263,8 @@ class Model():
            def (result):
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
-               self.browse(record.ids)
+               for id in record.ids:
+                   self.browse(id)
                return record
            ).catch(
            def (error):
@@ -433,7 +445,7 @@ class Model():
     def queue(self, method):
         if self._is_env or not exist(self):
            return
-        records = self.__iter__()
+        records = [record for record in self]
         v'var index = 0'
         def next():
             v'index += 1'
