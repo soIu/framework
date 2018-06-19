@@ -8,7 +8,7 @@ check_admin()
 
 #tools.configuration.client = True
 tools.configuration.url = "http://localhost:8069"
-tools.configuratoin.home_view = window.localStorage.rapyd_home_view or 'res.message.chat'
+tools.configuration.home_view = window.localStorage.rapyd_home_view or 'res.message.chat'
 tools.configuration = Object.assign(tools.configuration, v'{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}')
 
 for key in tools.menu:
