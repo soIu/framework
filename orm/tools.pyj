@@ -734,7 +734,10 @@ def ajax(type, dataType, url, data):
         xhr.onerror = def(): ajax_reject(reject, this)
         xhr.responseType = dataType
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-        xhr.send(data)
+        try:
+            xhr.send(data)
+        except Exception as error:
+            reject(error)
     )
 
 #Polyfill Array.find

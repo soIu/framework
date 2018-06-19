@@ -27,22 +27,27 @@ var mainView = myApp.addView('.view-main', {
     dynamicNavbar: false
 });
 
+myApp.onPageInit('login', function(page) {
+    function click_login(event) {
+       event.preventDefault();
+       if (event.keyCode === 13) {
+           document.querySelector('button.button-login').click();
+       }
+    }
+    document.querySelector('#login').addEventListener('keyup', click_login);
+    document.querySelector('#password').addEventListener('keyup', click_login);
+});
+
 myApp.onPageInit('login_settings', function(page) {
     document.getElementById('url').value = getLocal('rapyd_server_url');
 });
 
-myApp.onPageInit('index', function(page) {
-    if (page.name === 'index') {
-        if (typeof tools === 'undefined') {
-            return
-        }
+function loadIndex(page) {
+    if (indexLoaded === true || page === undefined || typeof tools === 'undefined') {
+        return
+    }
+    if (page.name === 'index' || page.name === 'login' || page.name === tools.configuration.home_view) {
         loadApp();
-        models.env['res.message'].search().then(function (message_ids) {
-            message_ids.queue(function (message_id, next) {
-                showMessage({user: 'Administrator', message: message_id.text});
-                next();
-            });
-        });
         models.env.context = Object.assign(models.env.context, {
             active_id: null,
             active_ids: [],
@@ -112,9 +117,20 @@ myApp.onPageInit('index', function(page) {
                 list.innerHTML = template.innerHTML.replace('template_list', model + '.list').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
                 document.getElementsByTagName('body')[0].append(list);
                 myApp.onPageInit(model + '.list', function() {
+                    if (currentPage === tools.configuration.home_view) {
+                        var back_button = document.querySelector('a.back');
+                        if (back_button !== null) {
+                            back_button.setAttribute('class', 'open-panel link icon-only');
+                            back_button.setAttribute('data-panel', 'left');
+                            back_button.setAttribute('href', '#');
+                            //back_button.children[0].remove();
+                            back_button.innerHTML = '<i class="icon icon-bars"></i>';
+                        }
+                    }
                     models.env.context.active_id = null;
                     models.env.context.active_model = model;
                     var page = document.querySelector("div[data-page='" + model + ".list']");
+                    //templatePages[model + '.list'] = page;
                     var headers = page.getElementsByClassName('table-headers')[0];
                     var values = page.getElementsByClassName('table-values')[0];
                     var tbody = page.getElementsByTagName('tbody')[0];
@@ -169,8 +185,19 @@ myApp.onPageInit('index', function(page) {
                 view.innerHTML = template.innerHTML.replace('template_form', model + '.form').replace('template_model', model).replace('Template', views.string).replace('Template', views.string);
                 document.getElementsByTagName('body')[0].append(view);
                 myApp.onPageInit(model + '.form', function() {
+                    if (currentPage === tools.configuration.home_view) {
+                        var back_button = document.querySelector('a.back');
+                        if (back_button !== null) {
+                            back_button.setAttribute('class', 'open-panel link icon-only');
+                            back_button.setAttribute('data-panel', 'left');
+                            back_button.setAttribute('href', '#');
+                            //back_button.children[0].remove();
+                            back_button.innerHTML = '<i class="icon icon-bars"></i>';
+                        }
+                    }
                     models.env.context.active_model = model;
                     var page = document.querySelector("div[data-page='" + model + ".form']");
+                    //templatePages[model + '.form'] = page;
                     var content = page.querySelector('.form-content');
                     var header = page.querySelector('header').cloneNode(true);
                     page.querySelector('header').remove();
@@ -397,21 +424,43 @@ myApp.onPageInit('index', function(page) {
                     }
                 });
             }
+            for (var mode in tools.view[keys[key]]) {
+                if (mode !== 'tree' && mode !== 'form' && mode !== 'string' && mode !== 'custom_init') {
+                    var view = tools.view[keys[key]][mode];
+                    var extra_view = document.createElement('template');
+                    extra_view.id = keys[key] + '.' + mode;
+                    extra_view.innerHTML = view;
+                    document.getElementsByTagName('body')[0].append(extra_view);
+                    var page = document.querySelector("div[data-page='" + keys[key] + "." + mode + "']");
+                    if (hasKey(tools.view[keys[key]].custom_init, keys[key] + '.' + mode)) {
+                        myApp.onPageInit(keys[key] + '.' + mode, tools.view[keys[key]].custom_init[keys[key] + '.' + mode]);
+                    }
+                    //templatePages[keys[key] + '.' + mode] = page;
+                }
+            }
             loadedViews.push(keys[key]);
         };
         for (key in keys) {
             render_views(key);
         }
         doneApp();
+        document.querySelector('#index').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
+        document.querySelector('.navbar-fixed').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
+        document.querySelector('.view.view-main').setAttribute('data-page', tools.configuration.home_view);
+        indexLoaded = true;
     }
-});
+}
+
+myApp.onPageInit('index', loadIndex);
 
 loginCount = 0;
 exceptionCount = 0;
 warningCount = 0;
+indexLoaded = false;
 loadedMenus = [];
 loadedViews = [];
 currentPage = 'index';
+//templatePages = {};
 selectivityFields = {};
 
 function startApp(view) {
@@ -482,7 +531,11 @@ function doAjax(type, dataType, url, data) {
         }
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.responseType = dataType;
-        xhr.send(data);
+        try {
+            xhr.send(data);
+        } catch(error) {
+            reject(error);
+        }
     });
 }
 
@@ -496,21 +549,54 @@ function doSleep(milliseconds) {
 }
 
 function loadPage(view, page) {
+    /*if (window.tools !== undefined && page === 'index') {
+        page = tools.configuration.home_view;
+    }*/
     currentPage = page;
     myApp.closePanel();
-    view.router.loadContent(document.getElementById(page).innerHTML);
+    page = document.getElementById(page);
+    /*if (indexLoaded === false) {
+        loadIndex(view.activePage || {name: 'index'});
+    } else if (page === null) {
+        return
+    }*/
+    view.router.loadContent(page.innerHTML);
 }
 
 function reloadPage(view, page) {
+    /*if (window.tools !== undefined && page === 'index') {
+        page = tools.configuration.home_view;
+    }*/
     currentPage = page;
-    view.router.reloadContent(document.getElementById(page).innerHTML)
+    page = document.getElementById(page);
+    /*if (indexLoaded === false) {
+        loadIndex(view.activePage || {name: 'index'});
+    } else if (page === null) {
+        return
+    }*/
+    view.router.reloadContent(page.innerHTML)
 }
 
-function reloadPreviousPage(view, page) {
+function reloadPreviousPage(view) {
+    var page = document.querySelector('div.pages').children[0].attributes['data-page'].value;
+    /*if (window.tools !== undefined && page === 'index') {
+        page = tools.configuration.home_view;
+    }*/
     currentPage = page;
-    document.getElementsByClassName('page-on-left')[0].remove();
-    view.router.reloadPreviousContent(document.getElementById(page).innerHTML);
+    page = document.getElementById(page);
+    /*if (indexLoaded === false) {
+        loadIndex(view.activePage || {name: 'index'});
+    } else if (page === null) {
+        return
+    }*/
+    var left_page = document.querySelector('.page-on-left');
+    if (left_page !== null) {
+        left_page.remove();
+    }
+    view.router.reloadContent(page.innerHTML);
 }
+
+//mainView.router.back = function back() {reloadPreviousPage(mainView)};
 
 function getFile(file) {
     return new Promise(function(resolve, reject) {
@@ -679,16 +765,17 @@ function hasClass(element, cls) {
 }
 
 function hasKey(object, key) {
-    if (object === undefined | null | false) {
+    if (object === undefined || object === null || object === false) {
         return false;
     }
     return Object.keys(object).indexOf(key) > -1;
 }
 
 function hasValue(object, key) {
-    if (object === undefined | null | false) {
+    if (object === undefined || object === null || object === false) {
         return false;
     }
+    object = object.toString();
     return object.indexOf(key) > -1;
 }
 
@@ -715,6 +802,12 @@ function loadORM(client_js) {
     }
     forceReplace(['exception(error', 'warning(error', 'ajax_load(data)', 'ajax_resolve(resolve, this', 'ajax_reject(reject, this']);
     eval(client_js);
+    if (tools.exist(tools.configuration.custom_navbar) === true) {
+        var style = document.createElement('style');
+        style.innerHTML = '.navbar {background-color: ' + tools.configuration.custom_navbar + '!important}';
+        document.querySelector('head').append(style);
+    }
+    document.querySelector('body').className = tools.configuration.material_theme + ' framework7-root';
     tools.exception = function(error) {
         console.log(error);
         if (exceptionCount !== 0) {
@@ -731,6 +824,7 @@ function loadORM(client_js) {
             offline = false;
         }
         console.log(error);
+        console.log(offline);
         if (warningCount !== 0) {
             return new Promise(function(resolve, reject) {
                 warningCount = 0;
@@ -768,7 +862,7 @@ function loadORM(client_js) {
                 window.socket = io(getLocal('rapyd_server_url'));
             }
             socket.removeAllListeners()
-            socket.on('message', showMessage);
+            socket.on('message', tools.show_message);
         } catch (error) {
             console.log(error);
             //connectSocket();
@@ -864,7 +958,9 @@ function doLogin(view, args) {
         }).catch(function(error) {
             loginCount = 0;
             console.log(error);
-            myApp.alert("Can't connect to server");
+            if (hasValue(error, 'innerHTML') === false) {
+                myApp.alert("Can't connect to server");
+            }
             reloadPage(view, currentPage);
         });
     }
@@ -878,6 +974,7 @@ function doLogout(view) {
     }).catch(function(error) {
         console.log(error);
     });
+    local_db.destroy();
 }
 
 function onchangeField(field, model) {
@@ -1047,42 +1144,6 @@ function addTable(element) {
 
 function removeTable(table) {
     table.parentElement.parentElement.remove();
-}
-
-function showMessage(msg) {
-
-    //Calculate time
-    var d = new Date();
-    var s = d.getSeconds();
-    var m = d.getMinutes();
-    var h = d.getHours();
-    if (s < 10) {
-        s = '0' + s;
-    }
-    if (m < 10) {
-        m = '0' + m;
-    }
-    if (h < 10) {
-        h = '0' + h;
-    }
-
-    //Create new message
-    var listItem = $('<li class="mdl-list__item mdl-list__item--three-line"></li>');
-    var mainSpan = $('<span class="mdl-list__item-primary-content"></span>');
-    var icon = $('<i class="material-icons mdl-list__item-avatar">person</i>');
-    var user = $('<span></span>').text(msg.user);
-    var message = $('<span class="mdl-list__item-text-body"></span>').text(msg.message + ' - ' + h + ':' + m + ':' + s);
-
-    //Build the message html and append it to the correct room div
-    mainSpan.append(icon);
-    mainSpan.append(user);
-    mainSpan.append(message);
-    listItem.append(mainSpan);
-    $('.messages').append(listItem);
-
-    //Scroll down
-    //$('.page-content').animate({scrollTop: $('.chat-list-div').prop("scrollHeight")}, 500);
-    document.querySelector('.page-content').scrollBy(0, $('.chat-list-div').prop('scrollHeight'))
 }
 
 //Polyfills

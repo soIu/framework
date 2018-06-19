@@ -35,5 +35,12 @@ view.add = def add(args):
                             break
                   if args.model not in tools.view:
                      tools.view[args.model] = {}
+                  if tools.exist(args.init):
+                     if not tools.view[args.model].custom_init:
+                        tools.view[args.model].custom_init = {}
+                     tools.view[args.model].custom_init[args.model + '.' + args.mode] = args.init
                   tools.view[args.model][args.mode] = args.arch
                   tools.view[args.model].string = args.string
+
+tools.configuration.material_theme = 'theme-teal'
+tools.configuration.custom_navbar = '#875a7b'

@@ -76,8 +76,26 @@
     <div class="views">
         <!-- Your main view, should have "view-main" class -->
         <div class="view view-main">
-            <!-- Pages container, because we use fixed navbar and toolbar, it has additional appropriate classes-->
             <div class="pages navbar-fixed toolbar-fixed">
+                <!--<div data-page="index" class="page">
+ 
+                <div class="navbar">
+                  <div class="navbar-inner">
+                    <div class="left">
+                      <a href="#" data-panel="left" class="open-panel link icon-only">
+                        <i class="icon icon-bars"></i>
+                      </a>
+                    </div>
+                    <div class="center">Home</div>
+                  </div>
+                </div>
+ 
+                <div class="page-content" style="padding-top: 56px">
+              
+              
+                
+                </div>
+              </div>-->
             </div>
         </div>
     </div>
@@ -101,82 +119,6 @@
     <template id="index">
       
           <div data-page="index" class="page">
- 
-            <!-- Top Navbar. In Material theme it should be inside of the page-->
-            <div class="navbar">
-              <div class="navbar-inner">
-                <div class="left">
-                  <a href="#" data-panel="left" class="open-panel link icon-only">
-                    <i class="icon icon-bars"></i>
-                  </a>
-                </div>
-                <div class="center">Home</div>
-                <!--<div class="right">
-                  <a href="#" data-panel="left" class="open-panel link icon-only">
-                    <i class="icon icon-bars"></i>
-                  </a>
-                </div>-->
-              </div>
-            </div>
- 
-            <!-- Scrollable page content -->
-            <div class="page-content" style="padding-top: 56px">
-              
-              <main>
-                <div>
-
-                    <section class="chat-area mdl-grid" style="padding-bottom: 196px">
-                        <div class="mdl-cell mdl-cell--9-col" id="chat-cell">
-                          <div class="chat-list-div">
-                            <ul class="listborder mdl-list messages"></ul>
-                          </div>
-                        </div>
-                        <!--<div class="user-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--2-col mdl-cell--1-offset mdl-cell--hide-phone mdl-cell--hide-tablet" style="margin: 0; min-width: 200px;">
-                            <div class="mdl-card__title">
-                                <h2 class="mdl-card__title-text">Users</h2>
-                            </div>
-                            <div class="user-list-div">
-                                <ul class="listborder mdl-list" id="users">
-                                </ul>
-                            </div>
-
-                        </div>-->
-                    </section>
-
-                    <section class="message-area mdl-grid">
-                        <div class="mdl-cell mdl-cell--12-col">
-                            <div class="message-card mdl-card mdl-grid mdl-shadow--2dp" style="min-width: 100%; position: fixed; left: 0; bottom: 0;">
-                                <!--<div class="message-box mdl-cell mdl-cell--11-col">
-                                    <form action="" id="send-message-form">
-                                        <div class="message-field mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                                            <input class="mdl-textfield__input" autocomplete="off" type="text" id="send-message-form-input">
-                                            <label class="mdl-textfield__label" for="send-message-form-input">Message</label>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="send-button mdl-cell mdl-cell--1-col">
-                                    <button id="send-message-button" class="mdl-button mdl-button--colored mdl-js-button mdl-button--raised mdl-js-ripple-effect">Send</button>
-                                </div>-->
-                                <div class="list-block">
-                    <div class="item-content">
-                      <div>
-                        <div class="item-input">
-                          <input type="text" placeholder="Message" id="homepage_chat_message">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                                <div class="item-content" style="margin-top: 40px; margin-left: auto; margin-right: 10px;">
-                    <div class="button button-fill button-raised" onclick="models.env['res.message'].create({'sender_id': models.env.user.id, 'text': getValue('homepage_chat_message'), 'name': 'Chat'}).then(function(result) {setValue('homepage_chat_message', ''); if (result.length > 0) result.send_message()})">Send</div>
-                  </div>
-                            </div>
-                            
-                        </div>
-                    </section>
-                </div>
-              </main>
-                
-            </div>
           </div>
       
     </template>
@@ -195,7 +137,7 @@
                   <div class="mdl-card__supporting-text">
                     <form action="#">
                       <div class="mdl-textfield mdl-js-textfield">
-                        <input class="mdl-textfield__input" type="text" id="login" placeholder="Username/Email"/>
+                        <input class="mdl-textfield__input" type="text" id="login" placeholder="Username/Email" autofocus/>
                         <label class="mdl-textfield__label" for="username"></label>
                       </div>
                       <div class="mdl-textfield mdl-js-textfield">
@@ -206,7 +148,7 @@
                   </div>
                   
                   <div class="mdl-card__actions mdl-card--border">
-                    <button onclick="doLogin(mainView, getValues(['login', 'password']))" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Login</button>
+                    <button onclick="doLogin(mainView, getValues(['login', 'password']))" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect button-login">Login</button>
                     <button onclick="loadPage(mainView, 'login_settings')" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Settings</button>
                   </div>
                   
@@ -223,7 +165,7 @@
             <!-- Top Navbar. In Material theme it should be inside of the page-->
             <div class="navbar">
               <div class="navbar-inner">
-                <div class="left">
+                <div class="left" onclick="reloadPreviousPage(mainView)">
                   <a class="back link icon-only"><i class="icon icon-back"></i></a>
                 </div>
                 <div class="center">Settings</div>
@@ -324,7 +266,7 @@
             
             <div class="navbar">
               <div class="navbar-inner">
-                <div class="left" onclick="reloadPreviousPage(mainView, 'template_model.list')">
+                <div class="left" onclick="reloadPreviousPage(mainView)">
                   <a class="back link icon-only"><i class="icon icon-back"></i></a>
                 </div>
                 <div class="center">Template</div>

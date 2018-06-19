@@ -1,5 +1,6 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 import orm.api as api
 from ir.ui import menu, view
 class ResMessage(models.Model):
@@ -53,4 +54,131 @@ view.add({'model': 'res.message', 'mode': 'form', 'string': False, 'arch': """
         </group>
     </sheet>
 </form>
+"""})
+
+def show_message(msg):
+
+    #Calculate time
+    d = Date()
+    s = d.getSeconds()
+    m = d.getMinutes()
+    h = d.getHours()
+    if s < 10:
+       s = '0' + s
+    if m < 10:
+       m = '0' + m
+    if h < 10:
+       h = '0' + h
+
+    #Create new message
+    listItem = window.$$('<li class="mdl-list__item mdl-list__item--three-line"></li>')
+    mainSpan = window.$$('<span class="mdl-list__item-primary-content"></span>')
+    icon = window.$$('<i class="material-icons mdl-list__item-avatar">person</i>')
+    user = window.$$('<span></span>').text(msg.user)
+    message = window.$$('<span class="mdl-list__item-text-body"></span>').text(msg.message + ' - ' + h + ':' + m + ':' + s)
+
+    #Build the message html and append it to the correct room div
+    mainSpan.append(icon)
+    mainSpan.append(user)
+    mainSpan.append(message)
+    listItem.append(mainSpan)
+    window.$$('.messages').append(listItem)
+
+    #Scroll down
+    #window.$$('.page-content').animate({scrollTop: window.$$('.chat-list-div').prop("scrollHeight")}, 500)
+    document.querySelector('.page-content').scrollBy(0, window.$$('.chat-list-div').prop('scrollHeight'))
+
+tools.show_message = show_message
+
+def chat_init(page):
+    models.env['res.message'].search().then(
+    def (message_ids):
+        message_ids.queue(
+           def (message_id, next):
+               show_message({'user': 'Administrator', 'message': message_id.text})
+               next()
+        )
+    ).catch(
+    def (error): console.log(error)
+    )
+
+view.add({'model': 'res.message', 'mode': 'chat', 'string': False, 'init': chat_init, 'arch': """
+          <div data-page="res.message.chat" class="page">
+ 
+            <!-- Top Navbar. In Material theme it should be inside of the page-->
+            <div class="navbar">
+              <div class="navbar-inner">
+                <div class="left">
+                  <a href="#" data-panel="left" class="open-panel link icon-only">
+                    <i class="icon icon-bars"></i>
+                  </a>
+                </div>
+                <div class="center">Home</div>
+                <!--<div class="right">
+                  <a href="#" data-panel="left" class="open-panel link icon-only">
+                    <i class="icon icon-bars"></i>
+                  </a>
+                </div>-->
+              </div>
+            </div>
+ 
+            <!-- Scrollable page content -->
+            <div class="page-content" style="padding-top: 56px">
+              
+              <main>
+                <div>
+
+                    <section class="chat-area mdl-grid" style="padding-bottom: 196px">
+                        <div class="mdl-cell mdl-cell--9-col" id="chat-cell">
+                          <div class="chat-list-div">
+                            <ul class="listborder mdl-list messages"></ul>
+                          </div>
+                        </div>
+                        <!--<div class="user-card mdl-card mdl-shadow--2dp mdl-cell mdl-cell--2-col mdl-cell--1-offset mdl-cell--hide-phone mdl-cell--hide-tablet" style="margin: 0; min-width: 200px;">
+                            <div class="mdl-card__title">
+                                <h2 class="mdl-card__title-text">Users</h2>
+                            </div>
+                            <div class="user-list-div">
+                                <ul class="listborder mdl-list" id="users">
+                                </ul>
+                            </div>
+
+                        </div>-->
+                    </section>
+
+                    <section class="message-area mdl-grid">
+                        <div class="mdl-cell mdl-cell--12-col">
+                            <div class="message-card mdl-card mdl-grid mdl-shadow--2dp" style="min-width: 100%; position: fixed; left: 0; bottom: 0;">
+                                <!--<div class="message-box mdl-cell mdl-cell--11-col">
+                                    <form action="" id="send-message-form">
+                                        <div class="message-field mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                                            <input class="mdl-textfield__input" autocomplete="off" type="text" id="send-message-form-input">
+                                            <label class="mdl-textfield__label" for="send-message-form-input">Message</label>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="send-button mdl-cell mdl-cell--1-col">
+                                    <button id="send-message-button" class="mdl-button mdl-button--colored mdl-js-button mdl-button--raised mdl-js-ripple-effect">Send</button>
+                                </div>-->
+                                <div class="list-block">
+                    <div class="item-content">
+                      <div>
+                        <div class="item-input">
+                          <input type="text" placeholder="Message" id="homepage_chat_message">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                                <div class="item-content" style="margin-top: 40px; margin-left: auto; margin-right: 10px;">
+                    <div class="button button-fill button-raised" onclick="models.env['res.message'].create({'sender_id': models.env.user.id, 'text': getValue('homepage_chat_message'), 'name': 'Chat'}).then(function(result) {setValue('homepage_chat_message', ''); if (result.length > 0) result.send_message()})">Send</div>
+                  </div>
+                            </div>
+                            
+                        </div>
+                    </section>
+                </div>
+              </main>
+                
+            </div>
+          </div>
 """})

@@ -1,3 +1,4 @@
+import res.config
 import res.users
 import res.partner
 import res.message

@@ -8,6 +8,7 @@ check_admin()
 
 #tools.configuration.client = True
 tools.configuration.url = "http://localhost:8069"
+tools.configuration.home_view = window.localStorage.rapyd_home_view or 'res.message.chat'
 
 for key in tools.menu:
     if tools.exist(tools.menu[key].parent):
