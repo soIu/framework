@@ -993,6 +993,7 @@ function onchangeField(field, model) {
 }
 
 function editRecord(button) {
+    loadApp();
     if (tools.exist(models.env.context.active_id) === false) {
         models.env.context.active_id = models.env[models.env.context.active_model].browse();
     }
@@ -1014,9 +1015,19 @@ function editRecord(button) {
         button.style.display = 'none';
         document.querySelector('.button-save').style.display = 'inline-block';
     }
+    doneApp();
 }
 
 function saveRecord(button) {
+    loadApp();
+    function hideButton() {
+        if (button !== undefined) {
+            button.style.display = 'none';
+            document.querySelector('.button-upload').style.display = 'inline-block';
+            document.querySelector('.button-edit').style.display = 'inline-block';
+        }
+        doneApp();
+    }
     var values = {};
     var inputs = document.querySelectorAll('.input-field');
     for (var index in Array.from(inputs)) {
@@ -1044,6 +1055,7 @@ function saveRecord(button) {
             models.env.context.unsaved[models.env.context.active_model][result.id] = 'create';
             updateUnsave();
             setValues(result.values);
+            hideButton();
         });
     } else {
         models.env.context.active_id.write(values, false).then(function(result) {
@@ -1053,16 +1065,20 @@ function saveRecord(button) {
             models.env.context.unsaved[models.env.context.active_model][result.id] = 'write';
             updateUnsave();
             setValues(result.values);
+            hidebutton();
         });
-    }
-    if (button !== undefined) {
-        button.style.display = 'none';
-        document.querySelector('.button-upload').style.display = 'inline-block';
-        document.querySelector('.button-edit').style.display = 'inline-block';
     }
 }
 
 function uploadRecord(button) {
+    loadApp();
+    function hideButton() {
+        if (button !== undefined) {
+            button.style.display = 'none';
+            document.querySelector('.button-edit').style.display = 'inline-block';
+        }
+        doneApp();
+    }
     if (hasKey(models.env.context.unsaved, models.env.context.active_model) === true) {
         if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'create') {
             var todelete = models.env.context.active_id;
@@ -1070,20 +1086,18 @@ function uploadRecord(button) {
                 models.env.context.active_id = result;
                 todelete.unlink(false);
                 setValues(result.values);
+                hideButton();
             });
             delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
             updateUnsave();
         } else if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'write') {
             models.env.context.active_id.write().then(function(result) {
                 setValues(result.values);
+                hideButton();
             });
             delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
             updateUnsave();
         }
-    }
-    if (button !== undefined) {
-        button.style.display = 'none';
-        document.querySelector('.button-edit').style.display = 'inline-block';
     }
 }
 
