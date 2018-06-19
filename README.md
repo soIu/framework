@@ -18,7 +18,7 @@ New Messaging Feature
 # Purpose of this project
 - Creating an ORM for PouchDB/CouchDB which is a non-relational database or simply called NoSQL (except PouchDB that can be configured to use SQLite, etc), with a fabulous sync feature (https://pouchdb.com/guides/replication.html), offline capabilities, revision management, and performance. One more thing, ITS JSON!! (ORM Repo https://github.com/rafi16jan/pouchdb-orm ARCHIVED) Done ✓
 
-- Build a *not so magic* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA, but I still need recommendation. (Framework Repo https://github.com/rafi16jan/rapyd-framework) Ready ✓
+- Build a *not so [magic](https://en.wikipedia.org/wiki/Magic_(programming))* server-side MVC or PWA (Progressive Web Apps that only rely to RESTFul APIs and can be ran offline, either with service worker or local PouchDB) Framework. I prefer PWA, but I still need recommendation. (Framework Repo https://github.com/rafi16jan/rapyd-framework) Ready ✓
 
 - Use RapydScript (Python transpiler to Javascript, currently ES5 for compatibilty) in server-side (Node.js) and client-side, because Python's slogan "readability counts" is true. I managed to build full-customized ERP based on customer's needs with Odoo. But the performance is not good. Done ✓
 
