@@ -31,6 +31,7 @@ class Model():
         self._is_env = _is_env if _is_env != undefined else False
         self._is_singleton = _is_singleton if _is_singleton != undefined else False
         self._inherited_keys = []
+        self._context = {}
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
@@ -238,7 +239,7 @@ class Model():
 
     def search(self):
         args = Array.prototype.slice.call(arguments)
-        options = copy(self.env.context)
+        options = copy(self._context)
         if options.is_client == undefined:
            options.is_client = configuration.client
         if exist(self.env.context.active_limit):
@@ -555,5 +556,5 @@ class Model():
 
     def with_context(self, **kwargs):
         for key in kwargs:
-            self.env.context[key] = kwargs[key]
+            self._context[key] = kwargs[key]
         return self
