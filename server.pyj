@@ -11,6 +11,7 @@ admin_password = configuration.admin_password
 check_admin()
 
 client_js = require('child_process').execSync(require('process').execPath + ' ./node_modules/.bin/rapydscript -p modules/ client.pyj').toString()
+client_js = client_js.replace('{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}', JSON.stringify(configuration))
 client_js_time = Date().toISOString()
 
 crypto = require('crypto')
