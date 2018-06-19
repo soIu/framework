@@ -3,3 +3,4 @@ node_modules
 modules/modules.pyj
 modules/controllers.pyj
 app.conf
+main
