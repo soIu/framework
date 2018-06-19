@@ -1,4 +1,5 @@
 node_modules
 *.pyj-cached
 modules/modules.pyj
+modules/controllers.pyj
 app.conf

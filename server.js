@@ -20,6 +20,8 @@ try {
     }
     var modules_list = require('child_process').execSync('cd modules && for module in $(find */modules.pyj); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
     fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list)
+    var controllers_list = require('child_process').execSync('cd modules && for module in $(find */controllers.pyj); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
+    fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list)
 } catch(error) {
     console.log(error)
 }
