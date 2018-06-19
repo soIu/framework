@@ -2,7 +2,8 @@
 if (typeof myApp === 'undefined') {
     myApp = new Framework7({
         modalTitle: 'App',
-        domCache: true,
+        cache: false,
+        domCache: false,
         pushState: true,
         material: true,
 
@@ -445,7 +446,8 @@ function loadIndex(page) {
         }
         doneApp();
         document.querySelector('#index').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
-        document.querySelector('.navbar-fixed').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
+        document.querySelector('.navbar-fixed').children[0].innerHTML = document.getElementById(tools.configuration.home_view).content.children[0].innerHTML;
+        document.querySelector('.page.page-on-center').setAttribute('data-page', tools.configuration.home_view);
         document.querySelector('.view.view-main').setAttribute('data-page', tools.configuration.home_view);
         indexLoaded = true;
     }
@@ -475,7 +477,7 @@ function startApp(view) {
         models.env.user.login = record.login;
         models.env.user.password = record.password;
         //models.env.user.client_js = record.client_js;
-        //reloadPage(view, 'index');
+        reloadPage(view, 'index');
         checkLoginValid(view);
     }).catch(function(error) {
         if (getLocal('rapyd_server_url') === null) {
