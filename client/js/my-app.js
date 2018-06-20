@@ -54,7 +54,8 @@ function loadIndex(page) {
             active_ids: [],
             active_index: 0,
             active_limit: 80,
-            active_model: false
+            active_model: false,
+            force_upload: false
         });
         var keys = tools.keys(tools.menu, 'sequence').as_array();
         var render_menu = function(key) {
@@ -128,6 +129,14 @@ function loadIndex(page) {
                             back_button.innerHTML = '<i class="icon icon-bars"></i>';
                         }
                     }
+                    models.env.context = Object.assign(models.env.context, {
+                        active_id: null,
+                        active_ids: [],
+                        active_index: 0,
+                        active_limit: 80,
+                        active_model: false,
+                        force_upload: false
+                    });
                     models.env.context.active_id = null;
                     models.env.context.active_model = model;
                     var page = document.querySelector("div[data-page='" + model + ".list']");
@@ -196,6 +205,7 @@ function loadIndex(page) {
                             back_button.innerHTML = '<i class="icon icon-bars"></i>';
                         }
                     }
+                    models.env.context.force_upload = !!JSON.parse((form.getAttribute('force_upload') || false).toString().toLowerCase());
                     models.env.context.active_model = model;
                     var page = document.querySelector("div[data-page='" + model + ".form']");
                     //templatePages[model + '.form'] = page;
@@ -450,6 +460,10 @@ function loadIndex(page) {
         document.querySelector('.page.page-on-center').setAttribute('data-page', tools.configuration.home_view);
         document.querySelector('.view.view-main').setAttribute('data-page', tools.configuration.home_view);
         indexLoaded = true;
+        var color_element = document.createElement('meta');
+        color_element.name = 'theme-color';
+        color_element.content = '#' + getComputedStyle(document.querySelector('.navbar'), null).backgroundColor.replace('rgb(', '').replace(')', '').split(', ').map(function(c) {return parseInt(c).toString(16)}).map(function(hex) {return hex.length == 1 ? "0" + hex : hex}).join('');
+        document.querySelector('head').appendChild(color_element);
     }
 }
 
@@ -1027,6 +1041,9 @@ function saveRecord(button) {
             document.querySelector('.button-edit').style.display = 'inline-block';
         }
         doneApp();
+        if (models.env.context.force_upload === true) {
+            uploadRecord(button);
+        }
     }
     var values = {};
     var inputs = document.querySelectorAll('.input-field');
