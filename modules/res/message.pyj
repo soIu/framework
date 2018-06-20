@@ -86,7 +86,8 @@ def show_message(msg):
 
     #Scroll down
     #window.$$('.page-content').animate({scrollTop: window.$$('.chat-list-div').prop("scrollHeight")}, 500)
-    document.querySelector('.page-content').scrollBy(0, window.$$('.chat-list-div').prop('scrollHeight'))
+    #window.document.querySelector('.page-content').scrollBy(0, window.$$('.chat-list-div').prop('scrollHeight'))
+    window.document.querySelector('.page-content').scrollTop = window.$$('.chat-list-div').prop('scrollHeight');
 
 tools.show_message = show_message
 

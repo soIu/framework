@@ -1035,6 +1035,7 @@ function editRecord(button) {
 function saveRecord(button) {
     loadApp();
     function hideButton() {
+        document.querySelector('.form-label').innerHTML = '/ ' + models.env.context.active_id.name;
         if (button !== undefined) {
             button.style.display = 'none';
             document.querySelector('.button-upload').style.display = 'inline-block';
@@ -1042,7 +1043,7 @@ function saveRecord(button) {
         }
         doneApp();
         if (models.env.context.force_upload === true) {
-            uploadRecord(button);
+            uploadRecord(document.querySelector('.button-upload'));
         }
     }
     var values = {};
@@ -1082,7 +1083,7 @@ function saveRecord(button) {
             models.env.context.unsaved[models.env.context.active_model][result.id] = 'write';
             updateUnsave();
             setValues(result.values);
-            hidebutton();
+            hideButton();
         });
     }
 }
@@ -1094,6 +1095,7 @@ function uploadRecord(button) {
             button.style.display = 'none';
             document.querySelector('.button-edit').style.display = 'inline-block';
         }
+        console.log(button);
         doneApp();
     }
     if (hasKey(models.env.context.unsaved, models.env.context.active_model) === true) {
