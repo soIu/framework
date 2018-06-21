@@ -162,12 +162,12 @@ class Model():
            return iter([])
         elif self._is_singleton:
            return iter([self])
-        lists = []
-        for value in self.values:
-            result = self.browse()
-            result.values = value
-            lists.push(result)
-        return iter(lists)
+        def yield_record(self):
+            for value in self.values:
+                result = self.browse()
+                result.values = value
+                yield result
+        return yield_record(self)
 
     """def __super__(self):
         inherited = v'new self.inherited_constructor(self._is_env, self._is_singleton)'
