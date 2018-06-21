@@ -75,7 +75,7 @@ function loadIndex(page) {
                 '</a>';
             if (tools.exist(menu.model) === true) {
                 li.children[0].onclick = function() {
-                    loadPage(mainView, menu.model + '.list')
+                    loadPage(mainView, (menu.view_id || menu.model + '.list'))
                 };
             }
             var div = false;
@@ -88,7 +88,7 @@ function loadIndex(page) {
                 var child_menu = menu.childs[child];
                 var onclick = '';
                 if (tools.exist(child_menu.model) === true) {
-                    onclick = "loadPage(mainView, " + "'" + child_menu.model + ".list" + "'" + ")";
+                    onclick = "loadPage(mainView, " + "'" + (child_menu.view_id || child_menu.model + ".list") + "'" + ")";
                     //div.children[child].onclick = function () {loadPage(mainView, child_menu.model + '.list')};
                 }
                 div.innerHTML +=
