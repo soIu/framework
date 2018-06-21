@@ -574,3 +574,16 @@ class Model():
         for key in kwargs:
             self._context[key] = kwargs[key]
         return self
+
+    def sort_by(self, field):
+        if self.length < 2:
+           return self
+        self.values.sort(
+        def (a, b):
+             if a[field] < b[field]:
+                return -1
+             elif a[field] > b[field]:
+                return 1
+             return 0
+        )
+        return self
