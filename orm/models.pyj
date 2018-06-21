@@ -18,6 +18,7 @@ def queryInverse(field_type, records, fields, _fields):
 class Model():
     _name = undefined
     _inherit = False
+    _rec_name = 'name'
     #_fields = {}
     #_values = {}
     #_related = {}
@@ -65,6 +66,9 @@ class Model():
         schemas[self._name] = schema
         #Reserved fields
         reserved = ['id', '_id', 'rev', '_rev', 'ids']
+        if self.name == undefined and self._rec_name != 'name':
+           self.name = copy(self[self._rec_name])
+           self.name.related = self._rec_name
         if self._is_singleton:
            self.id = fields.Char(string="ID", related='_id', store=True)
            self._id = fields.Char(string="ID (Raw)")
