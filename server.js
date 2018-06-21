@@ -14,14 +14,16 @@ var conf = "" +
 "server_db_custom_adapter = False\n" +
 "local_app = True\n" +
 "serverless = False\n"
+var modules_list = '';
+var controllerst_list = '';
 try {
+    modules_list = require('child_process').execSync('cd modules && for module in $(find * -maxdepth 1 -mindepth 1 | grep modules.pyj | grep -v .pyj-cached); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
+    controllers_list = require('child_process').execSync('cd modules && for module in $(find * -maxdepth 1 -mindepth 1 | grep controllers.pyj | grep -v .pyj-cached); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
+    fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list)
+    fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list)
     if (fs.existsSync(__dirname + '/app.conf') === false) {
         fs.writeFileSync(__dirname + '/app.conf', conf)
     }
-    var modules_list = require('child_process').execSync('cd modules && for module in $(find */modules.pyj); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
-    fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list)
-    var controllers_list = require('child_process').execSync('cd modules && for module in $(find */controllers.pyj); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
-    fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list)
 } catch(error) {
     console.log(error)
 }
@@ -32,13 +34,29 @@ if (conf !== '') {
     conf = JSON.parse(conf);
     process.env = Object.assign(process.env, conf);
 }
-var command;
+//process.env.RAPYDSCRIPT_IMPORT_PATH = 'modules/';
+var command = process.execPath + ' ./node_modules/.bin/rapydscript -p modules/';
+if (process.env.custom_modules !== undefined && process.env.custom_modules !== false) {
+    //command += ':' + process.env.custom_modules + '/';
+    process.env.RAPYDSCRIPT_IMPORT_PATH = process.env.custom_modules;
+    try {
+        if (fs.existsSync(process.env.custom_modules + '/__init__.pyj') === false) {
+            fs.writeFileSync(process.env.custom_modules + '/__init__.pyj', '');
+        }
+        modules_list += require('child_process').execSync('cd ' + process.env.custom_modules + ' && for module in $(find * -maxdepth 1 -mindepth 1 | grep modules.pyj | grep -v .pyj-cached); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
+        controllers_list += require('child_process').execSync('cd ' + process.env.custom_modules + ' && for module in $(find * -maxdepth 1 -mindepth 1 | grep controllers.pyj | grep -v .pyj-cached); do echo "import $module" | sed "s/.pyj//g" | tr / .; done', {cwd: __dirname}).toString();
+        fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list);
+        fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list);
+    } catch(error) {
+        console.log(error);
+    }
+}
 var pipe;
 if (process.argv.indexOf('--serverless') === -1 && require.main === module) {
-    command = process.execPath + ' ./node_modules/.bin/rapydscript -p modules/ -x server.pyj';
+    command += ' -x server.pyj';
     pipe = 'inherit'
 } else {
-    command = process.execPath + ' ./node_modules/.bin/rapydscript -p modules/ server.pyj'
+    command += ' server.pyj'
     pipe = 'pipe'
     process.env.serverless = true
 }
