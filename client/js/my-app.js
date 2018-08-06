@@ -48,7 +48,7 @@ function loadIndex(page) {
         return
     }
     if (page.name === 'index' || page.name === 'login' || page.name === tools.configuration.home_view) {
-        loadApp();
+        var preload = loadApp();
         models.env.context = Object.assign(models.env.context, {
             active_id: null,
             active_ids: [],
@@ -157,7 +157,7 @@ function loadIndex(page) {
                     }
 
                     function render(records) {
-                        loadApp();
+                        var preload_render = loadApp();
                         //records = Array.from(records.__iter__());
                         records.queue(function(record, next) {
                             //record = records[record];
@@ -179,7 +179,7 @@ function loadIndex(page) {
                             next();
                         });
                         values.remove(); //.parentElement.removeChild(values);
-                        doneApp();
+                        doneApp(preload_render);
                     }
                     models.env[model].search(['id', 'not in', unsaved_ids]).then(render);
                     if (tools.exist(unsaved_ids) === true) {
@@ -403,8 +403,7 @@ function loadIndex(page) {
                             parent.append(element);
                             if (typeof children[index].children === 'object' && children[index].children.length > 0) {
                                 if (children[index].children[0].tagName === 'tree') {
-                                    //showTable(input, children[index].children[0], models.env[model]._fields[children[index].attributes.name.value].relation);
-                                    //To-DO fields.push();
+                                    showTable(input, children[index].children[0], models.env[model]._fields[children[index].attributes.name.value].relation, models.env[model]._fields[children[index].attributes.name.value].inverse);
                                     return;
                                 }
                                 render(element, children[index].children, group_left, element_left);
@@ -454,7 +453,7 @@ function loadIndex(page) {
         for (key in keys) {
             render_views(key);
         }
-        doneApp();
+        doneApp(preload);
         document.querySelector('#index').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
         document.querySelector('.navbar-fixed').children[0].innerHTML = document.getElementById(tools.configuration.home_view).content.children[0].innerHTML;
         document.querySelector('.page.page-on-center').setAttribute('data-page', tools.configuration.home_view);
@@ -502,12 +501,24 @@ function startApp(view) {
     });
 }
 
-function loadApp(callBack) {
-    myApp.showIndicator();
+function loadApp() {
+    var overlay = document.createElement('div');
+    overlay.className = 'preloader-indicator-overlay';
+    var modal = document.createElement('div');
+    modal.className = 'preloader-indicator-modal';
+    modal.innerHTML = '<span class="preloader preloader-white"><span class="preloader-inner"><span class="preloader-inner-gap"></span><span class="preloader-inner-left"><span class="preloader-inner-half-circle"></span></span><span class="preloader-inner-right"><span class="preloader-inner-half-circle"></span></span></span></span>';
+    document.body.append(overlay);
+    document.body.append(modal);
+    //console.log(new Error());
+    var object = {overlay: overlay, modal: modal};//, done: false, trace: new Error()};
+    //loaderrors.push(object)
+    return object;
 }
 
-function doneApp() {
-    myApp.hideIndicator();
+function doneApp(object) {
+    //object.done = true;
+    object.modal.remove();
+    object.overlay.remove();
 }
 
 function parseURI(data) {
@@ -526,7 +537,7 @@ function parseURI(data) {
 }
 
 function doAjax(type, dataType, url, data) {
-    loadApp();
+    var preload = loadApp();
     if (data !== undefined || null || false) {
         data = parseURI(data);
     }
@@ -536,11 +547,11 @@ function doAjax(type, dataType, url, data) {
         xhr.open(type, url, true);
         xhr.onload = function() {
             resolve(this.response);
-            doneApp();
+            doneApp(preload);
         };
         xhr.onerror = function() {
             reject(this.statusText);
-            doneApp();
+            doneApp(preload);
         };
         if (dataType === undefined) {
             dataType = 'json';
@@ -609,7 +620,8 @@ function reloadPreviousPage(view) {
     if (left_page !== null) {
         left_page.remove();
     }
-    view.router.reloadContent(page.innerHTML);
+    //view.router.reloadContent(page.innerHTML);
+    view.router.back();
 }
 
 //mainView.router.back = function back() {reloadPreviousPage(mainView)};
@@ -629,7 +641,7 @@ function getFile(file) {
 }
 
 function getFiles(elements, array, index) {
-    loadApp();
+    var preload = loadApp();
     if (array === undefined) {
         array = [];
     }
@@ -642,7 +654,7 @@ function getFiles(elements, array, index) {
         if (index !== elements.length) {
             return getFiles(elements, array, index);
         } else {
-            doneApp();
+            doneApp(preload);
             return array;
         }
     });
@@ -653,6 +665,8 @@ function getValue(id) {
     if (element !== null) {
         if (element.type === 'checkbox') {
             return element.checked;
+        } else if (window.tools !== undefined && tools.exist(models.env.context.active_model) === true && models.env[models.env.context.active_model]._fields[id] && hasValue(['date', 'datetime'], models.env[models.env.context.active_model]._fields[id].type) === true) {
+            return new Date(element.value).toISOString();
         }
         return element.value;
     } else {
@@ -724,6 +738,26 @@ function setValue(id, value) {
                 return;
             }
             return models.env[models.env[models.env.context.active_model]._fields[id].relation].browse(value).then(function(result) {
+                if (hasValue(models.env.context, 'active_lines') === false) {
+                    models.env.context.active_lines = {};
+                }
+                if (tools.exist(models.env.context.active_lines[models.env[models.env.context.active_model]._fields[id].relation]) === true) {
+                    return;
+                }
+                models.env.context.active_lines[models.env[models.env.context.active_model]._fields[id].relation] = result;
+                var table = document.querySelector('table[class*="' + models.env[models.env.context.active_model]._fields[id].relation + '"]');
+                if (table !== null) {
+                    var columns = table.querySelectorAll('th[class*=column]');
+                    result.queue(function (record, next) {
+                        var line = addTable(table);
+                        for (var index in Array.from(columns)) {
+                             var field = columns[index].className.split(' ')[0];
+                             console.log(field);
+                             line.querySelector('.tree-input.' + field).innerHTML = record[field];
+                        }
+                        next();
+                    });
+                }
                 var values = [];
                 records = Array.from(result.__iter__());
                 for (var record in records) {
@@ -735,8 +769,11 @@ function setValue(id, value) {
                 selectivityFields[models.env.context.active_model + '.' + id].setData(values);
             });
         } else {
-            if (tools.exist(models.env.context.active_model) === true && models.env[models.env.context.active_model]._fields[id] && models.env[models.env.context.active_model]._fields[id].type === 'date' && tools.exist(value) === true) {
-                value = value.split('T')[0];
+            if (tools.exist(models.env.context.active_model) === true && models.env[models.env.context.active_model]._fields[id] && hasValue(['date', 'datetime'], models.env[models.env.context.active_model]._fields[id].type) === true && tools.exist(value) === true) {
+                var date = new Date(value);
+                date.setHours(date.getHours() + (date.getTimezoneOffset() / 60 * -1));
+                element.value = date.toISOString().slice(0, -1)
+                return;
             }
             element.value = value;
         }
@@ -816,7 +853,10 @@ function loadORM(client_js) {
             client_js = client_js.split(code).join('window.tools.' + code);
         }
     }
-    forceReplace(['exception(error', 'warning(error', 'ajax_load(data)', 'ajax_resolve(resolve, this', 'ajax_reject(reject, this']);
+    forceReplace(['exception(error', 'warning(error', 'ajax_load(opts', 'ajax_resolve(resolve, this', 'ajax_reject(reject, this']);
+    delete window.models;
+    delete window.tools;
+    delete window.local_db;
     eval(client_js);
     if (tools.exist(tools.configuration.custom_navbar) === true) {
         var style = document.createElement('style');
@@ -855,15 +895,21 @@ function loadORM(client_js) {
         }
         warningCount = 1;
     };
-    tools.ajax_load = function() {
-        loadApp();
+    tools.ajax_load = function(opts) {
+        if (opts.no_preload !== true) {
+            opts.preload = loadApp();
+        }
     };
-    tools.ajax_resolve = function(resolve, xhr) {
-        doneApp();
+    tools.ajax_resolve = function(resolve, xhr, opts) {
+        if (opts.no_preload !== true) {
+            doneApp(opts.preload);
+        }
         resolve(xhr.response);
     };
-    tools.ajax_reject = function(reject, xhr) {
-        doneApp();
+    tools.ajax_reject = function(reject, xhr, opts) {
+        if (opts.no_preload !== true) {
+            doneApp(opts.preload);
+        }
         reject(xhr.statusText);
     };
     (function connectSocket() {
@@ -875,10 +921,17 @@ function loadORM(client_js) {
                     script.src = getLocal('rapyd_server_url') + '/socket.io/socket.io.js';
                     document.body.appendChild(script);
                 }*/
-                window.socket = io(getLocal('rapyd_server_url'));
+                window.socket = io(getLocal('rapyd_server_url'));//, {transports: ['polling']});
+                socket.removeAllListeners();
+                socket.on('message', tools.show_message);
+                db.get('session').then(function(record) {
+                    window.user_socket = io(getLocal('rapyd_server_url') + '/' + record.id);//, {transports: ['polling']});
+                    user_socket.removeAllListeners();
+                    //user_socket.on('message', tools.show_message);
+                }).catch(function(error) {
+                    
+                });
             }
-            socket.removeAllListeners()
-            socket.on('message', tools.show_message);
         } catch (error) {
             console.log(error);
             //connectSocket();
@@ -936,7 +989,11 @@ function doLogin(view, args) {
                         client_js: response.client_js || doc.client_js,
                         client_js_time: response.client_js_time || doc.client_js_time,
                         unsaved: doc.unsaved
-                    });
+                    }).then(function() {
+                        if (response.client_js) {
+                            window.location.reload();
+                        }
+                    });;
                 }).catch(function(error) {
                     db.put({
                         _id: 'session',
@@ -947,6 +1004,10 @@ function doLogin(view, args) {
                         client_js: response.client_js,
                         client_js_time: response.client_js_time,
                         unsaved: {}
+                    }).then(function() {
+                        if (response.client_js) {
+                            window.location.reload();
+                        }
                     });
                     myApp.alert('Login success!');
                 });
@@ -1007,7 +1068,7 @@ function onchangeField(field, model) {
 }
 
 function editRecord(button) {
-    loadApp();
+    var preload = loadApp();
     if (tools.exist(models.env.context.active_id) === false) {
         models.env.context.active_id = models.env[models.env.context.active_model].browse();
     }
@@ -1029,11 +1090,11 @@ function editRecord(button) {
         button.style.display = 'none';
         document.querySelector('.button-save').style.display = 'inline-block';
     }
-    doneApp();
+    doneApp(preload);
 }
 
 function saveRecord(button) {
-    loadApp();
+    var preload = loadApp();
     function hideButton() {
         document.querySelector('.form-label').innerHTML = '/ ' + models.env.context.active_id.name;
         if (button !== undefined) {
@@ -1041,7 +1102,28 @@ function saveRecord(button) {
             document.querySelector('.button-upload').style.display = 'inline-block';
             document.querySelector('.button-edit').style.display = 'inline-block';
         }
-        doneApp();
+        if (hasKey(models.env.context, 'active_lines') === true) {
+            for (var model in models.env.context.active_lines) {
+                var values = extractTable(document.querySelector('table[class*="' + model + '"]'));
+                models.env.context.active_lines[model].values = values;
+                models.env.context.active_lines[model].queue(function (record, next) {
+                    if (hasKey(models.env.context.unsaved, model) === false) {
+                        models.env.context.unsaved[model] = {};
+                    }
+                    if (tools.exist(record.id) === false) {
+                        record.create({}, false).then(function(result) {
+                            models.env.context.unsaved[model][result.id] = 'create';
+                            updateUnsave().then(next).catch(console.error);
+                        }).catch(function(error) {console.log(error)});
+                    } else {
+                        record.write({}, false).catch(function(error) {console.log(error)});
+                        models.env.context.unsaved[model][record.id] = 'write';
+                        updateUnsave().then(next).catch(console.error);
+                    }
+                });
+            }
+        }
+        doneApp(preload);
         if (models.env.context.force_upload === true) {
             uploadRecord(document.querySelector('.button-upload'));
         }
@@ -1071,9 +1153,8 @@ function saveRecord(button) {
                 models.env.context.unsaved[models.env.context.active_model] = {};
             }
             models.env.context.unsaved[models.env.context.active_model][result.id] = 'create';
-            updateUnsave();
+            updateUnsave().then(hideButton);
             setValues(result.values);
-            hideButton();
         });
     } else {
         models.env.context.active_id.write(values, false).then(function(result) {
@@ -1081,22 +1162,40 @@ function saveRecord(button) {
                 models.env.context.unsaved[models.env.context.active_model] = {};
             }
             models.env.context.unsaved[models.env.context.active_model][result.id] = 'write';
-            updateUnsave();
+            updateUnsave().then(hideButton);
             setValues(result.values);
-            hideButton();
         });
     }
 }
 
 function uploadRecord(button) {
-    loadApp();
+    var preload = loadApp();
     function hideButton() {
         if (button !== undefined) {
             button.style.display = 'none';
             document.querySelector('.button-edit').style.display = 'inline-block';
         }
-        console.log(button);
-        doneApp();
+        if (hasKey(models.env.context, 'active_lines') === true) {
+            for (var model in models.env.context.active_lines) {
+                //var values = extractTable(document.querySelector('table[class*="' + model + '"]'));
+                //models.env.context.active_lines[model].values = values;
+                models.env.context.active_lines[model].queue(function (record, next) {
+                    if (models.env.context.unsaved[model][record.id] === 'create') {
+                        var todelete = record;
+                        record.create({}).then(function(result) {
+                            delete models.env.context.unsaved[model][todelete.id];
+                            updateUnsave().then(next);
+                            todelete.unlink(false);
+                        }).catch(function(error) {console.log(error)});
+                    } else if (models.env.context.unsaved[model][record.id] === 'write') {
+                        record.write({}).catch(function(error) {console.log(error)});
+                        delete models.env.context.unsaved[model][record.id];
+                        updateUnsave().then(next);
+                    }
+                });
+            }
+        }
+        doneApp(preload);
     }
     if (hasKey(models.env.context.unsaved, models.env.context.active_model) === true) {
         if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'create') {
@@ -1105,37 +1204,42 @@ function uploadRecord(button) {
                 models.env.context.active_id = result;
                 todelete.unlink(false);
                 setValues(result.values);
-                hideButton();
+                delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
+                updateUnsave().then(hideButton);
             });
-            delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
-            updateUnsave();
         } else if (models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id] === 'write') {
             models.env.context.active_id.write().then(function(result) {
                 setValues(result.values);
-                hideButton();
+                delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
+                updateUnsave().then(hideButton);
             });
-            delete models.env.context.unsaved[models.env.context.active_model][models.env.context.active_id.id];
-            updateUnsave();
         }
     }
 }
 
 function updateUnsave() {
-    db.get('session').then(function(doc) {
-        db.put(Object.assign(doc, {
+    return db.get('session').then(function(doc) {
+        return db.put(Object.assign(doc, {
             unsaved: models.env.context.unsaved
         }));
     });
 }
 
-function showTable(input, tree, model) {
+function showTable(input, tree, model, inverse) {
+    if (hasValue(models.env.context, 'active_lines') === false) {
+        models.env.context.active_lines = {};
+    }
+    if (models.env.context.active_lines[model] === undefined) {
+        models.env.context.active_lines[model] = models.env[model].browse();
+    }
+    input.parentElement.style.display = 'none';
     var id = input.id;
     var table =
         '<div class="mdl-cell item-content">' +
         '	<table class="mdl-data-table">' +
         '		<thead>' +
         '			<tr class="columns">' +
-        '				<th class="hide column-default"></th>' +
+        '				<th class="id hide column-default" style="text-align: left;"></th>' +
         '				<th>' +
         '					<i style="vertical-align: bottom;" class="table-add material-icons md-24" onclick="addTable(this)">&#xe03b;</i>' +
         '				</th>' +
@@ -1144,7 +1248,7 @@ function showTable(input, tree, model) {
         '		<tbody>' +
         '			<tr class="hide line-default">' +
         '				<td class="hide column-row-default">' +
-        '					<div contenteditable style="width: 100%; height: 100%; outline: 0px solid transparent;"></div>' +
+        '					<div contenteditable class="id tree-input" style="text-align: left; width: 100%; height: 100%; outline: 0px solid transparent; user-select: text; -webkit-user-select: text;"></div>' +
         //'					<input type="text">'+
         '				</td>' +
         '				<td>' +
@@ -1154,21 +1258,37 @@ function showTable(input, tree, model) {
         '		</tbody>' +
         '	</table>' +
         '</div>';
-    input.parentElement.parentElement.parentElement.parentElement.parentElement.insertAdjacentHTML('afterend', table);
-    table = input.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector('table');
+    input.parentElement.parentElement.parentElement.insertAdjacentHTML('afterend', table);
+    table = input.parentElement.parentElement.parentElement.parentElement.querySelector('table');
+    table.className += ' ' + model;
+    if (inverse !== undefined) {
+        table.setAttribute('inverse-field', inverse);
+    }
     var column_default = table.querySelector('th.column-default');
     var column_row_default = table.querySelector('td.column-row-default');
     for (var index in Array.from(tree.children)) {
         var field = tree.children[index];
+        if (field.attributes.name.value === 'id') {
+            continue;
+        }
         var column = column_default.cloneNode(true);
         var column_row = column_row_default.cloneNode(true);
         column.removeAttribute('class');
         column.innerHTML = models.env[model]._fields[field.attributes.name.value].string;
+        column.className = field.attributes.name.value + ' column-table';
         column_row.removeAttribute('class');
         column_row.children[0].className = field.attributes.name.value + ' tree-input';
-        column_default.parentElement.lastChild.insertAdjacentElement('beforebegin', column);
-        column_row_default.parentElement.lastChild.insertAdjacentElement('beforebegin', column_row);
+        column_default.parentElement.lastElementChild.insertAdjacentElement('beforebegin', column);
+        column_row_default.parentElement.lastElementChild.insertAdjacentElement('beforebegin', column_row);
     }
+    models.env.context.active_lines[model].queue(function (record, next) {
+        var line = addTable(table);
+        for (var index in Array.from(tree.children)) {
+             var field = tree.children[index];
+             line.querySelector('.tree-input.' + field.attributes.name.value).innerHTML = record[field];
+        }
+        next();
+    });
 }
 
 function addTable(element) {
@@ -1176,10 +1296,35 @@ function addTable(element) {
     append = element.parentElement.parentElement.parentElement.parentElement.querySelector('tbody').appendChild(clone);
     append.removeAttribute('class');
     append.setAttribute('class', 'line');
+    return append;
 }
 
 function removeTable(table) {
     table.parentElement.parentElement.remove();
+}
+
+function extractTable(table) {
+    var values = [];
+    var value_index = 0;
+    var elements = table.querySelectorAll('.tree-input');
+    var last_element = null;
+    for (var index in Array.from(elements)) {
+        if (elements[index].parentElement.parentElement.className === 'hide line-default') {
+            continue;
+        }
+        if (last_element !== null && last_element !== elements[index].parentElement.parentElement) {
+            value_index += 1;
+        }
+        if (values[value_index] === undefined) {
+            values[value_index] = models.env[table.className.split(' ')[1]].browse().values || {};
+            if (table.getAttribute('inverse-field') !== null) {
+                values[value_index][table.getAttribute('inverse-field')] = models.env.context.active_id.id;
+            }
+        }
+        values[value_index][elements[index].className.split(' ')[0]] = elements[index].innerHTML;
+        last_element = elements[index].parentElement.parentElement;
+    }
+    return values;
 }
 
 //Polyfills

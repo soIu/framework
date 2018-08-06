@@ -1,9 +1,11 @@
 import modules.modules
 import modules.controllers
 import orm.http as http
-from orm.models import env
+from orm.models import env, setSchema
 from orm.tools import exist, configuration, merge
 from res.users import check_admin, admin_password
+
+setSchema()
 
 configuration = merge(configuration, {key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
 
@@ -41,6 +43,7 @@ def (request, result, next):
        request.env['res.users'].with_context(limit=1).search(['login', '=', params.login], ['password', '=', params.password]).then(
        def (user_id):
            if exist(user_id):
+              request.env.context.user = user_id
               result.response = {'status': 'success'}
               if params.authentication = True:
                  result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
@@ -93,7 +96,7 @@ def (request, result, next):
     params = request.params
     if exist(request.params):
        options = params.options or {}
-       request.env[params.model].with_context(**options).search(params.args).then(
+       request.env[params.model].with_context(**options).search(*params.args).then(
        def (record):
            result.response = {'status': 'success', 'values': record.values}
            next()
@@ -197,7 +200,8 @@ def (request, result, next):
     if exist(request.params):
        request.env[params.model].browse(params.ids).then(
        def (record):
-           record[params.method]().then(
+           args = params.args if params.args else []
+           return record[params.method].apply(record, args).then(
            def (record):
                result.response = {'status': 'success', 'values': record.values}
                next()

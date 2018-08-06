@@ -4,12 +4,12 @@ import orm.tools as tools
 def server(method, write=True, iterate=True):
     def wrap():
         v'var self = this'
-        args = Array.prototype.slice.call(arguments)
+        args = Array.prototype.slice.call(arguments) or self._args
         if not tools.configuration.client:
            if self.length > 1:
               return self.queue(
               def (record, next):
-                  return record[method.name].apply(record, args).then(
+                  return record[method.name](*args).then(
                   def (value):
                       if tools.exist(value):
                          return value
@@ -17,8 +17,9 @@ def server(method, write=True, iterate=True):
                          return next()
                   )
               )
+           console.log(args)
            self[method.name] = method
-           result = self[method.name].apply(self, args)
+           result = self[method.name]()
            if write and v'result instanceof models.Model' == True:
               result = result.write()
            if tools.exist(result) and type(result) == Promise:

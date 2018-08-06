@@ -6,6 +6,9 @@ env = {}
 schemas = {}
 raw_models = {}
 
+def setSchema():
+    db.setSchema([schemas[key] for key in schemas])
+
 def queryInverse(field_type, records, fields, _fields):
     for record in records[field_type]:
         for field in fields:
@@ -67,8 +70,9 @@ class Model():
         #Reserved fields
         reserved = ['id', '_id', 'rev', '_rev', 'ids']
         if self.name == undefined and self._rec_name != 'name':
-           self.name = copy(self[self._rec_name])
-           self.name.related = self._rec_name
+           self.constructor.prototype.name = copy(self[self._rec_name])
+           self.constructor.prototype.name.related = self._rec_name
+           self.constructor.prototype.name.store = True
         if self._is_singleton:
            self.id = fields.Char(string="ID", related='_id', store=True)
            self._id = fields.Char(string="ID (Raw)")
@@ -111,7 +115,7 @@ class Model():
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
         try:
-           db.setSchema([schemas[key] for key in schemas])
+           setSchema()
         except:
            pass
         if exist(self._name):
@@ -124,9 +128,9 @@ class Model():
         Object.defineProperty(self, 'ids', {
         'get': def ():
                    if self._is_singleton:
-                      return [self.id]
+                      return [self.id] if self.id else []
                    else:
-                      return [object.id for object in self.values]
+                      return [object.id for object in self.values if object.id]
         ,
         'set': def (): return
         })
@@ -136,12 +140,20 @@ class Model():
         'set': def (newvalue):
                    if not exist(newvalue):
                       return
-                   if self._is_singleton:
-                      self._values = merge(self._values, newvalue)
+                   if type(newvalue).name not in [types.name for types in array]:
+                      self._is_singleton = True
+                      if type(newvalue).name in [types.name for types in array]:
+                         self._values = {}
+                      oldvalue = copy(self._values)
+                      self._values =  newvalue
+                      for key in oldvalue:
+                          if key not in newvalue:
+                             self._values[key] = oldvalue[key]
                       for key in self._fields:
                           if key in newvalue:
                              self[key] = self.adapt(key, newvalue[key])
                    else:
+                      self._is_singleton = False
                       self._values = newvalue
                       #self.ids = [object.id for object in newvalue]
         })
@@ -167,9 +179,9 @@ class Model():
         elif self._is_singleton:
            return iter([self])
         def yield_record(self):
-            for value in self.values:
+            for index in range(self.values.length):
                 result = self.browse()
-                result.values = value
+                result.values = self.values[index]
                 yield result
         return yield_record(self)
 
@@ -183,9 +195,17 @@ class Model():
 
     def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
-           v'return new self.constructor(false, is_singleton)'
+           if ids == []:
+              return Promise(
+              def (resolve, reject):
+                   #resolve(v'new self.constructor(false, is_singleton)')
+                   resolve(self.env[self._name])
+              )
+           result = v'new self.constructor(false, is_singleton)'
+           result._context = self._context
+           return result
         elif is_client:
-           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}).then(
+           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}, self._context).then(
            def (result):
                console.log(result)
                record = self.browse(is_singleton=type(result.values) not in array)
@@ -225,7 +245,7 @@ class Model():
                warning(error, True)
                return self.browse(ids, is_client=False)
            )
-        elif type(ids) in [ρσ_list_constructor, Array]:
+        elif type(ids).name in [types.name for types in array]:
            #result = self.browse()
            if ids.length > 1:
               v'var result = new self.constructor(false, false)'
@@ -263,12 +283,12 @@ class Model():
            options.index = self.env.context.active_index
         if exist(options.is_client):
            del options.is_client
-           return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}).then(
+           return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
            def (result):
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
                for id in record.ids:
-                   self.browse(id)
+                   self.with_context(no_preload=True).browse(id)
                return record
            ).catch(
            def (error):
@@ -281,7 +301,10 @@ class Model():
                 if not arg or str(arg) in ['|', '[]']:
                    continue
                 if arg[1] == '=':
-                   results.push(record[arg[0]] == arg[2])
+                   if arg[2] != False:
+                      results.push(record[arg[0]] == arg[2])
+                   else:
+                      results.push(exist(record[arg[0]]))
                 elif arg[1] == '>':
                    results.push(record[arg[0]] > arg[2])
                 elif arg[1] == '>=':
@@ -420,7 +443,7 @@ class Model():
            elif v'value instanceof env.Model' == True:
               value = value.ids
         #Related operation
-        if self._fields[key].store:
+        if self._fields[key].store in [True, None]:
            if exist(self._fields[key].related):
               self[self._fields[key].related] = value
               self._values[self._fields[key].related] = value
@@ -453,25 +476,27 @@ class Model():
         v'var index = 0'
         def next():
             v'index += 1'
-            if index < records.length and exist(records[index]):
+            if index < records.length and records[index]?:
                return method(records[index], next)
             return self
-        return method(records[index], next)
+        result = method(records[index], next)
+        #self.values = [record._values for record in records]
+        return result
 
     def create(self, values=False, is_client=configuration.client):
         self.update()
         if not exist(values):
            values = self.read()
         else:
-           merge(self.read(), values)
+           values = merge(self.read(), values)
         if self._is_env:
            self = self.browse()
            self.update(values)
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
                self.values = result.values
-               self.browse(self.id)
+               self.with_context(no_preload=True).browse(self.id)
                return self
            ).catch(
            def (error):
@@ -493,7 +518,7 @@ class Model():
 
     def write(self, values=False, is_client=configuration.client):
         if not exist(self.id) and not exist(self.ids):
-           return
+           return self
         self.update()
         if not exist(values):
            if not self._is_singleton:
@@ -504,10 +529,10 @@ class Model():
            self.update(values)
            values = self.read()
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}).then(
+           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
            def (result):
                self.values = result.values
-               self.browse(self.id)
+               self.with_context(no_preload=True).browse(self.id)
                return self
            ).catch(
            def (error):
@@ -550,7 +575,7 @@ class Model():
         if not exist(self.id) and not exist(self.ids):
            return
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()]}).then(
+           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()]}, self._context).then(
            def (result):
                return True
            ).catch(

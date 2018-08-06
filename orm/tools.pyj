@@ -17,7 +17,7 @@ def merge(*args):
     #This is a standard operation for merging objects, but for now we will use Object.assign
     target = args[0]
     for object in args[1:]:
-        Object.assign(target, object)
+        target = Object.assign(target, object)
     return target
 
 def copy(object):
@@ -52,6 +52,20 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def create_worker(code):
+    if v"typeof window === 'undefined'":
+       return
+    URL = window.URL or window.webkitURL
+    blob = False
+    try:
+        blob = new Blob([code], {'type': 'application/javascript'})
+    except:
+        BlobBuilder = window.BlobBuilder or window.WebKitBlobBuilder or window.MozBlobBuilder
+        blob = BlobBuilder()
+        blob.append(code)
+        blob = blob.getBlob()
+    return v'new Worker(URL.createObjectURL(blob))'
+
 def exception(string):
     console.log(string)
 
@@ -63,6 +77,8 @@ def warning(string, offline):
     console.log(string)
 
 array = [ρσ_list_constructor, Array]
+
+month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
 configuration = {}
 configuration.client = False
@@ -76,7 +92,7 @@ else {configuration.client = false}
 def parseURI(data):
     array = []
     for key in data:
-        if exist(data[key]):
+        if data[key] not in [True, False, None, undefined]:
            if type(data[key]) in array or type(data) == Object:
               try:
                   data[key] = JSON.stringify(data[key])
@@ -716,22 +732,24 @@ var XMLHttpRequest = window.XMLHttpRequest;
 def ajax_load():
     return
 
-def ajax_resolve(resolve, xhr):
+def ajax_resolve(resolve, xhr, opts):
     resolve(xhr.response)
 
-def ajax_reject(reject, xhr):
+def ajax_reject(reject, xhr, opts):
     reject(xhr.statusText)
 
-def ajax(type, dataType, url, data):
-    ajax_load()
+def ajax(type, dataType, url, data, opts):
+    if not exist(opts):
+       opts = {}
+    ajax_load(opts)
     if exist(data):
        data = parseURI(data)
     return Promise(
     def (resolve, reject):
         xhr = XMLHttpRequest()
         xhr.open(type, url, True)
-        xhr.onload = def(): ajax_resolve(resolve, this)
-        xhr.onerror = def(): ajax_reject(reject, this)
+        xhr.onload = def(): ajax_resolve(resolve, this, opts)
+        xhr.onerror = def(): ajax_reject(reject, this, opts)
         xhr.responseType = dataType
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         try:

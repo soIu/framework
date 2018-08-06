@@ -17,6 +17,22 @@ class ResUsers(models.Model):
             return self
         )
 
+default_create = ResUsers.create
+def create(self, values=False, client=tools.configuration.client):
+    self.create = default_create
+    result = self.create(values=values, client=client)
+    if v"typeof window === 'undefined'":
+       result = result.then(
+       def (record):
+            models.env.context.sockets[record.id] = models.env.context.socket.of('/' + record.id)
+            return record
+       )
+    self.create = create
+    return result
+
+ResUsers.prototype.create = create
+ResUsers.create = create
+
 ResUsers()
 
 menu.add({'id': 'settings_users', 'string': 'Users', 'parent': 'settings', 'model': 'res.users', 'sequence': 1})

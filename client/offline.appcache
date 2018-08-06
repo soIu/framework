@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# v1.04
+# v1.15
 css/framework7.material.rtl.css
 css/font-awesome.min.css
 css/selectivity.min.css
@@ -28,7 +28,6 @@ js/pouchdb.min.js
 js/material.min.js
 js/fetch.min.js
 js/pouchdb.relational-pouch.min.js
-js/framework7.js.map
 js/framework7.min.js.map
 js/my-app.js
 index.html

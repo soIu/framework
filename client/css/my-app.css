@@ -54,3 +54,7 @@
 .selectivity-multiple-selected-item-remove {
   color: #fff !important;
 }
+
+i.material-icons:before {
+  display: none;
+}
