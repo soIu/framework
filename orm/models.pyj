@@ -36,6 +36,7 @@ class Model():
         self._is_singleton = _is_singleton if _is_singleton != undefined else False
         self._inherited_keys = []
         self._context = {}
+        self._search_count = 0
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
@@ -135,7 +136,13 @@ class Model():
         'set': def (): return
         })
         Object.defineProperty(self, 'values', {
-        'get': def (): return self._values
+        'get': def (): 
+                   if type(self._values).name not in [types.name for types in array]:
+                      self._values._search_count = self._search_count
+                   else:
+                      for value in self._values:
+                          value._search_count = self._search_count
+                   return self._values
         ,
         'set': def (newvalue):
                    if not exist(newvalue):
@@ -152,7 +159,11 @@ class Model():
                       for key in self._fields:
                           if key in newvalue:
                              self[key] = self.adapt(key, newvalue[key])
+                      #if exist(newvalue._search_count):
+                      #   self._search_count = newvalue._search_count
                    else:
+                      #if exist(newvalue):
+                      #   self._search_count = newvalue[0]._search_count
                       self._is_singleton = False
                       self._values = newvalue
                       #self.ids = [object.id for object in newvalue]
@@ -182,6 +193,7 @@ class Model():
             for index in range(self.values.length):
                 result = self.browse()
                 result.values = self.values[index]
+                result._search_count = self.values[index]._search_count
                 yield result
         return yield_record(self)
 
@@ -210,6 +222,10 @@ class Model():
                console.log(result)
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
+               if result.values.map:
+                  record._search_count = result.values[0]._search_count
+               else:
+                  record._search_count = result.values._search_count
                if exist(record):
                   self.browse(ids=ids, is_client=False).then(
                   def (records):
@@ -254,6 +270,7 @@ class Model():
                   record = queryInverse(result._name, record, result._one2many_fields, result._fields)
                   #result.ids = ids
                   result.values = record[result._name]
+                  result._search_count = record[result._name].length
                   return result
               )
            else:
@@ -268,6 +285,7 @@ class Model():
                #record.data.id = db.rel.parseDocID(record._id).id
                #record.data.rev = record._rev
                result.values = record[result._name][0]#.data
+               result._search_count = 1
                return result
            )
         return result
@@ -281,12 +299,18 @@ class Model():
            options.limit = self.env.context.active_limit
         if exist(self.env.context.active_index):
            options.index = self.env.context.active_index
+        if exist(self.env.context.active_sort):
+           options.order = self.env.context.active_sort
         if exist(options.is_client):
            del options.is_client
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
            def (result):
                record = self.browse(is_singleton=type(result.values) not in array)
                record.values = result.values
+               if result.values.map:
+                  record._search_count = result.values[0]._search_count
+               else:
+                  record._search_count = result.values._search_count
                for id in record.ids:
                    self.with_context(no_preload=True).browse(id)
                return record
@@ -344,8 +368,14 @@ class Model():
            def (records):
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
                record = records[result._name].find(query)
+               result._search_count = 1 if record else 0
                #result.id = record.id
                result.values = record
+               if exist(options.order):
+                  for order in options.order.split(','):
+                      order, desc = order.split(' ')
+                      desc = True if desc == 'desc' else False
+                      result.sort_by(order, desc)
                return result
            )
         else:
@@ -353,8 +383,10 @@ class Model():
            def (records):
                v'var result = new self.constructor(false, false)'
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
+               result._search_count = records[result._name].length
                if records[result._name].length > 1:
                   values = records[result._name].filter(query)
+                  result._search_count = values.length
                   if exist(options.limit) and type(options.limit) == Number:
                      start = 0
                      if exist(options.index) and type(options.index) == Number:
@@ -364,6 +396,11 @@ class Model():
                   else:
                      result.values = values
                   #result.ids = [value.id for value in result._values]
+                  if exist(options.order):
+                     for order in options.order.split(','):    
+                         order, desc = order.split(' ')
+                         desc = True if desc == 'desc' else False
+                         result.sort_by(order, desc)
                   return result
                else:
                   result = self.browse()
@@ -372,6 +409,11 @@ class Model():
                   record = records[result._name].find(query)
                   #result.id = record.id
                   result.values = record
+                  if exist(options.order):
+                     for order in options.order.split(','):    
+                         order, desc = order.split(' ')
+                         desc = True if desc == 'desc' else False
+                         result.sort_by(order, desc)
                   return result
            )
         return result
@@ -600,11 +642,16 @@ class Model():
             self._context[key] = kwargs[key]
         return self
 
-    def sort_by(self, field):
+    def sort_by(self, field, desc=False):
         if self.length < 2:
            return self
         self.values.sort(
         def (a, b):
+             if desc:
+                c = a
+                d = b
+                a = d
+                b = c
              if a[field] < b[field]:
                 return -1
              elif a[field] > b[field]:

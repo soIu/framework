@@ -17,8 +17,11 @@ class ResUsers(models.Model):
             return self
         )
 
-default_create = ResUsers.create
-def create(self, values=False, client=tools.configuration.client):
+default_create = ResUsers.prototype.create
+def create(values=False, client=tools.configuration.client):
+    self = this
+    console.log(self)
+    console.log(values)
     self.create = default_create
     result = self.create(values=values, client=client)
     if v"typeof window === 'undefined'":

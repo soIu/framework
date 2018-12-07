@@ -454,6 +454,7 @@ function loadIndex(page) {
             render_views(key);
         }
         doneApp(preload);
+        tools.configuration.home_view = tools.configuration.home_view.replace('tree', 'list');
         document.querySelector('#index').innerHTML = document.getElementById(tools.configuration.home_view).innerHTML;
         document.querySelector('.navbar-fixed').children[0].innerHTML = document.getElementById(tools.configuration.home_view).content.children[0].innerHTML;
         document.querySelector('.page.page-on-center').setAttribute('data-page', tools.configuration.home_view);
