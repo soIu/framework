@@ -131,7 +131,7 @@ class Model():
                    if self._is_singleton:
                       return [self.id] if self.id else []
                    else:
-                      return [object.id for object in self.values if object.id]
+                      return [object.id.toString() for object in self.values if object.id]
         ,
         'set': def (): return
         })
@@ -152,6 +152,7 @@ class Model():
                       if type(newvalue).name in [types.name for types in array]:
                          self._values = {}
                       oldvalue = copy(self._values)
+                      newvalue.id = nevalue.id.toString()
                       self._values =  newvalue
                       for key in oldvalue:
                           if key not in newvalue:
