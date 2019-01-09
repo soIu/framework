@@ -12,7 +12,7 @@ configuration = merge(configuration, {key: True if value in ['True', 'true'] els
 admin_password = configuration.admin_password
 check_admin()
 
-client_js = require('child_process').execSync(require('process').execPath + ' ./node_modules/.bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString()
+client_js = require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString()
 client_js = client_js.replace('{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}', JSON.stringify(configuration))
 client_js_time = Date().toISOString()
 
