@@ -168,7 +168,7 @@ class Model():
                       self._is_singleton = False
                       for value in newvalue:
                           for key in self._fields:
-                              if value[key]:
+                              if key in value:
                                  value[key] = self.adapt(key, value[key])
                       self._values = newvalue
                       #self.ids = [object.id for object in newvalue]
