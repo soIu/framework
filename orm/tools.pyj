@@ -66,15 +66,15 @@ def create_worker(code):
         blob = blob.getBlob()
     return v'new Worker(URL.createObjectURL(blob))'
 
-def exception(string):
-    console.log(string)
+def exception(error):
+    console.error(error)
 
-def warning(string, offline):
+def warning(error, offline):
     #if offline == undefined:
     #   offline = False
     if offline:
        console.log('You are offline')
-    console.log(string)
+    console.error(error)
 
 array = [ρσ_list_constructor, Array]
 
@@ -83,6 +83,11 @@ month = ["January", "February", "March", "April", "May", "June", "July", "August
 configuration = {}
 configuration.client = False
 configuration.url = False
+configuration.exception = exception
+configuration.warning = warning
+configuration.ajax_load = ajax_load
+configuration.ajax_resolve = ajax_resolve
+configuration.ajax_reject = ajax_reject
 
 v"""
 if (typeof window !== 'undefined' && typeof window.HTMLBodyElement !== 'undefined') {configuration.client = true}
@@ -741,15 +746,15 @@ def ajax_reject(reject, xhr, opts):
 def ajax(type, dataType, url, data, opts):
     if not exist(opts):
        opts = {}
-    ajax_load(opts)
+    configuration.ajax_load(opts)
     if exist(data):
        data = parseURI(data)
     return Promise(
     def (resolve, reject):
         xhr = XMLHttpRequest()
         xhr.open(type, url, True)
-        xhr.onload = def(): ajax_resolve(resolve, this, opts)
-        xhr.onerror = def(): ajax_reject(reject, this, opts)
+        xhr.onload = def(): configuration.ajax_resolve(resolve, this, opts)
+        xhr.onerror = def(): configuration.ajax_reject(reject, this, opts)
         xhr.responseType = dataType
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
         try:

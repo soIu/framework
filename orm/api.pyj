@@ -38,19 +38,21 @@ def server(method, write=True, iterate=True):
             return self
         ).catch(
         def (error):
-            console.log(error)
-            return Exception("There are some error")
+            #console.log(error)
+            #return Exception("There are some error")
+            raise error
         )
     return wrap
 
 def client(method, write=True, iterate=True):
     def wrap():
         v'var self = this'
+        args = Array.prototype.slice.call(arguments)
         if not tools.configuration.client:
            if self.length > 1:
               return self.queue(
               def (record, next):
-                  return record[method.name]().then(
+                  return record[method.name].apply(record, args).then(
                   def (value):
                       if tools.exist(value):
                          return value
@@ -59,7 +61,7 @@ def client(method, write=True, iterate=True):
                   )
               )
            self[method.name] = method
-           result = self[method.name]()
+           result = self[method.name].apply(self, args)
            if write and v'result instanceof models.Model' == True: 
               result = result.write()
            if tools.exist(result) and type(result) == Promise:
@@ -71,7 +73,7 @@ def client(method, write=True, iterate=True):
                except Exception as error:
                    reject(error)
            )
-        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name}, self._context).then(
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
             self.values = result.values
             context = self._context
@@ -79,9 +81,9 @@ def client(method, write=True, iterate=True):
             return self
         ).catch(
         def (error):
-            console.log(error)
+            console.error(error)
             self[method.name] = method
-            return self[method.name]()
+            return self[method.name].apply(self, args)
             #return Exception("There are some error")
         )
     return wrap
@@ -89,11 +91,12 @@ def client(method, write=True, iterate=True):
 def strict(method, write=True, iterate=True):
     def wrap():
         v'var self = this'
+        args = Array.prototype.slice.call(arguments)
         if v"typeof window === 'undefined'" == True:
            if self.length > 1:
               return self.queue(
               def (record, next):
-                  return record[method.name]().then(
+                  return record[method.name].apply(record, args).then(
                   def (value):
                       if tools.exist(value):
                          return value
@@ -102,7 +105,7 @@ def strict(method, write=True, iterate=True):
                   )
               )
            self[method.name] = method
-           result = self[method.name]()
+           result = self[method.name].apply(self, args)
            if write and v'result instanceof models.Model' == True: 
               result = result.write()
            if tools.exist(result) and type(result) == Promise:
@@ -114,7 +117,7 @@ def strict(method, write=True, iterate=True):
                except Exception as error:
                    reject(error)
            )
-        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name}, self._context).then(
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
             self.values = result.values
             context = self._context
@@ -122,8 +125,9 @@ def strict(method, write=True, iterate=True):
             return self
         ).catch(
         def (error):
-            console.log(error)
-            return Exception("There are some error")
+            #console.log(error)
+            #return Exception("There are some error")
+            raise error
         )
     return wrap
 
@@ -134,8 +138,9 @@ def onchange(method, *fields):
     method._onchange_fields = fields
     def wrap():
         v'var self = this'
+        args = Array.prototype.slice.call(arguments)
         self[method.name] = method
-        result = self[method.name]()
+        result = self[method.name].apply(self, args)
         if not tools.exist(result):
            result = self
         return result

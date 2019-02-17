@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, exception, warning
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array
 from orm.pouchdb import db
 
 env = {}
@@ -152,7 +152,8 @@ class Model():
                       if type(newvalue).name in [types.name for types in array]:
                          self._values = {}
                       oldvalue = copy(self._values)
-                      newvalue.id = newvalue.id.toString()
+                      if newvalue.id:
+                         newvalue.id = newvalue.id.toString()
                       self._values =  newvalue
                       for key in oldvalue:
                           if key not in newvalue:
@@ -253,8 +254,9 @@ class Model():
                              del value._id
                              db.rel.save(records._name, value)
                   ).catch(
+                  #Possible duplication is from here, need to check
                   def (error):
-                      console.log(error)
+                      console.error(error)
                       del result.values.rev
                       del result.values._rev
                       del result.values._id
@@ -263,7 +265,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               warning(error, True)
+               configuration.warning(error, True)
                return self.browse(ids, is_client=False)
            )
         elif type(ids).name in [types.name for types in array]:
@@ -322,7 +324,7 @@ class Model():
                return record
            ).catch(
            def (error):
-               warning(error, True)
+               configuration.warning(error, True)
                return self.with_context(is_client=False).search(args)
            )
         def query(record):
@@ -442,28 +444,28 @@ class Model():
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
-              return Exception("Not a valid Number")
+              raise Exception("Not a valid Number")
         elif self._fields[key].type == 'float':
            value = parseFloat(value)
            if isNaN(value):
-              return Exception("Not a valid Number")
+              raise Exception("Not a valid Number")
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
            elif value in ['false', 'False', None, undefined]:
               value = False
            elif type(value) == String:
-              return Exception("Not a valid Boolean")
+              raise Exception("Not a valid Boolean")
            else:
               value = Boolean(value)
         elif self._fields[key].type == 'binary':
            if not checkBase64(value):
-              return Exception("Not a valid base64")
+              raise Exception("Not a valid base64")
         elif self._fields[key].type == 'selection':
            if not exist(value):
               value = None
            elif not value in dict(self._fields[key].selection):
-              return Exception("Incorrect value")
+              raise Exception("Incorrect value")
         elif self._fields[key].type in ['date', 'datetime']:
            if not exist(value):
               value = None
@@ -473,9 +475,9 @@ class Model():
               try:
                   value = v'new Date(value).toISOString()'
               except:
-                  return Exception("Can't parse Date")
+                  raise Exception("Can't parse Date")
            else:
-              return Exception("Can't parse Date")
+              raise Exception("Can't parse Date")
            if exist(value) and self._fields[key].type == 'date':
               value = value.split('T')[0] + 'T00:00:00.000Z'
         elif self._fields[key].type in ['many2one', 'one2one']:
@@ -548,9 +550,10 @@ class Model():
                return self
            ).catch(
            def (error):
-               exception(error)
-               return Exception("There is some error")
+               configuration.exception(error)
+               #return Exception("There is some error")
                #return self.create(values, is_client=False)
+               raise error
            )
         del values['id']
         del values['rev']
@@ -584,9 +587,10 @@ class Model():
                return self
            ).catch(
            def (error):
-               exception(error)
+               configuration.exception(error)
                #return self.write(values, is_client=False)
-               return Exception("There are some error")
+               #return Exception("There are some error")
+               raise error
            )
         if self._is_singleton:
            return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
@@ -628,9 +632,10 @@ class Model():
                return True
            ).catch(
            def (error):
-               warning(error, True)
+               configuration.warning(error, True)
                #return self.unlink(is_client=False)
-               return False
+               #return False
+               raise error
            )
         if self._is_singleton:
            db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
