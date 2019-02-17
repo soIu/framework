@@ -111,7 +111,7 @@ def chat_init(page):
         doneApp(preload)
     ).catch(
     def (error): 
-         console.log(error)
+         console.error(error)
          doneApp()
     )
 
@@ -230,8 +230,8 @@ def users_init(page):
         doneApp(preload)
     ).catch(
     def (error): 
-         console.log(error)
          doneApp(preload)
+         raise error
     )
 
 view.add({'model': 'res.message', 'mode': 'users', 'string': False, 'init': users_init, 'arch': """
