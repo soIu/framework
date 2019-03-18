@@ -31,10 +31,10 @@ def decrypt(string):
     return string
 
 http.route('/api/login',
-def (request, result, next):
+def (request, response, next):
     #request.accepts('application/json')
     request.env = env
-    result.response = {'status': 'denied'}
+    response.result = {'status': 'denied'}
     request.params = Object.assign(request.params, request.query, request.body or {});
     params = http.parse(request.params)
     if exist(request.params.login):
@@ -44,37 +44,37 @@ def (request, result, next):
        def (user_id):
            if exist(user_id):
               request.env.context.user = user_id
-              result.response = {'status': 'success'}
+              response.result = {'status': 'success'}
               if params.authentication = True:
-                 result.response.login, result.response.password = encrypt(params.login), encrypt(params.password)
-                 result.response.id = user_id.id
+                 response.result.login, response.result.password = encrypt(params.login), encrypt(params.password)
+                 response.result.id = user_id.id
                  if not exist(params.client_js_time) or params.client_js_time != client_js_time:
-                    result.response.client_js = client_js
-                    result.response.client_js_time = client_js_time
+                    response.result.client_js = client_js
+                    response.result.client_js_time = client_js_time
            next()
        ).catch(
        def (error):
            console.log(error.stack)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/browse',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
        request.env[params.model].browse(params.ids).then(
        def (record):
-           result.response = {'status': 'success', 'values': record.values}
+           response.result = {'status': 'success', 'values': record.values}
            next()
        ).catch(
        def (error):
@@ -85,62 +85,62 @@ def (request, result, next):
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/search',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
        options = params.options or {}
        request.env[params.model].with_context(**options).search(*params.args).then(
        def (record):
-           result.response = {'status': 'success', 'values': record.values}
+           response.result = {'status': 'success', 'values': record.values}
            next()
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/create',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
        request.env[params.model].create(params.values).then(
        def (record):
-           result.response = {'status': 'success', 'values': record.values}
+           response.result = {'status': 'success', 'values': record.values}
            next()
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/write',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
@@ -148,26 +148,26 @@ def (request, result, next):
        def (record):
            record.write(params.values).then(
            def (record):
-               result.response = {'status': 'success', 'values': record.values}
+               response.result = {'status': 'success', 'values': record.values}
                next()
            )
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/unlink',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
@@ -175,26 +175,26 @@ def (request, result, next):
        def (record):
            record.unlink().then(
            def ():
-               result.response = {'status': 'success'}
+               response.result = {'status': 'success'}
                next()
            )
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 http.route('/api/methods',
-def (request, result, next):
-    if result.response.status != 'success':
+def (request, response, next):
+    if response.result.status != 'success':
        next()
     params = request.params
     if exist(request.params):
@@ -202,22 +202,24 @@ def (request, result, next):
        def (record):
            args = params.args if params.args else []
            return record[params.method].apply(record, args).then(
-           def (record):
-               result.response = {'status': 'success', 'values': record.values}
+           def (result):
+               response.result = {'status': 'success', 'values': record.values}
+               if v'result instanceof models.Model' == False:
+                  response.result.method_result = result
                next()
            )
        ).catch(
        def (error):
            console.log(error)
-           result.response = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error}
            next()
        )
     else:
        next()
 ,
 
-def (request, result, next):
-    return result.send(result.response)
+def (request, response, next):
+    return response.send(response.result)
 )
 
 controller = http.Controller()
@@ -230,7 +232,7 @@ else:
        #if exist(entry) and route != entry:
        #   continue
        console.log(route)
-       serverless_route[route] = def (request, result, route):
+       serverless_route[route] = def (request, response, route):
                             functions = []
                             (def recurse(methods):
                                  for method in methods:
@@ -245,10 +247,10 @@ else:
                                 v'index += 1'
                                 if index < functions.length and exist(functions[index]):
                                    console.log(functions[index].toString())
-                                   functions[index](request, result, next)
+                                   functions[index](request, response, next)
                             console.log(functions[index].toString())
-                            functions[index](request, result, next)
-   exports.api = def (request, result):
+                            functions[index](request, response, next)
+   exports.api = def (request, response):
                      path = request.path
                      console.log(path)
                      routing = '/api/'+path.split('/')[1]
@@ -260,6 +262,6 @@ else:
                                return path
                             return def (): return path.slice(5)
                         })
-                        route(request, result, routing)
+                        route(request, response, routing)
                      else:
-                        result.send({'status': 'error', 'error': {'message': 'URL not found'}})
+                        response.send({'status': 'error', 'error': {'message': 'URL not found'}})
