@@ -32,6 +32,8 @@ def server(method, write=True, iterate=True):
            )
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)
@@ -77,6 +79,8 @@ def client(method, write=True, iterate=True):
            )
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)
@@ -123,6 +127,8 @@ def strict(method, write=True, iterate=True):
            )
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)

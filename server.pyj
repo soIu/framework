@@ -55,7 +55,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error.stack)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
@@ -103,7 +103,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
@@ -127,7 +127,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
@@ -154,7 +154,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
@@ -181,7 +181,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
@@ -211,7 +211,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error}
+           response.result = {'status': 'error', 'error': error.stack}
            next()
        )
     else:
