@@ -204,7 +204,7 @@ def (request, response, next):
            return record[params.method].apply(record, args).then(
            def (result):
                response.result = {'status': 'success', 'values': record.values}
-               if v'result instanceof models.Model' == False:
+               if v'result instanceof env.Model' == False:
                   response.result.method_result = result
                next()
            )
