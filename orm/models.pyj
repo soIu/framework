@@ -648,7 +648,10 @@ class Model():
            db.bulkDocs(self._values)
         return True
 
-    def with_context(self, **kwargs):
+    def with_context(self, *args, **kwargs):
+        for arg in args:
+            for key in arg:
+                self._context[key] = arg[key]
         for key in kwargs:
             self._context[key] = kwargs[key]
         return self
