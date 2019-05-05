@@ -203,10 +203,25 @@ class Model():
                 yield result
         return yield_record(self)
 
-    """def __super__(self):
-        inherited = v'new self.inherited_constructor(self._is_env, self._is_singleton)'
-        inherited.values = self.values
-        return inherited"""
+    def __super__(self, method_name):
+        method = env.Model.prototype[method_name]
+        if not self._inherit:
+           if not method:
+              return def (): return Promise(def (resolve): resolve();)
+        else:
+           method = raw_models[self._inherit][-1].prototype[method_name]
+        return def (*args, **kwargs):
+            original_method = self[method_name]
+            self[method_name] = method
+            result = self[method_name].bind(self)(*args, **kwargs)
+            if exist(result) and type(result) == Promise:
+               return result.then(
+               def (result):
+                   self[method_name] = original_method
+                   return result
+               )
+            self[method_name] = original_method
+            return result
 
     def __view__(self, view, view_type):
         return view
@@ -647,6 +662,11 @@ class Model():
                value['_deleted'] = True
            db.bulkDocs(self._values)
         return True
+
+    def sudo(self, uid):
+        if configuration.client: return self
+        if not uid: uid = 1
+        return self.with_context(uid=uid)
 
     def with_context(self, *args, **kwargs):
         for arg in args:

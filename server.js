@@ -65,7 +65,7 @@ if (process.argv.indexOf('--serverless') === -1 && require.main === module) {
     process.env.serverless = true
 }
 if (process.argv.indexOf('--clear-cache') !== -1) {
-    command = 'rm -f */*.pyj-cached && ' + command;
+    command = 'find . -name "*.pyj-cached" -type f -delete && ' + command;
 }
 result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
 if (process.argv.indexOf('--serverless') !== -1 | require.main !== module) {
