@@ -4,7 +4,9 @@ def Char(string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
     return merge({'type': 'char', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
-Text = Char #For now fields.Text will be the same like fields.Char
+def Text(string, **args):
+    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    return merge({'type': 'text', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Integer(string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
