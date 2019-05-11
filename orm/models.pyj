@@ -527,6 +527,7 @@ class Model():
            else:
               values = {}
         for key in values:
+            if key == '_search_count': continue
             value = self.adapt(key, values[key])
             if self._is_singleton:
                self._values[key] = value
