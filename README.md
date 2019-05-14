@@ -47,7 +47,7 @@ To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -p m
 
 - (DECIDED) Server-side MVC (like Django, Odoo) or PWA with RESTFul Webservices (Custom REST API Controllers or CouchDB's REST API). PWA is already developed https://github.com/rafi16jan/rapyd-client
 
-- (DEVELOPER CHOICE) Use PouchDB Server (leveldb) or CouchDB (now CouchDB but I use in-memory db for testing). There are so many adapters for PouchDB ranging from MySQL, SQLite to Facebook's RocksDB. The most common and decent is Google's LevelDB but you're free to choose and configure it at app.conf
+- (DEVELOPER CHOICE) Use PouchDB Server (leveldb) or CouchDB (now CouchDB but I use in-memory db for testing). There are so many adapters for PouchDB ranging from MySQL, SQLite to Facebook's RocksDB. The most common and decent is Google's LevelDB but you're free to choose an adapter and configure it at app.conf
 
 - Custom authentication with token (CSRF if MVC) or CouchDB authentication (http://docs.couchdb.org/en/2.1.0/api/server/authn.html)
 
