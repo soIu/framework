@@ -10,11 +10,11 @@ def Text(string, **args):
 
 def Integer(string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
-    return merge({'type': 'integer', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
+    return merge({'type': 'integer', 'string': string, 'defaults': 0}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Float(string, **args):
     attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
-    return merge({'type': 'float', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
+    return merge({'type': 'float', 'string': string, 'defaults': 0.0}, {attribute: args[attribute] or None for attribute in attributes})
 
 #While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
 

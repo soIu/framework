@@ -105,7 +105,7 @@ class Model():
                   if not exist(self._related[self._fields[key].related]):
                      self._related[self._fields[key].related] = []
                   self._related[self._fields[key].related].push(key)
-               self[key] = self._fields[key].default
+               self[key] = self._fields[key].defaults
                self._values[key] = self[key]
                #Once more disable getter and setter, massive bugs
                """Object.defineProperty(self, key, {
@@ -459,11 +459,11 @@ class Model():
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
-              raise Exception("Not a valid Number")
+              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'float':
            value = parseFloat(value)
            if isNaN(value):
-              raise Exception("Not a valid Number")
+              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
@@ -474,7 +474,7 @@ class Model():
            else:
               value = Boolean(value)
         elif self._fields[key].type == 'binary':
-           if not checkBase64(value):
+           if exist(value) and not checkBase64(value):
               raise Exception("Not a valid base64")
         elif self._fields[key].type == 'selection':
            if not exist(value):
