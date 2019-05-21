@@ -42,9 +42,9 @@ class Controller():
             server.get(key, _controllers[key])
         if configuration.local_app == True:
            if configuration.serverless != True:
-              server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'}))
+              server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'}))
            else:
-              _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client', 'default': 'index.html'})]
+              _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'})]
 
     def run(self):
         console.log('Running on port ' + configuration.port)
