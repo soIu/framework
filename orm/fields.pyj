@@ -1,65 +1,65 @@
 #TODO fields.Date and fields.Datetime
 from orm.tools import merge
 def Char(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'char', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Text(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'text', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Integer(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'integer', 'string': string, 'defaults': 0}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Float(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'float', 'string': string, 'defaults': 0.0}, {attribute: args[attribute] or None for attribute in attributes})
 
 #While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
 
 def Boolean(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'boolean', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Binary(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'binary', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 #Boolean will be stored True or False and Binary will be stored as base64 (btoa and atob), or should we store it with just plain Buffer/Blob? (remember https://pouchdb.com/faq.html#data_types not all browsers support storing Blob)
 
 def Many2one(relation, string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'many2one', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 
 def One2many(relation, inverse, string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'one2many', 'relation': relation, 'inverse': inverse, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 
 def Many2many(relation, string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'many2many', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 
 def One2one(relation, string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'one2one', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Selection(*selection, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'selection', 'selection': selection, 'string': args.string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Date(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'date', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 def Datetime(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'datetime', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
 
 #Add fields.Data for storing JSON
 def Data(string, **args):
-    attributes = ['required', 'readonly', 'default', 'compute', 'store', 'related']
+    attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
     return merge({'type': 'data', 'string': string}, {attribute: args[attribute] or None for attribute in attributes})
