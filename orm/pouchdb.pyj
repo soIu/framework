@@ -4,16 +4,16 @@ if v"typeof window === 'undefined'":
     PouchDB.plugin(require('pouchdb-adapter-http'))
     PouchDB.plugin(require('pouchdb-adapter-memory'))
     PouchDB.plugin(require('relational-pouch'))
-    if require('process').env.server_db_custom_adapter not in ['False', undefined]:
-       try:
+    try:
+        if require('process').env.server_db_custom_adapter not in ['False', undefined]:
            PouchDB.plugin(require(require('process').env.server_db_custom_adapter))
-       except Exception as error:
-           if require('process').env.server_db_fallback_adapter not in ['False', undefined]:
-              PouchDB.plugin(require(require('process').env.server_db_fallback_adapter))
-              require('process').env.server_db_adapter = require('process').env.server_db_fallback
-           else: 
-              raise error
-    db = PouchDB(require('process').env.server_db or 'cache', {'adapter': require('process').env.server_db_adapter or 'memory'})
+        db = PouchDB(require('process').env.server_db or 'cache', {'adapter': require('process').env.server_db_adapter or 'memory'})
+    except Exception as error:
+        if require('process').env.server_db_fallback_adapter not in ['False', undefined]:
+           PouchDB.plugin(require(require('process').env.server_db_fallback_adapter))
+           db = PouchDB(require('process').env.server_db, {'adapter': require('process').env.server_db_fallback})
+        else:
+           raise error
 else:
     PouchDB = window.PouchDB
     db = PouchDB('main')
