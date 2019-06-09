@@ -192,3 +192,20 @@
 .ios .user-link .item-media+.item-inner {
     margin-left: 10px
 }
+
+div:focus {
+    outline: none;
+}
+
+.selectivity-caret {
+    top: 0.6em;
+}
+
+.selectivity-remove {
+    color: #212121;
+    margin-right: 5px;
+}
+
+.selectivity-single-select {
+    background-color: unset;
+}

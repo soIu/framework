@@ -3,9 +3,18 @@ import {
     List,
     ListInput,
 } from 'framework7-react';
-import {React as Selectivity} from 'selectivity/react';
+import {React as Selectivity, Templates} from 'selectivity/react';
+import 'selectivity/styles/selectivity-react.css';
 import Flatpickr from './Flatpickr';
 import api from 'api';
+
+
+const singleSelectInput = Templates.singleSelectInput;
+Templates.singleSelectInput = (options) => singleSelectInput(options).replace('<i class="fa fa-sort-desc selectivity-caret"></i>', '<i class="selectivity-caret material-icons">expand_more</i>');
+const singleSelectedItem = Templates.singleSelectedItem;
+Templates.singleSelectedItem = (options) => singleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>');
+const multipleSelectedItem = Templates.multipleSelectedItem;
+Templates.multipleSelectedItem = (options) => multipleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>');
 
 export default class extends React.Component {
   /*constructor(props) {
@@ -14,11 +23,9 @@ export default class extends React.Component {
     this.props = props;
   }*/
 
-  async setValue(values) {
-    for (let key in values) {
-      window.models.env.context.active_id[key] = values[key];
-    }
-    return await this.setState(values);
+  async setValue(value) {
+    window.models.env.context.active_id[this.props.name] = value;
+    return await this.setState({value});
   }
 
   async componentDidMount() {
@@ -56,6 +63,9 @@ export default class extends React.Component {
     else if (api.hasValue(['date', 'datetime'], type)) {
       return this.setState({value, input: this.refs.date_input.$listEl[0].querySelector('input')});
     }
+    else {
+      return this.setState({value});
+    }
   }
 
   render(props) {
@@ -71,12 +81,13 @@ export default class extends React.Component {
       const limit = 10
       models.env.context.active_limit = limit;
       models.env.context.active_index = query.offset / limit;
-      const records = await models.env[field.relation].search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
+      const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
       const results = [];
       for (let record of records) {
         results.push({id: record.id, text: record[record._rec_name || 'name']});
       }
       models.env.context.active_index = 0;
+      console.log((query.offset / limit + 1) * limit < records._search_count);
       return {results: results, more: (query.offset / limit + 1) * limit < records._search_count};
     }
 
@@ -86,9 +97,19 @@ export default class extends React.Component {
 
     let component;
 
-    if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type)) {
+    if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one', 'selection'], type)) {
+      let ajax;
+      let items = null;
+      if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type)) {
+        ajax = {url: window.tools.configuration.url, minimumInputLength: 0, params: () => ({}), placeholder: '', fetch: fetch};
+      }
+      else if (type === 'selection') {
+        items = field.selection.map((selection) => ({id: selection[0], text: selection[1]}));
+      }
       component = (
-        <Selectivity ajax={{url: window.tools.configuration.url, minimumInputLength: 0, params: () => ({}), placeholder: '', fetch: fetch}} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} defaultValue={this.state.value} allowClear/>
+        <ListInput label={string} input={false}>
+          <Selectivity slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} value={this.state.value} onChange={(event) => this.setValue(event.value)} allowClear/>
+        </ListInput>
       );
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
@@ -98,12 +119,12 @@ export default class extends React.Component {
         </ul>
       );
       component = (
-        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={this.state.value} onChange={(value) => this.setValue({[props.name]: value, value})}/>
+        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={this.state.value} onChange={(value) => this.setValue(value)}/>
       );
     }
     else {
       component = (
-        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={!context.editing} onChange={(event) => this.setValue({[props.name]: event.target.value})}/>
+        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={!context.editing} onChange={(event) => this.setValue(event.target.value)}/>
       );
     }
 
