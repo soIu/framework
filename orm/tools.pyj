@@ -8,8 +8,8 @@ def keys(object, sort=False):
        return [item[0] for item in object]
     return Object.keys(object)
 
-def merge(*args, reverse=False):
-    if reverse: args = args.reverse()
+def merge(*args, **kwargs):
+    if kwargs.reverse: args = args.reverse()
     #new = {}
     #for object in args:
     #    for key in object:
