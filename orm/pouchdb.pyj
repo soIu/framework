@@ -5,7 +5,14 @@ if v"typeof window === 'undefined'":
     PouchDB.plugin(require('pouchdb-adapter-memory'))
     PouchDB.plugin(require('relational-pouch'))
     if require('process').env.server_db_custom_adapter not in ['False', undefined]:
-       PouchDB.plugin(require(require('process').env.server_db_custom_adapter))
+       try:
+           PouchDB.plugin(require(require('process').env.server_db_custom_adapter))
+       except Exception as error:
+           if require('process').env.server_db_fallback_adapter not in ['False', undefined]:
+              PouchDB.plugin(require(require('process').env.server_db_fallback_adapter))
+              require('process').env.server_db_adapter = require('process').env.server_db_fallback
+           else: 
+              raise error
     db = PouchDB(require('process').env.server_db or 'cache', {'adapter': require('process').env.server_db_adapter or 'memory'})
 else:
     PouchDB = window.PouchDB
