@@ -1,10 +1,11 @@
+def loadPlugin(PouchDB):
+    PouchDB.plugin(require('pouchdb-find'));
+    PouchDB.plugin(require('pouchdb-adapter-http'))
+    PouchDB.plugin(require('pouchdb-adapter-memory'))
+    PouchDB.plugin(require('relational-pouch'))
+
 if v"typeof window === 'undefined'":
     PouchDB = require('pouchdb-core')
-    def loadPlugin(PouchDB):
-        PouchDB.plugin(require('pouchdb-find'));
-        PouchDB.plugin(require('pouchdb-adapter-http'))
-        PouchDB.plugin(require('pouchdb-adapter-memory'))
-        PouchDB.plugin(require('relational-pouch'))
     old_adapters = ['fs']
     try:
         if require('process').env.server_db_custom_adapter not in ['False', undefined]:
