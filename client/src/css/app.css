@@ -206,6 +206,13 @@ div:focus {
     margin-right: 5px;
 }
 
+.selectivity-multi-remove {
+    color: #fff;
+    position: relative;
+    margin-right: 0px;
+    top: 5px;
+}
+
 .selectivity-single-select {
     background-color: unset;
 }

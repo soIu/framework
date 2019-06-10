@@ -14,7 +14,7 @@ Templates.singleSelectInput = (options) => singleSelectInput(options).replace('<
 const singleSelectedItem = Templates.singleSelectedItem;
 Templates.singleSelectedItem = (options) => singleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>');
 const multipleSelectedItem = Templates.multipleSelectedItem;
-Templates.multipleSelectedItem = (options) => multipleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>');
+Templates.multipleSelectedItem = (options) => multipleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove selectivity-multi-remove material-icons">close</i>');
 
 export default class extends React.Component {
   /*constructor(props) {
@@ -23,9 +23,9 @@ export default class extends React.Component {
     this.props = props;
   }*/
 
-  async setValue(value) {
+  async setValue(value, altvalue) {
     window.models.env.context.active_id[this.props.name] = value;
-    return await this.setState({value});
+    return await this.setState({value: altvalue || value});
   }
 
   async componentDidMount() {
@@ -57,7 +57,8 @@ export default class extends React.Component {
         return this.setState({value: {id: records.id, text: records[records._rec_name || 'name']}});
       }
       else if (value.constructor === Array) {
-        return this.setState({value: records.values.map((record) => ({id: record.id, text: record[record._rec_name || 'name']}))});
+        window.c = records;
+        return this.setState({value: Array.from(records.__iter__()).map((record) => ({id: record.id, text: record[record._rec_name || 'name']}))});
       }
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
@@ -69,7 +70,7 @@ export default class extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.refs.selectivity) this.refs.selectivity.selectivity.destroy();
+    if (this.refs.selectivity && this.refs.selectivity.selectivity) this.refs.selectivity.selectivity.destroy();
   }
 
   render(props) {
@@ -115,7 +116,7 @@ export default class extends React.Component {
       }
       component = (
         <ListInput label={string} input={false}>
-          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} value={this.state.value} onChange={(event) => this.setValue(event.value)} allowClear/>
+          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} allowClear/>
         </ListInput>
       );
     }
