@@ -68,6 +68,10 @@ export default class extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    if (this.refs.selectivity) this.refs.selectivity.selectivity.destroy();
+  }
+
   render(props) {
     const models = window.models;
     const model = window.models.env.context.active_model;
@@ -76,6 +80,7 @@ export default class extends React.Component {
     const type = field.type;
     const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea'};
     const context = window.models.env.context;
+    const refs = this.refs;
 
     async function fetch(url, init, query) {
       const limit = 10
@@ -83,6 +88,8 @@ export default class extends React.Component {
       models.env.context.active_index = query.offset / limit;
       const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
       const results = [];
+      window.d = refs.selectivity;
+      if (type === 'selection') return {results, more: false};
       for (let record of records) {
         results.push({id: record.id, text: record[record._rec_name || 'name']});
       }
@@ -108,7 +115,7 @@ export default class extends React.Component {
       }
       component = (
         <ListInput label={string} input={false}>
-          <Selectivity slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} value={this.state.value} onChange={(event) => this.setValue(event.value)} allowClear/>
+          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} value={this.state.value} onChange={(event) => this.setValue(event.value)} allowClear/>
         </ListInput>
       );
     }

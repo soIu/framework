@@ -209,3 +209,10 @@ div:focus {
 .selectivity-single-select {
     background-color: unset;
 }
+.selectivity-multiple-input-container {
+    background-color: unset;
+}
+
+.selectivity-dropdown {
+    position: unset;
+}
