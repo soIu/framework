@@ -461,7 +461,7 @@ class Model():
                       def (records):
                           names = []
                           for record in records:
-                              names.push(record[record._rec_name || 'name'])
+                              names.push(record[record._rec_name or 'name'])
                           value[key] = names.join(', ')
                       )
                       promises.push(promise)
