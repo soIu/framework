@@ -1,14 +1,15 @@
 {
   "main": "server.js",
   "dependencies": {
-    "pouchdb-adapter-http": "^6.3.4",
-    "pouchdb-adapter-memory": "^6.3.4",
-    "pouchdb-core": "^6.3.4",
-    "pouchdb-find": "^6.4.1",
-    "pouchdb-mapreduce": "^6.3.4",
+    "pouchdb-adapter-http": "^7.0.0",
+    "pouchdb-adapter-memory": "^7.0.0",
+    "pouchdb-core": "^7.0.0",
+    "pouchdb-find": "^7.0.0",
+    "pouchdb-mapreduce": "^7.0.0",
+    "pouchdb-stable": "^6.3.5",
     "rapydscript-ng": "^0.7.18",
     "regenerator": "^0.10.1",
-    "relational-pouch": "^2.1.0",
+    "relational-pouch": "^3.2.0",
     "restify": "^6.0.1",
     "restify-cors-middleware": "^1.0.1",
     "socket.io": "^2.0.4"
