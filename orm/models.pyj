@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, date
 from orm.pouchdb import db
 
 env = {}
@@ -441,7 +441,34 @@ class Model():
            )
         return result
 
-    def read(self):
+    def read(self, format):
+        if format:
+           promises = []
+           values = copy(self._values)
+           if type(self._values).name not in [types.name for types in array]:
+              values = [values]
+           for value in values:
+               for key in value:
+                   field = self._fields[key]
+                   if field.type in ['date', 'datetime']:
+                      value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
+                   elif field.type == 'float' and Number.isInteger(value[key]):
+                      value[key] = value[key].toFixed(2)
+                   elif field.type == 'selection':
+                      value[key] = tools.dict(field.selection)[value[key]]
+                   elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
+                      promise = self.env[field.relation].browse(value[key]).then(
+                      def (records):
+                          names = []
+                          for record in records:
+                              names.push(record[record._rec_name || 'name'])
+                          value[key] = names.join(', ')
+                      )
+                      promises.push(promise)
+           return Promise.all(promises).then(
+           def ():
+               return values
+           )
         if self._is_env:
            return {}
         return self._values#{key: self.adapt(key, self[key]) for key in self._fields}
