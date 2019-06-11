@@ -231,7 +231,7 @@ else:
        #entry = configuration.ENTRY_POINT or configuration.X_GOOGLE_ENTRY_POINT
        #if exist(entry) and route != entry:
        #   continue
-       console.log(route)
+       #console.log(route)
        serverless_route[route] = def (request, response, route):
                             functions = []
                             (def recurse(methods):
@@ -246,9 +246,9 @@ else:
                                 v'if (arg instanceof Error) {throw arg;}'
                                 v'index += 1'
                                 if index < functions.length and exist(functions[index]):
-                                   console.log(functions[index].toString())
+                                   #console.log(functions[index].toString())
                                    functions[index](request, response, next)
-                            console.log(functions[index].toString())
+                            #console.log(functions[index].toString())
                             functions[index](request, response, next)
    exports.api = def (request, response):
                      path = request.path

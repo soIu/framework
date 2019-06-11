@@ -11,8 +11,8 @@ if v"typeof window === 'undefined'":
         if require('process').env.server_db_custom_adapter not in ['False', undefined]:
            if require('process').env.server_db_adapter in old_adapters:
               PouchDB = require('pouchdb-stable')
-           loadPlugin(PouchDB)
            PouchDB.plugin(require(require('process').env.server_db_custom_adapter))
+        loadPlugin(PouchDB)
         db = PouchDB(require('process').env.server_db or 'cache', {'adapter': require('process').env.server_db_adapter or 'memory'})
     except: #Exception as error:
         if require('process').env.server_db_fallback_adapter not in ['False', undefined]:
