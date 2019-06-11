@@ -57,9 +57,11 @@ export default class extends React.Component {
         return this.setState({value: {id: records.id, text: records[records._rec_name || 'name']}});
       }
       else if (value.constructor === Array) {
-        window.c = records;
         return this.setState({value: Array.from(records.__iter__()).map((record) => ({id: record.id, text: record[record._rec_name || 'name']}))});
       }
+    }
+    else if (type === 'selection') {
+      return this.setState({value: value && {id: value, text: window.tools.dict(field.selection)[value]}});
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
       return this.setState({value, input: this.refs.date_input.$listEl[0].querySelector('input')});
@@ -77,6 +79,7 @@ export default class extends React.Component {
     const models = window.models;
     const model = window.models.env.context.active_model;
     const field = window.models.env[model]._fields[props.name];
+    if (!field) return;
     const string = props.string || field.string;
     const type = field.type;
     const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea'};

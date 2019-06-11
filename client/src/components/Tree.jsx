@@ -1,10 +1,11 @@
 import React from 'react';
 import Page from './Page';
 import Grid from './Grid';
-import {Button} from 'framework7-react';
+import {Button, Icon} from 'framework7-react';
 import api from 'api';
 
 function autoSizeAll(gridOptions) {
+  this.gridOptions = gridOptions;
   /*var allColumnIds = [];
   let first = true;
   gridOptions.columnApi.getAllColumns().forEach(function(column) {
@@ -19,9 +20,9 @@ function autoSizeAll(gridOptions) {
   let availableWidth = grid['gridPanel'].getWidthForSizeColsToFit();
   let columns = grid['gridPanel']['columnController'].getAllDisplayedColumns();
   let usedWidth = grid['gridPanel']['columnController'].getWidthOfColsInList(columns);
-  if (usedWidth < availableWidth) {
-    grid.sizeColumnsToFit();
-  }
+  //if (usedWidth < availableWidth) {
+  grid.sizeColumnsToFit();
+  //}
   //gridOptions.api.sizeColumnsToFit();
   //gridOptions.columnApi.autoSizeColumns(allColumnIds);
 }
@@ -41,12 +42,13 @@ export default class extends React.Component {
       }
       return false;
     }
+    this.isEditable = isEditable;
     const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
     const records = [];
-    this.state = {fields: fields, records: records, limit: 50, model: model};
+    this.state = {fields: fields, records: records, new_records: [], limit: 50, model: model};
     if (props.field) {
       this.state.tree_field = props.field;
     }
@@ -56,6 +58,7 @@ export default class extends React.Component {
     if (rows.length < 1) {
       return rows;
     }
+    rows = rows.concat(this.state.new_records)
     const count = rows[0]._search_count;
     if (index > 0) {
       let pushed = 0;
@@ -84,7 +87,7 @@ export default class extends React.Component {
       if (this.state.tree_field) {
         args.push([this.state.tree_field, 'in', window.models.env.context.active_ids]);
       }
-      const records = await models.env[models.env.context.active_model].search(...args);
+      const records = await models.env[this.state.model || models.env.context.active_model].search(...args);
       let result = [];
       if (records.length > 0) {
         result = records.values.constructor === Array ? records.values : [records.values];
@@ -130,7 +133,7 @@ export default class extends React.Component {
     }
     models.env.context.active_args = args;
     /*try {
-      const records = await models.env[models.env.context.active_model].search(...args);
+      const records = await models.env[this.state.model || models.env.context.active_model].search(...args);
       let result = [];
       if (records.length > 0) {
         result = records.values.constructor === Array ? records.values : [records.values];
@@ -165,12 +168,13 @@ export default class extends React.Component {
     const load = api.preload();
     try {
       const models = window.models;
-      const args = models.env.context.active_args || (this.state.tree_field ? [[this.state.tree_field, 'in', window.models.env.context.active_ids]] : []);
+      const args = models.env.context.active_args || (this.state.tree_field ? [[this.state.tree_field, 'in', window.models.env.context.active_ids || []]] : []);
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       const records = await models.env[this.state.model].search(...args);
       if (records.length > 0) {
-        this.setState({records: this.paginate(records.values.constructor === Array ? records.values : [records.values], index)})
+        console.log(args)
+        this.setState({records: this.paginate(await records.read(true), index)})
       }
     }
     catch(error) {
@@ -179,12 +183,27 @@ export default class extends React.Component {
     load.done();
   }
 
+  async addItem() {
+    if (!this.isEditable()) return;
+    const record = window.models.env[this.state.model].browse();
+    this.state.new_records.push(record.values);
+    this.state.records.push(record.values);
+    await this.setState({records: this.state.records, new_records: this.state.new_records});
+    this.gridOptions.api.updateRowData({add: [record.values]});
+    //console.log(this.gridOptions.api.redrawRows());
+    //return this.paging.bind(this)(0, {});
+  }
+
   render(props) {
     const model = props.model || window.models.env.context.active_model;
     const models = window.models;
     const grid = (
-      <div className="card-body" style={{height: this.state.records.length * 48 + 112 <= 440 ? this.state.records.length * 48 + 112 + 'px' : '67vh'}}>
-        <Grid onGridReady={(params) => (window.onresize = () => autoSizeAll(params))()} onRowClicked={(params) => models.env[model].browse([]).then((record) => models.env.context.active_id = models.env[model].browse()).then(() => models.env.context.active_id.values = params.data).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records}/>
+      <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) + 'px' : '67vh'}}>
+        <Grid onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records}/>
+        {!props.isTreeView &&
+        <Button onClick={this.addItem.bind(this)} style={{display: 'inline-block', top: '-45px'}}>Add</Button>
+        //<Icon style={{color: '#4e4e4e', float: 'right', marginRight: '18px'}} material="add_circle"/>
+        }
       </div>
     );
     //delete grid.props.children[0].props.onRowClicked;

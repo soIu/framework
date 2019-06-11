@@ -18,7 +18,7 @@ export default class extends React.Component {
   async componentDidMount(props) {
     const model = window.models.env.context.active_model;
     const models = window.models;
-    if (!models.env.context.active_ids[0]) {
+    if (!models.env.context.active_ids || models.env.context.active_ids.length < 1 || !models.env.context.active_ids[0]) {
       models.env.context.active_id = models.env[model].browse();
       models.env.context.editing = true;
       this.setState(models.env.context);

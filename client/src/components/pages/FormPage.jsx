@@ -49,7 +49,12 @@ export default (props) => {
   const id = props.f7route.query.id;
   const view = window.tools.view[model].form;
   window.models.env.context.active_model = model;
-  window.models.env.context.active_ids = [id];
+  if (id) {
+    window.models.env.context.active_ids = [id];
+  }
+  else {
+    delete window.models.env.context.active_ids;
+  }
   /*if (id) {
     window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
   }*/
