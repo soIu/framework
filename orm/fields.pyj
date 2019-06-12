@@ -18,7 +18,7 @@ def Float(string, **args):
 #While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
 
 def Boolean(string, **args):
-    return merge({'type': 'boolean', 'string': string, 'defaults': false}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'boolean', 'string': string, 'defaults': False}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Binary(string, **args):
     return merge({'type': 'binary', 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
