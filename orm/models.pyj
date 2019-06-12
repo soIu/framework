@@ -721,3 +721,13 @@ class Model():
              return 0
         )
         return self
+
+    def add(self):
+        values = self.value if Array.isArray(self.value) else [self.value]
+        recordsets = Array.prototype.slice.call(arguments)
+        for records in recordsets:
+            if records._name != self._name: raise Exception('Not the same model')
+            for record in records:
+                values.push(record.value)
+        self.value = values if values.length > 1 else values[0]
+        return self
