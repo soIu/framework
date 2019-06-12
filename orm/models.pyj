@@ -461,7 +461,7 @@ class Model():
                       value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
                    elif field.type == 'float' and Number.isInteger(value[key]):
                       value[key] = value[key].toFixed(2)
-                   elif field.type == 'selection' and :
+                   elif field.type == 'selection':
                       value[key] = tools.dict(field.selection)[value[key]]
                    elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
                       promise = self.env[field.relation].browse(value[key])
