@@ -53,6 +53,16 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def queue(values, method):
+    v'var index = 0'
+    def next():
+        v'index += 1'
+        if index < values.length and values[index]?:
+           return method(values[index], next)
+        #return
+    result = method(values[index], next)
+    return result
+
 def create_worker(code):
     if v"typeof window === 'undefined'":
        return
@@ -90,48 +100,48 @@ def format_date(object, format):
     self.selectedDateObj = object
     formats = {
                 # hours with leading zero e.g. 03
-                H: def (): return pad(self.selectedDateObj.getHours());,
+                'H': def (): return pad(self.selectedDateObj.getHours());,
 
                 # AM/PM
-                K: def (): return self.selectedDateObj.getHours() > 11 ? "PM" : "AM";,
+                'K': def (): return self.selectedDateObj.getHours() > 11 ? "PM" : "AM";,
 
                 # seconds 00-59
-                S: def (): return pad(self.selectedDateObj.getSeconds());,
+                'S': def (): return pad(self.selectedDateObj.getSeconds());,
 
                 # unix timestamp
-                U: def (): return self.selectedDateObj.getTime() / 1000;,
+                'U': def (): return self.selectedDateObj.getTime() / 1000;,
 
                 # full year e.g. 2016
-                Y: def (): return self.selectedDateObj.getFullYear();,
+                'Y': def (): return self.selectedDateObj.getFullYear();,
 
-                # day in month;, padded (01-30)
-                d: def (): return pad(self.formats.j());,
+                # day in month, padded (01-30)
+                'd': def (): return pad(self.formats.j());,
 
                 # hour from 1-12 (am/pm)
-                h: def (): return self.selectedDateObj.getHours() % 12 ? self.selectedDateObj.getHours() % 12 : 12;,
+                'h': def (): return self.selectedDateObj.getHours() % 12 ? self.selectedDateObj.getHours() % 12 : 12;,
 
                 # minutes;, padded with leading zero e.g. 09
-                i: def (): return pad(self.selectedDateObj.getMinutes());,
+                'i': def (): return pad(self.selectedDateObj.getMinutes());,
 
-                M: def (): return pad(self.selectedDateObj.getMinutes());,
+                'M': def (): return pad(self.selectedDateObj.getMinutes());,
 
                 # day in month (1-30)
-                j: def (): return self.selectedDateObj.getDate();,
+                'j': def (): return self.selectedDateObj.getDate();,
 
                 # padded month number (01-12)
-                m: def (): return pad(self.formats.n());,
+                'm': def (): return pad(self.formats.n());,
 
                 # the month number (1-12)
-                n: def (): return self.selectedDateObj.getMonth() + 1;,
+                'n': def (): return self.selectedDateObj.getMonth() + 1;,
 
                 # seconds 0-59
-                s: def (): return self.selectedDateObj.getSeconds();,
+                's': def (): return self.selectedDateObj.getSeconds();,
 
                 # number of the day of the week
-                w: def (): return self.selectedDateObj.getDay();,
+                'w': def (): return self.selectedDateObj.getDay();,
 
                 # last two digits of year e.g. 16 for 2016
-                y: def (): return String(self.formats.Y()).substring(2)
+                'y': def (): return String(self.formats.Y()).substring(2)
     }
     self.formats = formats
     result = ''
