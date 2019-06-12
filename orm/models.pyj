@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, date
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, date, queue
 from orm.pouchdb import db
 
 env = {}
@@ -228,7 +228,7 @@ class Model():
 
     def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
         if not exist(ids):
-           if ids == []:
+           if ids in [[], None, undefined]:
               return Promise(
               def (resolve, reject):
                    #resolve(v'new self.constructor(false, is_singleton)')
@@ -351,6 +351,11 @@ class Model():
                    if arg[2] != False:
                       results.push(record[arg[0]] == arg[2])
                    else:
+                      results.push(not exist(record[arg[0]]))
+                elif arg[1] == '!=':
+                   if arg[2] != False:
+                      results.push(record[arg[0]] != arg[2])
+                   else:
                       results.push(exist(record[arg[0]]))
                 elif arg[1] == '>':
                    results.push(record[arg[0]] > arg[2])
@@ -360,9 +365,9 @@ class Model():
                    results.push(record[arg[0]] < arg[2])
                 elif arg[1] == '<=':
                    results.push(record[arg[0]] <= arg[2])
-                elif arg[1] == 'in':
+                elif arg[1] == 'in' and Array.isArray(arg[2]):
                    results.push(record[arg[0]] in arg[2])
-                elif arg[1] == 'not in':
+                elif arg[1] == 'not in' and Array.isArray(arg[2]):
                    results.push(record[arg[0]] not in arg[2])
                 elif arg[1] == 'like':
                    results.push(arg[2] in record[arg[0]])
@@ -448,8 +453,10 @@ class Model():
            if type(self._values).name not in [types.name for types in array]:
               values = [values]
            for value in values:
-               for key in value:
+               queue(keys(value),
+               def (key, next):
                    field = self._fields[key]
+                   if not field: return next()
                    if field.type in ['date', 'datetime']:
                       value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
                    elif field.type == 'float' and Number.isInteger(value[key]):
@@ -457,7 +464,8 @@ class Model():
                    elif field.type == 'selection':
                       value[key] = tools.dict(field.selection)[value[key]]
                    elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
-                      promise = self.env[field.relation].browse(value[key]).then(
+                      promise = self.env[field.relation].browse(value[key])
+                      promise.then(
                       def (records):
                           names = []
                           for record in records:
@@ -465,6 +473,8 @@ class Model():
                           value[key] = names.join(', ')
                       )
                       promises.push(promise)
+                   next()
+               )
            return Promise.all(promises).then(
            def ():
                return values
