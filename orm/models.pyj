@@ -456,12 +456,12 @@ class Model():
                queue(keys(value),
                def (key, next):
                    field = self._fields[key]
-                   if not field: return next()
+                   if not field and field.type != 'float': return next()
                    if field.type in ['date', 'datetime']:
                       value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
                    elif field.type == 'float' and Number.isInteger(value[key]):
                       value[key] = value[key].toFixed(2)
-                   elif field.type == 'selection':
+                   elif field.type == 'selection' and :
                       value[key] = tools.dict(field.selection)[value[key]]
                    elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
                       promise = self.env[field.relation].browse(value[key])
@@ -734,12 +734,18 @@ class Model():
 
     def add(self):
         ids = self.ids
+        unsaved_records = []
         values = self.values if Array.isArray(self.values) else [self.values]
         recordsets = Array.prototype.slice.call(arguments)
         for records in recordsets:
             if records._name != self._name: raise Exception('Not the same model')
             for record in records:
-                if record.id in ids: continue
+                if record.id:
+                   if record.id in ids: continue
+                   ids.push(record.id)
+                else:
+                   if unsaved_records.indexOf(record._values) != -1: continue
+                   unsaved_records.push(record.values)
                 values.push(record.values)
         self.values = values if values.length > 1 else values[0]
         return self
