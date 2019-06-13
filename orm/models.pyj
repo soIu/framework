@@ -745,7 +745,9 @@ class Model():
         values = self.values if Array.isArray(self.values) else [self.values]
         recordsets = Array.prototype.slice.call(arguments)
         for records in recordsets:
-            if records._name != self._name: raise Exception('Not the same model')
+            if records._name != self._name:
+               raise Exception('Not the same model')
+            if not records.id: records = [records]
             for record in records:
                 if record.id:
                    if record.id in ids: continue
