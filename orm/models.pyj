@@ -30,6 +30,7 @@ class Model():
     def __init__(self, _is_env, _is_singleton):
         self._fields = {}
         self._values = {}
+        self._mapped_values = {}
         self._related = {}
         self._one2many_fields = []
         self._is_env = _is_env if _is_env != undefined else False
@@ -139,9 +140,11 @@ class Model():
         'get': def (): 
                    if type(self._values).name not in [types.name for types in array]:
                       self._values._search_count = self._search_count
+                      self._mapped_values[self._values.id] = self._values
                    else:
                       for value in self._values:
                           value._search_count = self._search_count
+                          self._mapped_values[value.id] = value
                    return self._values
         ,
         'set': def (newvalue):
@@ -753,3 +756,6 @@ class Model():
                 values.push(record.values)
         self.values = values if values.length > 1 else values[0]
         return self
+
+    def find(self, id):
+        return self._mapped_values[id] or self.browse()
