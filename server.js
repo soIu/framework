@@ -73,8 +73,10 @@ if (process.argv.indexOf('--debug') !== -1) {
     if (process.execArgv.indexOf('--experimental-vm-modules') !== -1) {
         var vm = require('vm');
         var global_module = module;
+        var runInNewContext = vm.runInNewContext;
         vm.runInNewContext = function () {
             var args = Array.prototype.slice.call(arguments);
+            if (args[2] && args[2] !== 'server.pyj') return runInNewContext.apply(vm, arguments);
             if (typeof args[2] === 'string') args[2] = {filename: args[2]};
             var options = args[2];
             options.context = vm.createContext(args[1] || global);
