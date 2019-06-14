@@ -1,0 +1,45 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+
+class StockMove(models.Model):
+    _name = 'stock.move'
+
+    name = fields.Char(string="Move")
+    date = fields.Datetime(string="Date")
+    product_id = fields.Many2one('product.product', string="Product")
+    product_qty = fields.Float(string="Quantity")
+    location_src_id = fields.Many2one('stock.location', string="Source Location")
+    location_dest_id = fields.Many2one('stock.location', string="Destination Location")
+    picking_id = fields.Many2one('stock.picking', string="Operation")
+    pack_id = fields.Many2one('stock.pack', string="Pack/Box")
+    
+StockMove()
+
+menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
+menu.add({'id': 'move', 'parent': 'stock', 'string': 'Movement', 'model': 'stock.move', 'sequence': 5})
+
+view.add({'model': 'stock.move', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="product_id"/>
+    <field name="date"/>
+    <field name="location_src_id"/>
+    <field name="location_dest_id"/>
+</tree>
+"""})
+
+view.add({'model': 'stock.move', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="location_src_id"/>
+        </group>
+        <group>
+            <field name="date"/>
+            <field name="location_dest_id"/>
+        </group>
+    </sheet>
+</form>
+"""})

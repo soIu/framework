@@ -1,0 +1,174 @@
+import orm.models as models
+import orm.tools as tools
+
+def server(method, write=True, iterate=True):
+    def wrap():
+        v'var self = this'
+        args = Array.prototype.slice.call(arguments)
+        if not tools.configuration.client:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name].apply(record, args).then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
+           self[method.name] = method
+           result = self[method.name].apply(self, args)
+           if write and v'result instanceof models.Model' == True:
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
+        def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
+            self.values = result.values
+            context = self._context
+            self.env[self._name].with_context(**context).browse(self.ids)
+            if result.method_result:
+               return result.method_result
+            return self
+        ).catch(
+        def (error):
+            #console.log(error)
+            #return Exception("There are some error")
+            raise error
+        )
+    return wrap
+
+def client(method, write=True, iterate=True):
+    def wrap():
+        v'var self = this'
+        args = Array.prototype.slice.call(arguments)
+        if not tools.configuration.client:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name].apply(record, args).then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
+           self[method.name] = method
+           result = self[method.name].apply(self, args)
+           if write and v'result instanceof models.Model' == True: 
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
+        def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
+            self.values = result.values
+            context = self._context
+            self.env[self._name].with_context(**context).browse(self.ids)
+            if result.method_result:
+               return result.method_result
+            return self
+        ).catch(
+        def (error):
+            console.error(error)
+            self[method.name] = method
+            return self[method.name].apply(self, args)
+            #return Exception("There are some error")
+        )
+    return wrap
+
+def strict(method, write=True, iterate=True):
+    def wrap():
+        v'var self = this'
+        args = Array.prototype.slice.call(arguments)
+        if v"typeof window === 'undefined'" == True:
+           if self.length > 1:
+              return self.queue(
+              def (record, next):
+                  return record[method.name].apply(record, args).then(
+                  def (value):
+                      if tools.exist(value):
+                         return value
+                      else:
+                         return next()
+                  )
+              )
+           self[method.name] = method
+           result = self[method.name].apply(self, args)
+           if write and v'result instanceof models.Model' == True: 
+              result = result.write()
+           if tools.exist(result) and type(result) == Promise:
+              return result
+           return Promise(
+           def (resolve, reject):
+               try:
+                   resolve(result)
+               except Exception as error:
+                   reject(error)
+           )
+        return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
+        def (result):
+            if result.error:
+               tools.configuration.exception(result.error)
+            self.values = result.values
+            context = self._context
+            self.env[self._name].with_context(**context).browse(self.ids)
+            if result.method_result:
+               return result.method_result
+            return self
+        ).catch(
+        def (error):
+            #console.log(error)
+            #return Exception("There are some error")
+            raise error
+        )
+    return wrap
+
+#if not tools.exist(tools.onchanges):
+#   tools.onchanges = {}
+
+def onchange(method, *fields):
+    method._onchange_fields = fields
+    def wrap():
+        v'var self = this'
+        args = Array.prototype.slice.call(arguments)
+        self[method.name] = method
+        result = self[method.name].apply(self, args)
+        if not tools.exist(result):
+           result = self
+        return result
+    return wrap
+
+def get_onchanges(self):
+    onchanges = {}
+    for key in Object.getOwnPropertyNames(self):
+        if tools.exist(self[key]) and type(self[key]) == Function and tools.exist(self[key]._onchange_fields):
+           for field in self[key]._onchange_fields:
+               if not tools.exist(onchanges[field]):
+                  onchanges[field] = []
+               onchanges[field].push(self[key].name)
+    return onchanges
+
+tools.get_onchanges = get_onchanges
+
+#I plan to make depends to listen at adapt or write, not really sure. Maybe for now I'll make it the same as onchange
+depends = onchange

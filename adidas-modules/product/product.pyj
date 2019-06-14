@@ -1,0 +1,37 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+
+class ProductProduct(models.Model):
+    _name = 'product.product'
+
+    name = fields.Char(string="Product Name")
+    code = fields.Char(string="Product Code")
+    description = fields.Text(string="Description")
+    
+ProductProduct()
+
+menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
+menu.add({'id': 'product', 'parent': 'stock', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
+
+view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="code"/>
+</tree>
+"""})
+
+view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="code"/>
+        </group>
+        <group>
+            <field name="description"/>
+        </group>
+    </sheet>
+</form>
+"""})

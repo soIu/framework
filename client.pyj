@@ -1,0 +1,28 @@
+import modules.modules
+import orm.models as models
+import orm.tools as tools
+from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
+from res.users import check_admin
+
+check_admin()
+
+#tools.configuration.client = True
+tools.configuration.url = "http://localhost:8069"
+tools.configuration.home_view = window.localStorage.rapyd_home_view or 'res.message.chat'
+configuration = v'{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}'
+configuration.client = tools.configuration.client
+tools.configuration = Object.assign(tools.configuration, configuration)
+
+for key in tools.menu:
+    if tools.exist(tools.menu[key].parent):
+       if tools.menu[key].parent in tools.menu:
+          tools.menu[tools.menu[key].parent].childs.push(tools.menu[key])
+          tools.menu[tools.menu[key].parent].childs.sort(
+          def (a, b):
+              return a.sequence - b.sequence
+          )
+       del tools.menu[key]
+
+window.models = models
+window.tools = tools
+window.local_db = db

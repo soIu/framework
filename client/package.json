@@ -1,0 +1,41 @@
+{
+  "name": "rapyd-client",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node scripts/start.js",
+    "build": "node scripts/build.js && mkdir build/static/css/static && cp -r build/static/media build/static/css/static && sed -i 's/,e.respondWith(f)/;try{e.respondWith(f)}catch(error){}/g' build/sw.js",
+    "copy-fonts": "node node_modules/cpy-cli/cli.js node_modules/framework7-icons/fonts/*.* src/fonts && node node_modules/cpy-cli/cli.js node_modules/material-design-icons/iconfont/*.{eot,ttf,woff,woff2} src/fonts",
+    "postinstall": "npm run copy-fonts && cp node_modules/preact/dist/preact.min.js public/ && cp node_modules/preact-compat/dist/preact-compat.min.js public/ && cp patch/react-component-el.js node_modules/framework7-react/runtime-helpers/react-component-el.js && cp patch/list-input.js node_modules/framework7-react/components/"
+  },
+  "devDependencies": {
+    "ag-grid-community": "^19.1.4",
+    "ag-grid-react": "^19.1.2",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "cpy-cli": "^2.0.0",
+    "flatpickr": "^1.9.1",
+    "framework7": "^3.0.1",
+    "framework7-icons": "^0.9.1",
+    "framework7-react": "^3.0.1",
+    "material-design-icons": "^3.0.1",
+    "module-alias": "^2.1.0",
+    "offline-plugin": "^5.0.6",
+    "pouchdb-browser": "^7.0.0",
+    "pouchdb-find": "^7.0.0",
+    "preact": "^8.3.1",
+    "preact-compat": "^3.18.4",
+    "react-scripts": "2.1.1",
+    "relational-pouch": "^3.1.0",
+    "selectivity": "^3.1.0",
+    "socket.io-client": "^2.2.0",
+    "string-replace-loader": "^2.1.1"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "_moduleAliases": {
+    "mini-css-extract-plugin": "patch/mini-css.js"
+  }
+}

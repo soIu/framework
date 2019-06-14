@@ -1,0 +1,763 @@
+import orm.fields as fields
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, date, queue
+from orm.pouchdb import db
+
+env = {}
+schemas = {}
+raw_models = {}
+
+def setSchema():
+    db.setSchema([schemas[key] for key in schemas])
+
+def queryInverse(field_type, records, fields, _fields):
+    for record in records[field_type]:
+        for field in fields:
+            record[field] = []
+            for result in records[_fields[field].relation]:
+                if result[_fields[field].inverse] == record.id:
+                   record[field].push(result.id)
+    return records
+
+class Model():
+    _name = undefined
+    _inherit = False
+    _rec_name = 'name'
+    #_fields = {}
+    #_values = {}
+    #_related = {}
+    #This JSON objects turnout having the same id, separating them on class initiation
+
+    def __init__(self, _is_env, _is_singleton):
+        self._fields = {}
+        self._values = {}
+        self._mapped_values = {}
+        self._related = {}
+        self._one2many_fields = []
+        self._is_env = _is_env if _is_env != undefined else False
+        self._is_singleton = _is_singleton if _is_singleton != undefined else False
+        self._inherited_keys = []
+        self._context = {}
+        self._search_count = 0
+        if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
+           if not exist(self._name):
+              self._name = self._inherit
+           newmodel = self
+           oldconstructor = self.constructor
+           models = raw_models[newmodel._inherit]
+           if oldconstructor not in models:
+              models.push(oldconstructor)
+           for raw_model in models:
+               for key in Object.getOwnPropertyNames(raw_model.prototype):
+                   if key[:2] != '__' and key not in ['_inherit', 'inherited_constructor', 'values']:
+                      self[key] = raw_model.prototype[key]
+                      self._inherited_keys.push(key)
+           self._name = newmodel._name
+           self._is_env = False
+           if exist(env[self._name]) and env[self._name].constructor != self.constructor:
+              del env[self._name]
+           #self.inherited_constructor = self.constructor
+        if 'Model' not in env:
+           env['Model'] = Model
+        if 'context' not in env:
+            env['context'] = {}
+        if self._name not in env:
+           env[self._name] = True
+           v'Object.defineProperty(env, self._name, {get: function() {return new self.constructor(true)}})'
+           #env[self._name]._is_env = True
+        self.env = env
+        #if self._is_env:
+        #   return
+        schema = {'singular': self._name, 'plural': self._name}
+        schemas[self._name] = schema
+        #Reserved fields
+        reserved = ['id', '_id', 'rev', '_rev', 'ids']
+        if self.name == undefined and self._rec_name != 'name':
+           self.constructor.prototype.name = copy(self[self._rec_name])
+           self.constructor.prototype.name.related = self._rec_name
+           self.constructor.prototype.name.store = True
+        if self._is_singleton:
+           self.id = fields.Char(string="ID", related='_id', store=True)
+           self._id = fields.Char(string="ID (Raw)")
+        self._fields.ids = fields.Data(string="IDs")
+        self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
+        self._rev = fields.Char(string="DB Revision Number")
+        valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
+        for key in valid_fields:
+            if not exist(self[key]) or type(self[key]) != Object or (type(self[key]) == Object and 'compute' not in self[key]):
+               continue
+            #if key in self._fields:
+            #   self[key] = self._fields[key]
+            if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
+               if not schema.relations:
+                  schema.relations = {}
+               relation = 'belongsTo'
+               if self[key].type in ['one2many', 'many2many']:
+                  relation = 'hasMany'
+               if self[key].type != 'one2many':
+                  schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': False}}} #Turning async into false since one2many doesn't work
+               else:
+                  schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': False, 'queryInverse': self[key].inverse}}}
+                  self._one2many_fields.push(key)
+               if type == 'belongsTo':
+                  db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
+            self._fields[key] = self[key]
+            if self._is_singleton:
+               if exist(self._fields[key].related):
+                  if not exist(self._related[self._fields[key].related]):
+                     self._related[self._fields[key].related] = []
+                  self._related[self._fields[key].related].push(key)
+               self[key] = self._fields[key].defaults
+               self._values[key] = self[key]
+               #Once more disable getter and setter, massive bugs
+               """Object.defineProperty(self, key, {
+               'get': def(): return self._values[key]
+               ,
+               'set': def(value): self._values[key] = self.adapt(key, value)
+               }})"""
+        #if exist(self._fields):
+        #   self.env[self._name]._fields = self._fields
+        try:
+           setSchema()
+        except:
+           pass
+        if exist(self._name):
+           if not exist(raw_models[self._name]):
+              raw_models[self._name] = []
+           if self.constructor not in raw_models[self._name]:
+              raw_models[self._name].push(self.constructor)
+        if 'values' in Object.getOwnPropertyNames(self):
+           return
+        Object.defineProperty(self, 'ids', {
+        'get': def ():
+                   if self._is_singleton:
+                      return [self.id] if self.id else []
+                   else:
+                      return [object.id.toString() for object in self.values if object.id]
+        ,
+        'set': def (): return
+        })
+        Object.defineProperty(self, 'values', {
+        'get': def (): 
+                   if type(self._values).name not in [types.name for types in array]:
+                      self._values._search_count = self._search_count
+                      self._mapped_values[self._values.id] = self._values
+                   else:
+                      for value in self._values:
+                          value._search_count = self._search_count
+                          self._mapped_values[value.id] = value
+                   return self._values
+        ,
+        'set': def (newvalue):
+                   if not exist(newvalue):
+                      return
+                   if type(newvalue).name not in [types.name for types in array]:
+                      self._is_singleton = True
+                      if type(newvalue).name in [types.name for types in array]:
+                         self._values = {}
+                      oldvalue = copy(self._values)
+                      if newvalue.id:
+                         newvalue.id = newvalue.id.toString()
+                      self._values =  newvalue
+                      for key in oldvalue:
+                          if key not in newvalue:
+                             self._values[key] = oldvalue[key]
+                      for key in self._fields:
+                          if key in newvalue:
+                             self[key] = self.adapt(key, newvalue[key])
+                      #if exist(newvalue._search_count):
+                      #   self._search_count = newvalue._search_count
+                   else:
+                      #if exist(newvalue):
+                      #   self._search_count = newvalue[0]._search_count
+                      self._is_singleton = False
+                      for value in newvalue:
+                          for key in self._fields:
+                              if key in value:
+                                 value[key] = self.adapt(key, value[key])
+                      self._values = newvalue
+                      #self.ids = [object.id for object in newvalue]
+        })
+        Object.defineProperty(self, 'length', {'get':
+        def (): 
+            if self._is_env:
+               return 0
+            elif self._is_singleton:
+               if not exist(self.id) or not exist(self.values):
+                  return 0
+               return 1
+            else:
+               return self._values.length
+        })
+        #Disabling seal and freeze altogether because they cause bugs
+        #v'Object.seal(self)'
+        #v'Object.freeze(self._fields)'
+        #v'Object.seal(self._values)'
+
+    def __iter__(self):
+        if self._is_env or self.length < 1:
+           return iter([])
+        elif self._is_singleton:
+           return iter([self])
+        def yield_record(self):
+            for index in range(self.values.length):
+                result = self.browse()
+                result.values = self.values[index]
+                result._search_count = self.values[index]._search_count
+                yield result
+        return yield_record(self)
+
+    def __super__(self, method_name):
+        method = env.Model.prototype[method_name]
+        if not self._inherit:
+           if not method:
+              return def (): return Promise(def (resolve): resolve();)
+        else:
+           method = raw_models[self._inherit][-1].prototype[method_name]
+        return def (*args, **kwargs):
+            original_method = self[method_name]
+            self[method_name] = method
+            result = self[method_name].bind(self)(*args, **kwargs)
+            if exist(result) and type(result) == Promise:
+               return result.then(
+               def (result):
+                   self[method_name] = original_method
+                   return result
+               )
+            self[method_name] = original_method
+            return result
+
+    def __view__(self, view, view_type):
+        return view
+
+    def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
+        if not exist(ids):
+           if ids in [[], None, undefined]:
+              return Promise(
+              def (resolve, reject):
+                   #resolve(v'new self.constructor(false, is_singleton)')
+                   resolve(self.env[self._name])
+              )
+           result = v'new self.constructor(false, is_singleton)'
+           result._context = self._context
+           return result
+        elif is_client:
+           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}, self._context).then(
+           def (result):
+               console.log(result)
+               record = self.browse(is_singleton=type(result.values) not in array)
+               record.values = result.values
+               if result.values.map:
+                  record._search_count = result.values[0]._search_count
+               else:
+                  record._search_count = result.values._search_count
+               if exist(record):
+                  self.browse(ids=ids, is_client=False).then(
+                  def (records):
+                      if exist(records):
+                         for record in records:
+                             values = {}
+                             if not records._is_singleton:
+                                result.values = [result.values]
+                             for value in result.values:
+                                 if value.id == record.id:
+                                    values = value
+                                    break
+                             record.write(values, is_client=False)
+                      else:
+                         if records._is_singleton:
+                            result.values = [result.values]
+                         for value in result.values:
+                             del value.rev
+                             del value._rev
+                             del value._id
+                             db.rel.save(records._name, value)
+                  ).catch(
+                  #Possible duplication is from here, need to check
+                  def (error):
+                      console.error(error)
+                      del result.values.rev
+                      del result.values._rev
+                      del result.values._id
+                      db.rel.save(record._name, result.values)
+                  )
+               return record
+           ).catch(
+           def (error):
+               configuration.warning(error, True)
+               return self.browse(ids, is_client=False)
+           )
+        elif type(ids).name in [types.name for types in array]:
+           #result = self.browse()
+           if ids.length > 1:
+              v'var result = new self.constructor(false, false)'
+              return db.rel.find(result._name, ids).then(
+              def (record):
+                  record = queryInverse(result._name, record, result._one2many_fields, result._fields)
+                  #result.ids = ids
+                  result.values = record[result._name]
+                  result._search_count = record[result._name].length
+                  return result
+              )
+           else:
+              ids = ids[0]
+        if type(ids) == String:
+           result = self.browse()
+           #return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
+           return db.rel.find(result._name, ids).then(
+           def (record):
+               record = queryInverse(result._name, record, result._one2many_fields, result._fields)
+               #result.id = ids
+               #record.data.id = db.rel.parseDocID(record._id).id
+               #record.data.rev = record._rev
+               result.values = record[result._name][0]#.data
+               result._search_count = 1
+               return result
+           )
+        return result
+
+    def search(self):
+        args = Array.prototype.slice.call(arguments)
+        options = copy(self._context)
+        if options.is_client == undefined:
+           options.is_client = configuration.client
+        if exist(self.env.context.active_limit):
+           options.limit = self.env.context.active_limit
+        if exist(self.env.context.active_index):
+           options.index = self.env.context.active_index
+        if exist(self.env.context.active_sort):
+           options.order = self.env.context.active_sort
+        if exist(options.is_client):
+           del options.is_client
+           options.fields = Object.keys(self._fields)
+           return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
+           def (result):
+               record = self.browse(is_singleton=type(result.values) not in array)
+               record.values = result.values
+               if result.values.map:
+                  record._search_count = result.values[0]._search_count
+               else:
+                  record._search_count = result.values._search_count
+               for id in record.ids:
+                   self.with_context(no_preload=True).browse(id)
+               return record
+           ).catch(
+           def (error):
+               configuration.warning(error, True)
+               return self.with_context(is_client=False).search(args)
+           )
+        def query(record):
+            results = []
+            for arg in args:
+                if not arg or str(arg) in ['|', '[]']:
+                   continue
+                if arg[1] == '=':
+                   if arg[2] != False:
+                      results.push(record[arg[0]] == arg[2])
+                   else:
+                      results.push(not exist(record[arg[0]]))
+                elif arg[1] == '!=':
+                   if arg[2] != False:
+                      results.push(record[arg[0]] != arg[2])
+                   else:
+                      results.push(exist(record[arg[0]]))
+                elif arg[1] == '>':
+                   results.push(record[arg[0]] > arg[2])
+                elif arg[1] == '>=':
+                   results.push(record[arg[0]] >= arg[2])
+                elif arg[1] == '<':
+                   results.push(record[arg[0]] < arg[2])
+                elif arg[1] == '<=':
+                   results.push(record[arg[0]] <= arg[2])
+                elif arg[1] == 'in' and Array.isArray(arg[2]):
+                   results.push(record[arg[0]] in arg[2])
+                elif arg[1] == 'not in' and Array.isArray(arg[2]):
+                   results.push(record[arg[0]] not in arg[2])
+                elif arg[1] == 'like':
+                   results.push(arg[2] in record[arg[0]])
+                elif arg[1] == 'ilike':
+                   results.push(str(arg[2]).toLowerCase() in str(record[arg[0]]).toLowerCase())
+            if not exist(args) or not exist(args[0]):
+               return True
+            elif args[0] == '|':
+               return results.some(
+               def (result):
+                   return result == True
+               )
+            else:
+               return results.every( 
+               def (result):
+                   return result == True
+               )
+        result = self.browse()
+        if options.limit == 1:
+           if options.index > 0:
+              return Promise(
+              def (resolve, reject):
+                  resolve(result)
+              )
+           return db.rel.find(result._name).then(
+           def (records):
+               records = queryInverse(result._name, records, result._one2many_fields, result._fields)
+               record = records[result._name].find(query)
+               result._search_count = 1 if record else 0
+               #result.id = record.id
+               result.values = record
+               if exist(options.order):
+                  for order in options.order.split(','):
+                      order, desc = order.split(' ')
+                      desc = True if desc == 'desc' else False
+                      result.sort_by(order, desc)
+               return result
+           )
+        else:
+           return db.rel.find(result._name).then(
+           def (records):
+               v'var result = new self.constructor(false, false)'
+               records = queryInverse(result._name, records, result._one2many_fields, result._fields)
+               result._search_count = records[result._name].length
+               if records[result._name].length > 1:
+                  values = records[result._name].filter(query)
+                  result._search_count = values.length
+                  if exist(options.limit) and type(options.limit) == Number:
+                     start = 0
+                     if exist(options.index) and type(options.index) == Number:
+                        start = options.index * options.limit
+                        options.limit = (options.index + 1) * options.limit
+                     result.values = values.slice(start, options.limit)
+                  else:
+                     result.values = values
+                  #result.ids = [value.id for value in result._values]
+                  if exist(options.order):
+                     for order in options.order.split(','):    
+                         order, desc = order.split(' ')
+                         desc = True if desc == 'desc' else False
+                         result.sort_by(order, desc)
+                  return result
+               else:
+                  result = self.browse()
+                  if options.index > 0:
+                     return result
+                  record = records[result._name].find(query)
+                  #result.id = record.id
+                  result.values = record
+                  if exist(options.order):
+                     for order in options.order.split(','):    
+                         order, desc = order.split(' ')
+                         desc = True if desc == 'desc' else False
+                         result.sort_by(order, desc)
+                  return result
+           )
+        return result
+
+    def read(self, format):
+        if format:
+           promises = []
+           values = self._values#copy(self._values)
+           if type(self._values).name not in [types.name for types in array]:
+              values = [values]
+           for value in values:
+               oldvalue = value
+               value = copy(value)
+               if not value.id:
+                  value._original_object_for_id = oldvalue
+               queue(keys(value),
+               def (key, next):
+                   field = self._fields[key]
+                   if not field or value == None and field.type != 'float': return next()
+                   if field.type in ['date', 'datetime']:
+                      value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
+                   elif field.type == 'float' and Number.isInteger(value[key]):
+                      value[key] = value[key].toFixed(2)
+                   elif field.type == 'selection':
+                      value[key] = tools.dict(field.selection)[value[key]]
+                   elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
+                      promise = self.env[field.relation].browse(value[key])
+                      promise.then(
+                      def (records):
+                          names = []
+                          for record in records:
+                              names.push(record[record._rec_name or 'name'])
+                          value[key] = names.join(', ')
+                      )
+                      promises.push(promise)
+                   next()
+               )
+           return Promise.all(promises).then(
+           def ():
+               return values
+           )
+        if self._is_env:
+           return {}
+        return self._values#{key: self.adapt(key, self[key]) for key in self._fields}
+
+    def adapt(self, key, value):
+        if self._is_env:
+           return
+        #if key == 'id':
+        #   value = self._fields[key].value
+        if self._fields[key].type in ['char', 'text']:
+           if not exist(value):
+              value = ""
+           else:
+              value = v'String(value)'
+        elif self._fields[key].type == 'integer':
+           value = parseInt(value)
+           if isNaN(value):
+              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
+        elif self._fields[key].type == 'float':
+           value = parseFloat(value)
+           if isNaN(value):
+              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
+        elif self._fields[key].type == 'boolean':
+           if value in ['true', 'True']:
+              value = True
+           elif value in ['false', 'False', None, undefined]:
+              value = False
+           elif type(value) == String:
+              raise Exception("Not a valid Boolean")
+           else:
+              value = Boolean(value)
+        elif self._fields[key].type == 'binary':
+           if exist(value) and not checkBase64(value):
+              raise Exception("Not a valid base64")
+        elif self._fields[key].type == 'selection':
+           if not exist(value):
+              value = None
+           elif not value in dict(self._fields[key].selection):
+              raise Exception("Incorrect value")
+        elif self._fields[key].type in ['date', 'datetime']:
+           if not exist(value):
+              value = None
+           elif type(value) == Date:
+              value = value.toISOString()
+           elif type(value) == String:
+              try:
+                  value = v'new Date(value).toISOString()'
+              except:
+                  raise Exception("Can't parse Date")
+           else:
+              raise Exception("Can't parse Date")
+           if exist(value) and self._fields[key].type == 'date':
+              value = value.split('T')[0] + 'T00:00:00.000Z'
+        elif self._fields[key].type in ['many2one', 'one2one']:
+           if not exist(value):
+              return None
+           elif v'value instanceof env.Model' == True:
+              value = value.id
+           elif type(value) in [ρσ_list_constructor, Array] and value.length > 0:
+                value = value[0]
+        elif self._fields[key].type in ['many2many', 'one2many']:
+           if not exist(value):
+              value = []
+           elif v'value instanceof env.Model' == True:
+              value = value.ids
+        #Related operation
+        if self._fields[key].store in [True, None]:
+           if exist(self._fields[key].related):
+              self[self._fields[key].related] = value
+              self._values[self._fields[key].related] = value
+           if exist(self._related[key]):
+              for field in self._related[key]:
+                  self[field] = value
+                  self._values[field] = value
+        return value
+
+    def update(self, values=False):
+        if self._is_env:
+           return
+        if not exist(values):
+           if self._is_singleton:
+              values = {key: self[key] for key in self._fields}
+           else:
+              values = {}
+        for key in values:
+            if key == '_search_count': continue
+            value = self.adapt(key, values[key])
+            if self._is_singleton:
+               self._values[key] = value
+            else:
+               for object in self._values:
+                   object[key] = value
+
+    def queue(self, method):
+        if self._is_env or not exist(self):
+           return
+        records = [record for record in self]
+        v'var index = 0'
+        def next():
+            v'index += 1'
+            if index < records.length and records[index]?:
+               return method(records[index], next)
+            return self
+        result = method(records[index], next)
+        #self.values = [record._values for record in records]
+        return result
+
+    def create(self, values=False, is_client=configuration.client):
+        self.update()
+        if not exist(values):
+           values = self.read()
+        else:
+           values = merge(self.read(), values)
+        if self._is_env:
+           self = self.browse()
+           self.update(values)
+        if is_client:
+           return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
+           def (result):
+               self.values = result.values
+               self.with_context(no_preload=True).browse(self.id)
+               return self
+           ).catch(
+           def (error):
+               configuration.exception(error)
+               #return Exception("There is some error")
+               #return self.create(values, is_client=False)
+               raise error
+           )
+        del values['id']
+        del values['rev']
+        del values['_id']
+        del values['_rev']
+        return db.rel.save(self._name, values).then(
+        def (record):
+            #queryInverse(self._name, record, self._one2many_fields, self._fields)
+            self.values = record[self._name][0]
+            return self
+        )
+        #return self
+
+    def write(self, values=False, is_client=configuration.client):
+        if not exist(self.id) and not exist(self.ids):
+           return self
+        self.update()
+        if not exist(values):
+           if not self._is_singleton:
+              return
+           values = self.read()
+        else:
+           #merge(self.read(), values)
+           self.update(values)
+           values = self.read()
+        if is_client:
+           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
+           def (result):
+               self.values = result.values
+               self.with_context(no_preload=True).browse(self.id)
+               return self
+           ).catch(
+           def (error):
+               configuration.exception(error)
+               #return self.write(values, is_client=False)
+               #return Exception("There are some error")
+               raise error
+           )
+        if self._is_singleton:
+           return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
+           def (record):
+               #return db.put(merge(values, {'_id': record._id, '_rev': record._rev}))
+               del values._id
+               del values._rev
+               del values.rev
+               values.rev = record._rev
+               return db.rel.save(self._name, values).then(
+               def (result):
+                   self.values = values
+                   return self
+               )
+           )
+        else:
+           return self.queue(
+           def (record, next):
+               return record.write().then(
+               def (result):
+                   return next()
+               )
+           )
+           #for value in values:
+           #    values._id = db.rel.makeDocID({'type': self._name, 'id': value.id})
+           #Turn out bulkDocs and db.put doesn't work on realational-pouch
+           #return db.bulkDocs(values).then(
+           #def (record):
+           #    self.values = record
+           #)
+        return self
+
+    def unlink(self, is_client=configuration.client):
+        if not exist(self.id) and not exist(self.ids):
+           return
+        if is_client:
+           return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()]}, self._context).then(
+           def (result):
+               return True
+           ).catch(
+           def (error):
+               configuration.warning(error, True)
+               #return self.unlink(is_client=False)
+               #return False
+               raise error
+           )
+        if self._is_singleton:
+           db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
+           def (record):
+               db.remove(record)
+           )
+        else:
+           for value in self._values:
+               value['_deleted'] = True
+           db.bulkDocs(self._values)
+        return True
+
+    def sudo(self, uid):
+        if configuration.client: return self
+        if not uid: uid = 1
+        return self.with_context(uid=uid)
+
+    def with_context(self, *args, **kwargs):
+        for arg in args:
+            for key in arg:
+                self._context[key] = arg[key]
+        for key in kwargs:
+            self._context[key] = kwargs[key]
+        return self
+
+    def sort_by(self, field, desc=False):
+        if self.length < 2:
+           return self
+        self.values.sort(
+        def (a, b):
+             if desc:
+                c = a
+                d = b
+                a = d
+                b = c
+             if a[field] < b[field]:
+                return -1
+             elif a[field] > b[field]:
+                return 1
+             return 0
+        )
+        return self
+
+    def add(self):
+        ids = self.ids
+        unsaved_records = []
+        values = self.values if Array.isArray(self.values) else [self.values]
+        recordsets = Array.prototype.slice.call(arguments)
+        for records in recordsets:
+            if records._name != self._name:
+               raise Exception('Not the same model')
+            if not records.id: records = [records]
+            for record in records:
+                if record.id:
+                   if record.id in ids: continue
+                   ids.push(record.id)
+                else:
+                   if unsaved_records.indexOf(record._values) != -1: continue
+                   unsaved_records.push(record.values)
+                values.push(record.values)
+        self.values = values if values.length > 1 else values[0]
+        return self
+
+    def find(self, id):
+        return self._mapped_values[id] or self.browse()

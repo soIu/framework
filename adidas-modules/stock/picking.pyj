@@ -1,0 +1,58 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+
+class StockPicking(models.Model):
+    _name = 'stock.picking'
+
+    name = fields.Char(string="Picking Number")
+    date = fields.Datetime(string="Date")
+    reference = fields.Char(string="Reference")
+    #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
+    location_src_id = fields.Many2one('stock.location', string="Source Location")
+    location_dest_id = fields.Many2one('stock.location', string="Destination Location")
+    move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
+    pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs/Boxes")
+
+StockPicking()
+
+menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Operations', 'model': 'stock.picking', 'sequence': 1})
+
+
+view.add({'model': 'stock.picking', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="date"/>
+</tree>
+"""})
+
+view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="reference"/>
+        </group>
+        <group> 
+            <field name="date"/>
+        </group>
+        <group width="100%">
+            <field name="pack_ids">
+                <tree>
+                    <field name="name"/>
+                </tree>
+            </field>
+        </group>
+        <group width="100%">
+            <field name="move_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                    <field name="pack_id"/>
+                </tree>
+            </field>
+        </group>
+    </sheet>
+</form>
+"""})

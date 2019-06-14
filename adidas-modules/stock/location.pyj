@@ -1,0 +1,35 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+
+class StockLocation(models.Model):
+    _name = 'stock.location'
+
+    name = fields.Char(string="Location Name")
+    type = fields.Selection(['vendor', 'Vendor'], ['customer', 'Customer'], ['internal', 'Internal'], string="Location Type")
+    
+    
+StockLocation()
+
+menu.add({'id': 'location', 'parent': 'stock', 'string': 'Locations', 'model': 'stock.location', 'sequence': 15})
+
+view.add({'model': 'stock.location', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="type"/>
+</tree>
+"""})
+
+view.add({'model': 'stock.location', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="type"/>
+        </group>
+    </sheet>
+</form>
+"""})

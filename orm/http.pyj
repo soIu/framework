@@ -1,0 +1,51 @@
+from orm.tools import exist, keys, configuration
+
+configuration.port = 8069
+
+configuration.local_app = False
+
+restify = require('restify')
+server = restify.createServer()
+
+cors = require('restify-cors-middleware')({'origins': ['*']})
+
+server.pre(cors.preflight)
+server.use(cors.actual)
+server.use(restify.plugins.bodyParser({'mapParams': True}))
+server.use(restify.plugins.queryParser());
+
+def parse(params):
+    for key in keys(params):
+        try:
+            params[key] = JSON.parse(params[key])
+        except:
+            pass
+    return params
+
+_controllers = {}
+
+def route(routing, *method):
+    def apply():
+        if routing not in _controllers:
+           _controllers[routing] = []
+           _controllers[routing].push(method)
+    apply()
+    return def(): return
+
+class Controller():
+
+    def __init__(self):
+        for key in keys(_controllers):
+            if key != '/api/login':
+               _controllers[key].unshift(_controllers['/api/login'][0][0])
+            server.post(key, _controllers[key])
+            server.get(key, _controllers[key])
+        if configuration.local_app == True:
+           if configuration.serverless != True:
+              server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'}))
+           else:
+              _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'})]
+
+    def run(self):
+        console.log('Running on port ' + configuration.port)
+        server.listen(configuration.port)

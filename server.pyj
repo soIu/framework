@@ -1,0 +1,267 @@
+import modules.modules
+import modules.controllers
+import orm.http as http
+from orm.models import env, setSchema
+from orm.tools import exist, configuration, merge
+from res.users import check_admin, admin_password
+
+setSchema()
+
+configuration = merge(configuration, {key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
+
+admin_password = configuration.admin_password
+check_admin()
+
+client_js = 'var ρσ_module_doc__\n' + require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString()
+client_js = client_js.replace('{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}', JSON.stringify(configuration))
+client_js_time = Date().toISOString()
+
+crypto = require('crypto')
+
+def encrypt(string):
+    cipher = crypto.createCipher('aes-256-cbc', configuration.master_password)
+    string = cipher.update(string, 'utf-8', 'hex')
+    string += cipher.final('hex')
+    return string
+
+def decrypt(string):
+    decipher = crypto.createDecipher('aes-256-cbc', configuration.master_password)
+    string = decipher.update(string, 'hex', 'utf-8')
+    string += decipher.final('utf-8')
+    return string
+
+http.route('/api/login',
+def (request, response, next):
+    #request.accepts('application/json')
+    request.env = env
+    response.result = {'status': 'denied'}
+    request.params = Object.assign(request.params, request.query, request.body or {});
+    params = http.parse(request.params)
+    if exist(request.params.login):
+       if params.encrypted == True:
+          params.login, params.password = decrypt(params.login), decrypt(params.password)
+       request.env['res.users'].with_context(limit=1).search(['login', '=', params.login], ['password', '=', params.password]).then(
+       def (user_id):
+           if exist(user_id):
+              request.env.context.user = user_id
+              response.result = {'status': 'success'}
+              if params.authentication = True:
+                 response.result.login, response.result.password = encrypt(params.login), encrypt(params.password)
+                 response.result.id = user_id.id
+                 if not exist(params.client_js_time) or params.client_js_time != client_js_time:
+                    response.result.client_js = client_js
+                    response.result.client_js_time = client_js_time
+           next()
+       ).catch(
+       def (error):
+           console.log(error.stack)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/browse',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].sudo(response.result.id).browse(params.ids).then(
+       def (record):
+           response.result = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/search',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       options = params.options or {}
+       request.env[params.model].sudo(response.result.id).with_context(**options).search(*params.args).then(
+       def (record):
+           response.result = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/create',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].sudo(response.result.id).create(params.values).then(
+       def (record):
+           response.result = {'status': 'success', 'values': record.values}
+           next()
+       ).catch(
+       def (error):
+           console.log(error)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/write',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].sudo(response.result.id).browse(params.ids).then(
+       def (record):
+           record.write(params.values).then(
+           def (record):
+               response.result = {'status': 'success', 'values': record.values}
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/unlink',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].sudo(response.result.id).browse(params.ids).then(
+       def (record):
+           record.unlink().then(
+           def ():
+               response.result = {'status': 'success'}
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+http.route('/api/methods',
+def (request, response, next):
+    if response.result.status != 'success':
+       next()
+    params = request.params
+    if exist(request.params):
+       request.env[params.model].sudo(response.result.id).browse(params.ids).then(
+       def (record):
+           args = params.args if params.args else []
+           return record[params.method].apply(record, args).then(
+           def (result):
+               response.result = {'status': 'success', 'values': record.values}
+               if v'result instanceof env.Model' == False:
+                  response.result.method_result = result
+               next()
+           )
+       ).catch(
+       def (error):
+           console.log(error)
+           response.result = {'status': 'error', 'error': error.stack}
+           next()
+       )
+    else:
+       next()
+,
+
+def (request, response, next):
+    return response.send(response.result)
+)
+
+controller = http.Controller()
+if not configuration.serverless:
+   controller.run()
+else:
+   serverless_route = {}
+   for route in http._controllers:
+       #entry = configuration.ENTRY_POINT or configuration.X_GOOGLE_ENTRY_POINT
+       #if exist(entry) and route != entry:
+       #   continue
+       #console.log(route)
+       serverless_route[route] = def (request, response, route):
+                            functions = []
+                            (def recurse(methods):
+                                 for method in methods:
+                                     if type(method) == Array:
+                                        recurse(method)
+                                     else:
+                                        functions.push(method)
+                            )(http._controllers[route])
+                            index = 0
+                            def next(arg):
+                                v'if (arg instanceof Error) {throw arg;}'
+                                v'index += 1'
+                                if index < functions.length and exist(functions[index]):
+                                   #console.log(functions[index].toString())
+                                   functions[index](request, response, next)
+                            #console.log(functions[index].toString())
+                            functions[index](request, response, next)
+   exports.api = def (request, response):
+                     path = request.path
+                     console.log(path)
+                     routing = '/api/'+path.split('/')[1]
+                     route = serverless_route[routing]
+                     if exist(route):
+                        Object.defineProperty(request, 'path', {'get': 
+                        def (): 
+                            if '/web' not in path:
+                               return path
+                            return def (): return path.slice(5)
+                        })
+                        route(request, response, routing)
+                     else:
+                        response.send({'status': 'error', 'error': {'message': 'URL not found'}})

@@ -1,0 +1,6 @@
+node_modules
+*.pyj-cached
+modules/modules.pyj
+modules/controllers.pyj
+main
+package-lock.json

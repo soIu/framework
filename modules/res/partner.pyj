@@ -1,0 +1,36 @@
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+from ir.ui import menu, view
+class ResPartner(models.Model):
+    _name = 'res.partner'
+
+    name = fields.Char(string="Name", required=True)
+    email = fields.Char(string="Email")
+    phone = fields.Char(string="Phone")
+
+ResPartner()
+
+menu.add({'id': 'contact', 'string': 'Contacts', 'model': 'res.partner', 'sequence': 1})
+
+view.add({'model': 'res.partner', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="email"/>
+    <field name="phone"/>
+</tree>
+"""})
+
+view.add({'model': 'res.partner', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="phone"/>
+        </group>
+        <group>
+            <field name="email"/>
+        </group>
+    </sheet>
+</form>
+"""})
