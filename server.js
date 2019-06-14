@@ -57,13 +57,13 @@ if (process.env.custom_modules !== undefined && process.env.custom_modules !== f
     }
 }
 var pipe;
-if (process.argv.indexOf('--serverless') === -1 && require.main === module) {
-    command += ' -x server.pyj';
-    pipe = 'inherit';
-} else {
+if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     command += ' server.pyj'
     pipe = 'pipe';
     process.env.serverless = true;
+} else {
+    command += ' -x server.pyj';
+    pipe = 'inherit';
 }
 if (process.argv.indexOf('--clear-cache') !== -1) {
     var clear_command = 'find . -name "*.pyj-cached" -type f -delete';
@@ -83,14 +83,17 @@ if (process.argv.indexOf('--debug') !== -1) {
                 module.instantiate();
                 return module.evaluate()
             }).catch(function (error) {
-                console.log('dor');
-                if (module.status === 'errored') {
+                if (module.status === 'errored' && error.stack.indexOf('vm:module(0)') !== -1) {
                     var line_end = parseInt(error.stack.split('\n')[1].split('vm:module(0):')[1].split(':')[0]);
                     var line_start = line_end - 15;
                     codes = args[0].split(/\n/);
                     line_end += 10;
                     var code = codes.slice(line_start, line_end).join('\n');
+                    console.error(error);
                     console.error("\nCorresponding error lines:\n\n" + code + '\n\n');
+                }
+                else {
+                    console.error(error);
                 }
             });
         }
@@ -103,7 +106,7 @@ if (process.argv.indexOf('--debug') !== -1) {
         process.exit();
     }
 }
-if (process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
+if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
     if (process.argv.indexOf('--print-file') !== -1) {
        console.log(result.toString());
