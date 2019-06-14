@@ -106,7 +106,7 @@ if (process.argv.indexOf('--debug') !== -1) {
         process.exit();
     }
 }
-if (process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
+if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
     if (process.argv.indexOf('--print-file') !== -1) {
        console.log(result.toString());
