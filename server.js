@@ -58,12 +58,12 @@ if (process.env.custom_modules !== undefined && process.env.custom_modules !== f
 }
 var pipe;
 if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
-    command += ' -x server.pyj';
-    pipe = 'inherit';
-} else {
     command += ' server.pyj'
     pipe = 'pipe';
     process.env.serverless = true;
+} else {
+    command += ' -x server.pyj';
+    pipe = 'inherit';
 }
 if (process.argv.indexOf('--clear-cache') !== -1) {
     var clear_command = 'find . -name "*.pyj-cached" -type f -delete';
