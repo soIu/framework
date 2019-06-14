@@ -53,6 +53,18 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def is_array(object):
+    return Array.isArray(object)
+
+def is_json(object):
+    if v'typeof object' == 'object' and object != None:
+       if v'typeof Object.getPrototypeOf' == 'function':
+          prototype = Object.getPrototypeOf(object)
+          return prototype == Object.prototype or prototype == None
+       else:
+          return Object.prototype.toString.call(object) == '[object Object]'
+    return False
+
 def queue(values, method):
     v'var index = 0'
     def next():

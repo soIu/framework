@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, array, date, queue
+from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json
 from orm.pouchdb import db
 
 env = {}
@@ -29,8 +29,7 @@ class Model():
 
     def __init__(self, _is_env, _is_singleton):
         self._fields = {}
-        self._values = {}
-        self._mapped_values = {}
+        self._values = [{}]
         self._related = {}
         self._one2many_fields = []
         self._is_env = _is_env if _is_env != undefined else False
@@ -82,9 +81,10 @@ class Model():
         self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
         self._rev = fields.Char(string="DB Revision Number")
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
-        for key in valid_fields:
+        queue(valid_fields,
+        def (key):
             if not exist(self[key]) or type(self[key]) != Object or (type(self[key]) == Object and 'compute' not in self[key]):
-               continue
+               return next()
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
@@ -106,14 +106,29 @@ class Model():
                   if not exist(self._related[self._fields[key].related]):
                      self._related[self._fields[key].related] = []
                   self._related[self._fields[key].related].push(key)
-               self[key] = self._fields[key].defaults
-               self._values[key] = self[key]
-               #Once more disable getter and setter, massive bugs
-               """Object.defineProperty(self, key, {
-               'get': def(): return self._values[key]
-               ,
-               'set': def(value): self._values[key] = self.adapt(key, value)
-               }})"""
+               self._values[0][key] = self[key].defaults
+            #self[key] = self._fields[key].defaults
+            del self[key]
+            Object.defineProperty(self, key, {
+              'get':
+              def ():
+                  ids = self.ids
+                  if ids.length == 0:
+                     return self._values[0][key]
+                  elif ids.length == 1:
+                     return self._values[ids[0]][key]
+                  return self[key].defaults
+              ,
+              'set':
+              def (value):
+                  ids = self.ids
+                  if ids.length == 0:
+                     self._values[0][key] = self.adapt(key, value)
+                  elif ids.length == 1:
+                     self._values[ids[0]][key] = self.adapt(key, value)
+            })
+            next()
+        )
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
         try:
@@ -137,54 +152,49 @@ class Model():
         'set': def (): return
         })
         Object.defineProperty(self, 'values', {
-        'get': def (): 
-                   if type(self._values).name not in [types.name for types in array]:
-                      self._values._search_count = self._search_count
-                      self._mapped_values[self._values.id] = self._values
+        'get': def ():
+                   values = self._values
+                   if values.length == 1:
+                      values = self._values[0]     
+                      values._search_count = self._search_count
                    else:
-                      for value in self._values:
+                      for value in values:
                           value._search_count = self._search_count
-                          self._mapped_values[value.id] = value
-                   return self._values
+                   return values
         ,
-        'set': def (newvalue):
-                   if not exist(newvalue):
+        'set': def (new_value):
+                   if not exist(new_value):
                       return
-                   if type(newvalue).name not in [types.name for types in array]:
+                   if not is_array(new_value):
                       self._is_singleton = True
-                      if type(newvalue).name in [types.name for types in array]:
-                         self._values = {}
-                      oldvalue = copy(self._values)
-                      if newvalue.id:
-                         newvalue.id = newvalue.id.toString()
-                      self._values =  newvalue
-                      for key in oldvalue:
-                          if key not in newvalue:
-                             self._values[key] = oldvalue[key]
+                      if self._values.length != 1:
+                         self._values = [{}]
                       for key in self._fields:
-                          if key in newvalue:
-                             self[key] = self.adapt(key, newvalue[key])
-                      #if exist(newvalue._search_count):
-                      #   self._search_count = newvalue._search_count
+                          if key in new_value:
+                             self._values[0][key] = self.adapt(key, new_value[key], new_value)
+                      if new_value.id: self._values[new_value.id] = self._values[0]
                    else:
-                      #if exist(newvalue):
-                      #   self._search_count = newvalue[0]._search_count
+                      #if exist(new_value):
+                      #   self._search_count = new_value[0]._search_count
                       self._is_singleton = False
-                      for value in newvalue:
+                      new_array = []
+                      for value in new_value:
                           for key in self._fields:
                               if key in value:
-                                 value[key] = self.adapt(key, value[key])
-                      self._values = newvalue
-                      #self.ids = [object.id for object in newvalue]
+                                 value[key] = self.adapt(key, value[key], value)
+                          if value.id: self._values[value.id] = value
+                          new_array.push(value)
+                      self._values = new_array
+                      #self.ids = [object.id for object in new_value]
         })
         Object.defineProperty(self, 'length', {'get':
         def (): 
             if self._is_env:
                return 0
             elif self._is_singleton:
-               if not exist(self.id) or not exist(self.values):
-                  return 0
-               return 1
+               if exist(self.id) or Object.keys(self._values[0]).length > 0:
+                  return 1
+               return 0
             else:
                return self._values.length
         })
@@ -244,7 +254,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}, self._context).then(
            def (result):
                console.log(result)
-               record = self.browse(is_singleton=type(result.values) not in array)
+               record = self.browse(is_singleton=not is_array(result.values))
                record.values = result.values
                if result.values.map:
                   record._search_count = result.values[0]._search_count
@@ -286,7 +296,7 @@ class Model():
                configuration.warning(error, True)
                return self.browse(ids, is_client=False)
            )
-        elif type(ids).name in [types.name for types in array]:
+        elif is_array(ids):
            #result = self.browse()
            if ids.length > 1:
               v'var result = new self.constructor(false, false)'
@@ -301,7 +311,7 @@ class Model():
            else:
               ids = ids[0]
         if type(ids) == String:
-           result = self.browse()
+           result = self.env[self._name]
            #return db.get(db.rel.makeDocID({'type': result._name, 'id': ids})).then(
            return db.rel.find(result._name, ids).then(
            def (record):
@@ -310,7 +320,7 @@ class Model():
                #record.data.id = db.rel.parseDocID(record._id).id
                #record.data.rev = record._rev
                result.values = record[result._name][0]#.data
-               result._search_count = 1
+               result._search_count = record[result._name].length
                return result
            )
         return result
@@ -331,7 +341,7 @@ class Model():
            options.fields = Object.keys(self._fields)
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
            def (result):
-               record = self.browse(is_singleton=type(result.values) not in array)
+               record = self.browse(is_singleton=not is_array(result.values))
                record.values = result.values
                if result.values.map:
                   record._search_count = result.values[0]._search_count
@@ -368,9 +378,9 @@ class Model():
                    results.push(record[arg[0]] < arg[2])
                 elif arg[1] == '<=':
                    results.push(record[arg[0]] <= arg[2])
-                elif arg[1] == 'in' and Array.isArray(arg[2]):
+                elif arg[1] == 'in' and is_array(arg[2]):
                    results.push(record[arg[0]] in arg[2])
-                elif arg[1] == 'not in' and Array.isArray(arg[2]):
+                elif arg[1] == 'not in' and is_array(arg[2]):
                    results.push(record[arg[0]] not in arg[2])
                 elif arg[1] == 'like':
                    results.push(arg[2] in record[arg[0]])
@@ -388,7 +398,7 @@ class Model():
                def (result):
                    return result == True
                )
-        result = self.browse()
+        result = self.env[self._name]
         if options.limit == 1:
            if options.index > 0:
               return Promise(
@@ -434,7 +444,7 @@ class Model():
                          result.sort_by(order, desc)
                   return result
                else:
-                  result = self.browse()
+                  result = self.env[self._name]
                   if options.index > 0:
                      return result
                   record = records[result._name].find(query)
@@ -452,9 +462,9 @@ class Model():
     def read(self, format):
         if format:
            promises = []
-           values = self._values#copy(self._values)
+           values = self.values#copy(self._values)
            new_values = []
-           if type(self._values).name not in [types.name for types in array]:
+           if not is_array(values):
               values = [values]
            for value in values:
                oldvalue = value
@@ -490,11 +500,12 @@ class Model():
            )
         if self._is_env:
            return {}
-        return self._values#{key: self.adapt(key, self[key]) for key in self._fields}
+        return copy(self.values)#{key: self.adapt(key, self[key]) for key in self._fields}
 
-    def adapt(self, key, value):
+    def adapt(self, key, value, values):
         if self._is_env:
            return
+        if not values: values = self._values[0] if self._values.length < 2 else {}
         #if key == 'id':
         #   value = self._fields[key].value
         if self._fields[key].type in ['char', 'text']:
@@ -546,7 +557,7 @@ class Model():
               return None
            elif v'value instanceof env.Model' == True:
               value = value.id
-           elif type(value) in [ρσ_list_constructor, Array] and value.length > 0:
+           elif is_array(value) and value.length > 0:
                 value = value[0]
         elif self._fields[key].type in ['many2many', 'one2many']:
            if not exist(value):
@@ -557,11 +568,11 @@ class Model():
         if self._fields[key].store in [True, None]:
            if exist(self._fields[key].related):
               self[self._fields[key].related] = value
-              self._values[self._fields[key].related] = value
+              values[self._fields[key].related] = value
            if exist(self._related[key]):
               for field in self._related[key]:
                   self[field] = value
-                  self._values[field] = value
+                  values[field] = value
         return value
 
     def update(self, values=False):
@@ -569,17 +580,11 @@ class Model():
            return
         if not exist(values):
            if self._is_singleton:
-              values = {key: self[key] for key in self._fields}
+              return
            else:
               values = {}
-        for key in values:
-            if key == '_search_count': continue
-            value = self.adapt(key, values[key])
-            if self._is_singleton:
-               self._values[key] = value
-            else:
-               for object in self._values:
-                   object[key] = value
+        self.values = values
+        return self
 
     def queue(self, method):
         if self._is_env or not exist(self):
@@ -592,15 +597,14 @@ class Model():
                return method(records[index], next)
             return self
         result = method(records[index], next)
-        #self.values = [record._values for record in records]
         return result
 
     def create(self, values=False, is_client=configuration.client):
         self.update()
         if not exist(values):
            values = self.read()
-        else:
-           values = merge(self.read(), values)
+        if not exist(values) and self.length < 1:
+           return
         if self._is_env:
            self = self.browse()
            self.update(values)
@@ -621,26 +625,35 @@ class Model():
         del values['rev']
         del values['_id']
         del values['_rev']
-        return db.rel.save(self._name, values).then(
-        def (record):
+        def process_result(record):
             #queryInverse(self._name, record, self._one2many_fields, self._fields)
             self.values = record[self._name][0]
             return self
-        )
-        #return self
+        if is_array(values):
+           promises = []
+           for value in values:
+               promise = db.rel.save(self._name, value).then(process_result)
+               promises.push(promise)
+           records = self.browse()
+           return Promise.all(promises).then(
+           def (recordsets):
+               for record in recordsets:
+                   records.add(record)
+               return records
+           )
+        return db.rel.save(self._name, values).then(process_result)
 
     def write(self, values=False, is_client=configuration.client):
         if not exist(self.id) and not exist(self.ids):
            return self
         self.update()
         if not exist(values):
-           if not self._is_singleton:
-              return
            values = self.read()
-        else:
-           #merge(self.read(), values)
+        elif self.length < 2:
            self.update(values)
            values = self.read()
+        if not exist(values) and self.length < 1:
+           return
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
            def (result):
@@ -654,7 +667,7 @@ class Model():
                #return Exception("There are some error")
                raise error
            )
-        if self._is_singleton:
+        if self.length == 1 and is_json(values):
            return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
            def (record):
                #return db.put(merge(values, {'_id': record._id, '_rev': record._rev}))
@@ -668,21 +681,22 @@ class Model():
                    return self
                )
            )
+        elif self.length != values.length:
+           return
         else:
-           return self.queue(
-           def (record, next):
-               return record.write().then(
-               def (result):
-                   return next()
-               )
+           promises = []
+           index = 0
+           for record in self:
+               promise = record.write(values[index])
+               promises.push(promise)
+               index += 0
+           records = self.browse()
+           return Promise.all(promises).then(
+           def (recordsets):
+               for record in recordsets:
+                   records.add(record)
+               return records
            )
-           #for value in values:
-           #    values._id = db.rel.makeDocID({'type': self._name, 'id': value.id})
-           #Turn out bulkDocs and db.put doesn't work on realational-pouch
-           #return db.bulkDocs(values).then(
-           #def (record):
-           #    self.values = record
-           #)
         return self
 
     def unlink(self, is_client=configuration.client):
@@ -700,14 +714,18 @@ class Model():
                raise error
            )
         if self._is_singleton:
-           db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
+           return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
            def (record):
                db.remove(record)
            )
         else:
-           for value in self._values:
-               value['_deleted'] = True
-           db.bulkDocs(self._values)
+           processes = []
+           for record in self:
+               processes.push(record.unlink())
+           return Promise.all(processes)
+           #for value in self._values:
+           #    value['_deleted'] = True
+           #return db.bulkDocs(self._values)
         return True
 
     def sudo(self, uid):
@@ -744,7 +762,7 @@ class Model():
     def add(self):
         ids = self.ids
         unsaved_records = []
-        values = self.values if Array.isArray(self.values) else [self.values]
+        values = self.values if is_array(self.values) else [self.values]
         recordsets = Array.prototype.slice.call(arguments)
         for records in recordsets:
             if records._name != self._name:
@@ -755,11 +773,11 @@ class Model():
                    if record.id in ids: continue
                    ids.push(record.id)
                 else:
-                   if unsaved_records.indexOf(record._values) != -1: continue
+                   if unsaved_records.indexOf(record.values) != -1: continue
                    unsaved_records.push(record.values)
                 values.push(record.values)
         self.values = values if values.length > 1 else values[0]
         return self
 
     def find(self, id):
-        return self._mapped_values[id] or self.browse()
+        return self._values[id] or self.env[self._name]
