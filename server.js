@@ -57,7 +57,7 @@ if (process.env.custom_modules !== undefined && process.env.custom_modules !== f
     }
 }
 var pipe;
-if (process.argv.indexOf('--serverless') === -1 && require.main === module) {
+if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     command += ' -x server.pyj';
     pipe = 'inherit';
 } else {
