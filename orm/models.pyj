@@ -453,6 +453,7 @@ class Model():
         if format:
            promises = []
            values = self._values#copy(self._values)
+           new_values = []
            if type(self._values).name not in [types.name for types in array]:
               values = [values]
            for value in values:
@@ -460,6 +461,7 @@ class Model():
                value = copy(value)
                if not value.id:
                   value._original_object_for_id = oldvalue
+               new_values.push(value)
                queue(keys(value),
                def (key, next):
                    field = self._fields[key]
@@ -484,7 +486,7 @@ class Model():
                )
            return Promise.all(promises).then(
            def ():
-               return values
+               return new_values
            )
         if self._is_env:
            return {}
