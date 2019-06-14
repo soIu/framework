@@ -83,14 +83,17 @@ if (process.argv.indexOf('--debug') !== -1) {
                 module.instantiate();
                 return module.evaluate()
             }).catch(function (error) {
-                console.log('dor');
-                if (module.status === 'errored') {
+                if (module.status === 'errored' && error.stack.indexOf('vm:module(0)') !== -1) {
                     var line_end = parseInt(error.stack.split('\n')[1].split('vm:module(0):')[1].split(':')[0]);
                     var line_start = line_end - 15;
                     codes = args[0].split(/\n/);
                     line_end += 10;
                     var code = codes.slice(line_start, line_end).join('\n');
+                    console.error(error);
                     console.error("\nCorresponding error lines:\n\n" + code + '\n\n');
+                }
+                else {
+                    console.error(error);
                 }
             });
         }
