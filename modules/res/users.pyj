@@ -101,4 +101,7 @@ def check_admin():
        ).catch(
        def (error):
            return create_admin()
+       ).catch(
+       def (error):
+           console.log(error)
        )

@@ -163,15 +163,18 @@ class Model():
                    return values
         ,
         'set': def (new_value):
+                   if new_value and '_search_count' in new_value:
+                      del new_value._search_count
                    if not exist(new_value):
                       return
+                   self._is_env = False
                    if not is_array(new_value):
                       self._is_singleton = True
                       if self._values.length != 1:
                          self._values = [{}]
                       for key in self._fields:
                           if key in new_value:
-                             self._values[0][key] = self.adapt(key, new_value[key], new_value)
+                             self._values[0][key] = self.adapt(key, new_value[key], self._values[0][key])
                       if new_value.id: self._values[new_value.id] = self._values[0]
                    else:
                       #if exist(new_value):
@@ -239,22 +242,22 @@ class Model():
     def __view__(self, view, view_type):
         return view
 
-    def browse(self, ids=False, is_singleton=True, is_client=configuration.client):
+    def browse(self, ids=False, is_singleton=True, is_client=configuration.client, is_env=False):
         if not exist(ids):
            if ids in [[], None, undefined]:
               return Promise(
               def (resolve, reject):
-                   #resolve(v'new self.constructor(false, is_singleton)')
+                   #resolve(v'new self.constructor(is_env, is_singleton)')
                    resolve(self.env[self._name])
               )
-           result = v'new self.constructor(false, is_singleton)'
+           result = v'new self.constructor(is_env, is_singleton)'
            result._context = self._context
            return result
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}, self._context).then(
            def (result):
                console.log(result)
-               record = self.browse(is_singleton=not is_array(result.values))
+               record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
                if result.values.map:
                   record._search_count = result.values[0]._search_count
@@ -341,7 +344,7 @@ class Model():
            options.fields = Object.keys(self._fields)
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
            def (result):
-               record = self.browse(is_singleton=not is_array(result.values))
+               record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
                if result.values.map:
                   record._search_count = result.values[0]._search_count
@@ -422,7 +425,7 @@ class Model():
         else:
            return db.rel.find(result._name).then(
            def (records):
-               v'var result = new self.constructor(false, false)'
+               v'var result = new self.constructor(true, false)'
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
                result._search_count = records[result._name].length
                if records[result._name].length > 1:
@@ -503,8 +506,6 @@ class Model():
         return copy(self.values)#{key: self.adapt(key, self[key]) for key in self._fields}
 
     def adapt(self, key, value, values):
-        if self._is_env:
-           return
         if not values: values = self._values[0] if self._values.length < 2 else {}
         #if key == 'id':
         #   value = self._fields[key].value
@@ -760,11 +761,12 @@ class Model():
     def add(self):
         ids = self.ids
         unsaved_records = []
-        values = self.values if is_array(self.values) else [self.values]
+        values = self.values if is_array(self.values) else [self.values] if self.length > 0 else []
         recordsets = Array.prototype.slice.call(arguments)
         for records in recordsets:
             if records._name != self._name:
                raise Exception('Not the same model')
+            if records.length < 1: continue
             if not records.id: records = [records]
             for record in records:
                 if record.id:
@@ -773,6 +775,7 @@ class Model():
                 else:
                    if unsaved_records.indexOf(record.values) != -1: continue
                    unsaved_records.push(record.values)
+                if configuration.client: console.error(record.values)
                 values.push(record.values)
         self.values = values if values.length > 1 else values[0]
         return self
