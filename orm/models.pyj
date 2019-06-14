@@ -82,7 +82,7 @@ class Model():
         self._rev = fields.Char(string="DB Revision Number")
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
         queue(valid_fields,
-        def (key):
+        def (key, next):
             if not exist(self[key]) or type(self[key]) != Object or (type(self[key]) == Object and 'compute' not in self[key]):
                return next()
             #if key in self._fields:
@@ -117,15 +117,15 @@ class Model():
                      return self._values[0][key]
                   elif ids.length == 1:
                      return self._values[ids[0]][key]
-                  return self[key].defaults
+                  return self._fields[key].defaults
               ,
               'set':
               def (value):
                   ids = self.ids
                   if ids.length == 0:
-                     self._values[0][key] = self.adapt(key, value)
+                     self._values[0][key] = self.adapt(key, value, self._values[0])
                   elif ids.length == 1:
-                     self._values[ids[0]][key] = self.adapt(key, value)
+                     self._values[ids[0]][key] = self.adapt(key, value, self._values[ids[0]])
             })
             next()
         )
@@ -144,8 +144,8 @@ class Model():
            return
         Object.defineProperty(self, 'ids', {
         'get': def ():
-                   if self._is_singleton:
-                      return [self.id] if self.id else []
+                   if not is_array(self.values):
+                      return [self._values[0].id] if self._values[0].id else []
                    else:
                       return [object.id.toString() for object in self.values if object.id]
         ,
@@ -567,11 +567,9 @@ class Model():
         #Related operation
         if self._fields[key].store in [True, None]:
            if exist(self._fields[key].related):
-              self[self._fields[key].related] = value
               values[self._fields[key].related] = value
            if exist(self._related[key]):
               for field in self._related[key]:
-                  self[field] = value
                   values[field] = value
         return value
 

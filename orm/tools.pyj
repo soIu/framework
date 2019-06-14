@@ -46,7 +46,7 @@ def checkBase64(string):
 def exist(object):
     if object in ['', False, None, undefined, 0.0, {}, []]:
        return False
-    elif v'typeof object == "object"' and v'typeof object.length == "number"':
+    elif v'typeof object === "object"' and v'typeof object.length === "number"':
        return object.length > 0
     return True
 
