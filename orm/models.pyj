@@ -174,7 +174,7 @@ class Model():
                          self._values = [{}]
                       for key in self._fields:
                           if key in new_value:
-                             self._values[0][key] = self.adapt(key, new_value[key], self._values[0][key])
+                             self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
                       if new_value.id: self._values[new_value.id] = self._values[0]
                    else:
                       #if exist(new_value):
