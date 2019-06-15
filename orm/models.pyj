@@ -594,6 +594,8 @@ class Model():
         if self._is_env:
            return
         if not exist(values): return
+        if is_array(values):
+           self.values = values
         for record in self:
             for key in values:
                 if self._fields[key]:
