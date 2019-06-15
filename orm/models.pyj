@@ -175,7 +175,9 @@ class Model():
                       for key in self._fields:
                           if key in new_value:
                              self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
-                      if new_value.id: self._values[new_value.id] = self._values[0]
+                      if new_value.id:
+                         self._values[new_value.id] = self._values[0]
+                         self._values[0].id = new_value.id
                    else:
                       #if exist(new_value):
                       #   self._search_count = new_value[0]._search_count
@@ -185,7 +187,8 @@ class Model():
                           for key in self._fields:
                               if key in value:
                                  value[key] = self.adapt(key, value[key], value)
-                          if value.id: self._values[value.id] = value
+                          if value.id: 
+                             self._values[value.id] = value
                           new_array.push(value)
                       self._values = new_array
                       #self.ids = [object.id for object in new_value]
