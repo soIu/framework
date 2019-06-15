@@ -7,7 +7,7 @@ import NotFound from './components/pages/NotFound';
 import PanelLeft from './components/pages/PanelLeft';
 import PanelRight from './components/pages/PanelRight';
 
-export default [
+const routes = () => window.models ? [
   {
     path: '/',
     component: HomePage,
@@ -40,4 +40,6 @@ export default [
     path: '(.*)',
     component: NotFound,
   },
-];
+] : [{path: '(.*)', component: HomePage}];
+
+export default routes;

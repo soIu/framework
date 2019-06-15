@@ -89,6 +89,7 @@ async function update_session(new_session) {
 async function login(args) {
   args.encrypted = args.encrypted ? true: false;
   const session = await ajax('post', 'json', window.localStorage.rapyd_server_url + '/api/login', args);
+  console.log(session);
   if (session.status === 'denied') {
     return false;
   }

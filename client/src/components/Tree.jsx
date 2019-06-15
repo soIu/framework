@@ -43,22 +43,41 @@ export default class extends React.Component {
       return false;
     }
     this.isEditable = isEditable;
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable}));
+    function onChange(params) {
+      if (params.newValue != params.oldValue) {
+        const value = params.newValue;
+        const record = params.data.id ? window.models.env.context.active_lines[this.state.model][this.state.tree_field].find(params.data.id) : this.state.new_records.values === params.data._original_object_for_id && this.state.new_records || Array.from(this.state.new_records.__iter__()).find((record) => record.values === params.data._original_object_for_id);
+        record[params.colDef.field] = value;
+      }
+    }
+    function handleOutside(event) {
+      if (this.refs.grid && !this.refs.grid.base.contains(event.target) && this.gridOptions) this.gridOptions.api.stopEditing();
+    }
+    this.handleOutside = handleOutside.bind(this);
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, onCellValueChanged: onChange.bind(this)}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
     const records = [];
-    this.state = {fields: fields, records: records, new_records: [], limit: 50, model: model};
+    this.state = {fields: fields, records: records, new_records: window.models.env[model], updated_records: {}, limit: 50, model: model};
     if (props.field) {
       this.state.tree_field = props.field;
     }
+  }
+
+  componentDidMount() {
+    document.addEventListener('mousedown', this.handleOutside);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mousedown', this.handleOutside);
   }
 
   paginate(rows, index=0) {
     if (rows.length < 1) {
       return rows;
     }
-    rows = rows.concat(this.state.new_records)
+    //rows = rows.concat(this.state.new_records)
     const count = rows[0]._search_count;
     if (index > 0) {
       let pushed = 0;
@@ -172,8 +191,22 @@ export default class extends React.Component {
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       const records = await models.env[this.state.model].search(...args);
+      if (!this.props.isTreeView) {
+        if (!models.env.context.active_lines) models.env.context.active_lines = {};
+        if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
+        if (!models.env.context.active_lines[this.state.model][this.state.tree_field]) {
+          models.env.context.active_lines[this.state.model][this.state.tree_field] = records;
+        }
+        else {
+          records = models.env.context.active_lines[this.state.model][this.state.tree_field].add(records);
+        }
+      }
+      else {
+        console.log(records.length);
+        console.log(this.state.new_records.length);
+        records.add(this.state.new_records);
+      }
       if (records.length > 0) {
-        console.log(args)
         this.setState({records: this.paginate(await records.read(true), index)})
       }
     }
@@ -186,10 +219,13 @@ export default class extends React.Component {
   async addItem() {
     if (!this.isEditable()) return;
     const record = window.models.env[this.state.model].browse();
-    this.state.new_records.push(record.values);
-    this.state.records.push(record.values);
+    const values = await record.read(true);
+    this.state.new_records.add(record);
+    this.state.records.push(values[0]);
+    if (!this.props.treeView) window.models.env.context.active_lines[this.state.model][this.state.tree_field].add(record);
     await this.setState({records: this.state.records, new_records: this.state.new_records});
-    this.gridOptions.api.updateRowData({add: [record.values]});
+    window.c = this.state;
+    this.gridOptions.api.updateRowData({add: values});
     //console.log(this.gridOptions.api.redrawRows());
     //return this.paging.bind(this)(0, {});
   }
@@ -199,7 +235,7 @@ export default class extends React.Component {
     const models = window.models;
     const grid = (
       <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) + 'px' : '67vh'}}>
-        <Grid onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records}/>
+        <Grid ref="grid" onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records}/>
         {!props.isTreeView &&
         <Button onClick={this.addItem.bind(this)} style={{display: 'inline-block', top: '-45px'}}>Add</Button>
         //<Icon style={{color: '#4e4e4e', float: 'right', marginRight: '18px'}} material="add_circle"/>
