@@ -167,10 +167,11 @@ class Model():
                       del new_value._search_count
                    if not exist(new_value):
                       return
+                   is_env = self._is_env
                    self._is_env = False
                    if not is_array(new_value):
                       self._is_singleton = True
-                      if self.length != 1:
+                      if self.length != 1 or is_env:
                          self._values = [new_value]
                       for key in self._fields:
                           if key in new_value:
