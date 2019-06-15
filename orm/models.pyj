@@ -74,12 +74,11 @@ class Model():
            self.constructor.prototype.name = copy(self[self._rec_name])
            self.constructor.prototype.name.related = self._rec_name
            self.constructor.prototype.name.store = True
-        if self._is_singleton:
-           self.id = fields.Char(string="ID", related='_id', store=True)
-           self._id = fields.Char(string="ID (Raw)")
+        self._fields.id = fields.Char(string="ID", related='_id', store=True)
+        self._fields._id = fields.Char(string="ID (Raw)")
         self._fields.ids = fields.Data(string="IDs")
-        self.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
-        self._rev = fields.Char(string="DB Revision Number")
+        self._fields.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
+        self._fields._rev = fields.Char(string="DB Revision Number")
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
         queue(valid_fields,
         def (key, next):
