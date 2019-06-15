@@ -596,6 +596,7 @@ class Model():
         if not exist(values): return
         if is_array(values):
            self.values = values
+           return
         for record in self:
             for key in values:
                 if self._fields[key]:
