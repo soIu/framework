@@ -170,8 +170,7 @@ class Model():
                    self._is_env = False
                    if not is_array(new_value):
                       self._is_singleton = True
-                      if self.length != 1 or self.ids.length != 1:
-                         self._values = [new_value]
+                      self._values = [new_value]
                       for key in self._fields:
                           if key in new_value:
                              self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
@@ -580,12 +579,10 @@ class Model():
     def update(self, values=False):
         if self._is_env:
            return
-        if not exist(values):
-           if self._is_singleton:
-              return
-           else:
-              values = {}
-        self.values = values
+        if not exist(values): return
+        for key in values:
+            if self._fields[key]:
+               self[key] = value[key]
         return self
 
     def queue(self, method):
