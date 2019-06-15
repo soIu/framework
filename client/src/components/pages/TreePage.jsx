@@ -17,7 +17,6 @@ function parseView(view, model) {
       for (let attribute of element.attributes) {
         props[attribute.name] = attribute.value;
       }
-      console.log(element.tagName);
       props.isTreeView = true;
       components.push(React.createElement(component, props, recurse(element.children)));
     }

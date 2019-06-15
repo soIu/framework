@@ -227,3 +227,11 @@ div:focus {
 .selectivity-dropdown {
     position: unset;
 }
+
+.ag-theme-material .ag-cell-inline-editing {
+    max-width: 400px;
+}
+
+.ag-theme-material .ag-paging-panel {
+    border-top: none;
+}

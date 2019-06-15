@@ -32,7 +32,7 @@ export default function (props) {
     name: 'App', // App name
     theme: 'md', // Automatic theme detection
     // App routes
-    routes,
+    routes: routes(),
     panel: {
       leftBreakpoint: 960,
     },
