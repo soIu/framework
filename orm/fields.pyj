@@ -26,19 +26,16 @@ def Binary(string, **args):
 #Boolean will be stored True or False and Binary will be stored as base64 (btoa and atob), or should we store it with just plain Buffer/Blob? (remember https://pouchdb.com/faq.html#data_types not all browsers support storing Blob)
 
 def Many2one(relation, string, **args):
-    return merge({'type': 'many2one', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
-
+    return merge({'type': 'many2one', 'relation': relation, 'ondelete': 'cascade', 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2many(relation, inverse, string, **args):
-    return merge({'type': 'one2many', 'relation': relation, 'inverse': inverse, 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
-
+    return merge({'type': 'one2many', 'relation': relation, 'ondelete': 'cascade', 'inverse': inverse, 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Many2many(relation, string, **args):
-    return merge({'type': 'many2many', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
-
+    return merge({'type': 'many2many', 'relation': relation, 'ondelete': 'cascade', 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2one(relation, string, **args):
-    return merge({'type': 'one2one', 'relation': relation, 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'one2one', 'relation': relation, 'ondelete': 'cascade', 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Selection(*selection, **args):
     return merge({'type': 'selection', 'selection': selection, 'string': args.string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
