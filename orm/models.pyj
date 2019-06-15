@@ -517,7 +517,7 @@ class Model():
            )
         if self._is_env:
            return {}
-        if self.length > 1: return [self.read() for record in self]
+        if self.length > 1: return [record.read() for record in self]
         return {key: self.adapt(key, self[key]) for key in self.values if key in self._fields}
 
     def adapt(self, key, value, values):
