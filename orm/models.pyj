@@ -209,9 +209,10 @@ class Model():
         #v'Object.seal(self._values)'
 
     def __iter__(self):
-        if self._is_env or self.length < 1:
+        length = self.length
+        if self._is_env or length < 1:
            return iter([])
-        elif self._is_singleton:
+        elif length == 1:
            return iter([self])
         def yield_record(self):
             for index in range(self.values.length):
@@ -580,9 +581,11 @@ class Model():
         if self._is_env:
            return
         if not exist(values): return
-        for key in values:
-            if self._fields[key]:
-               self[key] = values[key]
+        for record in self:
+            for key in values:
+                if self._fields[key]:
+                   record[key] = values[key]
+        if self.length == 1 and values.id: self._values[values.id] = self._values[0]
         return self
 
     def queue(self, method):
