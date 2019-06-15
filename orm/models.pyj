@@ -37,6 +37,7 @@ class Model():
         self._inherited_keys = []
         self._context = {}
         self._search_count = 0
+        self.toJSON = def (): return None
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
@@ -74,7 +75,7 @@ class Model():
            self.constructor.prototype.name = copy(self[self._rec_name])
            self.constructor.prototype.name.related = self._rec_name
            self.constructor.prototype.name.store = True
-        self.id = fields.Char(string="ID", related='_id', store=True)
+        self._fields.id = fields.Char(string="ID", related='_id', store=True)
         self._fields._id = fields.Char(string="ID (Raw)")
         self._fields.ids = fields.Data(string="IDs")
         self._fields.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
@@ -128,7 +129,6 @@ class Model():
             })
             next()
         )
-        del self._fields.id
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
         try:
@@ -150,6 +150,17 @@ class Model():
                       return [object.id.toString() for object in self._values if object.id]
         ,
         'set': def (): return
+        })
+        Object.defineProperty(self, 'id', {
+        'get': def ():
+                   if self._values.length == 1:
+                      return self._values[0].id if self._values[0].id else None
+        ,
+        'set': def (id): 
+                   if self._values.length == 1 and not self._values[0].id:
+                      id = id.toString()
+                      self._values[0].id = id
+                      self._values[id] = self._values[0]
         })
         Object.defineProperty(self, 'values', {
         'get': def ():
@@ -506,7 +517,8 @@ class Model():
            )
         if self._is_env:
            return {}
-        return copy(self.values)#{key: self.adapt(key, self[key]) for key in self._fields}
+        if self.length > 1: return [self.read() for record in self]
+        return {key: self.adapt(key, self[key]) for key in self.values if key in self._fields}
 
     def adapt(self, key, value, values):
         if not values: values = self._values[0] if self._values.length < 2 else {}
@@ -560,7 +572,8 @@ class Model():
            if not exist(value):
               return None
            elif v'value instanceof env.Model' == True:
-              value = value.id
+              if value.id:
+                 value = value.id
            elif is_array(value) and value.length > 0:
                 value = value[0]
         elif self._fields[key].type in ['many2many', 'one2many']:
@@ -654,7 +667,7 @@ class Model():
         elif self.length < 2:
            self.update(values)
            values = self.read()
-        if not exist(values) and self.length < 1:
+        if not exist(values) or self.length < 1:
            return
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
@@ -683,13 +696,16 @@ class Model():
                    return self
                )
            )
-        elif self.length != values.length:
+        if is_array(values) and self.length != values.length:
            return
         else:
+           value = None
+           if is_json(values):
+              value = values
            promises = []
            index = 0
            for record in self:
-               promise = record.write(values[index])
+               promise = record.write(value or values[index])
                promises.push(promise)
                index += 0
            records = self.browse()
