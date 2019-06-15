@@ -37,7 +37,7 @@ class Model():
         self._inherited_keys = []
         self._context = {}
         self._search_count = 0
-        self.toJSON = def (): return None
+        self.toJSON = def (): return self.ids
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
