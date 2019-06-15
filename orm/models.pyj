@@ -147,7 +147,7 @@ class Model():
                    if not is_array(self.values):
                       return [self._values[0].id] if self._values[0].id else []
                    else:
-                      return [object.id.toString() for object in self.values if object.id]
+                      return [object.id.toString() for object in self._values if object.id]
         ,
         'set': def (): return
         })
@@ -167,11 +167,10 @@ class Model():
                       del new_value._search_count
                    if not exist(new_value):
                       return
-                   is_env = self._is_env
                    self._is_env = False
                    if not is_array(new_value):
                       self._is_singleton = True
-                      if self.length != 1 or is_env:
+                      if self.length != 1 or self.ids.length != 1:
                          self._values = [new_value]
                       for key in self._fields:
                           if key in new_value:
