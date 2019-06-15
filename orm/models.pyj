@@ -492,7 +492,7 @@ class Model():
                queue(keys(value),
                def (key, next):
                    field = self._fields[key]
-                   if not field or value == None and field.type != 'float': return next()
+                   if not field or (value[key] == None and field.type != 'float'): return next()
                    if field.type in ['date', 'datetime']:
                       value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
                    elif field.type == 'float' and Number.isInteger(value[key]):
