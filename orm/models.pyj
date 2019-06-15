@@ -128,6 +128,7 @@ class Model():
             })
             next()
         )
+        del self._fields.id
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
         try:
