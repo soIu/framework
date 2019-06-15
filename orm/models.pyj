@@ -122,12 +122,13 @@ class Model():
               def (value):
                   ids = self.ids
                   if ids.length == 0:
-                     self._values[0][key] = self.adapt(key, value, self._values[0])
+                     self._values[0][key] = self.adapt(key, value, self._values[0]) if key != 'id' else id
                   elif ids.length == 1:
                      self._values[ids[0]][key] = self.adapt(key, value, self._values[ids[0]])
             })
             next()
         )
+        del self._fields.id
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
         try:
