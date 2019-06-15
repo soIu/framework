@@ -69,7 +69,7 @@ class Model():
         schema = {'singular': self._name, 'plural': self._name}
         schemas[self._name] = schema
         #Reserved fields
-        reserved = ['_id', 'rev', '_rev', 'ids']
+        reserved = ['id', '_id', 'rev', '_rev', 'ids']
         if self.name == undefined and self._rec_name != 'name':
            self.constructor.prototype.name = copy(self[self._rec_name])
            self.constructor.prototype.name.related = self._rec_name
