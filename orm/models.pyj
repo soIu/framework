@@ -582,7 +582,7 @@ class Model():
         if not exist(values): return
         for key in values:
             if self._fields[key]:
-               self[key] = value[key]
+               self[key] = values[key]
         return self
 
     def queue(self, method):
