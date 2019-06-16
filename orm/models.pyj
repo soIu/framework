@@ -806,7 +806,7 @@ class Model():
             if records._name != self._name:
                raise Exception('Not the same model')
             if records.length < 1: continue
-            if not records.id: records = [records]
+            #if not records.id: records = [records]
             for record in records:
                 if record.id:
                    if record.id in ids: continue
