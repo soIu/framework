@@ -18,6 +18,8 @@ export default class extends React.Component {
   async componentDidMount(props) {
     const model = window.models.env.context.active_model;
     const models = window.models;
+    models.env.context.active_lines = {};
+    models.env.context.active_task = [];
     if (!models.env.context.active_ids || models.env.context.active_ids.length < 1 || !models.env.context.active_ids[0]) {
       models.env.context.active_id = models.env[model].browse();
       models.env.context.editing = true;
@@ -40,8 +42,24 @@ export default class extends React.Component {
       models.env.context.editing = true;
       return await this.setState({...models.env.context, offline});
     }
+    let promises = [];
+    for (let task of models.env.context.active_task) {
+      const result = task();
+      if (result && result.constructor === Promise) await result;//promises.push(result);
+    }
+    //await Promise.all(promises);
     const operation = models.env.context.active_id.id ? 'write' : 'create';
     await models.env.context.active_id[operation]({}, !offline);
+    if (operation === 'create') {
+      window.history.replaceState(undefined, undefined, window.location.hash + '?id=' + models.env.context.active_id.id);
+      promises = [];
+      for (let model in models.env.context.active_lines) {
+        for (let inverse_field in models.env.context.active_lines[model]) {
+          promises.push(models.env.context.active_lines[model][inverse_field].write({[inverse_field]: models.env.context.active_id.id}));
+        }
+      }
+      await Promise.all(promises);
+    }
     models.env.context.editing = false;
     if (offline) models.env.context.unsaved = {...models.env.context.unsaved, [model]: {...(models.env.context.unsaved && models.env.context.unsaved[model]), [models.env.context.active_id.id]: models.env.context.active_id.id}};
     await api.update_session({unsaved: models.env.context.unsaved});
@@ -83,6 +101,7 @@ export default class extends React.Component {
               <span style={{color: '#666666'}}>{' / ' + (this.state.active_id && this.state.active_id.id ? this.state.active_id.name : 'New')}</span>
               <div>
                 <Button onClick={this.edit.bind(this)} style={buttonStyle} fill>{this.state.editing ? 'Save' : 'Edit'}</Button>
+                <Button onClick={() => api.globals.app.router.back()} style={{...buttonStyle, ...(!this.state.editing ? {display: 'none'} : {})}}>{'Cancel'}</Button>
                 <Button onClick={this.upload.bind(this)} style={{...buttonStyle, ...uploadStyle}} fill>{'Upload'}</Button>
               </div>
             </div>

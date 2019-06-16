@@ -10,7 +10,7 @@ export default class extends React.Component {
   }
 
   async componentDidMount(props) {
-    api.locals.app = this.$f7;
+    api.globals.app = this.$f7;
     this.setState({'name': await window.models.env.user.browse(window.models.env.user.id.toString()).then((record) => record.name)});
   }
 

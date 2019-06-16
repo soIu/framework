@@ -6,8 +6,8 @@ import api from 'api';
 let hide = false;
 
 function hidePanel() {
-  api.locals.app.params.panel.leftBreakpoint = hide ? 768 : 1000000;
-  api.locals.app.panel.left.initBreakpoints();
+  api.globals.app.params.panel.leftBreakpoint = hide ? 768 : 1000000;
+  api.globals.app.panel.left.initBreakpoints();
   hide = !hide;
 }
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import Page from './Page';
 import Grid from './Grid';
+import GridEditor from './GridEditor';
 import {Button, Icon} from 'framework7-react';
 import api from 'api';
 
@@ -32,7 +33,6 @@ export default class extends React.Component {
     super(props);
 
     const model = props.model || window.models.env.context.active_model;
-    const children = props.children.constructor === Array ? props.children : [props.children];
     function isEditable() {
       if (props.isTreeView && !props.editable) {
         return false;
@@ -43,23 +43,50 @@ export default class extends React.Component {
       return false;
     }
     this.isEditable = isEditable;
+    this.pendingTask = {create: false, write: false, tasked: false};
+    this.pendingCreate = false;
+    this.pendingWrite = false;
     function onChange(params) {
-      if (params.newValue != params.oldValue) {
+      if (!params.colDef.cellEditorFramework && params.newValue != params.oldValue) {
         const value = params.newValue;
         const record = params.data.id ? window.models.env.context.active_lines[this.state.model][this.state.tree_field].find(params.data.id) : this.state.new_records.values === params.data._original_object_for_id && this.state.new_records || Array.from(this.state.new_records.__iter__()).find((record) => record.values === params.data._original_object_for_id);
+        if (!this.pendingTask.write && record.id) {
+          this.pendingTask.write = true;
+        }
+        else if (!this.pendingTask.write && !record.id) {
+          this.pendingTask.create = true;          
+        }
+        if (!this.pendingTask.tasked && (this.pendingTask.create || this.pendingTask.write)) {
+          this.pendingTask.tasked = true;
+          window.models.env.context.active_task.push((async () => {
+            if (this.pendingTask.create) await this.state.new_records.create();
+            if (this.pendingTask.write) await window.models.env.context.active_lines[this.state.model][this.state.tree_field].write();
+          }).bind(this));
+        }
         record[params.colDef.field] = value;
       }
     }
+    this.onChange = onChange.bind(this);
+    function onSelectionChanged(event) {
+      const selected = event.api.getSelectedRows();
+      const ids = [];
+      for (let data of selected) {
+        if (data.id) ids.push(data.id);
+      }
+      return this.setState({active_ids: ids, selected});
+    }
+    this.onSelectionChanged = onSelectionChanged.bind(this);
     function handleOutside(event) {
       if (this.refs.grid && !this.refs.grid.base.contains(event.target) && this.gridOptions) this.gridOptions.api.stopEditing();
     }
     this.handleOutside = handleOutside.bind(this);
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, onCellValueChanged: onChange.bind(this)}));
+    const children = props.children.constructor === Array ? props.children : [props.children];
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, onCellValueChanged: this.onChange, ...((['date', 'datetime'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
     const records = [];
-    this.state = {fields: fields, records: records, new_records: window.models.env[model], updated_records: {}, limit: 50, model: model};
+    this.state = {fields: fields, records: records, new_records: window.models.env[model], updated_records: {}, limit: 50, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};
     if (props.field) {
       this.state.tree_field = props.field;
     }
@@ -190,7 +217,7 @@ export default class extends React.Component {
       const args = models.env.context.active_args || (this.state.tree_field ? [[this.state.tree_field, 'in', window.models.env.context.active_ids || []]] : []);
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
-      const records = await models.env[this.state.model].search(...args);
+      let records = await models.env[this.state.model].search(...args);
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
         if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
@@ -202,13 +229,12 @@ export default class extends React.Component {
         }
       }
       else {
-        console.log(records.length);
-        console.log(this.state.new_records.length);
         records.add(this.state.new_records);
       }
       if (records.length > 0) {
-        this.setState({records: this.paginate(await records.read(true), index)})
+        await this.setState({records: this.paginate(await records.read(true), index)})
       }
+      else if (records.length === 0) await this.setState({records: []});
     }
     catch(error) {
       console.log(error);
@@ -219,27 +245,57 @@ export default class extends React.Component {
   async addItem() {
     if (!this.isEditable()) return;
     const record = window.models.env[this.state.model].browse();
+    if (window.models.env.context.active_id.id) record[this.state.tree_field] = window.models.env.context.active_id.id;
+    if (record._pending_promises.length > 0) await record._wait_promise();
     const values = await record.read(true);
     this.state.new_records.add(record);
     this.state.records.push(values[0]);
     if (!this.props.treeView) window.models.env.context.active_lines[this.state.model][this.state.tree_field].add(record);
     await this.setState({records: this.state.records, new_records: this.state.new_records});
-    window.c = this.state;
     this.gridOptions.api.updateRowData({add: values});
-    //console.log(this.gridOptions.api.redrawRows());
-    //return this.paging.bind(this)(0, {});
+  }
+
+  async removeItem() {
+    if (this.props.isTreeView) {
+      const records = await window.models.env[this.state.model].browse(this.state.active_ids);
+      await records.unlink();
+      await this.paging.bind(this)(0, {newData: false});
+      //this.gridOptions.api.updateRowData({remove: this.state.selected});
+      return this.setState({selected: []});
+    }
+    for (let data of this.state.selected) {
+      for (let index in this.state.records) {
+        if (data === this.state.records[index]) this.state.records.pop(index);
+      }
+      if (!window.models.env.context.active_id.id) {
+        const values = window.models.env.context.active_lines[this.state.model][this.state.tree_field].values;
+        if (!Array.isArray(values)) {
+          if (data._original_object_for_id === values) window.models.env.context.active_lines[this.state.model][this.state.tree_field] = window.models.env[this.state.model];
+          continue;
+        }
+        for (let index in values.as_array()) {
+          if (data._original_object_for_id === values[index]) values.pop(index);
+        }
+        continue;
+      }
+      const params = {data};
+      params.oldValue = "";
+      params.newValue = null;
+      params.colDef = {field: this.state.tree_field};
+      this.onChange(params);
+    }
+    await this.setState({records: this.state.records, selected: []});
+    this.gridOptions.api.updateRowData({remove: this.state.selected});
   }
 
   render(props) {
     const model = props.model || window.models.env.context.active_model;
     const models = window.models;
     const grid = (
-      <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 40 : 0) + 'px' : '67vh'}}>
-        <Grid ref="grid" onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records}/>
-        {!props.isTreeView &&
-        <Button onClick={this.addItem.bind(this)} style={{display: 'inline-block', top: '-45px'}}>Add</Button>
-        //<Icon style={{color: '#4e4e4e', float: 'right', marginRight: '18px'}} material="add_circle"/>
-        }
+      <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) + 'px' : '67vh'}}>
+        <Grid ref="grid" onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
+        <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() ? 'inline-block' : 'none', top: '-45px'}}>Add</Button>
+        <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px'}}>Delete</Button>
       </div>
     );
     //delete grid.props.children[0].props.onRowClicked;
