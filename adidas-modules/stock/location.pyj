@@ -7,7 +7,7 @@ class StockLocation(models.Model):
     _name = 'stock.location'
 
     name = fields.Char(string="Location Name", required=True)
-    type = fields.Selection(['vendor', 'Vendor'], ['customer', 'Customer'], ['internal', 'Internal'], string="Location Type")
+    type = fields.Selection(['vendor', 'Vendor'], ['customer', 'Customer'], ['internal', 'Internal'], string="Location Type", required=True)
     
     
 StockLocation()
