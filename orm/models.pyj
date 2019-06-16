@@ -820,3 +820,9 @@ class Model():
 
     def find(self, id):
         return self._values[id] or self.env[self._name]
+
+    def filter(self, filter_function):
+        records = self.env[self._name]
+        for record in self:
+            if filter_function(record): records.add(record)
+        return records
