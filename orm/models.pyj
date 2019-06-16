@@ -130,7 +130,7 @@ class Model():
                      return self._values[0][key]
                   elif ids.length == 1:
                      return self._values[ids[0]][key]
-                  return self._fields[key].defaults
+                  return None
               ,
               'set':
               def (value):
@@ -371,11 +371,11 @@ class Model():
         if options.is_client == undefined:
            options.is_client = configuration.client
         if exist(self.env.context.active_limit):
-           options.limit = self.env.context.active_limit
+           options.limit = options.limit or self.env.context.active_limit
         if exist(self.env.context.active_index):
-           options.index = self.env.context.active_index
+           options.index = options.index or self.env.context.active_index
         if exist(self.env.context.active_sort):
-           options.order = self.env.context.active_sort
+           options.order = options.order or self.env.context.active_sort
         if exist(options.is_client):
            del options.is_client
            options.fields = Object.keys(self._fields)
