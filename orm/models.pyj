@@ -1,4 +1,5 @@
 import orm.fields as fields
+import orm.exceptions as exceptions
 from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json
 from orm.pouchdb import db
 
@@ -657,6 +658,12 @@ class Model():
         if self._is_env:
            self = self.browse()
            self.update(values)
+        required_fields = []
+        for value in values if is_array(values) else [values]:
+            for key in self._fields:
+                if self._fields[key].required and value[key] in [None, undefined]:
+                   required_fields.push(key)
+        if required_fields.length > 0: raise exceptions.RequiredError(required_fields, self)
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
@@ -704,6 +711,12 @@ class Model():
            values = self.read()
         if not exist(values) or self.length < 1:
            return
+        required_fields = []
+        for value in values if is_array(values) else [values]:
+            for key in self._fields:
+                if self._fields[key].required and value[key] in [None, undefined]:
+                   required_fields.push(key)
+        if required_fields.length > 0: raise exceptions.RequiredError(required_fields, self)
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
            def (result):
