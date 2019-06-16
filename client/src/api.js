@@ -21,7 +21,7 @@ if (!window.localStorage.rapyd_server_url) {
   }
 }
 
-const locals = {};
+const globals = {};
 
 function preload() {
   const root = document.getElementById('app');
@@ -123,6 +123,16 @@ async function logout() {
   return window.location.reload();
 }
 
+function wait(ms) {
+  return new Promise((resolve, reject) => {
+    const clear = (id) => {
+      clearInterval(id);
+      resolve();
+    }
+    const interval = setTimeout(() => clear(interval), ms);
+  });
+}
+
 function wait_exist(fn) {
   return new Promise((resolve, reject) => {
     const clear = (id) => {
@@ -183,27 +193,27 @@ async function ORM(session) {
     if (!options.no_preload) options.preload.done();
     reject(xhr);
   }
-  locals.exceptionCount = 0;
+  globals.exceptionCount = 0;
   tools.configuration.exception = (error) => {
-    /*if (locals.exceptionCount !== 0) return new Promise((resolve) => {
-      locals.exceptionCount = 0;
+    /*if (globals.exceptionCount !== 0) return new Promise((resolve) => {
+      globals.exceptionCount = 0;
       resolve(true);
       throw error;
     });*/
-    locals.app.dialog.alert('There are some error');
-    locals.exceptionCount += 1;
+    globals.app.dialog.alert('There are some error');
+    globals.exceptionCount += 1;
     throw error;
   }
-  locals.warningCount = 0;
+  globals.warningCount = 0;
   tools.configuration.warning = (error, offline=false) => {
-    if (locals.warningCount !== 0) return new Promise((resolve) => {
-      locals.warningCount = 0;
+    if (globals.warningCount !== 0) return new Promise((resolve) => {
+      globals.warningCount = 0;
       resolve(true);
       console.warn(error);
     });
-    console.log(locals);
-    if (offline) locals.app.toast.create({text: 'You are offline, using local data', closeButton: true, closeTimeout: 1000}).open();
-    locals.warningCount += 1;
+    console.log(globals);
+    if (offline) globals.app.toast.create({text: 'You are offline, using local data', closeButton: true, closeTimeout: 1000}).open();
+    globals.warningCount += 1;
     console.warn(error);
   }
 }
@@ -267,4 +277,4 @@ function hasValue(object, value) {
   return object.indexOf(value) > -1;
 }
 
-export default {locals, preload, get_session, update_session, wait_exist, login, logout, ORM, ajax, parseURI, hasValue, hasKey};
+export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, ajax, parseURI, hasValue, hasKey};

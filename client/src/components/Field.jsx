@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
     List,
@@ -24,7 +25,7 @@ export default class extends React.Component {
   }*/
 
   async setValue(value, altvalue) {
-    window.models.env.context.active_id[this.props.name] = value;
+    if (!this.props.cellEdit) window.models.env.context.active_id[this.props.name] = value;
     return await this.setState({value: altvalue || value});
   }
 
@@ -33,11 +34,13 @@ export default class extends React.Component {
     await api.wait_exist(() => window.models.env.context.active_id);
     const props = this.props;
     const models = window.models;
-    const model = window.models.env.context.active_model;
+    const model = props.model || window.models.env.context.active_model;
     const field = window.models.env[model]._fields[props.name];
     const type = field.type;
     const context = window.models.env.context;
-    const value = context.active_id && context.active_id[this.props.name];
+    if (context.active_id._pending_promises.length > 0) await context.active_id._wait_promise();
+    const value = props.cellEdit ? null : context.active_id && context.active_id[this.props.name];
+    if (this.props.ref_object) Object.assign(this.props.ref_object, this.refs, {loaded: true});
     if (this.refs.input) {
       if (!api.hasValue(['text', 'data'], type)) {
         this.refs.input.$listEl[0].querySelector('input').value = value;
@@ -50,8 +53,8 @@ export default class extends React.Component {
       if (!value) {
         return this.setState({value: undefined});
       }
-      const model = window.models.env.context.active_model;
-      const field = window.models.env[model]._fields[props.name];
+      //const model = props.model || window.models.env.context.active_model;
+      //const field = window.models.env[model]._fields[props.name];
       const records = await models.env[field.relation].browse(value);
       if (value.constructor === String) {
         return this.setState({value: {id: records.id, text: records[records._rec_name || 'name']}});
@@ -77,7 +80,7 @@ export default class extends React.Component {
 
   render(props) {
     const models = window.models;
-    const model = window.models.env.context.active_model;
+    const model = props.model || window.models.env.context.active_model;
     const field = window.models.env[model]._fields[props.name];
     if (!field) return;
     const string = props.string || field.string;
@@ -87,19 +90,37 @@ export default class extends React.Component {
     const refs = this.refs;
 
     async function fetch(url, init, query) {
-      const limit = 10
-      models.env.context.active_limit = limit;
-      models.env.context.active_index = query.offset / limit;
-      const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
-      const results = [];
-      window.d = refs.selectivity;
-      if (type === 'selection') return {results, more: false};
-      for (let record of records) {
-        results.push({id: record.id, text: record[record._rec_name || 'name']});
+      try {
+        const limit = 10
+        models.env.context.active_limit = limit;
+        models.env.context.active_index = query.offset / limit;
+        const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
+        if (models.env.context.active_lines[field.relation]) {
+          for (var inverse_field in models.env.context.active_lines[model]) {
+            records.add(models.env.context.active_lines[field.relation][inverse_field].filter((record) => record[record._rec_name || 'name'] && record[record._rec_name || 'name'].toLowerCase().indexOf(query.term.toLowerCase()) !== -1));
+          }
+        }
+        const results = [];
+        if (type === 'selection') return {results, more: false};
+        for (let record of records) {
+          if (!record.id) {
+            const id = 'etemp' + Math.random().toString(36).substr(2, 9);
+            if (!api.globals.temp_records) api.globals.temp_records = {};
+            api.globals.temp_records[id] = record;
+            results.push({id, text: record[record._rec_name || 'name']});
+            continue;
+          }
+          results.push({id: record.id, text: record[record._rec_name || 'name']});
+        }
+        models.env.context.active_index = 0;
+        console.log((query.offset / limit + 1) * limit < records._search_count);
+        console.log(results);
+        return {results: results, more: (query.offset / limit + 1) * limit < records._search_count};
       }
-      models.env.context.active_index = 0;
-      console.log((query.offset / limit + 1) * limit < records._search_count);
-      return {results: results, more: (query.offset / limit + 1) * limit < records._search_count};
+      catch(error) {
+        console.error(error);
+        throw error;
+      }
     }
 
     if (api.hasValue(['many2many', 'one2many'], type) && props.children) {
@@ -119,9 +140,10 @@ export default class extends React.Component {
       }
       component = (
         <ListInput label={string} input={false}>
-          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} allowClear/>
+          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
+      if (props.cellEdit) return component.children[0];
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
       const input = (
@@ -132,6 +154,7 @@ export default class extends React.Component {
       component = (
         <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={this.state.value} onChange={(value) => this.setValue(value)}/>
       );
+      if (props.cellEdit) return component.children.children;
     }
     else {
       component = (
