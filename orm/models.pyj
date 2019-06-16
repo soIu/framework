@@ -130,7 +130,7 @@ class Model():
                      return self._values[0][key]
                   elif ids.length == 1:
                      return self._values[ids[0]][key]
-                  return self._fields[key].defaults
+                  return None
               ,
               'set':
               def (value):
