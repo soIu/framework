@@ -8,6 +8,24 @@ def keys(object, sort=False):
        return [item[0] for item in object]
     return Object.keys(object)
 
+def sort(object, key, desc=False):
+    if object.length < 2:
+       return object
+    object.sort(
+    def (a, b):
+         if desc:
+            c = a
+            d = b
+            a = d
+            b = c
+         if a[key] < b[key]:
+            return -1
+         elif a[key] > b[key]:
+            return 1
+         return 0
+    )
+    return object
+
 def merge(*args, **kwargs):
     if kwargs.reverse: args = args.reverse()
     #new = {}

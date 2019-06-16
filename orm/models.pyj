@@ -1,5 +1,5 @@
 import orm.fields as fields
-from orm.tools import exist, keys, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json
 from orm.pouchdb import db
 
 env = {}
@@ -440,6 +440,7 @@ class Model():
                )
         result = self.env[self._name]
         if options.limit == 1:
+           #TODO index implementation
            if options.index > 0:
               return Promise(
               def (resolve, reject):
@@ -448,15 +449,15 @@ class Model():
            return db.rel.find(result._name).then(
            def (records):
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
-               record = records[result._name].find(query)
-               result._search_count = 1 if record else 0
-               #result.id = record.id
-               result.values = record
                if exist(options.order):
                   for order in options.order.split(','):
                       order, desc = order.split(' ')
                       desc = True if desc == 'desc' else False
-                      result.sort_by(order, desc)
+                      records[result._name] = sort(records[result._name], order, desc)
+               record = records[result._name].find(query)
+               result._search_count = 1 if record else 0
+               #result.id = record.id
+               result.values = record
                return result
            )
         else:
