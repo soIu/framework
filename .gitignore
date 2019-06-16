@@ -3,4 +3,5 @@ node_modules
 modules/modules.pyj
 modules/controllers.pyj
 main
+main.json
 package-lock.json
