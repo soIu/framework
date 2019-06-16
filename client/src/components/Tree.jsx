@@ -232,6 +232,7 @@ export default class extends React.Component {
         records.add(this.state.new_records);
       }
       if (records.length > 0) {
+        window.c = this;
         await this.setState({records: this.paginate(await records.read(true), index)})
       }
       else if (records.length === 0) await this.setState({records: []});
@@ -246,7 +247,17 @@ export default class extends React.Component {
     if (!this.isEditable()) return;
     const record = window.models.env[this.state.model].browse();
     if (window.models.env.context.active_id.id) record[this.state.tree_field] = window.models.env.context.active_id.id;
-    if (record._pending_promises.length > 0) await record._wait_promise();
+    if (record._pending_promises.length > 0) {
+      await record._wait_promise();
+      if (!this.pendingTask.tasked) {
+        this.pendingTask.create = true;
+        this.pendingTask.tasked = true;
+        window.models.env.context.active_task.push((async () => {
+          if (this.pendingTask.create) await this.state.new_records.create();
+          if (this.pendingTask.write) await window.models.env.context.active_lines[this.state.model][this.state.tree_field].write();
+        }).bind(this));
+      }
+    }
     const values = await record.read(true);
     this.state.new_records.add(record);
     this.state.records.push(values[0]);
