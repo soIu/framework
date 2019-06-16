@@ -661,7 +661,7 @@ class Model():
         required_fields = []
         for value in values if is_array(values) else [values]:
             for key in self._fields:
-                if self._fields[key].required and value[key] in [None, undefined]:
+                if self._fields[key].required and value[key] != False and not exist(value[key]):
                    required_fields.push(key)
         if required_fields.length > 0: raise exceptions.RequiredError(required_fields, self)
         if is_client:
@@ -714,7 +714,7 @@ class Model():
         required_fields = []
         for value in values if is_array(values) else [values]:
             for key in self._fields:
-                if self._fields[key].required and value[key] in [None, undefined]:
+                if self._fields[key].required and value[key] != False and not exist(value[key]):
                    required_fields.push(key)
         if required_fields.length > 0: raise exceptions.RequiredError(required_fields, self)
         if is_client:
