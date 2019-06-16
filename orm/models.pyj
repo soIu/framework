@@ -103,7 +103,7 @@ class Model():
                if type == 'belongsTo':
                   db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
             self._fields[key] = self[key]
-            if self._is_singleton:
+            if self._is_singleton and not self._is_env:
                if exist(self._fields[key].related):
                   if not exist(self._related[self._fields[key].related]):
                      self._related[self._fields[key].related] = []

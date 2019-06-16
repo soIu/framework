@@ -53,6 +53,26 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def max():
+    objects = Array.prototype.slice.call(arguments)
+    maximum = None
+    for object in objects:
+        for compare in objects:
+            if object == compare: continue
+            if not maximum and object > compare: maximum = object
+            elif object > compare and object > maximum: maximum = object
+    return maximum
+
+def min():
+    objects = Array.prototype.slice.call(arguments)
+    minimum = None
+    for object in objects:
+        for compare in objects:
+            if object == compare: continue
+            if not minimum and object < compare: minimum = object
+            elif object < compare and object < minimum: minimum = object
+    return minimum
+
 def is_array(object):
     return Array.isArray(object)
 
