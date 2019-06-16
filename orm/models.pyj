@@ -39,7 +39,7 @@ class Model():
         self._search_count = 0
         self.toJSON = def (): return self.ids
         self._pending_promises = []
-        self._wait_promise = def (): return Promise.all(self._pending_promises).then(def (): self._pending_promises = [])
+        self._wait_promise = def (): return Promise.all(self._pending_promises).then(def (): self._pending_promises = [];)
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
