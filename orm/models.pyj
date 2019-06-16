@@ -38,6 +38,8 @@ class Model():
         self._context = {}
         self._search_count = 0
         self.toJSON = def (): return self.ids
+        self._pending_promises = []
+        self._wait_promise = def (): return Promise.all(self._pending_promises).then(def (): self._pending_promises = [])
         if exist(self._inherit) and exist(raw_models[self._inherit]) and env[self._inherit] != True:
            if not exist(self._name):
               self._name = self._inherit
@@ -106,7 +108,14 @@ class Model():
                   if not exist(self._related[self._fields[key].related]):
                      self._related[self._fields[key].related] = []
                   self._related[self._fields[key].related].push(key)
-               self._values[0][key] = self[key].defaults
+               if v'typeof self[key].defaults' != 'function':
+                  self._values[0][key] = self[key].defaults
+               else:
+                  result = self[key].defaults(self, key)
+                  if result and type(result) == Promise:
+                     self._pending_promises.push(result)
+                  else:
+                     self._values[0][key] = result
             #self[key] = self._fields[key].defaults
             del self[key]
             Object.defineProperty(self, key, {
