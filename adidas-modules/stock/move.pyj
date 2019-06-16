@@ -8,7 +8,7 @@ class StockMove(models.Model):
 
     name = fields.Char(string="Move")
     date = fields.Datetime(string="Date")
-    product_id = fields.Many2one('product.product', string="Product")
+    product_id = fields.Many2one('product.product', string="Product", required=True)
     product_qty = fields.Float(string="Quantity")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")

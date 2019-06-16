@@ -6,7 +6,7 @@ from ir.ui import menu, view
 class StockLocation(models.Model):
     _name = 'stock.location'
 
-    name = fields.Char(string="Location Name")
+    name = fields.Char(string="Location Name", required=True)
     type = fields.Selection(['vendor', 'Vendor'], ['customer', 'Customer'], ['internal', 'Internal'], string="Location Type")
     
     

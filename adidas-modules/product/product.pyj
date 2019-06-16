@@ -6,7 +6,7 @@ from ir.ui import menu, view
 class ProductProduct(models.Model):
     _name = 'product.product'
 
-    name = fields.Char(string="Product Name")
+    name = fields.Char(string="Product Name", required=True)
     code = fields.Char(string="Product Code")
     description = fields.Text(string="Description")
     

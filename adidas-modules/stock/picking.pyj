@@ -1,13 +1,23 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 import orm.api as api
 from ir.ui import menu, view
 
 class StockPicking(models.Model):
     _name = 'stock.picking'
 
-    name = fields.Char(string="Picking Number")
-    date = fields.Datetime(string="Date")
+    def _get_picking_number(self):
+        return self.env['stock.picking'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
+        def (picking_id):
+            if picking_id.length > 0:
+               name = 'Picking ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
+               return name
+            return 'Picking 001'
+        )
+
+    name = fields.Char(string="Picking Number", defaults=_get_picking_number, required=True)
+    date = fields.Datetime(string="Date", required=True)
     reference = fields.Char(string="Reference")
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
