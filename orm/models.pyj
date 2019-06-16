@@ -111,7 +111,7 @@ class Model():
                if v'typeof self[key].defaults' != 'function':
                   self._values[0][key] = self[key].defaults
                else:
-                  result = self[key].defaults()
+                  result = self[key].defaults.apply(self, [self])
                   if result and type(result) == Promise:
                      result.then(
                      def (value):
