@@ -145,16 +145,26 @@ class Model():
         Object.defineProperty(self, 'ids', {
         'get': def ():
                    if not is_array(self.values):
-                      return [self._values[0].id] if self._values[0].id else []
+                      if self._values[0].id:
+                         if not self._values[self._values[0].id]: self._values[self._values[0].id] = self._values[0]
+                         return [self._values[0].id.toString()]
+                      return []
                    else:
-                      return [object.id.toString() for object in self._values if object.id]
+                      ids = []
+                      for object in self._values:
+                          if object.id:
+                             ids.push(object.id.toString())
+                             if not self._values[object.id]: self._values[object.id] = object
+                      return ids
         ,
         'set': def (): return
         })
         Object.defineProperty(self, 'id', {
         'get': def ():
-                   if self._values.length == 1:
-                      return self._values[0].id if self._values[0].id else None
+                   if self._values.length == 1 and self._values[0].id:
+                      if not self._values[self._values[0].id]: self._values[self._values[0].id] = self._values[0]
+                      return self._values[0].id
+                   return None
         ,
         'set': def (id): 
                    if self._values.length == 1 and not self._values[0].id:
@@ -595,13 +605,19 @@ class Model():
            return
         if not exist(values): return
         if is_array(values):
-           self.values = values
+           if self._values.length != values.length:
+              self.values = values
+           else:
+              index = 0
+              for record in self:
+                  record.update(values[index])
+                  index += 1
            return
         for record in self:
             for key in values:
                 if self._fields[key]:
                    record[key] = values[key]
-        if self.length == 1 and values.id: self._values[values.id] = self._values[0]
+        if self.length == 1 and values.id: self.id = values.id
         return self
 
     def queue(self, method):
@@ -629,7 +645,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
-               self.values = result.values
+               self.update(result.values)
                self.with_context(no_preload=True).browse(self.id)
                return self
            ).catch(
@@ -639,10 +655,11 @@ class Model():
                #return self.create(values, is_client=False)
                raise error
            )
-        del values['id']
-        del values['rev']
-        del values['_id']
-        del values['_rev']
+        if not is_array(values):
+           del values['id']
+           del values['rev']
+           del values['_id']
+           del values['_rev']
         def process_result(record):
             #queryInverse(self._name, record, self._one2many_fields, self._fields)
             self.update(record[self._name][0])
@@ -650,9 +667,9 @@ class Model():
         if is_array(values):
            promises = []
            for value in values:
-               promise = db.rel.save(self._name, value).then(process_result)
+               promise = self.env[self._name].create(value)
                promises.push(promise)
-           records = self.browse()
+           records = self.env[self._name]
            return Promise.all(promises).then(
            def (recordsets):
                for record in recordsets:
@@ -675,7 +692,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
            def (result):
-               self.values = result.values
+               self.update(result.values)
                self.with_context(no_preload=True).browse(self.id)
                return self
            ).catch(
