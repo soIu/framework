@@ -503,11 +503,10 @@ class Model():
     def read(self, format):
         if format:
            promises = []
-           values = self.values#copy(self._values)
            new_values = []
-           if not is_array(values):
-              values = [values]
-           for value in values:
+           self.queue(
+           def (record, next):
+               value = record.values
                oldvalue = value
                value = copy(value)
                if not value.id:
@@ -535,6 +534,8 @@ class Model():
                       promises.push(promise)
                    next()
                )
+               next()
+           )
            return Promise.all(promises).then(
            def ():
                return new_values
