@@ -25,6 +25,7 @@ export default class extends React.Component {
   }*/
 
   async setValue(value, altvalue) {
+    window.models.env.context.active_error && (window.models.env.context.active_error.field_map[this.props.name] = false);
     if (!this.props.cellEdit) window.models.env.context.active_id[this.props.name] = value;
     return await this.setState({value: altvalue || value});
   }
@@ -139,7 +140,7 @@ export default class extends React.Component {
         items = field.selection.map((selection) => ({id: selection[0], text: selection[1]}));
       }
       component = (
-        <ListInput label={string} input={false}>
+        <ListInput label={string} input={false} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
           <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
@@ -148,7 +149,7 @@ export default class extends React.Component {
     else if (api.hasValue(['date', 'datetime'], type)) {
       const input = (
         <ul>
-          <ListInput ref="date_input" label={string} placeholder={props.placeholder || ''} disabled={!context.editing}/>
+          <ListInput ref="date_input" label={string} placeholder={props.placeholder || ''} disabled={!context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
         </ul>
       );
       component = (
@@ -158,7 +159,7 @@ export default class extends React.Component {
     }
     else {
       component = (
-        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={!context.editing} onChange={(event) => this.setValue(event.target.value)}/>
+        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={!context.editing} onChange={(event) => this.setValue(event.target.value)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
       );
     }
 

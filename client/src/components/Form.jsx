@@ -30,6 +30,7 @@ export default class extends React.Component {
       models.env.context.active_id = await models.env[model].browse(models.env.context.active_ids);
     }
     const refresh = () => this.setState({active_id: models.env.context.active_id});
+    this.refresh = refresh.bind(this);
     models.env.context.refresh = refresh;
     refresh()
   }
@@ -42,17 +43,33 @@ export default class extends React.Component {
       models.env.context.editing = true;
       return await this.setState({...models.env.context, offline});
     }
-    let promises = [];
+    const operation = models.env.context.active_id.id ? 'write' : 'create';
+    try {
+      await models.env.context.active_id[operation]({}, !offline);
+    }
+    catch(error) {
+      if (error && error.constructor === window.tools.exceptions.RequiredError) {
+        error.field_map = {};
+        for (let field of error.fields) {
+          error.field_map[field] = true;
+        }
+        models.env.context.active_error = error;
+        await this.setState({active_id: models.env.context.active_id});
+        api.globals.app.toast.create({text: 'Some fields are required', closeButton: false, closeTimeout: 2000, position: 'center'}).open();
+        return;
+      }
+      else {
+        throw error;
+      }
+    }
     for (let task of models.env.context.active_task) {
       const result = task();
-      if (result && result.constructor === Promise) await result;//promises.push(result);
+      if (result && result.constructor === Promise) await result;
     }
-    //await Promise.all(promises);
-    const operation = models.env.context.active_id.id ? 'write' : 'create';
-    await models.env.context.active_id[operation]({}, !offline);
+    models.env.context.active_task = [];
     if (operation === 'create') {
       window.history.replaceState(undefined, undefined, window.location.hash + '?id=' + models.env.context.active_id.id);
-      promises = [];
+      const promises = [];
       for (let model in models.env.context.active_lines) {
         for (let inverse_field in models.env.context.active_lines[model]) {
           promises.push(models.env.context.active_lines[model][inverse_field].write({[inverse_field]: models.env.context.active_id.id}));
