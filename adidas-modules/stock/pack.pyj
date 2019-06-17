@@ -12,15 +12,13 @@ class StockPack(models.Model):
     def _get_box_number(self):
         return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (pack_id):
-            console.log(pack_id.name)
-            if pack_id.length > 0 and pack_id.name and pack_id.name.split:
-               name = pack_id.name
+            if pack_id:
+               name = pack_id.name or 'Box 000'
                if pack.last_box:
-                  name = tools.max(pack_id.name, pack.last_box)
+                  name = tools.max(name, pack.last_box)
                name = 'Box ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
                pack.last_box = name
                return name
-            return 'Box 001'
         )
 
     name = fields.Char(string="Pack/Box Number", defaults=_get_box_number, required=True)

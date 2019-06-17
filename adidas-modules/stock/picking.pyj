@@ -19,11 +19,16 @@ class StockPicking(models.Model):
     name = fields.Char(string="Picking Number", defaults=_get_picking_number, required=True)
     date = fields.Datetime(string="Date", required=True)
     reference = fields.Char(string="Reference")
+    state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], string="Status")
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
     pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs/Boxes")
+
+    @api.server
+    def confirm(self):
+        return self.write({'state': 'confirmed'})
 
 StockPicking()
 
@@ -39,6 +44,10 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': False, 'arch': """
 
 view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
 <form>
+    <header>
+        <button name="confirm" string="Confirm"/>
+        <field name="state" widget="statusbar"/>
+    </header>
     <sheet>
         <group>
             <field name="name"/>
