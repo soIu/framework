@@ -249,3 +249,587 @@ div:focus {
 .ag-react-container .selectivity-multiple-input-container {
     display: none;
 }
+
+.UL_1 {
+    margin: 12px;
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    float: right;
+    height: 30px;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 140.5px 15px;
+    transform-origin: 140.5px 15px;
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    outline: rgb(51, 51, 51) none 0px;
+    padding: 0px 18px 0px 0px;
+}/*.UL_1*/
+
+.UL_1:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.UL_1:after*/
+
+.UL_1:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.UL_1:before*/
+
+.LI_2 {
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 30px;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    width: 125px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 62.5px 15px;
+    transform-origin: 62.5px 15px;
+    caret-color: rgb(51, 51, 51);
+    background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 0px -18px 0px 0px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_2*/
+
+.LI_2:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_2:after*/
+
+.LI_2:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_2:before*/
+
+.SPAN_3 {
+    bottom: 0px;
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    display: inline-block;
+    height: 29px;
+    left: 0px;
+    position: relative;
+    right: 0px;
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    top: 0px;
+    white-space: nowrap;
+    width: 110px;
+    column-rule-color: rgb(76, 76, 76);
+    perspective-origin: 55px 14.5px;
+    transform-origin: 55px 14.5px;
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    border-radius: 3.25px 3.25px 3.25px 3.25px;
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+    padding: 7px 7px 7px 14px;
+}/*.SPAN_3*/
+
+.SPAN_3:after {
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(76, 76, 76);
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+}/*.SPAN_3:after*/
+
+.SPAN_3:before {
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(76, 76, 76);
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+}/*.SPAN_3:before*/
+
+.SPAN_4, .SPAN_8 {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 30px;
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    vertical-align: top;
+    width: 17px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 8.5px 15px;
+    transform-origin: 8.5px 15px;
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 0px 0px 0px -5px;
+    outline: rgb(51, 51, 51) none 0px;
+    overflow: hidden;
+}/*.SPAN_4, .SPAN_8*/
+
+.SPAN_4:after, .SPAN_8:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_4:after, .SPAN_8:after*/
+
+.SPAN_4:before, .SPAN_8:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_4:before, .SPAN_8:before*/
+
+.SPAN_5, .SPAN_9 {
+    bottom: 0px;
+    box-shadow: rgba(255, 255, 255, 0.2) -1px 1px 2px 0px, rgba(0, 0, 0, 0.2) -1px 1px 1px 0px inset;
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 24px;
+    left: 0px;
+    position: relative;
+    right: 0px;
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    top: 0px;
+    width: 24px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 12px 12px;
+    transform: matrix(0.707107, 0.707107, -0.707107, 0.707107, 0, 0);
+    transform-origin: 12px 12px;
+    caret-color: rgb(51, 51, 51);
+    background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 0px none rgb(51, 51, 51);
+    border-radius: 3px 3px 3px 3px;
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 3px 0px 0px -12px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_5, .SPAN_9*/
+
+.SPAN_5:after, .SPAN_9:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_5:after, .SPAN_9:after*/
+
+.SPAN_5:before, .SPAN_9:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_5:before, .SPAN_9:before*/
+
+.LI_6 {
+    border-radius: 5px;
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 30px;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 52px 15px;
+    transform-origin: 52px 15px;
+    caret-color: rgb(51, 51, 51);
+    background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 0px -18px 0px 0px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_6*/
+
+.LI_6:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_6:after*/
+
+.LI_6:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_6:before*/
+
+.SPAN_7 {
+    bottom: 0px;
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    display: inline-block;
+    height: 29px;
+    left: 0px;
+    position: relative;
+    right: 0px;
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    top: 0px;
+    white-space: nowrap;
+    width: 89px;
+    column-rule-color: rgb(76, 76, 76);
+    perspective-origin: 44.5px 14.5px;
+    transform-origin: 44.5px 14.5px;
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    border-radius: 3.25px 3.25px 3.25px 3.25px;
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+    padding: 7px 7px 7px 24px;
+}/*.SPAN_7*/
+
+.SPAN_7:after {
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(76, 76, 76);
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+}/*.SPAN_7:after*/
+
+.SPAN_7:before {
+    box-sizing: border-box;
+    color: rgb(76, 76, 76);
+    text-align: center;
+    text-decoration: none solid rgb(76, 76, 76);
+    text-shadow: rgb(252, 252, 252) 0px 1px 1px, rgb(222, 222, 222) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(76, 76, 76);
+    caret-color: rgb(76, 76, 76);
+    border: 0px none rgb(76, 76, 76);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(76, 76, 76) none 0px;
+}/*.SPAN_7:before*/
+
+.LI_10 {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 30px;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    width: 82px;
+    column-rule-color: rgb(51, 51, 51);
+    perspective-origin: 41px 15px;
+    transform-origin: 41px 15px;
+    caret-color: rgb(51, 51, 51);
+    background: rgb(56, 180, 74) none repeat scroll 0% 0% / auto padding-box border-box;
+    border-top: 0px none rgb(56, 180, 74);
+    border-right: 1px solid rgb(56, 180, 74);
+    border-bottom: 0px none rgb(56, 180, 74);
+    border-left: 0px none rgb(56, 180, 74);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 0px -18px 0px 0px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_10*/
+
+.LI_10:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_10:after*/
+
+.LI_10:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.LI_10:before*/
+
+.SPAN_11 {
+    bottom: 0px;
+    box-sizing: border-box;
+    color: rgb(255, 255, 255);
+    display: inline-block;
+    height: 29px;
+    left: 0px;
+    position: relative;
+    right: 0px;
+    text-align: center;
+    text-decoration: none solid rgb(255, 255, 255);
+    text-shadow: rgb(56, 180, 74) 0px 1px 1px, rgb(56, 180, 74) 0px -1px 1px;
+    text-size-adjust: 100%;
+    top: 0px;
+    white-space: nowrap;
+    width: 81px;
+    column-rule-color: rgb(255, 255, 255);
+    perspective-origin: 40.5px 14.5px;
+    transform-origin: 40.5px 14.5px;
+    caret-color: rgb(255, 255, 255);
+    border: 0px none rgb(255, 255, 255);
+    border-radius: 3.25px 3.25px 3.25px 3.25px;
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(255, 255, 255) none 0px;
+    padding: 7px 14px 7px 24px;
+}/*.SPAN_11*/
+
+.SPAN_11:after {
+    box-sizing: border-box;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    text-decoration: none solid rgb(255, 255, 255);
+    text-shadow: rgb(56, 180, 74) 0px 1px 1px, rgb(56, 180, 74) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(255, 255, 255);
+    caret-color: rgb(255, 255, 255);
+    border: 0px none rgb(255, 255, 255);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(255, 255, 255) none 0px;
+}/*.SPAN_11:after*/
+
+.SPAN_11:before {
+    box-sizing: border-box;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    text-decoration: none solid rgb(255, 255, 255);
+    text-shadow: rgb(56, 180, 74) 0px 1px 1px, rgb(56, 180, 74) 0px -1px 1px;
+    text-size-adjust: 100%;
+    white-space: nowrap;
+    column-rule-color: rgb(255, 255, 255);
+    caret-color: rgb(255, 255, 255);
+    border: 0px none rgb(255, 255, 255);
+    font: normal normal 400 normal 13px / normal Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(255, 255, 255) none 0px;
+}/*.SPAN_11:before*/
+
+.SPAN_12 {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: none;
+    height: 30px;
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    vertical-align: top;
+    width: 17px;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 0px 0px 0px -5px;
+    outline: rgb(51, 51, 51) none 0px;
+    overflow: hidden;
+}/*.SPAN_12*/
+
+.SPAN_12:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_12:after*/
+
+.SPAN_12:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_12:before*/
+
+.SPAN_13 {
+    box-shadow: rgba(255, 255, 255, 0.2) -1px 1px 2px 0px, rgba(0, 0, 0, 0.2) -1px 1px 1px 0px inset;
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    display: inline-block;
+    height: 24px;
+    position: relative;
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    width: 24px;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    background: rgb(56, 180, 74) none repeat scroll 0% 0% / auto padding-box border-box;
+    border: 0px none rgb(56, 180, 74);
+    border-radius: 3px 3px 3px 3px;
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    margin: 3px 0px 0px -12px;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_13*/
+
+.SPAN_13:after {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_13:after*/
+
+.SPAN_13:before {
+    box-sizing: border-box;
+    color: rgb(51, 51, 51);
+    text-align: left;
+    text-decoration: none solid rgb(51, 51, 51);
+    text-size-adjust: 100%;
+    column-rule-color: rgb(51, 51, 51);
+    caret-color: rgb(51, 51, 51);
+    border: 0px none rgb(51, 51, 51);
+    font: normal normal 400 normal 13px / 18.5714px Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    list-style: none outside none;
+    outline: rgb(51, 51, 51) none 0px;
+}/*.SPAN_13:before*/
+
+.rapyd-statusbars {
+  display: block;
+  float: right;
+  width: auto;
+  margin: 10px;
+  color: #fff !important;
+}
+
+.rapyd-statusbar-arrow {
+  font-size: 20px;
+  margin-top: 12px;
+  margin-left: 0px;
+  margin-right: 0px;
+}

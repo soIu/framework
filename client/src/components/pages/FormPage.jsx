@@ -38,32 +38,36 @@ function parseView(view, model) {
 
 const cachedViews = {};
 
-export default (props) => {
-  let model = window.models.env.context.active_model;
-  if (props.f7route) {
-    model = props.f7route.params.model;
-    window.models.env.context.active_url = props.f7route.url;     
-  } else {
-    window.models.env.context.active_url = '/';
-  }
-  const id = props.f7route.query.id;
-  const view = window.tools.view[model].form;
-  window.models.env.context.active_model = model;
-  if (id) {
-    window.models.env.context.active_ids = [id];
-  }
-  else {
-    delete window.models.env.context.active_ids;
-  }
-  /*if (id) {
-    window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
-  }*/
-  if (!cachedViews[view]) {
-    // eslint-disable-next-line
-    //cachedViews[view] = eval(Parser(view, {presets: [preset]}).code);
-    cachedViews[view] = parseView(view, model);
-  }
+export default class extends React.Component {
+  render(props) {
+    const refresh = () => this.setState({});
+    this.refresh = refresh.bind(this);
+    window.models.env.context.refresh = this.refresh;
+    let model = window.models.env.context.active_model;
+    if (props.f7route) {
+      model = props.f7route.params.model;
+      window.models.env.context.active_url = props.f7route.url;
+    } else {
+      window.models.env.context.active_url = '/';
+    }
+    const id = props.f7route.query.id;
+    const view = window.tools.view[model].form;
+    window.models.env.context.active_model = model;
+    if (id) {
+      window.models.env.context.active_ids = [id];
+    }
+    else {
+      delete window.models.env.context.active_ids;
+    }
+    /*if (id) {
+      window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
+    }*/
+    if (!cachedViews[view]) {
+      // eslint-disable-next-line
+      //cachedViews[view] = eval(Parser(view, {presets: [preset]}).code);
+      cachedViews[view] = parseView(view, model);
+    }
 
-  return cachedViews[view];
-
+    return cachedViews[view];
+  }
 }

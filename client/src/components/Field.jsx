@@ -3,6 +3,7 @@ import React from 'react';
 import {
     List,
     ListInput,
+    F7Button as Button,
 } from 'framework7-react';
 import {React as Selectivity, Templates} from 'selectivity/react';
 import 'selectivity/styles/selectivity-react.css';
@@ -65,6 +66,7 @@ export default class extends React.Component {
       }
     }
     else if (type === 'selection') {
+      if (this.props.widget === 'statusbar') return this.setState({value});
       return this.setState({value: value && {id: value, text: window.tools.dict(field.selection)[value]}});
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
@@ -129,6 +131,19 @@ export default class extends React.Component {
     }
 
     let component;
+
+    if (type === 'selection' && props.widget === 'statusbar') {
+      let first = true;
+      const selections = window.tools.copy(field.selection).reverse();
+      component = (
+        <div>
+          {selections.map((selection) => 
+          first ? <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{(first = false) || selection[1]}</Button> : [<span className="rapyd-statusbars rapyd-statusbar-arrow">{'>'}</span>, <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{selection[1]}</Button>]
+          )}
+        </div>
+      );
+      return component;
+    }
 
     if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one', 'selection'], type)) {
       let ajax;

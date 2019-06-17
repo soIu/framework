@@ -27,7 +27,7 @@ export default class extends React.Component {
 
   render(props) {
     return (
-      <Button fill onClick={() => button.bind(this)(props)} style={{display: 'inline-block', margin: '10px'}}>{props.string}</Button>
+      <Button fill onClick={() => button.bind(this)(props)} style={{display: 'block', float: 'left', width: 'auto', margin: '10px'}}>{props.string}</Button>
     );
   }
 }
