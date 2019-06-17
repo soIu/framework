@@ -304,7 +304,7 @@ export default class extends React.Component {
     const models = window.models;
     const grid = (
       <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) + 'px' : '67vh'}}>
-        <Grid ref="grid" onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => this.$f7.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
+        <Grid ref="grid" onGridReady={((params) => (window.onresize = () => autoSizeAll.bind(this)(params))()).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id).then((record) => models.env.context.active_id = record).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
         <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() ? 'inline-block' : 'none', top: '-45px'}}>Add</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px'}}>Delete</Button>
       </div>
@@ -321,7 +321,7 @@ export default class extends React.Component {
             <div className="data-table-title">
               {window.tools.view[model].string}
               <br/>
-              <Button onClick={() => this.$f7.views.main.router.navigate('/form/' + model)} style={{display: 'inline-block'}} fill>Create</Button>
+              <Button onClick={() => api.globals.app.views.main.router.navigate('/form/' + model)} style={{display: 'inline-block'}} fill>Create</Button>
             </div>
           </div>
           {grid}

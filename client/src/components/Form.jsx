@@ -20,19 +20,16 @@ export default class extends React.Component {
     const models = window.models;
     models.env.context.active_lines = {};
     models.env.context.active_task = [];
+    const form = this;
     if (!models.env.context.active_ids || models.env.context.active_ids.length < 1 || !models.env.context.active_ids[0]) {
       models.env.context.active_id = models.env[model].browse();
       models.env.context.editing = true;
-      this.setState(models.env.context);
-      return;
+      return this.setState(models.env.context);
     }
     else if (!models.env.context.active_id) {
       models.env.context.active_id = await models.env[model].browse(models.env.context.active_ids);
     }
-    const refresh = () => this.setState({active_id: models.env.context.active_id});
-    this.refresh = refresh.bind(this);
-    models.env.context.refresh = refresh;
-    refresh()
+    return models.env.context.refresh();
   }
 
   async edit() {
