@@ -49,7 +49,7 @@ class WcsJob(models.Model):
                    result = JSON.parse(result)
                    if result.receiveState != 'success':
                       raise Exception(result.message)
-                   return self.write({'state': 'submitted', 'homepoint': bucket_object.homepoint})
+                   return self.write({'state': 'submitted', 'homepoint': bucket_object.homePoint})
                )
         )
 
