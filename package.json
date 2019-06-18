@@ -10,6 +10,7 @@
     "rapydscript-ng": "^0.7.18",
     "regenerator": "^0.10.1",
     "relational-pouch": "^3.2.0",
+    "request-promise-native": "^1.0.7",
     "restify": "^6.0.1",
     "restify-cors-middleware": "^1.0.1",
     "socket.io": "^2.0.4"
