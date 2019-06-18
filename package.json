@@ -1,6 +1,7 @@
 {
   "main": "server.js",
   "dependencies": {
+    "pouchdb-adapter-fs": "^2.0.7",
     "pouchdb-adapter-http": "^7.0.0",
     "pouchdb-adapter-memory": "^7.0.0",
     "pouchdb-core": "^7.0.0",
