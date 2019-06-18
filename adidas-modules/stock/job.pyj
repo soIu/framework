@@ -11,7 +11,7 @@ class WcsJob(models.Model):
         return self.env['wcs.job'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (job_id):
             if job_id.length > 0:
-               name = 'Job ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
+               name = 'Job ' + str.zfill((parseInt(job_id.name.split(' ')[1]) + 1).toString(), 3)
                return name
             return 'Job 001'
         )
