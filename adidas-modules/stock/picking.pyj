@@ -13,13 +13,13 @@ class StockPicking(models.Model):
             if picking_id.length > 0:
                name = 'Picking ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
                return name
-            return 'Picking 001'
+            return 'Operation 001'
         )
 
-    name = fields.Char(string="Picking Number", defaults=_get_picking_number, required=True)
+    name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True)
     date = fields.Datetime(string="Date", required=True)
     reference = fields.Char(string="Reference")
-    state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], string="Status")
+    state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], string="Status", defaults='draft')
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
