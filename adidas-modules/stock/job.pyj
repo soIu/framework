@@ -29,7 +29,7 @@ class WcsJob(models.Model):
     @api.strict
     def submit(self):
         requests = require('request-promise-native')
-        return requests.post({'url': 'http://localhost:8080/wcs/bucket/query', 'body': JSON.stringify({'warehouseId': '60001', 'bucketCodeList': [str(index + 1) for index in xrange(34)]}), 'headers': {'Content-Type': 'application/json'}}).then(
+        return requests.post({'url': 'http://localhost:8080/wcs/bucket/query', 'body': JSON.stringify({'warehouseId': '60001', 'bucketCodeList': [str(index + 1) for index in range(34)]}), 'headers': {'Content-Type': 'application/json'}}).then(
         def (result):
             buckets = JSON.parse(result).bucketBOList
             bucket_object = None
