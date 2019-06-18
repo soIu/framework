@@ -56,7 +56,7 @@ class WcsJob(models.Model):
     @api.strict
     def return_bucket(self):
         requests = require('request-promise-native')
-        return requests.post({'url': 'http://localhost:8080/wcs/robot/job/submit', 'body': JSON.stringify({'robotJobId': 'RJI_RET' + self.id, 'warehouseId': '60001', 'bucketId': self.bucket, 'workFace': self.workface, 'endPoint': self.homepoint.toString(), 'letDownFlag': self.flag, 'jobPriority': self.priority.toString()}), 'headers': {'Content-Type': 'application/json'}}).then(
+        return requests.post({'url': 'http://localhost:8080/wcs/robot/job/submit', 'body': JSON.stringify({'robotJobId': 'RJI_RET' + self.id, 'warehouseId': '60001', 'bucketId': self.bucket, 'workFace': self.workface, 'endPoint': self.homepoint.toString(), 'letDownFlag': 'offline', 'jobPriority': self.priority.toString()}), 'headers': {'Content-Type': 'application/json'}}).then(
         def (result):
             result = JSON.parse(result)
             if result.receiveState != 'success':
