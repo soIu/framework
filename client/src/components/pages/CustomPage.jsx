@@ -24,6 +24,16 @@ function parseView(view, model) {
       for (let attribute of element.attributes) {
         props[attribute.name] = attribute.value;
       }
+      for (let attribute of ['invisible', 'required', 'readonly']) {
+        if (api.hasKey(props, attribute)) {
+          if (api.hasValue(['true', 'True'], props[attribute])) props[attribute] = true;
+          if (api.hasValue(['false', 'False'], props[attribute])) props[attribute] = false;
+          if (props[attribute].constructor === Boolean) continue;
+          if (api.hasValue(props[attribute], ' == ')) props[attribute] = props[attribute].replace('==', '===');
+          if (api.hasValue(props[attribute], ' != ')) props[attribute] = props[attribute].replace('!=', '!==');
+          if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', 'if (!active_id) return false; \nreturn ' + props[attribute]]))();
+        }
+      }
       if (component === Tree) {
         props.model = window.models.env[model]._fields[parent_props.name].relation;
         props.field = window.models.env[model]._fields[parent_props.name].inverse;

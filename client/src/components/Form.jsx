@@ -107,7 +107,7 @@ export default class extends React.Component {
     const uploadStyle = {};
     if (!this.state.offline) uploadStyle['display'] = 'none';
     return (
-      <Page cache={props.cache} title={window.tools.view[model].string}>
+      <Page title={window.tools.view[model].string}>
         <div className="card" style={{margin: 0, boxShadow: 'none'}}>
           <div className="card-header">
             <div className="data-table-title">

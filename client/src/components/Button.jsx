@@ -27,7 +27,7 @@ export default class extends React.Component {
 
   render(props) {
     return (
-      <Button fill onClick={() => button.bind(this)(props)} style={{display: 'block', float: 'left', width: 'auto', margin: '10px'}}>{props.string}</Button>
+      <Button fill onClick={() => button.bind(this)(props)} style={{display: (props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? 'none' : 'block', float: 'left', width: 'auto', margin: '10px'}}>{props.string}</Button>
     );
   }
 }

@@ -56,7 +56,7 @@ export default function (props) {
       }
 
       {/* Main View */}
-      <View id="main-view" url="/" main className="ios-edges" pushState/>
+      <View id="main-view" url="/" main className="ios-edges" preloadPreviousPage={false} pushState/>
 
       {/* Popup */}
       <Popup id="popup">

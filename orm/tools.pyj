@@ -71,6 +71,28 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+function wait_exist(fn) {
+  return new Promise((resolve, reject) => {
+    const clear = (id) => {
+      clearInterval(id);
+      resolve();
+    }
+    const interval = setInterval(() => {if (fn()) clear(interval)}, 0);
+  });
+}
+
+def wait_exist(fn):
+    return Promise(
+    def (resolve, reject):
+        def clear(id):
+            clearInterval(id)
+            resolve();
+        interval = setInterval(
+        def ():
+            if fn(): clear(interval)
+        , 0)
+    )
+
 def max():
     objects = Array.prototype.slice.call(arguments)
     maximum = None
