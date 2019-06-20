@@ -81,21 +81,21 @@ view.add({'model': 'wcs.job', 'mode': 'tree', 'string': False, 'arch': """
 view.add({'model': 'wcs.job', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
-        <button name="submit" string="Submit"/>
-        <button name="return_bucket" string="Return"/>
+        <button name="submit" string="Submit" invisible="active_id.state != 'draft'"/>
+        <button name="return_bucket" string="Return" invisible="active_id.state != 'confirmed'"/>
         <field name="state" widget="statusbar"/>
     </header>
     <sheet>
         <group>
-            <field name="name"/>
-            <field name="bucket"/>
+            <field name="name" readonly="active_id.state != 'draft'"/>
+            <field name="bucket" readonly="active_id.state != 'draft'"/>
             <field name="workface"/>
-            <field name="priority"/>
+            <field name="priority" readonly="active_id.state != 'draft'"/>
         </group>
         <group> 
-            <field name="date"/>
-            <field name="type"/>
-            <field name="flag"/>
+            <field name="date" readonly="active_id.state != 'draft'"/>
+            <field name="type" readonly="active_id.state != 'draft'"/>
+            <field name="flag" readonly="active_id.state != 'draft'"/>
         </group>
     </sheet>
 </form>

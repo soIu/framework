@@ -45,12 +45,12 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': False, 'arch': """
 view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
-        <button name="confirm" string="Confirm"/>
+        <button name="confirm" string="Confirm" invisible="active_id.state != 'draft'"/>
         <field name="state" widget="statusbar"/>
     </header>
     <sheet>
         <group>
-            <field name="name"/>
+            <field name="name" readonly="active_id.state != 'draft'"/>
             <field name="reference"/>
         </group>
         <group> 
