@@ -44,8 +44,11 @@ export default class extends React.Component {
     const value = props.cellEdit ? null : context.active_id && context.active_id[this.props.name];
     if (this.props.ref_object) Object.assign(this.props.ref_object, this.refs, {loaded: true});
     if (this.refs.input) {
-      if (!api.hasValue(['text', 'data'], type)) {
+      if (!api.hasValue(['text', 'data', 'boolean'], type)) {
         this.refs.input.$listEl[0].querySelector('input').value = value;
+      }
+      else if (type === 'boolean') {
+        this.refs.input.$listEl[0].querySelector('input').checked = value;
       }
       else {
         this.refs.input.$listEl[0].querySelector('textarea').value = type !== 'data' ? value : JSON.stringify(value);
@@ -88,9 +91,13 @@ export default class extends React.Component {
     if (!field) return;
     const string = props.string || field.string;
     const type = field.type;
-    const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea'};
+    const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea', 'boolean': 'checkbox'};
     const context = window.models.env.context;
     const refs = this.refs;
+    const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[model].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id
+    const invisible = props.invisible instanceof Function && active_id ? props.invisible(active_id) : props.invisible;
+    props.readonly = field.readonly || props.readonly;
+    const readonly = props.readonly instanceof Function && active_id ? props.readonly(active_id) : props.readonly;
 
     async function fetch(url, init, query) {
       try {
@@ -136,7 +143,7 @@ export default class extends React.Component {
       let first = true;
       const selections = window.tools.copy(field.selection).reverse();
       component = (
-        <div>
+        <div style={invisible ? {display: 'none'} : {}}>
           {selections.map((selection) => 
           first ? <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{(first = false) || selection[1]}</Button> : [<span className="rapyd-statusbars rapyd-statusbar-arrow">{'>'}</span>, <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{selection[1]}</Button>]
           )}
@@ -156,7 +163,7 @@ export default class extends React.Component {
       }
       component = (
         <ListInput label={string} input={false} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
-          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={!context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
+          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
       if (props.cellEdit) return component.children[0];
@@ -164,7 +171,7 @@ export default class extends React.Component {
     else if (api.hasValue(['date', 'datetime'], type)) {
       const input = (
         <ul>
-          <ListInput ref="date_input" label={string} placeholder={props.placeholder || ''} disabled={!context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
+          <ListInput ref="date_input" label={string} placeholder={props.placeholder || ''} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
         </ul>
       );
       component = (
@@ -174,12 +181,12 @@ export default class extends React.Component {
     }
     else {
       component = (
-        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={!context.editing} onChange={(event) => this.setValue(event.target.value)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
+        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={readonly || !context.editing} onChange={(event) => this.setValue(event.target.value)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
       );
     }
 
     return (
-      <List>
+      <List style={invisible ? {display: 'none'} : {}}>
         {component}
       </List>
     );

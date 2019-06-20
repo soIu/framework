@@ -10,7 +10,7 @@ import {
 
 export default (props) => (
   <Page>
-    <Navbar backLinkForce={props.cache ? !JSON.parse(props.cache) : true} backLink={window.models.env.context.active_url === '/' ? false : 'Back'}>
+    <Navbar backLink={window.models.env.context.active_url === '/' ? false : 'Back'}>
       {window.models.env.context.active_url === '/' &&
       <NavLeft>
         <Link iconMd="material:menu" panelOpen="left"></Link>

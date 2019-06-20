@@ -25,7 +25,7 @@ export default class extends React.Component {
       props.width = '97%';
     }
     return (
-      <div ref="group" className="component-group" style={{float: 'left', width: props.width || '46.5%', padding: '10px', marginTop: '20px', height: props.children ? 'auto' : this.state.lastHeight + 'px'}}>
+      <div ref="group" className="component-group" style={{float: 'left', width: props.width || '46.5%', padding: '10px', marginTop: '20px', height: props.children ? 'auto' : this.state.lastHeight + 'px', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {display: 'none'} : {})}}>
         {props.children}
       </div>
     );
