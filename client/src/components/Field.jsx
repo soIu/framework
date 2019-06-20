@@ -181,7 +181,7 @@ export default class extends React.Component {
     }
     else {
       component = (
-        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={readonly || !context.editing} onChange={(event) => this.setValue(event.target.value)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
+        <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={readonly || !context.editing} onChange={(event) => this.setValue(event.target.type !== 'checkbox' ? event.target.value : event.target.checked)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
       );
     }
 
