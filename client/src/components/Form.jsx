@@ -115,7 +115,7 @@ export default class extends React.Component {
               <span style={{color: '#666666'}}>{' / ' + (this.state.active_id && this.state.active_id.id ? this.state.active_id.name : 'New')}</span>
               <div>
                 <Button onClick={this.edit.bind(this)} style={buttonStyle} fill>{this.state.editing ? 'Save' : 'Edit'}</Button>
-                <Button onClick={() => api.globals.app.router.back()} style={{...buttonStyle, ...(!this.state.editing ? {display: 'none'} : {})}}>{'Cancel'}</Button>
+                <Button onClick={() => api.globals.app.views.main.router.back()} style={{...buttonStyle, ...(!this.state.editing ? {display: 'none'} : {})}}>{'Cancel'}</Button>
                 <Button onClick={this.upload.bind(this)} style={{...buttonStyle, ...uploadStyle}} fill>{'Upload'}</Button>
               </div>
             </div>

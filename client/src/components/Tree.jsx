@@ -311,7 +311,7 @@ export default class extends React.Component {
     );
     //delete grid.props.children[0].props.onRowClicked;
     if (!props.isTreeView) {
-      delete grid.props.children[0].props.onRowClicked;
+      if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
     }
     return (
