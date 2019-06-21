@@ -28,7 +28,8 @@ export default class extends React.Component {
   async setValue(value, altvalue) {
     window.models.env.context.active_error && (window.models.env.context.active_error.field_map[this.props.name] = false);
     if (!this.props.cellEdit) window.models.env.context.active_id[this.props.name] = value;
-    return await this.setState({value: altvalue || value});
+    await this.setState({value: altvalue || value});
+    return window.models.env.context.refresh();
   }
 
   async componentDidMount() {
