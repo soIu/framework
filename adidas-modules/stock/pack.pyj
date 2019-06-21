@@ -2,6 +2,7 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
+from stock.wcs import WcsJob
 from ir.ui import menu, view
 
 pack = {}
@@ -25,6 +26,7 @@ class StockPack(models.Model):
     date = fields.Datetime(string="Date")
     location_id = fields.Many2one('stock.location', string="Current Location")
     picking_id = fields.Many2one('stock.picking', string="Operation")
+    bucket = WcsJob.prototype.bucket
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
 
     def print_barcode(self):

@@ -2,4 +2,4 @@ import stock.location
 import stock.move
 import stock.pack
 import stock.picking
-import stock.job
+import stock.wcs

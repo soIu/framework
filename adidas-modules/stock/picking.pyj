@@ -17,18 +17,54 @@ class StockPicking(models.Model):
         )
 
     name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True)
-    date = fields.Datetime(string="Date", required=True)
+    date = fields.Datetime(string="Date")
     reference = fields.Char(string="Reference")
-    state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], string="Status", defaults='draft')
+    state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
+    type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True)
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
     pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs")
+    pack_choosed_ids = fields.Many2many('stock.pack', string="Packs/Bags to pick")
+    job_id = fields.Many2one('wcs.job', string="WCS Job")
 
     @api.server
     def confirm(self):
-        return self.write({'state': 'confirmed'})
+        return self.env['wcs.job'].create({'name': 'Job ' + self.name, 'date': Date(), 'state': 'draft', 'bucket': '1', 'workface': '2' if self.type == 'picking' else '0', 'type': self.type, 'flag': 'online', 'priority': 1}).then(
+        def (job_id):
+            def submit():
+                return job_id.submit().then(def (job_id): return job_id;)
+            if self.type == 'picking': return submit()
+            return self.env['stock.pack'].with_context(limit=1).search(['bucket', '=', job_id.bucket]).then(
+            def (pack_id):
+                if pack_id.length > 0:
+                   return job_id.write({'workface': '4'})
+            ).then(submit)
+        ).then(
+        def (job_id):
+            return self.write({'state': 'confirmed', 'job_id': job_id.id})
+        )
+
+    @api.server
+    def validate(self):
+        processes = []
+        processes.push(self.env['wcs.job'].browse(self.job_id))
+        if self.type == 'putting':
+           processes.push(self.env['stock.pack'].browse(self.pack_ids))
+        return Promise.all(processes).then(
+        def (results):
+            job_id, pack_ids = results
+            return_bucket = job_id.return_bucket()
+            if self.type != 'putting': return return_bucket
+            return return_bucket.then(
+            def ():
+                return pack_ids.write({'bucket': job_id.bucket})
+            )
+        ).then(
+        def ():
+            return self.write({'state': 'validated'})
+        )
 
 StockPicking()
 
@@ -46,24 +82,27 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
         <button name="confirm" string="Confirm" invisible="active_id.state != 'draft'"/>
+        <button name="validate" string="Validate" invisible="active_id.state != 'confirmed'"/>
         <field name="state" widget="statusbar"/>
     </header>
     <sheet>
         <group>
             <field name="name" readonly="active_id.state != 'draft'"/>
             <field name="reference"/>
+            <field name="pack_choosed_ids" invisible="active_id.type == 'picking'"/>
         </group>
         <group> 
             <field name="date"/>
+            <field name="type"/>
         </group>
-        <group width="100%">
+        <group width="100%" invisible="active_id.type == 'putting'">
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
                 </tree>
             </field>
         </group>
-        <group width="100%">
+        <group width="100%" invisible="active_id.type == 'putting'">
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>
