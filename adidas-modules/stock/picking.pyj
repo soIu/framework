@@ -7,6 +7,7 @@ from ir.ui import menu, view
 class StockPicking(models.Model):
     _name = 'stock.picking'
 
+    @api.server
     def _get_picking_number(self):
         return self.env['stock.picking'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (picking_id):
@@ -36,9 +37,9 @@ class StockPicking(models.Model):
             def submit():
                 return job_id.submit().then(def (job_id): return job_id;)
             if self.type == 'picking': return submit()
-            return self.env['stock.pack'].with_context(limit=1).search(['bucket', '=', job_id.bucket]).then(
-            def (pack_id):
-                if pack_id.length > 0:
+            return self.env['wcs.job'].with_context(limit=1, order='date desc').search(['bucket', '=', job_id.bucket]).then(
+            def (previous_job_id):
+                if previous_job_id.length > 0 and previous_job_id.type == 'picking':
                    return job_id.write({'workface': '4'})
             ).then(submit)
         ).then(

@@ -10,6 +10,7 @@ pack = {}
 class StockPack(models.Model):
     _name = 'stock.pack'
 
+    @api.server
     def _get_box_number(self):
         return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (pack_id):
