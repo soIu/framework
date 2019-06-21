@@ -89,20 +89,20 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="name" readonly="active_id.state != 'draft'"/>
             <field name="reference"/>
-            <field name="pack_choosed_ids" invisible="active_id.type != 'picking'"/>
+            <!--<field name="pack_choosed_ids" invisible="active_id.type != 'picking'"/>-->
         </group>
         <group> 
             <field name="date"/>
             <field name="type"/>
         </group>
-        <group width="100%" invisible="active_id.type != 'putting'">
+        <group width="100%" <!--invisible="active_id.type != 'putting'">-->>
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
                 </tree>
             </field>
         </group>
-        <group width="100%" invisible="active_id.type != 'putting'">
+        <group width="100%" <!--invisible="active_id.type != 'putting'">-->>
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>
