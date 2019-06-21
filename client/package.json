@@ -11,6 +11,7 @@
     "ag-grid-community": "^19.1.4",
     "ag-grid-react": "^19.1.2",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "caniuse-lite": "1.0.30000974",
     "cpy-cli": "^2.0.0",
     "flatpickr": "^1.9.1",
     "framework7": "^3.0.1",
