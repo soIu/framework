@@ -5,8 +5,12 @@ import GridEditor from './GridEditor';
 import {Button, Icon} from 'framework7-react';
 import api from 'api';
 
-function autoSizeAll(gridOptions) {
-  if (this) this.gridOptions = gridOptions;
+async function autoSizeAll(gridOptions) {
+  console.log(this);
+  if (this) {
+    this.gridOptions = gridOptions;
+    await api.wait_exist(() => this.props.invisible instanceof Function ? !this.props.invisible(window.models.env.context.active_id) : !this.props.invisible);
+  }
   /*var allColumnIds = [];
   let first = true;
   gridOptions.columnApi.getAllColumns().forEach(function(column) {
@@ -94,6 +98,7 @@ export default class extends React.Component {
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleOutside);
+    //return autoSizeAll.bind(this)(this.gridOptions);
   }
 
   componentWillUnmount() {
@@ -304,7 +309,7 @@ export default class extends React.Component {
     const models = window.models;
     const grid = (
       <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) + 'px' : '67vh', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {display: 'none'} : {})}}>
-        <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', () => autoSizeAll(params))).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id || params.data._original_object_for_id.id).then((record) => models.env.context.active_id = record).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
+        <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) && window.addEventListener('resize', () => autoSizeAll(params))).bind(this)} onRowClicked={(params) => models.env[model].browse(params.data.id || params.data._original_object_for_id.id).then((record) => models.env.context.active_id = record).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
         <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() ? 'inline-block' : 'none', top: '-45px'}}>Add</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px'}}>Delete</Button>
       </div>
