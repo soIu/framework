@@ -40,9 +40,9 @@ class WcsJob(models.Model):
             if bucket_object:
                coordinate = None
                if self.type == 'putting':
-                  coordinate = 25 * 65536 + 12
+                  coordinate = 35 * 65536 + 22
                elif self.type == 'picking':
-                  coordinate = 10 * 65536 + 12
+                  coordinate = 20 * 65536 + 22
                request = requests.post({'url': 'http://localhost:8080/wcs/robot/job/submit', 'body': JSON.stringify({'robotJobId': 'RJI_' + self.id, 'warehouseId': '60001', 'bucketId': self.bucket, 'workFace': self.workface, 'endPoint': coordinate.toString(), 'letDownFlag': self.flag, 'jobPriority': self.priority.toString()}), 'headers': {'Content-Type': 'application/json'}})
                return request.then(
                def (result):

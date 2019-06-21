@@ -13,23 +13,27 @@ class StockPack(models.Model):
         return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (pack_id):
             if pack_id:
-               name = pack_id.name or 'Box 000'
+               name = pack_id.name or 'Pack 000'
                if pack.last_box:
                   name = tools.max(name, pack.last_box)
-               name = 'Box ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
+               name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
                pack.last_box = name
                return name
         )
 
-    name = fields.Char(string="Pack/Box Number", defaults=_get_box_number, required=True)
+    name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
     date = fields.Datetime(string="Date")
     location_id = fields.Many2one('stock.location', string="Current Location")
     picking_id = fields.Many2one('stock.picking', string="Operation")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
 
+    def print_barcode(self):
+        if v'typeof window' != 'undefined' and window.printBarcode:
+           printBarcode(self.name)
+
 StockPack()
 
-menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs/Boxes', 'model': 'stock.pack', 'sequence': 6})
+menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
 
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
@@ -42,6 +46,9 @@ view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 
 view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 <form>
+    <header>
+        <button name="print_barcode" string="Print"/>
+    </header>
     <sheet>
         <group>
             <field name="name"/>

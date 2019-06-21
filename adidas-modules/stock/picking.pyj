@@ -11,7 +11,7 @@ class StockPicking(models.Model):
         return self.env['stock.picking'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (picking_id):
             if picking_id.length > 0:
-               name = 'Picking ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
+               name = 'Operation ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
                return name
             return 'Operation 001'
         )
@@ -24,7 +24,7 @@ class StockPicking(models.Model):
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
-    pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs/Boxes")
+    pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs")
 
     @api.server
     def confirm(self):
