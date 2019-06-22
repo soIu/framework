@@ -34,7 +34,7 @@ try {
 }
 conf = fs.readFileSync(__dirname + '/app.conf').toString();
 if (conf !== '') {
-    conf = conf.split(' =').join('=').split('= ').join('=').split('=').join('":"').split('\n').join('","');
+    conf = conf.split(' =').join('=').split('= ').join('=').split('=').join('":"').replace(/(?:\r\n|\r|\n)/g, '","');
     conf = '{"' + conf.slice(0, -2) + '}';
     conf = JSON.parse(conf);
     process.env = Object.assign(process.env, conf);
