@@ -251,7 +251,7 @@ class Model():
            return iter([self])
         def yield_record(self):
             for index in range(self.values.length):
-                result = self.browse()
+                result = self.env[self._name]
                 result.values = self.values[index]
                 result._search_count = self.values[index]._search_count
                 yield result
