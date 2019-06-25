@@ -10,15 +10,19 @@ import {
 
 export default (props) => (
   <Page>
-    <Navbar backLink={window.models.env.context.active_url === '/' ? false : 'Back'}>
+    <Navbar backLink={(window.models.env.context.active_url === '/' || props.popup) ? false : 'Back'}>
       {window.models.env.context.active_url === '/' &&
       <NavLeft>
         <Link iconMd="material:menu" panelOpen="left"></Link>
       </NavLeft>}
       <NavTitle>{props.title}</NavTitle>
+      {!props.popup ?
       <NavRight>
         <Link iconMd="material:person" panelOpen="right"></Link>
-      </NavRight>
+      </NavRight> :
+      <NavRight>
+        <Link iconMd="material:close" popupClose></Link>
+      </NavRight>}
     </Navbar>
     {props.children}
   </Page>

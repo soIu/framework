@@ -13,6 +13,13 @@ import api from 'api';
 
 window.rapydComponents = {...window.rapydComponents, Form, Header, Button, Sheet, Group, Field, Tree, Footer};
 
+const function_string =
+`if (!active_id) return false;
+var True = true;
+var False = false;
+var None = null;
+return `;
+
 function parseView(view, model) {
   const customComponents = {...window.rapydComponents, Form, Header, Button, Sheet, Group, Field, Tree, Footer};
   view = new DOMParser().parseFromString(view, 'text/xml').children[0];
@@ -31,9 +38,10 @@ function parseView(view, model) {
           if (props[attribute].constructor === Boolean) continue;
           if (api.hasValue(props[attribute], ' == ')) props[attribute] = props[attribute].replace('==', '===');
           if (api.hasValue(props[attribute], ' != ')) props[attribute] = props[attribute].replace('!=', '!==');
-          if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', 'if (!active_id) return false; \nreturn ' + props[attribute]]))();
+          if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props[attribute]]))();
         }
       }
+      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props.domain.replace(/\(/g, '[').replace(/\)/g, ']')]))();
       if (component === Tree) {
         props.model = window.models.env[model]._fields[parent_props.name].relation;
         props.field = window.models.env[model]._fields[parent_props.name].inverse;

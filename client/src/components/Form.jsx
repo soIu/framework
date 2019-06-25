@@ -69,6 +69,7 @@ export default class extends React.Component {
       const promises = [];
       for (let model in models.env.context.active_lines) {
         for (let inverse_field in models.env.context.active_lines[model]) {
+          if (inverse_field.slice(0, 10) === 'many2many_') continue;
           promises.push(models.env.context.active_lines[model][inverse_field].write({[inverse_field]: models.env.context.active_id.id}));
         }
       }

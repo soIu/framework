@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
     List,
@@ -95,8 +94,8 @@ export default class extends React.Component {
     const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea', 'boolean': 'checkbox'};
     const context = window.models.env.context;
     const refs = this.refs;
-    const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[model].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id
-    const invisible = props.invisible instanceof Function && active_id ? props.invisible(active_id) : props.invisible;
+    const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[field.relation][(field.type !== 'one2many' ? 'many2many_' : '') + this.props.tree.state.tree_field].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id;
+    const invisible = props.invisible instanceof Function && active_id ? props.invisible(active_id, models.env.context.active_id) : props.invisible;
     props.readonly = field.readonly || props.readonly;
     const readonly = props.readonly instanceof Function && active_id ? props.readonly(active_id) : props.readonly;
 
@@ -105,9 +104,10 @@ export default class extends React.Component {
         const limit = 10
         models.env.context.active_limit = limit;
         models.env.context.active_index = query.offset / limit;
-        const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term]);
+        const domain = (active_id && props.domain) ? props.domain(...(!props.cellEdit ? [active_id] : [active_id, models.env.context.active_id])) : [];
+        const records = await models.env[field.relation].with_context({no_preload: true}).search([(models.env[field.relation]._rec_name || 'name'), 'ilike', query.term], ...domain);
         if (models.env.context.active_lines[field.relation]) {
-          for (var inverse_field in models.env.context.active_lines[model]) {
+          for (var inverse_field in models.env.context.active_lines[field.relation]) {
             records.add(models.env.context.active_lines[field.relation][inverse_field].filter((record) => record[record._rec_name || 'name'] && record[record._rec_name || 'name'].toLowerCase().indexOf(query.term.toLowerCase()) !== -1));
           }
         }
@@ -145,7 +145,7 @@ export default class extends React.Component {
       const selections = window.tools.copy(field.selection).reverse();
       component = (
         <div style={invisible ? {display: 'none'} : {}}>
-          {selections.map((selection) => 
+          {selections.map((selection) =>
           first ? <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{(first = false) || selection[1]}</Button> : [<span className="rapyd-statusbars rapyd-statusbar-arrow">{'>'}</span>, <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{selection[1]}</Button>]
           )}
         </div>
@@ -163,7 +163,7 @@ export default class extends React.Component {
         items = field.selection.map((selection) => ({id: selection[0], text: selection[1]}));
       }
       component = (
-        <ListInput label={string} input={false} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
+        <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
           <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
