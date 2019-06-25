@@ -1,12 +1,20 @@
 import React from 'react';
 //import Parser from 'react-jsx-parser';
 import Tree from '../Tree';
-import Field from '../Field';
+//import Field from '../Field';
 //import {transform as Parser} from 'babel-core';
 //import preset from '@babel/preset-react';
 import api from 'api';
 
-const customComponents = {Tree, Field};
+const customComponents = {Tree, Field: null};
+
+const function_string =
+`if (!active_id) return false;
+var True = true;
+var False = false;
+var None = null;
+return `;
+
 
 function parseView(view, model) {
   view = new DOMParser().parseFromString(view, 'text/xml').children[0];
@@ -25,9 +33,10 @@ function parseView(view, model) {
           if (props[attribute].constructor === Boolean) continue;
           if (api.hasValue(props[attribute], ' == ')) props[attribute] = props[attribute].replace('==', '===');
           if (api.hasValue(props[attribute], ' != ')) props[attribute] = props[attribute].replace('!=', '!==');
-          if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', 'if (!active_id) return false; \nreturn ' + props[attribute]]))();
+          if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props[attribute]]))();
         }
       }
+      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props.domain.replace(/\(/g, '[').replace(/\)/g, ']')]))();
       props.isTreeView = true;
       components.push(React.createElement(component, props, recurse(element.children)));
     }

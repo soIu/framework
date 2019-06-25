@@ -8,8 +8,8 @@ export default class extends React.Component {
   }*/
 
   componentDidMount() {
-    console.log(this.props.customInput)
-    const clone = this.props.customInput || (!this.props.inline ? this.refs.flatpickr : this.refs.flatpickr.cloneNode(false));
+    const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : this.refs.flatpickr.cloneNode(false));
+    console.log(clone);
     if (!clone) return;
     if (this.props.inline) {
       clone.style.display = '';
@@ -17,7 +17,7 @@ export default class extends React.Component {
     }
     let onChange = this.props.onChange;
     if (this.props.readOnly) onChange = (value) => value !== this.props.defaultDate && (this.props.defaultDate ? this.flatpickr.setDate(this.props.defaultDate) : this.flatpickr.clear());
-    this.flatpickr = flatpickr(clone, {...this.props, onChange: async (value) => {await onChange(value); this.flatpickr.open()}});
+    this.flatpickr = clone._flatpickr || flatpickr(clone, {...this.props, onChange: async (value) => {await onChange(value); this.flatpickr.open()}});
   }
 
   componentDidUpdate() {
@@ -26,7 +26,11 @@ export default class extends React.Component {
     let onChange = this.props.onChange;
     if (this.props.readOnly) onChange = (value) => value !== this.props.defaultDate && (this.props.defaultDate ? this.flatpickr.setDate(this.props.defaultDate) : this.flatpickr.clear());
     this.flatpickr.set('onChange', async (value) => {await onChange(value); this.flatpickr.open()});
-    this.flatpickr.setDate(this.props.defaultDate);
+    if (this.props.defaultDate) this.flatpickr.setDate(this.props.defaultDate);
+    else {
+      this.flatpickr.selectedDateObj = null;
+      this.flatpickr.input.value = '';
+    }
   }
 
   render(props) {
