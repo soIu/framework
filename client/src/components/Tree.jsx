@@ -74,7 +74,7 @@ export default class Tree extends React.Component {
     }
     this.handleOutside = handleOutside.bind(this);
     const children = props.children.constructor === Array ? props.children : [props.children];
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...((['date', 'datetime'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
