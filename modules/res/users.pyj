@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.api as api
 import orm.tools as tools
 from ir.ui import menu, view
+from ir.data import data
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -92,9 +93,9 @@ def check_admin():
             raise error
         )
     if not tools.configuration.client:
-       models.env['res.users'].with_context(limit=1).search(['is_superuser', '=', True]).then(
+       return models.env['res.users'].with_context(limit=1).search(['is_superuser', '=', True]).then(
        def (record):
-           if not tools.exist(record.length):
+           if not record.length:
               return create_admin()
            else:
               models.superuser_id = record.id
@@ -105,3 +106,5 @@ def check_admin():
        def (error):
            console.log(error)
        )
+
+data.append(check_admin)

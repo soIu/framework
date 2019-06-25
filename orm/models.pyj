@@ -145,10 +145,10 @@ class Model():
         )
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
-        try:
-           setSchema()
-        except:
-           pass
+        #try:
+        #   setSchema()
+        #except:
+        #   pass
         if exist(self._name):
            if not exist(raw_models[self._name]):
               raw_models[self._name] = []
