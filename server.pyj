@@ -3,14 +3,14 @@ import modules.controllers
 import orm.http as http
 from orm.models import env, setSchema
 from orm.tools import exist, configuration, merge
-from res.users import check_admin, admin_password
+from ir.data import create_data
 
 setSchema()
 
 configuration = merge(configuration, {key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
 
 admin_password = configuration.admin_password
-check_admin()
+create_data()
 
 client_js = 'var ρσ_module_doc__\n' + require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString()
 client_js = client_js.replace('{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}', JSON.stringify(configuration))

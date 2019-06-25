@@ -1,0 +1,6 @@
+data = []
+def create_data():
+    promises = []
+    for method in data:
+        promises.push(method())
+    return Promise.all(promises)

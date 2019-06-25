@@ -3,11 +3,13 @@ import orm.models as models
 import orm.exceptions as exceptions
 import orm.tools as tools
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
-from res.users import check_admin
+from ir.data import create_data
 
 tools.exceptions = exceptions
 
-check_admin()
+models.setSchema()
+
+create_data()
 
 #tools.configuration.client = True
 tools.configuration.url = "http://localhost:8069"
