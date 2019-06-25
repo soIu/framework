@@ -1,0 +1,66 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+from ir.ui import menu, view
+from ir.data import data
+
+defaults = {}
+
+class ProductCategory(models.Model):
+    _name = 'product.category'
+
+    name = fields.Char(string="Name", required=True)
+    reference = fields.Char(string="Reference")
+
+ProductCategory()
+
+menu.add({'id': 'category', 'parent': 'stock', 'string': 'Categories', 'model': 'product.category', 'sequence': 9})
+
+view.add({'model': 'product.category', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="reference"/>
+</tree>
+"""})
+
+view.add({'model': 'product.category', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="reference"/>
+        </group>
+    </sheet>
+</form>
+"""})
+
+def create_categories():
+    insole = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Insole'])
+    outsole = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Outsole'])
+    upper = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Upper'])
+    return Promise.all([insole, outsole, upper]).then(
+    def (result):
+        promises = []
+        insole_id, outsole_id, upper_id = result
+        if insole_id.length:
+           defaults.insole_id = insole_id.ids[0]
+        else:
+           promises.push(models.env['product.category'].create({'name': 'Insole', 'reference': 'ADS-Insole'}))
+        if outsole_id.length:
+           defaults.outsole_id = outsole_id.ids[0]
+        else:
+           promises.push(models.env['product.category'].create({'name': 'Outsole', 'reference': 'ADS-Outsole'}))
+        if upper_id.length:
+           defaults.uppper_id = upper_id.ids[0]
+        else:
+           promises.push(models.env['product.category'].create({'name': 'Upper', 'reference': 'ADS-Upper'}))
+        if promises.length:
+           return Promise.all(promises).then(
+           def (result):
+               defaults.insole_id, defaults.outsole_id, defaults.upper_id = [record.id for record in result]
+           )
+    )
+
+data.append(create_categories)

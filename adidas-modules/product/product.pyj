@@ -9,7 +9,8 @@ class ProductProduct(models.Model):
     name = fields.Char(string="Product Name", required=True)
     code = fields.Char(string="Product Code")
     description = fields.Text(string="Description")
-    
+    category_id = fields.Many2one('product.category', string="Category", required=True)
+
 ProductProduct()
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
@@ -28,6 +29,7 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         <group>
             <field name="name"/>
             <field name="code"/>
+            <field name="category_id"/>
         </group>
         <group>
             <field name="description"/>

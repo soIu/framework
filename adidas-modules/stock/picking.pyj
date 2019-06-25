@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from ir.ui import menu, view
+from stock.location import defaults as location_default
 
 class StockPicking(models.Model):
     _name = 'stock.picking'
@@ -16,52 +17,145 @@ class StockPicking(models.Model):
                return name
             return 'Operation 001'
         )
+    def _get_type(self):
+         if v'typeof window' != 'undefined':
+            return window.models.env.context.default_operation_type or None
 
     name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True)
     date = fields.Datetime(string="Date")
     reference = fields.Char(string="Reference")
     state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
-    type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True)
+    type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True, defaults=_get_type)
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
-    pack_ids = fields.One2many('stock.pack', 'picking_id', string="Packs")
-    pack_choosed_ids = fields.Many2many('stock.pack', string="Packs/Bags to pick")
-    job_id = fields.Many2one('wcs.job', string="WCS Job")
+    pack_ids = fields.Many2many('stock.pack', string="Packs")
+    job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
+
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v"typeof window === 'undefined'":
+           value = values if Array.isArray(values) else [values]
+           for object in value:
+               if object.type == 'putting':
+                  object.location_src_id = location_default.internal_id
+                  object.location_dest_id = location_default.external_id
+               elif object.type == 'picking':
+                  object.location_dest_id = location_default.internal_id
+                  object.location_src_id = location_default.external_id
+        result = self.__super__('create')(values=values, is_client=is_client)
+        return result
+
+    @api.server
+    def get_buckets(self):
+        if self.type == 'picking':
+           selected_buckets = []
+           def find_empty():
+               buckets = tools.copy(selected_buckets)
+               return self.env['stock.pack'].search(['id', 'not in', self.pack_ids], ['bucket', '!=', False]).then(
+               def (pack_ids):
+                   for pack_id in pack_ids:
+                       if pack_id.bucket not in buckets: buckets.push(pack_id.bucket)
+                   if not buckets.length:
+                      return ['1']
+                   elif buckets.length == 34:
+                      return self.env['stock.pack'].with_context(order='move_ids', limit=1).search(['bucket', '!=', False]).then(
+                      def (pack_id):
+                          if pack_id.length:
+                             return selected_buckets.concat([pack_id.bucket])
+                      )
+                   else:
+                      return selected_buckets.concat([str(int(tools.max(*buckets)) + 1)])
+               )
+           return self.env['stock.pack'].browse(self.pack_ids).then(
+           def (pack_ids):
+               unassigned_pack = False
+               for pack_id in pack_ids:
+                   if pack_id.bucket and pack_id.bucket not in selected_buckets: selected_buckets.push(pack_id.bucket)
+                   elif not pack_id.bucket: unassigned_pack = True
+               if unassigned_pack:
+                  return find_empty()
+               else:
+                  return selected_buckets
+           )
+        elif self.type == 'picking':
+           selected_packs = []
+           return self.env['stock.move'].browse(self.move_ids).then(
+           def (move_ids):
+               unassigned_move = False
+               for move_id in move_ids:
+                   if move_id.pack_id and move_id.pack_id not in selected_packs: selected_packs.push(move_id.pack_id)
+                   elif not move_id.pack_id: unassigned_pack = True
+               if unassigned_pack:
+                  promises = []
+                  for move_id in move_ids:
+                      if not move_id.pack_id:
+                         promise = self.env['stock.move'].with_context(limit=1).search(['pack_id', '!=', False], ['product_id', '=', move_id.product_id.id], ['product_qty', '>=', pack_id.product_qty], ['location_dest_id', '=', location_default.internal_id], ['state', '=', 'done']).then(
+                         def (move_id):
+                             if move_id.length:
+                                selected_packs.push(move_id.pack_id)
+                         )
+                         promises.push(promise)
+                  return Promise.all(promises)
+           ).then(
+           def ():
+               return self.env['stock.pack'].browse(selected_packs).then(
+               def (pack_ids):
+                   return Object.keys({pack_id.bucket: True for pack_id in pack_ids})
+               )
+           )
 
     @api.server
     def confirm(self):
-        return self.env['wcs.job'].create({'name': 'Job ' + self.name, 'date': Date(), 'state': 'draft', 'bucket': '1', 'workface': '2' if self.type == 'picking' else '0', 'type': self.type, 'flag': 'online', 'priority': 1}).then(
-        def (job_id):
-            def submit():
-                return job_id.submit().then(def (job_id): return job_id;)
-            if self.type == 'picking': return submit()
-            return self.env['wcs.job'].with_context(limit=1, order='date desc').search(['bucket', '=', job_id.bucket]).then(
-            def (previous_job_id):
-                if previous_job_id.length > 0 and previous_job_id.type == 'picking':
-                   return job_id.write({'workface': '4'})
-            ).then(submit)
-        ).then(
-        def (job_id):
-            return self.write({'state': 'confirmed', 'job_id': job_id.id})
+        return self.get_buckets().then(
+        def (buckets):
+            promises = []
+            count = 1
+            for bucket in buckets:
+                promise = self.env['wcs.job'].create({'name': 'Job ' + count + ' ' + self.name, 'date': Date(), 'state': 'draft', 'bucket': bucket, 'workface': '2' if self.type == 'picking' else '0', 'type': self.type, 'flag': 'online', 'priority': 1}).then(
+                def (job_id):
+                    def submit():
+                        return job_id.submit().then(def (job_id): return job_id;)
+                    if self.type == 'picking': return submit()
+                    return self.env['wcs.job'].with_context(limit=1, order='date desc').search(['bucket', '=', job_id.bucket], ['state', '=', 'returned']).then(
+                    def (previous_job_id):
+                        if previous_job_id.length > 0 and previous_job_id.type == 'picking':
+                           return job_id.write({'workface': '4'})
+                    ).then(submit)
+                ) #.then(
+                #def (job_id):
+                #    return self.write({'state': 'confirmed', 'job_id': job_id.id})
+                #)
+                promises.push(promise)
+                count += 1
+            return Promise.all(promises).then(
+            def (job_ids):
+                return self.write({'state': 'confirmed', 'job_ids': [job_id.id for job_id in job_ids]})
+            )
         )
 
     @api.server
     def validate(self):
-        processes = []
-        processes.push(self.env['wcs.job'].browse(self.job_id))
-        if self.type == 'putting':
-           processes.push(self.env['stock.pack'].browse(self.pack_ids))
+        """processes = []
+        processes.push(self.env['wcs.job'].browse(self.job_ids))
+        #if self.type == 'putting':
+        #   processes.push(self.env['stock.pack'].browse(self.pack_ids))
         return Promise.all(processes).then(
         def (results):
-            job_id, pack_ids = results
+            job_ids, pack_ids = results
             return_bucket = job_id.return_bucket()
             if self.type != 'putting': return return_bucket
             return return_bucket.then(
             def ():
                 return pack_ids.write({'bucket': job_id.bucket})
             )
+        )"""
+        return self.env['wcs.job'].browse(self.job_ids).then(
+        def (job_ids):
+            promises = []
+            for job_id in job_ids:
+                promises.push(job_id.return_bucket())
+            return Promise.all(promises)
         ).then(
         def ():
             return self.write({'state': 'validated'})
@@ -69,8 +163,8 @@ class StockPicking(models.Model):
 
 StockPicking()
 
-menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Operations', 'model': 'stock.picking', 'sequence': 1})
-
+menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'picking'}})
+menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
@@ -90,25 +184,27 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="name" readonly="active_id.state != 'draft'"/>
             <field name="reference"/>
-            <field name="pack_choosed_ids" invisible="active_id.type != 'picking'"/>
         </group>
-        <group> 
+        <group>
             <field name="date"/>
             <field name="type"/>
         </group>
-        <group width="100%" invisible="active_id.type != 'putting'">
+        <group width="100%">
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
+                    <field name="category_id"/>
+                    <field name="bucket" string="Bucket"/>
+                    <field name="level"/>
                 </tree>
             </field>
         </group>
-        <group width="100%" invisible="active_id.type != 'putting'">
+        <group width="100%">
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
-                    <field name="pack_id"/>
+                    <field name="pack_id" domain="[('id', 'in', parent.pack_ids.ids)]"/>
                 </tree>
             </field>
         </group>

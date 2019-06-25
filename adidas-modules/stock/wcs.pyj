@@ -92,7 +92,7 @@ view.add({'model': 'wcs.job', 'mode': 'form', 'string': False, 'arch': """
             <field name="workface"/>
             <field name="priority" readonly="active_id.state != 'draft'"/>
         </group>
-        <group> 
+        <group>
             <field name="date" readonly="active_id.state != 'draft'"/>
             <field name="type" readonly="active_id.state != 'draft'"/>
             <field name="flag" readonly="active_id.state != 'draft'"/>

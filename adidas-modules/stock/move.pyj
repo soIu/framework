@@ -1,5 +1,6 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 import orm.api as api
 from ir.ui import menu, view
 
@@ -14,7 +15,41 @@ class StockMove(models.Model):
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     picking_id = fields.Many2one('stock.picking', string="Operation")
     pack_id = fields.Many2one('stock.pack', string="Pack/Box")
-    
+
+    def create(self, values=False, is_client=tools.configuration.client):
+        promises = []
+        if v"typeof window === 'undefined'":
+           value = values if Array.isArray(values) else [values]
+           for object in value:
+               if object.picking_id:
+                  promise = self.env['stock.picking'].browse(object.picking_id).then(
+                  def (picking_id):
+                      object.location_src_id = picking_id.location_src_id
+                      object.location_dest_id = picking_id.location_dest_id
+                  )
+                  promises.push(promise)
+        return Promise.all(promises).then(
+        def ():
+            return self.__super__('create')(values=values, is_client=is_client)
+        )
+
+    def write(self, values=False, is_client=tools.configuration.client):
+        promises = []
+        if v"typeof window === 'undefined'":
+           value = values if Array.isArray(values) else [values]
+           for object in value:
+               if object.picking_id:
+                  promise = self.env['stock.picking'].browse(object.picking_id).then(
+                  def (picking_id):
+                      object.location_src_id = picking_id.location_src_id
+                      object.location_dest_id = picking_id.location_dest_id
+                  )
+                  promises.push(promise)
+        return Promise.all(promises).then(
+        def ():
+            return self.__super__('write')(values=values, is_client=is_client)
+        )
+
 StockMove()
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})

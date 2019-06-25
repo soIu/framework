@@ -11,16 +11,22 @@ class StockPack(models.Model):
     _name = 'stock.pack'
 
     @api.server
-    def _get_box_number(self):
+    def _get_box_number_server(self, last_box):
         return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (pack_id):
-            if pack_id:
+            if pack_id.length > 0:
                name = pack_id.name or 'Pack 000'
-               if pack.last_box:
-                  name = tools.max(name, pack.last_box)
+               if last_box:
+                  name = tools.max(name, last_box)
                name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
-               pack.last_box = name
                return name
+        )
+
+    def _get_box_number(self):
+        return self._get_box_number_server(pack.last_box).then(
+        def (result):
+            pack.last_box = result
+            return result
         )
 
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
@@ -29,6 +35,8 @@ class StockPack(models.Model):
     picking_id = fields.Many2one('stock.picking', string="Operation")
     bucket = fields.Selection(*WcsJob.prototype.bucket.selection, string="Current Bucket")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
+    category_id = fields.Many2one('product.category', string="Category")
+    level = fields.Selection(['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], string="Level")
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -42,8 +50,8 @@ menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pa
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
-    <field name="date"/>
-    <field name="location_id"/>
+    <field name="bucket"/>
+    <field name="category_id"/>
 </tree>
 """})
 
@@ -55,10 +63,12 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <field name="location_id"/>
+            <field name="category_id"/>
         </group>
-        <group> 
+        <group>
             <field name="date"/>
+            <field name="bucket"/>
+            <field name="level"/>
         </group>
         <group width="100%">
             <field name="move_ids">
