@@ -90,8 +90,8 @@
 			self.updateNow();
 		}
 	};
-
-	freeboard.loadDatasourcePlugin({
+    
+    var options = {
 		type_name: "JSON",
 		display_name: "JSON",
 		settings: [
@@ -164,6 +164,9 @@
 		newInstance: function (settings, newInstanceCallback, updateCallback) {
 			newInstanceCallback(new jsonDatasource(settings, updateCallback));
 		}
-	});
+	}
+    options.options = options.settings;
+
+	freeboard.loadDatasourcePlugin();
 
 }());
