@@ -117,55 +117,21 @@
 			{
 				name: "method",
 				display_name: "Method",
-				type: "option",
-				options: [
-					{
-						name: "GET",
-						value: "GET"
-					},
-					{
-						name: "POST",
-						value: "POST"
-					},
-					{
-						name: "PUT",
-						value: "PUT"
-					},
-					{
-						name: "DELETE",
-						value: "DELETE"
-					}
-				]
+				type: "text",
+                default_value: 'GET'
 			},
 			{
 				name: "body",
 				display_name: "Body",
 				type: "text",
 				description: "The body of the request. Normally only used if method is POST"
-			},
-			{
-				name: "headers",
-				display_name: "Headers",
-				type: "array",
-				settings: [
-					{
-						name: "name",
-						display_name: "Name",
-						type: "text"
-					},
-					{
-						name: "value",
-						display_name: "Value",
-						type: "text"
-					}
-				]
 			}
 		],
 		newInstance: function (settings, newInstanceCallback, updateCallback) {
 			newInstanceCallback(new jsonDatasource(settings, updateCallback));
 		}
 	}
-    options.options = options.settings;
+    //options.options = options.settings;
 
 	freeboard.loadDatasourcePlugin();
 
