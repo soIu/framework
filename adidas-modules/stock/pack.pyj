@@ -23,7 +23,7 @@ class StockPack(models.Model):
         )
 
     def _get_box_number(self):
-        return self._get_box_number_server(tools.exist(pack.last_box) or None).then(
+        return self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None).then(
         def (result):
             pack.last_box = result
             return result
