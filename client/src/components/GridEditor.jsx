@@ -16,8 +16,10 @@ export default class extends Component {
       delete colDef.cellEditorFramework;
       let temp_ids = this.refs.selectivity.selectivity.getValue();
       if (!Array.isArray(temp_ids)) temp_ids = [temp_ids];
-      const records = window.models.env[window.models.env[this.props.model]._fields[this.props.name].relation];
+      const field = window.models.env[this.props.model]._fields[this.props.name];
+      const records = field.relation && window.models.env[field.relation];
       for (let temp_id of temp_ids) {
+        if (!field.relation) break;
         if (temp_id.slice(0, 5) === 'etemp') {
           records.add(api.globals.temp_records[temp_id]);
         }
@@ -27,8 +29,7 @@ export default class extends Component {
           records.add(record);
         }
       }
-      console.log(records);
-      this.props.tree.onChange({colDef, data: this.props.tree.state.records[this.props.rowIndex], oldValue: null, newValue: records});
+      this.props.tree.onChange({colDef, data: this.props.tree.state.records[this.props.rowIndex], oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
       if (!Array.isArray(value)) {
         return value.text;
       }
