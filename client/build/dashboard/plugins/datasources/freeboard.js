@@ -93,6 +93,7 @@
 
 	freeboard.loadDatasourcePlugin({
 		type_name: "JSON",
+		display_name: "JSON",
 		settings: [
 			{
 				name: "url",
