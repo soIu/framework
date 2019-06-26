@@ -1,138 +1,66 @@
 (function () {
-	var jsonDatasource = function (settings, updateCallback) {
-		var self = this;
-		var updateTimer = null;
-		var currentSettings = settings;
-		var errorStage = 0; 	// 0 = try standard request
-		// 1 = try JSONP
-		// 2 = try thingproxy.freeboard.io
-		var lockErrorStage = false;
 
-		function updateRefresh(refreshTime) {
-			if (updateTimer) {
-				clearInterval(updateTimer);
-			}
+    const TYPE_INFO = {
+        type: "json-datasource",
+        name: "JSON Datasource",
+        version: "0.0.1",
+        author: "Farrell Rafi",
+        kind: "datasource",
+        description: "Fetch parsed data from a REST API",
+        settings: [
+            {
+                id: "fetchInterval",
+                name: "Fetch Interval",
+                description: "How ofter should data be fetched in ms",
+                defaultValue: "1000",
+                type: "number"
+            },
+            {
+                id: "baseUrl",
+                name: "Base Url (trailing slash)",
+                description: "REST API Url",
+                required: true,
+                type: "string"
+            }
+        ]
+    };
 
-			updateTimer = setInterval(function () {
-				self.updateNow();
-			}, refreshTime);
-		}
+    class Datasource {
 
-		updateRefresh(currentSettings.refresh * 1000);
+        initialize(props) {
+            if (props.state.settings.fetchInterval) {
+                props.setFetchInterval(props.state.settings.fetchInterval);
+            }
+        }
 
-		this.updateNow = function () {
-			if ((errorStage > 1 && !currentSettings.use_thingproxy) || errorStage > 2) // We've tried everything, let's quit
-			{
-				return; // TODO: Report an error
-			}
+        datasourceWillReceiveSettings(nextSettings) {
+            if (nextSettings.fetchInterval) {
+                this.props.setFetchInterval(nextSettings.fetchInterval);
+            }
+        }
 
-			var requestURL = currentSettings.url;
+        getLatestRecivedAt() {
 
-			if (errorStage == 2 && currentSettings.use_thingproxy) {
-				requestURL = (location.protocol == "https:" ? "https:" : "http:") + "//thingproxy.freeboard.io/fetch/" + encodeURI(currentSettings.url);
-			}
+        }
 
-			var body = currentSettings.body;
+        fetchData(resolve, reject) {
 
-			// Can the body be converted to JSON?
-			if (body) {
-				try {
-					body = JSON.parse(body);
-				}
-				catch (e) {
-				}
-			}
+            const settings = this.props.state.settings;
+            let receivedAfter = null;
 
-			$.ajax({
-				url: requestURL,
-				dataType: (errorStage == 1) ? "JSONP" : "JSON",
-				type: currentSettings.method || "GET",
-				data: body,
-				beforeSend: function (xhr) {
-					try {
-						_.each(currentSettings.headers, function (header) {
-							var name = header.name;
-							var value = header.value;
+            const request = new Request(settings.baseUrl, {
+                //mode: "no-cors"
+            })
+            fetch(request)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    resolve(data)
+                })
+        }
+    }
 
-							if (!_.isUndefined(name) && !_.isUndefined(value)) {
-								xhr.setRequestHeader(name, value);
-							}
-						});
-					}
-					catch (e) {
-					}
-				},
-				success: function (data) {
-					lockErrorStage = true;
-					updateCallback(data);
-				},
-				error: function (xhr, status, error) {
-					if (!lockErrorStage) {
-						// TODO: Figure out a way to intercept CORS errors only. The error message for CORS errors seems to be a standard 404.
-						errorStage++;
-						self.updateNow();
-					}
-				}
-			});
-		}
+    window.iotDashboardApi.registerDatasourcePlugin(TYPE_INFO, Datasource);
 
-		this.onDispose = function () {
-			clearInterval(updateTimer);
-			updateTimer = null;
-		}
-
-		this.onSettingsChanged = function (newSettings) {
-			lockErrorStage = false;
-			errorStage = 0;
-
-			currentSettings = newSettings;
-			updateRefresh(currentSettings.refresh * 1000);
-			self.updateNow();
-		}
-	};
-    
-    var options = {
-		type_name: "JSON",
-		display_name: "JSON",
-		settings: [
-			{
-				name: "url",
-				display_name: "URL",
-				type: "text"
-			},
-			{
-				name: "use_thingproxy",
-				display_name: "Try thingproxy",
-				description: 'A direct JSON connection will be tried first, if that fails, a JSONP connection will be tried. If that fails, you can use thingproxy, which can solve many connection problems to APIs. <a href="https://github.com/Freeboard/thingproxy" target="_blank">More information</a>.',
-				type: "boolean",
-				default_value: true
-			},
-			{
-				name: "refresh",
-				display_name: "Refresh Every",
-				type: "number",
-				suffix: "seconds",
-				default_value: 5
-			},
-			{
-				name: "method",
-				display_name: "Method",
-				type: "text",
-                default_value: 'GET'
-			},
-			{
-				name: "body",
-				display_name: "Body",
-				type: "text",
-				description: "The body of the request. Normally only used if method is POST"
-			}
-		],
-		newInstance: function (settings, newInstanceCallback, updateCallback) {
-			newInstanceCallback(new jsonDatasource(settings, updateCallback));
-		}
-	}
-    //options.options = options.settings;
-
-	freeboard.loadDatasourcePlugin();
-
-}());
+})();
