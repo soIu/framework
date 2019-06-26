@@ -48,7 +48,7 @@ class StockPicking(models.Model):
 
     @api.server
     def get_buckets(self):
-        if self.type == 'picking':
+        if self.type == 'putting':
            selected_buckets = []
            def find_empty():
                buckets = tools.copy(selected_buckets)
