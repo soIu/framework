@@ -20,6 +20,12 @@
                 name: "AGV Index",
                 defaultValue: "0",
                 type: "number"
+            },
+            {
+                id: "code",
+                name: "Code",
+                type: "text",
+                required: true
             }
         ]
     };
@@ -56,7 +62,9 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    resolve(data.method_result[parseInt(props.state.settings.agvIndex)])
+                    data = data.method_result[parseInt(props.state.settings.agvIndex)]
+                    eval(props.state.settings.code)
+                    resolve(data)
                 })
         }
     }
