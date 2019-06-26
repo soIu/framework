@@ -27,6 +27,11 @@ class WcsJob(models.Model):
     homepoint = fields.Integer(string="Homepoint")
 
     @api.strict
+    def get_agv_status(self):
+        requests = require('request-promise-native')
+        return requests.post({'url': 'http://localhost:8080/wcs/agv/query', 'body': JSON.stringify({'warehouseId': '60001'}), 'headers': {'Content-Type': 'application/json'}})
+
+    @api.strict
     def submit(self):
         requests = require('request-promise-native')
         return requests.post({'url': 'http://localhost:8080/wcs/bucket/query', 'body': JSON.stringify({'warehouseId': '60001', 'bucketCodeList': [str(index + 1) for index in range(34)]}), 'headers': {'Content-Type': 'application/json'}}).then(
@@ -67,7 +72,7 @@ class WcsJob(models.Model):
 WcsJob()
 
 menu.add({'id': 'job', 'parent': 'stock', 'string': 'Job', 'model': 'wcs.job', 'sequence': 2})
-
+menu.add({'id': 'agv', 'parent': 'stock', 'string': 'AGV', 'model': 'wcs.job', 'sequence': 2, 'view_id': 'wcs.job.agv'})
 
 view.add({'model': 'wcs.job', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
@@ -99,4 +104,10 @@ view.add({'model': 'wcs.job', 'mode': 'form', 'string': False, 'arch': """
         </group>
     </sheet>
 </form>
+"""})
+
+view.add({'model': 'wcs.job', 'mode': 'agv', 'string': False, 'arch': """
+<page title="AGV Status">
+    <iframe width="100%" height="100%" frameborder="0" src="dashboard/"/>
+</page>
 """})
