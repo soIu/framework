@@ -1,8 +1,8 @@
 (function () {
 
     const TYPE_INFO = {
-        type: "json-datasource",
-        name: "JSON Datasource",
+        type: "wms-datasource",
+        name: "WMS Datasource",
         version: "0.0.1",
         author: "Farrell Rafi",
         kind: "datasource",
@@ -16,11 +16,10 @@
                 type: "number"
             },
             {
-                id: "baseUrl",
-                name: "Base Url (trailing slash)",
-                description: "REST API Url",
-                required: true,
-                type: "string"
+                id: "agvIndex",
+                name: "AGV Index",
+                defaultValue: "0",
+                type: "number"
             }
         ]
     };
@@ -48,7 +47,7 @@
             const settings = this.props.state.settings;
             let receivedAfter = null;
 
-            const request = new Request(settings.baseUrl, {
+            const request = new Request(window.location.href.replace(window.location.hash, '').replace('/dashboard/', '/') + '/adidas-wms/api/methods?login=%228c46b255e370acbdf61c5b47e4696dfa%22&password=%22982063ae578804d3c36ae646ffaecb64%22&encrypted=true&model=%22wcs.job%22&ids=%5B%5D&method=%22get_agv_status%22&args=%5B%5D', {
                 //mode: "no-cors"
             })
             fetch(request)
@@ -56,7 +55,7 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    resolve(data)
+                    resolve(data.method_result[parseInt(this.props.state.settings.agvIndex)])
                 })
         }
     }
