@@ -166,14 +166,14 @@ StockPicking()
 menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'picking'}})
 menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'putting'}})
 
-view.add({'model': 'stock.picking', 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
 <tree>
     <field name="name"/>
     <field name="date"/>
 </tree>
 """})
 
-view.add({'model': 'stock.picking', 'mode': 'form', 'string': False, 'arch': """
+view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch': """
 <form>
     <header>
         <button name="confirm" string="Confirm" invisible="active_id.state != 'draft'"/>
