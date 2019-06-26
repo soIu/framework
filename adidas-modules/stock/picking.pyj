@@ -22,7 +22,7 @@ class StockPicking(models.Model):
             return window.models.env.context.default_operation_type or None
 
     name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True)
-    date = fields.Datetime(string="Date")
+    date = fields.Datetime(string="Date", defaults=Date)
     reference = fields.Char(string="Reference")
     state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
     type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True, defaults=_get_type)
