@@ -45,6 +45,7 @@
         fetchData(resolve, reject) {
 
             const settings = this.props.state.settings;
+            const props = this.props;
             let receivedAfter = null;
 
             const request = new Request(window.location.href.replace(window.location.hash, '').replace('/dashboard/datasource.html', '/') + '/api/methods?login=%228c46b255e370acbdf61c5b47e4696dfa%22&password=%22982063ae578804d3c36ae646ffaecb64%22&encrypted=true&model=%22wcs.job%22&ids=%5B%5D&method=%22get_agv_status%22&args=%5B%5D', {
@@ -55,7 +56,7 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    resolve(data.method_result[parseInt(this.props.state.settings.agvIndex)])
+                    resolve(data.method_result[parseInt(props.state.settings.agvIndex)])
                 })
         }
     }
