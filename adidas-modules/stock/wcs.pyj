@@ -29,7 +29,7 @@ class WcsJob(models.Model):
     @api.strict
     def get_agv_status(self):
         requests = require('request-promise-native')
-        return requests.post({'url': 'http://localhost:8080/wcs/agv/query', 'body': JSON.stringify({'warehouseId': '60001'}), 'headers': {'Content-Type': 'application/json'}})
+        return requests.post({'url': 'http://localhost:8080/wcs/agv/query', 'body': JSON.stringify({'warehouseId': '60001'}), 'headers': {'Content-Type': 'application/json'}}).then(JSON.parse)
 
     @api.strict
     def submit(self):
