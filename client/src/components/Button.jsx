@@ -8,6 +8,7 @@ async function button(props) {
   const load = api.preload();
   if (props.name) {
     try {
+      if (window.models.env.context.editing) await window.models.env.context.edit_function();
       await window.models.env.context.active_id[props.name]();
     }
     catch(error) {

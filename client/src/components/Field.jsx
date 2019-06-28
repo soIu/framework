@@ -31,6 +31,25 @@ export default class extends React.Component {
     return window.models.env.context.refresh();
   }
 
+  setInputValue(value) {
+    console.log(value);
+    const props = this.props;
+    const model = props.model || window.models.env.context.active_model;
+    const field = window.models.env[model]._fields[props.name];
+    const type = field.type;
+    if (this.refs.input) {
+      if (!api.hasValue(['text', 'data', 'boolean'], type)) {
+        this.refs.input.base.querySelector('input').value = value;
+      }
+      else if (type === 'boolean') {
+        this.refs.input.base.querySelector('input').checked = value;
+      }
+      else {
+        this.refs.input.base.querySelector('textarea').value = type !== 'data' ? value : JSON.stringify(value);
+      }
+    }
+  }
+
   async componentDidMount() {
     //if (!window.models.env.context.active_id) window.models.env.context.active_id = window.models.env[window.models.env.context.active_model].browse();
     await api.wait_exist(() => window.models.env.context.active_id);
@@ -45,13 +64,13 @@ export default class extends React.Component {
     if (this.props.ref_object) Object.assign(this.props.ref_object, this.refs, {loaded: true});
     if (this.refs.input) {
       if (!api.hasValue(['text', 'data', 'boolean'], type)) {
-        this.refs.input.$listEl[0].querySelector('input').value = value;
+        this.refs.input.base.querySelector('input').value = value;
       }
       else if (type === 'boolean') {
-        this.refs.input.$listEl[0].querySelector('input').checked = value;
+        this.refs.input.base.querySelector('input').checked = value;
       }
       else {
-        this.refs.input.$listEl[0].querySelector('textarea').value = type !== 'data' ? value : JSON.stringify(value);
+        this.refs.input.base.querySelector('textarea').value = type !== 'data' ? value : JSON.stringify(value);
       }
     }
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
@@ -94,10 +113,11 @@ export default class extends React.Component {
     const types = {char: 'text', text: 'textarea', float: 'number', integer: 'number', data: 'textarea', 'boolean': 'checkbox'};
     const context = window.models.env.context;
     const refs = this.refs;
-    const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[field.relation][(field.type !== 'one2many' ? 'many2many_' : '') + this.props.tree.state.tree_field].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id;
+    const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[this.props.tree.state.model][(field.type !== 'one2many' ? 'many2many_' : '') + this.props.tree.state.tree_field].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id;
     const invisible = props.invisible instanceof Function && active_id ? props.invisible(active_id, models.env.context.active_id) : props.invisible;
     props.readonly = field.readonly || props.readonly;
     const readonly = props.readonly instanceof Function && active_id ? props.readonly(active_id) : props.readonly;
+    const value = props.cellEdit ? null : context.active_id && context.active_id[this.props.name];
 
     async function fetch(url, init, query) {
       try {
@@ -176,7 +196,7 @@ export default class extends React.Component {
         </ul>
       );
       component = (
-        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={this.state.value} onChange={(value) => this.setValue(value)}/>
+        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={value || this.state.value} onChange={(value) => this.setValue(value)}/>
       );
       if (props.cellEdit) return component.children.children;
     }
@@ -184,6 +204,7 @@ export default class extends React.Component {
       component = (
         <ListInput ref="input" label={string} type={types[type]} placeholder={props.placeholder || ''} disabled={readonly || !context.editing} onChange={(event) => this.setValue(event.target.type !== 'checkbox' ? event.target.value : event.target.checked)} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required"/>
       );
+      api.wait_exist(() => this.refs.input).then(() => this.setInputValue(value || this.state.value || null));
     }
 
     return (
