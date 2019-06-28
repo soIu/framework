@@ -839,7 +839,17 @@ class Model():
         return self
 
     def find(self, id):
-        return self._values[id] or self.env[self._name]
+        value = False
+        if id and type(id) == String:
+           value = self._values[id]
+        elif id and type(id) == Object:
+           value = self._values.find(
+           def (object):
+               return v'object === id'
+           )
+        else:
+           return self.env[self._name]
+        return self.browse().update(value)
 
     def filter(self, filter_function):
         records = self.env[self._name]
