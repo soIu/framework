@@ -387,7 +387,7 @@ class Model():
                   record._search_count = result.values[0]._search_count
                else:
                   record._search_count = result.values._search_count
-               self.with_context(no_preload=True).browse(ids)
+               self.with_context(no_preload=True).browse(self.ids)
                return record
            ).catch(
            def (error):
