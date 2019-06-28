@@ -32,7 +32,7 @@ class StockPack(models.Model):
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
     date = fields.Datetime(string="Date")
     location_id = fields.Many2one('stock.location', string="Current Location")
-    picking_id = fields.Many2one('stock.picking', string="Operation")
+    #picking_ids = fields.Many2many('stock.picking', string="Operations")
     bucket = fields.Selection(*WcsJob.prototype.bucket.selection, string="Current Bucket")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")

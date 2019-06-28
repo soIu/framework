@@ -17,6 +17,7 @@ class StockPicking(models.Model):
                return name
             return 'Operation 001'
         )
+
     def _get_type(self):
          if v'typeof window' != 'undefined':
             return window.models.env.context.default_operation_type or None
@@ -45,6 +46,23 @@ class StockPicking(models.Model):
                   object.location_src_id = location_default.external_id
         result = self.__super__('create')(values=values, is_client=is_client)
         return result
+
+    def add_bucket(self):
+        if v'typeof window' == 'undefined': return
+        picking_id = window.models.env.context.active_id
+        tools.navigate('/form/stock.pack')
+        setTimeout(
+        def ():
+            def assign_picking():
+                return picking_id.write({'pack_ids': window.models.env.context.active_id.ids})
+            window.models.env.context.active_task.push(assign_picking)
+        , 0)
+
+    def add_move(self):
+        if v'typeof window' == 'undefined': return
+        window.models.env.context.default_picking_id = window.models.env.context.active_id.id
+        window.models.env.context.active_pack_ids = window.models.env.context.active_id.pack_ids
+        tools.navigate('/form/stock.move')
 
     @api.server
     def get_buckets(self):
@@ -190,6 +208,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="type"/>
         </group>
         <group width="100%">
+            <button name="add_bucket" string="Add Bucket" invisible="active_id.type != 'putting'"/>
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
@@ -200,6 +219,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             </field>
         </group>
         <group width="100%">
+            <button name="add_move" string="Add Items"/>
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>

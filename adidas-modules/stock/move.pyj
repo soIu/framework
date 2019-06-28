@@ -7,13 +7,17 @@ from ir.ui import menu, view
 class StockMove(models.Model):
     _name = 'stock.move'
 
+    def _get_picking_context(self):
+         if v'typeof window' != 'undefined':
+            return window.models.env.context.default_picking_id or None
+
     name = fields.Char(string="Move")
-    date = fields.Datetime(string="Date")
+    date = fields.Datetime(string="Date", default=Date)
     product_id = fields.Many2one('product.product', string="Product", required=True)
     product_qty = fields.Float(string="Quantity")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
-    picking_id = fields.Many2one('stock.picking', string="Operation")
+    picking_id = fields.Many2one('stock.picking', string="Operation", default=_get_picking_context)
     pack_id = fields.Many2one('stock.pack', string="Pack/Box")
 
     def create(self, values=False, is_client=tools.configuration.client):
@@ -22,12 +26,18 @@ class StockMove(models.Model):
            value = values if Array.isArray(values) else [values]
            for object in value:
                if object.picking_id:
-                  promise = self.env['stock.picking'].browse(object.picking_id).then(
+                  picking = self.env['stock.picking'].browse(object.picking_id).then(
                   def (picking_id):
                       object.location_src_id = picking_id.location_src_id
                       object.location_dest_id = picking_id.location_dest_id
                   )
-                  promises.push(promise)
+                  promises.push(picking)
+               if object.product_id:
+                  product = self.env['product.product'].browse(object.product_id).then(
+                  def (product_id):
+                      object.name = product_id.name + ' ' object.date;
+                  )
+                  promises.push(product)
         return Promise.all(promises).then(
         def ():
             return self.__super__('create')(values=values, is_client=is_client)
@@ -45,6 +55,12 @@ class StockMove(models.Model):
                       object.location_dest_id = picking_id.location_dest_id
                   )
                   promises.push(promise)
+               if object.product_id:
+                  product = self.env['product.product'].browse(object.product_id).then(
+                  def (product_id):
+                      object.name = product_id.name + ' ' object.date;
+                  )
+                  promises.push(product)
         return Promise.all(promises).then(
         def ():
             return self.__super__('write')(values=values, is_client=is_client)
@@ -68,12 +84,12 @@ view.add({'model': 'stock.move', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <sheet>
         <group>
-            <field name="name"/>
+            <field name="picking_id"/>
             <field name="location_src_id"/>
         </group>
         <group>
-            <field name="date"/>
-            <field name="location_dest_id"/>
+            <field name="product_qty"/>
+            <field name="pack_id" domain="[('id', 'in', active_id.env.context.active_pack_ids || null)]"/>
         </group>
     </sheet>
 </form>
