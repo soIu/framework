@@ -504,8 +504,9 @@ class Model():
                if not value.id:
                   value._original_object_for_id = oldvalue
                new_values.push(value)
-               queue(keys(value) if not fields else fields,
+               queue(keys(value),
                def (key, next):
+                   if fields and key not in fields: return next()
                    field = self._fields[key]
                    if not field or (value[key] == None and field.type != 'float'): return next()
                    if field.type in ['date', 'datetime']:
