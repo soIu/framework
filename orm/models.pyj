@@ -305,10 +305,10 @@ class Model():
                   self.browse(ids=ids, is_client=False).then(
                   def (records):
                       if exist(records):
-                         for value in result._values:
+                         for value in result.values if Array.isArray(result.values) else [result.values]:
                              records.find(value.id).write(value, is_client=False)
                       else:
-                         for value in result._values:
+                         for value in result.values if Array.isArray(result.values) else [result.values]:
                              del value.rev
                              del value._rev
                              del value._id
@@ -316,7 +316,7 @@ class Model():
                   ).catch(
                   #Possible duplication is from here, need to check
                   def (error):
-                      for value in result._values:
+                      for value in result.values if Array.isArray(result.values) else [result.values]:
                           del value.rev
                           del value._rev
                           del value._id
