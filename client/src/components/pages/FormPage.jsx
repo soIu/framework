@@ -31,7 +31,7 @@ function parseView(view, model) {
       for (let attribute of element.attributes) {
         props[attribute.name] = attribute.value;
       }
-      for (let attribute of ['invisible', 'required', 'readonly']) {
+      for (let attribute of ['invisible', 'required', 'readonly', 'create']) {
         if (api.hasKey(props, attribute)) {
           if (api.hasValue(['true', 'True'], props[attribute])) props[attribute] = true;
           if (api.hasValue(['false', 'False'], props[attribute])) props[attribute] = false;
@@ -80,6 +80,7 @@ export default class extends React.Component {
     window.models.env.context.active_model = model;
     if (id) {
       window.models.env.context.active_ids = [id];
+      //delete window.models.env.context.active_id;
     }
     else {
       delete window.models.env.context.active_ids;

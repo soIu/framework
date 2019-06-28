@@ -13,6 +13,7 @@ export default class extends React.Component {
     models.env.context.editing = false;
     //models.env.context.new_value = {};
     this.state = models.env.context;//{editing: false, active_id: active_id};
+    this.state.edit_function = this.edit.bind(this);
   }
 
   async componentDidMount(props) {
@@ -26,9 +27,9 @@ export default class extends React.Component {
       models.env.context.editing = true;
       return this.setState(models.env.context);
     }
-    else if (!models.env.context.active_id) {
-      models.env.context.active_id = await models.env[model].browse(models.env.context.active_ids);
-    }
+    //else if (!models.env.context.active_id) {
+    models.env.context.active_id = await models.env[model].browse(models.env.context.active_ids);
+    //}
     return models.env.context.refresh();
   }
 
@@ -65,7 +66,7 @@ export default class extends React.Component {
     }
     models.env.context.active_task = [];
     if (operation === 'create') {
-      window.history.replaceState(undefined, undefined, window.location.hash + '?id=' + models.env.context.active_id.id);
+      api.globals.app.views.main.router.navigate(window.location.hash.replace('#!', '') + '?id=' + models.env.context.active_id.id, {reloadCurrent: true});
       const promises = [];
       for (let model in models.env.context.active_lines) {
         for (let inverse_field in models.env.context.active_lines[model]) {

@@ -74,7 +74,7 @@ export default class Tree extends React.Component {
     }
     this.handleOutside = handleOutside.bind(this);
     const children = props.children.constructor === Array ? props.children : [props.children];
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
@@ -152,9 +152,10 @@ export default class Tree extends React.Component {
     }
   }
 
-  filter(fields, params) {
+  async filter(fields, params) {
     const models = window.models;
     //const load = api.preload();
+    if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
     const args = this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : [];
     const values = [];
     for (let field in fields) {
@@ -213,6 +214,7 @@ export default class Tree extends React.Component {
     //const load = api.preload();
     try {
       const models = window.models;
+      if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
       const args = this.args || (this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids || []] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : []);
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
@@ -231,13 +233,19 @@ export default class Tree extends React.Component {
         records.add(this.state.new_records);
       }
       if (records.length > 0) {
-        window.c = this;
-        await this.setState({records: this.paginate(await records.read(true), index)})
+        if (this.args) {
+          const domain = window.tools.copy(this.args);
+          records = records.filter((record) => {
+            for (let args of domain) if (Array.isArray(args)) args[0] = record[args[0]];
+            return window.tools.apply_domain(...domain);
+          });
+        }
+        await this.setState({records: this.paginate(await records.sort_by(...(!models.env.context.active_sort ? [records._rec_name || 'name', false] : models.env.context.active_sort.split(' ').map((value) => value == 'asc' ? false : value))).read(true, this.state.fields.map((field) => field.field)), index)})
       }
       else if (records.length === 0) await this.setState({records: []});
     }
     catch(error) {
-      console.log(error);
+      console.error(error);
     }
     //load.done();
   }
@@ -253,7 +261,7 @@ export default class Tree extends React.Component {
         this.taskJob();
       }
     }
-    const values = await record.read(true);
+    const values = await record.read(true, this.state.fields.map((field) => field.field));
     this.state.new_records.add(record);
     this.state.records.push(values[0]);
     if (!this.props.treeView) window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field].add(record);
@@ -333,8 +341,8 @@ export default class Tree extends React.Component {
     const models = window.models;
     const grid = (
       <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) + 'px' : '67vh', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
-        <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', this.resizeListener = () => autoSizeAll(params, this.resizeListener))).bind(this)} onRowClicked={(params) => models.env[this.state.model].browse(params.data.id || params.data._original_object_for_id.id).then((record) => models.env.context.active_id = record).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields.filter((field) => !props.isTreeView && models.env.context.active_id && field.invisible instanceof Function ? !field.invisible({}, models.env.context.active_id) : !field.invisible)} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
-        <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
+        <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', this.resizeListener = () => autoSizeAll(params, this.resizeListener))).bind(this)} onRowClicked={(params) => models.env[this.state.model].browse(null).then((record) => delete models.env.context.active_id).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields.filter((field) => !props.isTreeView && models.env.context.active_id && field.invisible instanceof Function ? !field.invisible({}, models.env.context.active_id) : !field.invisible)} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
+        <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() && props.create !== false ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
         <Button onClick={this.chooseItem.bind(this)} style={{display: (props.choose || props.parent_model) && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
