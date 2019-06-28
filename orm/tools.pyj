@@ -46,7 +46,6 @@ def copy(object):
        elif type(object) == Array:
           return [copy(value) if exist(value) and type(value) in [Object, Array] else value for value in object]
     return object
-    
 
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair
@@ -117,7 +116,7 @@ def is_json(object):
 
 def apply_domain():
     domains = Array.prototype.slice.call(arguments)
-    result = []
+    results = []
     is_or = False
     previously_or = False
     or_index = 1
@@ -173,7 +172,7 @@ def apply_domain():
 
 def apply_domain_record(*domains, **kwargs):
     record = kwargs.record
-    result = []
+    results = []
     is_or = False
     previously_or = False
     or_index = 1
