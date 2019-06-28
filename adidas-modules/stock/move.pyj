@@ -58,7 +58,7 @@ class StockMove(models.Model):
                if object.product_id:
                   product = self.env['product.product'].browse(object.product_id).then(
                   def (product_id):
-                      object.name = product_id.name + ' ' object.date;
+                      object.name = product_id.name + ' ' + object.date
                   )
                   promises.push(product)
         return Promise.all(promises).then(
