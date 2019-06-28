@@ -849,7 +849,9 @@ class Model():
            )
         else:
            return self.env[self._name]
-        return self.browse().update(value)
+        record = self.env[self._name]
+        record.values = value
+        return record
 
     def filter(self, filter_function):
         records = self.env[self._name]
