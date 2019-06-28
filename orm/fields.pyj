@@ -1,7 +1,7 @@
 #TODO fields.Date and fields.Datetime
 from orm.tools import merge
 
-attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related']
+attributes = ['required', 'readonly', 'defaults', 'compute', 'store', 'related', 'no_offline']
 
 def Char(string, **args):
     return merge({'type': 'char', 'string': string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
