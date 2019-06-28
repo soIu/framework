@@ -73,8 +73,14 @@ def (request, response, next):
     params = request.params
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).browse(params.ids).then(
-       def (record):
-           response.result = {'status': 'success', 'values': record.values}
+       def (records):
+           if params.context and params.context.no_preload:
+              non_offline_fields = [field for field in records._fields if records._fields[field].no_offline]
+              if non_offline_fields:
+                 for record in records:
+                     for field in non_offline_fields:
+                         record.values[field] = None
+           response.result = {'status': 'success', 'values': records.values}
            next()
        ).catch(
        def (error):
@@ -97,8 +103,13 @@ def (request, response, next):
     if exist(request.params):
        options = params.options or {}
        request.env[params.model].sudo(response.result.id).with_context(**options).search(*params.args).then(
-       def (record):
-           response.result = {'status': 'success', 'values': record.values}
+       def (records):
+           non_offline_fields = [field for field in records._fields if records._fields[field].no_offline]
+           if non_offline_fields:
+              for record in records:
+                  for field in non_offline_fields:
+                      record.values[field] = None
+           response.result = {'status': 'success', 'values': records.values}
            next()
        ).catch(
        def (error):

@@ -292,7 +292,7 @@ class Model():
            result._context = self._context
            return result
         elif is_client:
-           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids}, self._context).then(
+           return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids, 'context': self._context}, self._context).then(
            def (result):
                console.log(result)
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
@@ -305,19 +305,10 @@ class Model():
                   self.browse(ids=ids, is_client=False).then(
                   def (records):
                       if exist(records):
-                         for record in records:
-                             values = {}
-                             if not records._is_singleton:
-                                result.values = [result.values]
-                             for value in result.values:
-                                 if value.id == record.id:
-                                    values = value
-                                    break
-                             record.write(values, is_client=False)
+                         for value in result._values:
+                             records.find(value.id).write(value, is_client=False)
                       else:
-                         if records._is_singleton:
-                            result.values = [result.values]
-                         for value in result.values:
+                         for value in result._values:
                              del value.rev
                              del value._rev
                              del value._id
@@ -325,11 +316,11 @@ class Model():
                   ).catch(
                   #Possible duplication is from here, need to check
                   def (error):
-                      console.error(error)
-                      del result.values.rev
-                      del result.values._rev
-                      del result.values._id
-                      db.rel.save(record._name, result.values)
+                      for value in result._values:
+                          del value.rev
+                          del value._rev
+                          del value._id
+                          db.rel.save(record._name, value)
                   )
                return record
            ).catch(
@@ -501,7 +492,7 @@ class Model():
            )
         return result
 
-    def read(self, format):
+    def read(self, format, fields):
         if format:
            promises = []
            new_values = []
@@ -513,7 +504,7 @@ class Model():
                if not value.id:
                   value._original_object_for_id = oldvalue
                new_values.push(value)
-               queue(keys(value),
+               queue(keys(value) if not fields else fields,
                def (key, next):
                    field = self._fields[key]
                    if not field or (value[key] == None and field.type != 'float'): return next()
@@ -668,7 +659,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
                self.update(result.values)
-               self.with_context(no_preload=True).browse(self.id)
+               self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
            def (error):
@@ -718,10 +709,10 @@ class Model():
                    required_fields.push(key)
         if required_fields.length > 0: raise exceptions.RequiredError(required_fields, self)
         if is_client:
-           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()], 'values': values}, self._context).then(
+           return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': record.ids, 'values': values}, self._context).then(
            def (result):
                self.update(result.values)
-               self.with_context(no_preload=True).browse(self.id)
+               self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
            def (error):
