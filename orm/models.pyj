@@ -1,6 +1,6 @@
 import orm.fields as fields
 import orm.exceptions as exceptions
-from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record
 from orm.pouchdb import db
 
 env = {}
@@ -379,8 +379,7 @@ class Model():
                   record._search_count = result.values[0]._search_count
                else:
                   record._search_count = result.values._search_count
-               for id in record.ids:
-                   self.with_context(no_preload=True).browse(id)
+               self.with_context(no_preload=True).browse(ids)
                return record
            ).catch(
            def (error):
@@ -388,48 +387,7 @@ class Model():
                return self.with_context(is_client=False).search(args)
            )
         def query(record):
-            results = []
-            for arg in args:
-                if not arg or str(arg) in ['|', '[]']:
-                   continue
-                if arg[1] == '=':
-                   if arg[2] != False:
-                      results.push(record[arg[0]] == arg[2])
-                   else:
-                      results.push(not exist(record[arg[0]]))
-                elif arg[1] == '!=':
-                   if arg[2] != False:
-                      results.push(record[arg[0]] != arg[2])
-                   else:
-                      results.push(exist(record[arg[0]]))
-                elif arg[1] == '>':
-                   results.push(record[arg[0]] > arg[2])
-                elif arg[1] == '>=':
-                   results.push(record[arg[0]] >= arg[2])
-                elif arg[1] == '<':
-                   results.push(record[arg[0]] < arg[2])
-                elif arg[1] == '<=':
-                   results.push(record[arg[0]] <= arg[2])
-                elif arg[1] == 'in' and is_array(arg[2]):
-                   results.push(record[arg[0]] in arg[2])
-                elif arg[1] == 'not in' and is_array(arg[2]):
-                   results.push(record[arg[0]] not in arg[2])
-                elif arg[1] == 'like':
-                   results.push(arg[2] in record[arg[0]])
-                elif arg[1] == 'ilike':
-                   results.push(str(arg[2]).toLowerCase() in str(record[arg[0]]).toLowerCase())
-            if not exist(args) or not exist(args[0]):
-               return True
-            elif args[0] == '|':
-               return results.some(
-               def (result):
-                   return result == True
-               )
-            else:
-               return results.every( 
-               def (result):
-                   return result == True
-               )
+            return apply_domain_record(*args, record=record)
         result = self.env[self._name]
         if options.limit == 1:
            #TODO index implementation
@@ -471,7 +429,7 @@ class Model():
                      result.values = values
                   #result.ids = [value.id for value in result._values]
                   if exist(options.order):
-                     for order in options.order.split(','):    
+                     for order in options.order.split(','):
                          order, desc = order.split(' ')
                          desc = True if desc == 'desc' else False
                          result.sort_by(order, desc)
@@ -484,7 +442,7 @@ class Model():
                   #result.id = record.id
                   result.values = record
                   if exist(options.order):
-                     for order in options.order.split(','):    
+                     for order in options.order.split(','):
                          order, desc = order.split(' ')
                          desc = True if desc == 'desc' else False
                          result.sort_by(order, desc)

@@ -115,6 +115,119 @@ def is_json(object):
           return Object.prototype.toString.call(object) == '[object Object]'
     return False
 
+def apply_domain():
+    domains = Array.prototype.slice.call(arguments)
+    result = []
+    is_or = False
+    previously_or = False
+    or_index = 1
+    or_count = 0
+    for args in domains:
+        if args == '|':
+           is_or = True
+           or_index = 1
+           continue
+        if args[1] == '=':
+           if args[2] != False:
+              results.push(args[0] == args[2])
+           else:
+              results.push(not exist(args[0]))
+        elif args[1] == '!=':
+             if args[2] != False:
+                results.push(args[0] != args[2])
+             else:
+                results.push(exist(args[0]))
+        elif args[1] == '>':
+             results.push(args[0] > args[2])
+        elif args[1] == '>=':
+             results.push(args[0] >= args[2])
+        elif args[1] == '<':
+             results.push(args[0] < args[2])
+        elif args[1] == '<=':
+             results.push(args[0] <= args[2])
+        elif args[1] == 'in' and is_array(args[2]):
+             results.push(args[0] in args[2])
+        elif args[1] == 'not in' and is_array(args[2]):
+             results.push(args[0] not in args[2])
+        elif args[1] == 'like':
+             results.push(args[2] in args[0])
+        elif args[1] == 'ilike':
+             results.push(str(args[2]).toLowerCase() in str(args[0]).toLowerCase())
+        if previously_or:
+           or_1 = results[-2]
+           or_2 = results[-1]
+           results.pop()
+           results.pop()
+           results.push(or_1 or or_2)
+        if or_index == 2:
+           or_index = 1
+           is_or = False
+        elif is_or:
+           or_index += 1
+           previously_or = True
+        else:
+           previously_or = False
+    return results.every(
+    def (result): return result
+    )
+
+def apply_domain_record(*domains, **kwargs):
+    record = kwargs.record
+    result = []
+    is_or = False
+    previously_or = False
+    or_index = 1
+    or_count = 0
+    for args in domains:
+        if args == '|':
+           is_or = True
+           or_index = 1
+           continue
+        if args[1] == '=':
+           if args[2] != False:
+              results.push(record[args[0]] == args[2])
+           else:
+              results.push(not exist(record[args[0]]))
+        elif args[1] == '!=':
+             if args[2] != False:
+                results.push(record[args[0]] != args[2])
+             else:
+                results.push(exist(record[args[0]]))
+        elif args[1] == '>':
+             results.push(record[args[0]] > args[2])
+        elif args[1] == '>=':
+             results.push(record[args[0]] >= args[2])
+        elif args[1] == '<':
+             results.push(record[args[0]] < args[2])
+        elif args[1] == '<=':
+             results.push(record[args[0]] <= args[2])
+        elif args[1] == 'in' and is_array(args[2]):
+             results.push(record[args[0]] in args[2])
+        elif args[1] == 'not in' and is_array(args[2]):
+             results.push(record[args[0]] not in args[2])
+        elif args[1] == 'like':
+             results.push(args[2] in record[args[0]])
+        elif args[1] == 'ilike':
+             results.push(str(args[2]).toLowerCase() in str(record[args[0]]).toLowerCase())
+        if previously_or:
+           or_1 = results[-2]
+           or_2 = results[-1]
+           results.pop()
+           results.pop()
+           results.push(or_1 or or_2)
+        if or_index == 2:
+           or_index = 1
+           is_or = False
+        elif is_or:
+           or_index += 1
+           previously_or = True
+        else:
+           previously_or = False
+    return results.every(
+    def (result): return result
+    )
+
+
 def queue(values, method):
     v'var index = 0'
     def next():
