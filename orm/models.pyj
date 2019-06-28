@@ -314,7 +314,6 @@ class Model():
                              def (record):
                                  del pending_browses[records._name][value.id]
                              )
-                             records.find(value.id).write(value, is_client=False)
                       else:
                          for value in result.values if Array.isArray(result.values) else [result.values]:
                              del value.rev
