@@ -12,12 +12,12 @@ class StockMove(models.Model):
             return window.models.env.context.default_picking_id or None
 
     name = fields.Char(string="Move")
-    date = fields.Datetime(string="Date", default=Date)
+    date = fields.Datetime(string="Date", defaults=Date)
     product_id = fields.Many2one('product.product', string="Product", required=True)
     product_qty = fields.Float(string="Quantity")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
-    picking_id = fields.Many2one('stock.picking', string="Operation", default=_get_picking_context)
+    picking_id = fields.Many2one('stock.picking', string="Operation", defaults=_get_picking_context)
     pack_id = fields.Many2one('stock.pack', string="Pack/Box")
 
     def create(self, values=False, is_client=tools.configuration.client):
