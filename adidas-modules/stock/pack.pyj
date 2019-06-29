@@ -15,7 +15,7 @@ class StockPack(models.Model):
         return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (pack_id):
             if pack_id:
-               name = pack_id.name if pack_id.length else 'Pack 000'
+               name = pack_id.name if pack_id.length and pack_id.name else 'Pack 000'
                if last_box and type(last_box) == String:
                   name = tools.max(name, last_box)
                name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)

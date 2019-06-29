@@ -54,7 +54,7 @@ class StockPicking(models.Model):
         setTimeout(
         def ():
             def assign_picking():
-                return picking_id.write({'pack_ids': window.models.env.context.active_id.ids})
+                return picking_id.write({'pack_ids': (picking_id.pack_ids or []).concat(window.models.env.context.active_id.ids)})
             window.models.env.context.active_task.push(assign_picking)
         , 0)
 
@@ -209,6 +209,8 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
         <group width="100%">
             <button name="add_bucket" string="Add Bucket" invisible="active_id.type != 'putting'"/>
+        </group>
+        <group width="100%">
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
@@ -220,6 +222,8 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
         <group width="100%">
             <button name="add_move" string="Add Items"/>
+        </group>
+        <group width="100%">
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>
