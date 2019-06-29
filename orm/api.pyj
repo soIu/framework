@@ -146,29 +146,12 @@ def strict(method, write=True, iterate=True):
 #if not tools.exist(tools.onchanges):
 #   tools.onchanges = {}
 
-def onchange(method, *fields):
-    method._onchange_fields = fields
-    def wrap():
-        v'var self = this'
-        args = Array.prototype.slice.call(arguments)
-        self[method.name] = method
-        result = self[method.name].apply(self, args)
-        if not tools.exist(result):
-           result = self
-        return result
+def onchange(*fields):
+    def wrap(method):
+        method._onchange_function = True
+        method._onchange_fields = fields
+        return method
     return wrap
 
-def get_onchanges(self):
-    onchanges = {}
-    for key in Object.getOwnPropertyNames(self):
-        if tools.exist(self[key]) and type(self[key]) == Function and tools.exist(self[key]._onchange_fields):
-           for field in self[key]._onchange_fields:
-               if not tools.exist(onchanges[field]):
-                  onchanges[field] = []
-               onchanges[field].push(self[key].name)
-    return onchanges
-
-tools.get_onchanges = get_onchanges
-
-#I plan to make depends to listen at adapt or write, not really sure. Maybe for now I'll make it the same as onchange
-depends = onchange
+#I plan to make depends to listen at adapt or write, not really sure.
+#depends = onchange
