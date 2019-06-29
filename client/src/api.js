@@ -125,11 +125,7 @@ async function logout() {
 
 function wait(ms) {
   return new Promise((resolve, reject) => {
-    const clear = (id) => {
-      clearInterval(id);
-      resolve();
-    }
-    const interval = setTimeout(() => clear(interval), ms);
+    setTimeout(() => resolve(), ms);
   });
 }
 

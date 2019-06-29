@@ -6,12 +6,12 @@ export default class extends React.Component {
     this.state.lastHeight = 0.0;
   }
 
-  componentDidMount(props) {
-    if (this.haveChild && this.refs.group.previousElementSibling === null) {
+  componentDidMount() {
+    if (this.props.children || this.refs.group.previousElementSibling === null) {
       return;
     }
-    const interval = setInterval(() => {
-      if (!this.refs.group || !this.refs.group.previousElementSibling) return clearInterval(interval);
+    this.interval = setInterval(() => {
+      if (!this.refs.group || !this.refs.group.previousElementSibling) return clearInterval(this.interval);
       const lastHeight = this.refs.group.previousElementSibling.clientHeight - 20;
       if (lastHeight !== this.state.lastHeight) {
         this.setState({lastHeight: lastHeight});
@@ -19,8 +19,11 @@ export default class extends React.Component {
     }, 500);
   }
 
+  componentWillUnmount() {
+    if (this.interval) clearInterval(this.interval);
+  }
+
   render(props) {
-    this.haveChild = props.children !== undefined;
     if (props.width && props.width.slice(-1) === '%' && parseInt(props.width.slice(0, -1)) > 97) {
       props.width = '97%';
     }

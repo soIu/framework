@@ -11,7 +11,7 @@ export default class extends React.Component {
 
   async componentDidMount(props) {
     api.globals.app = this.$f7;
-    window.tools.navigate = api.globals.app.views.main.router.navigate;
+    window.tools.navigate = api.globals.app.views.main.router.navigate.bind(api.globals.app.views.main.router);
     this.setState({'name': await window.models.env.user.browse(window.models.env.user.id.toString()).then((record) => record.name)});
   }
 

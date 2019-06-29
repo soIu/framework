@@ -27,12 +27,42 @@ export default class extends React.Component {
   async setValue(value, altvalue) {
     window.models.env.context.active_error && (window.models.env.context.active_error.field_map[this.props.name] = false);
     if (!this.props.cellEdit) window.models.env.context.active_id[this.props.name] = value;
+    else return window.models.env.context.refresh();
     await this.setState({value: altvalue || value});
     return window.models.env.context.refresh();
   }
 
-  setInputValue(value) {
+  async setSelectivityValue(value) {
+    await api.wait_exist(() => this.refs.selectivity);
+    if (value && value === this.lastSelectivity) return;
     console.log(value);
+    this.lastSelectivity = value;
+    const props = this.props;
+    const models = window.models;
+    const model = props.model;// || window.models.env.context.active_model;
+    const field = window.models.env[model]._fields[props.name];
+    const type = field.type;
+    if (!value || !model) {
+      return;// this.setState({value: null});
+    }
+    else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
+      //const model = props.model || window.models.env.context.active_model;
+      //const field = window.models.env[model]._fields[props.name];
+      const records = await models.env[field.relation].browse(value);
+      if (!records.length) return;
+      if (value.constructor === String) {
+        return this.setState({value: {id: records.id, text: records[records._rec_name || 'name']}});
+      }
+      else if (value.constructor === Array) {
+        return this.setState({value: Array.from(records.__iter__()).map((record) => ({id: record.id, text: record[record._rec_name || 'name']}))});
+      }
+    }
+    else if (type === 'selection') {
+      return this.setState({value: value && {id: value, text: window.tools.dict(field.selection)[value]}});
+    }
+  }
+
+  setInputValue(value) {
     const props = this.props;
     const model = props.model || window.models.env.context.active_model;
     const field = window.models.env[model]._fields[props.name];
@@ -63,33 +93,14 @@ export default class extends React.Component {
     const value = props.cellEdit ? null : context.active_id && context.active_id[this.props.name];
     if (this.props.ref_object) Object.assign(this.props.ref_object, this.refs, {loaded: true});
     if (this.refs.input) {
-      if (!api.hasValue(['text', 'data', 'boolean'], type)) {
-        this.refs.input.base.querySelector('input').value = value;
-      }
-      else if (type === 'boolean') {
-        this.refs.input.base.querySelector('input').checked = value;
-      }
-      else {
-        this.refs.input.base.querySelector('textarea').value = type !== 'data' ? value : JSON.stringify(value);
-      }
+      return this.setInputValue(value);
     }
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
-      if (!value) {
-        return this.setState({value: undefined});
-      }
-      //const model = props.model || window.models.env.context.active_model;
-      //const field = window.models.env[model]._fields[props.name];
-      const records = await models.env[field.relation].browse(value);
-      if (value.constructor === String) {
-        return this.setState({value: {id: records.id, text: records[records._rec_name || 'name']}});
-      }
-      else if (value.constructor === Array) {
-        return this.setState({value: Array.from(records.__iter__()).map((record) => ({id: record.id, text: record[record._rec_name || 'name']}))});
-      }
+      return this.setSelectivityValue(value);
     }
     else if (type === 'selection') {
       if (this.props.widget === 'statusbar') return this.setState({value});
-      return this.setState({value: value && {id: value, text: window.tools.dict(field.selection)[value]}});
+      return this.setSelectivityValue(value);
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
       return this.setState({value, input: this.refs.date_input.$listEl[0].querySelector('input')});
@@ -182,12 +193,14 @@ export default class extends React.Component {
       else if (type === 'selection') {
         items = field.selection.map((selection) => ({id: selection[0], text: selection[1]}));
       }
+      const data = this.state.value && typeof this.state.value === 'object' ? {data: this.state.value} : {};
       component = (
         <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
-          <Selectivity ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} data={this.state.value} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
+          <Selectivity {...data} ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
       if (props.cellEdit) return component.children[0];
+      api.wait(500).then(() => api.wait_exist(() => context.active_id)).then(() => context.active_id[props.name] && this.setSelectivityValue(context.active_id[props.name]));
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
       const input = (

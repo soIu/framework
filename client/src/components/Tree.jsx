@@ -6,7 +6,12 @@ import {Button, Popup} from 'framework7-react';
 import api from 'api';
 
 function autoSizeAll(gridOptions, listener) {
-  if (this) this.gridOptions = gridOptions
+  if (this) {
+    this.gridOptions = gridOptions;
+    for (let column of this.state.fields) {
+      gridOptions.api.getFilterInstance(column.field).eClearButton.addEventListener('click', () => gridOptions.api.onFilterChanged());
+    }
+  }
   /*if (listener && !gridOptions.api.gridCore.eGridDiv.parentElement) {
     window.removeEventListener('resize', listener);
     return;
@@ -173,8 +178,14 @@ export default class Tree extends React.Component {
         /*if (operator === 'OR') {
           args.push('|');
         }*/
-        args.push([field, types[condition.type], condition.filter]);
         values.push(condition.filter);
+        if (models.env[this.state.model]._fields[field].relation) {
+          const relation = models.env[models.env[this.state.model]._fields[field].relation];
+          const result_ids = await relation.search([relation._rec_name || 'name', types[condition.type], condition.filter]);
+          args.push([field, 'in', result_ids.ids]);
+          continue;
+        }
+        args.push([field, types[condition.type], condition.filter]);
       }
     }
     this.args = args;
@@ -211,6 +222,7 @@ export default class Tree extends React.Component {
     if (params.newData !== false) {
       return;
     }
+    if (this.props.isPopup && !params.forcePopup) return;
     //const load = api.preload();
     try {
       const models = window.models;
@@ -234,8 +246,9 @@ export default class Tree extends React.Component {
       }
       if (records.length > 0) {
         if (this.args) {
-          const domain = window.tools.copy(this.args);
+          console.log(this.args);
           records = records.filter((record) => {
+            const domain = window.tools.copy(this.args);
             for (let args of domain) if (Array.isArray(args)) args[0] = record[args[0]];
             return window.tools.apply_domain(...domain);
           });
@@ -271,7 +284,7 @@ export default class Tree extends React.Component {
 
   async chooseItem() {
     //await this.setState({popupOpened: true});
-    await this.refs.popup.paging(0, {newData: false});
+    await this.refs.popup.paging(0, {newData: false, forcePopup: true});
     this.refs.popup_modal.getDOMNode().className = 'popup modal-in';
     autoSizeAll(this.refs.popup.gridOptions);
     return;
@@ -342,7 +355,7 @@ export default class Tree extends React.Component {
     const grid = (
       <div className="card-body" style={{height: this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) <= 440 ? this.state.records.length * 48 + 112 + (this.isEditable() ? 30 : 0) + 'px' : '67vh', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
         <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', this.resizeListener = () => autoSizeAll(params, this.resizeListener))).bind(this)} onRowClicked={(params) => models.env[this.state.model].browse(null).then((record) => delete models.env.context.active_id).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields.filter((field) => !props.isTreeView && models.env.context.active_id && field.invisible instanceof Function ? !field.invisible({}, models.env.context.active_id) : !field.invisible)} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
-        <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() && props.create !== false ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
+        <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() && (props.create instanceof Function ? props.create(models.env.context.active_id) : props.create) !== false ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
         <Button onClick={this.chooseItem.bind(this)} style={{display: (props.choose || props.parent_model) && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
@@ -365,6 +378,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
+    api.wait(500).then(() => !this.pagingCalled && !this.state.records.length && (this.pagingCalled = true) && this.paging(0, {newData: false}));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
