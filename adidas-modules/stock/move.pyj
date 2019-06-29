@@ -89,7 +89,7 @@ view.add({'model': 'stock.move', 'mode': 'form', 'string': False, 'arch': """
         </group>
         <group>
             <field name="product_qty"/>
-            <field name="pack_id" domain="[('id', 'in', active_id.env.context.active_pack_ids || null)]"/>
+            <field name="pack_id" domain="['id', 'in', active_id.env.context.active_pack_ids || null]"/>
         </group>
     </sheet>
 </form>

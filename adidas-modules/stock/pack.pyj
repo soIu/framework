@@ -17,7 +17,8 @@ class StockPack(models.Model):
             if pack_id:
                name = pack_id.name if pack_id.length and pack_id.name else 'Pack 000'
                if last_box and type(last_box) == String:
-                  name = tools.max(name, last_box)
+                  name = tools.max(name, last_box) or 'Pack 000'
+               console.log(name)
                name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
                return name
         )
@@ -66,8 +67,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="category_id"/>
         </group>
         <group>
-            <field name="date"/>
-            <field name="bucket"/>
+            <field name="bucket" string="Bucket"/>
             <field name="level"/>
         </group>
         <group width="100%">

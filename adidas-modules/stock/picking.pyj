@@ -47,7 +47,7 @@ class StockPicking(models.Model):
         result = self.__super__('create')(values=values, is_client=is_client)
         return result
 
-    def add_bucket(self):
+    def add_pack(self):
         if v'typeof window' == 'undefined': return
         picking_id = window.models.env.context.active_id
         tools.navigate('/form/stock.pack')
@@ -63,6 +63,25 @@ class StockPicking(models.Model):
         window.models.env.context.default_picking_id = window.models.env.context.active_id.id
         window.models.env.context.active_pack_ids = window.models.env.context.active_id.pack_ids
         tools.navigate('/form/stock.move')
+
+    @api.onchange('pack_ids')
+    def onchange_pack(self):
+        if self.type == 'putting':
+           return
+        return self.env['stock.pack'].browse(self.pack_ids).then(
+        def (pack_ids):
+            promises = []
+            for pack_id in pack_ids:
+                promise = self.env['stock.move'].browse(pack_id.move_ids).then(
+                def (move_ids):
+                    values = tools.copy(move_ids._values)
+                    for value in values:
+                        value.picking_id = self.id
+                    return self.env['stock.move'].create(values)
+                )
+                promises.push(promise)
+            return Promise.all(promises)
+        )
 
     @api.server
     def get_buckets(self):
@@ -208,7 +227,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="type"/>
         </group>
         <group width="100%">
-            <button name="add_bucket" string="Add Bucket" invisible="active_id.type != 'putting'"/>
+            <button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>
         </group>
         <group width="100%">
             <field name="pack_ids">
@@ -228,7 +247,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
-                    <field name="pack_id" domain="[('id', 'in', parent.pack_ids || [])]"/>
+                    <field name="pack_id" domain="['id', 'in', parent.pack_ids || []]"/>
                 </tree>
             </field>
         </group>
