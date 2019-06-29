@@ -28,11 +28,13 @@ export default class extends React.Component {
     window.models.env.context.active_error && (window.models.env.context.active_error.field_map[this.props.name] = false);
     if (!this.props.cellEdit) window.models.env.context.active_id[this.props.name] = value;
     else return window.models.env.context.refresh();
+    await window.models.env.context.active_id._wait_promise();
     await this.setState({value: altvalue || value});
     return window.models.env.context.refresh();
   }
 
   async setSelectivityValue(value) {
+    if (!value) return;
     await api.wait_exist(() => this.refs.selectivity);
     if (value && value === this.lastSelectivity) return;
     console.log(value);
@@ -42,7 +44,7 @@ export default class extends React.Component {
     const model = props.model;// || window.models.env.context.active_model;
     const field = window.models.env[model]._fields[props.name];
     const type = field.type;
-    if (!value || !model) {
+    if (!model) {
       return;// this.setState({value: null});
     }
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
@@ -193,10 +195,9 @@ export default class extends React.Component {
       else if (type === 'selection') {
         items = field.selection.map((selection) => ({id: selection[0], text: selection[1]}));
       }
-      const data = this.state.value && typeof this.state.value === 'object' ? {data: this.state.value} : {};
       component = (
         <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
-          <Selectivity {...data} ref="selectivity" slot="input" ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
+          <Selectivity ref="selectivity" slot="input" data={this.state.value || null} ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownClose={props.onSelect} allowClear closeOnSelect/>
         </ListInput>
       );
       if (props.cellEdit) return component.children[0];
