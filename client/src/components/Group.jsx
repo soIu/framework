@@ -9,7 +9,16 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
-    if (this.refs.group.previousElementSibling && this.refs.group.previousElementSibling.querySelector('div.component-group-title')) this.setState({previousTitle: true});
+    if (!this.props.title) {
+      let index = 0
+      for (let element of [this.refs.group.previousElementSibling, this.refs.group.nextElementSibling]) {
+        if (element && (!index ? element.offsetLeft === 0 : element.offsetLeft > 0) && element.querySelector('div.component-group-title')) {
+          this.setState({previousTitle: true});
+          break;
+        }
+        index += 1;
+      }
+    }
     if (this.props.children || this.refs.group.previousElementSibling === null) {
       return;
     }
