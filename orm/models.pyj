@@ -310,10 +310,15 @@ class Model():
                              if not pending_browses[records._name]: pending_browses[records._name] = {}
                              elif pending_browses[records._name][value.id]: continue
                              pending_browses[records._name][value.id] = True
-                             records.find(value.id).write(value, is_client=False).then(
-                             def (record):
+                             def delete_pending(record):
                                  del pending_browses[records._name][value.id]
-                             )
+                             record = records.find(value.id)
+                             if record.length: record.write(value, is_client=False).then(delete_pending).catch(delete_pending);
+                             else:
+                                del value.rev
+                                del value._rev
+                                del value._id
+                                db.rel.save(records._name, value).then(delete_pending).catch(delete_pending)
                       else:
                          for value in result.values if Array.isArray(result.values) else [result.values]:
                              del value.rev
@@ -323,6 +328,7 @@ class Model():
                   ).catch(
                   #Possible duplication is from here, need to check
                   def (error):
+                      console.error(error)
                       for value in result.values if Array.isArray(result.values) else [result.values]:
                           del value.rev
                           del value._rev
@@ -712,8 +718,8 @@ class Model():
            for record in self:
                promise = record.write(value or values[index])
                promises.push(promise)
-               index += 0
-           records = self.browse()
+               index += 1
+           records = self.env[self._name]
            return Promise.all(promises).then(
            def (recordsets):
                for record in recordsets:
