@@ -145,7 +145,7 @@ class Model():
                   if onchange_models[self._name] and onchange_models[self._name][key]:
                      for method in onchange_models[self._name][key]:
                          result = self[method].apply(self)
-                         if result && type(result) == Promise:
+                         if result and type(result) == Promise:
                             self._pending_promises.push(result)
             })
             next()
