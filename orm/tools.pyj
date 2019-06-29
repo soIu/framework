@@ -86,7 +86,9 @@ def max():
     objects = Array.prototype.slice.call(arguments)
     maximum = None
     for object in objects:
+        if not object: continue
         for compare in objects:
+            if not compare: continue
             if object == compare: continue
             if not maximum and object > compare: maximum = object
             elif object > compare and object > maximum: maximum = object
@@ -96,7 +98,9 @@ def min():
     objects = Array.prototype.slice.call(arguments)
     minimum = None
     for object in objects:
+        if not object: continue
         for compare in objects:
+            if not compare: continue
             if object == compare: continue
             if not minimum and object < compare: minimum = object
             elif object < compare and object < minimum: minimum = object
