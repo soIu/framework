@@ -230,6 +230,16 @@ def apply_domain_record(*domains, **kwargs):
     def (result): return result
     )
 
+def get_onchanges(self):
+    onchanges = {}
+    for key in Object.getOwnPropertyNames(self):
+        if key in self._fields: continue
+        if self[key] and type(self[key]) == Function and self[key]._onchange_function:
+           for field in self[key]._onchange_fields:
+               if not tools.exist(onchanges[field]):
+                  onchanges[field] = []
+               onchanges[field].push(self[key].name)
+    return onchanges
 
 def queue(values, method):
     v'var index = 0'
