@@ -43,7 +43,7 @@ view.add = def add(args):
                   tools.view[args.model].string = args.string
                   if not tools.view[args.model].actions:
                      tools.view[args.model].actions = {}
-                  tools.view[args.model].actions[args.mode] = args.action
+                  if args.action: tools.view[args.model].actions[args.mode] = args.action
 
 tools.configuration.material_theme = 'theme-teal'
 tools.configuration.custom_navbar = '#875a7b'
