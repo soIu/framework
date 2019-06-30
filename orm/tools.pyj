@@ -54,6 +54,14 @@ def dict(entries):
         object[entry[0]] = entry[1]
     return object
 
+def btoa(string):
+    if v'typeof window' != 'undefined': return window.btoa(string)
+    return Buffer.from(string, 'binary').toString('base64')
+
+def atob(string):
+    if v'typeof window' != 'undefined': return window.atob(string)
+    return Buffer.from(string, 'base64').toString('binary')
+
 def checkBase64(string):
     try:
        return btoa(atob(string)) == string
