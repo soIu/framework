@@ -36,7 +36,7 @@ function parseView(view, model) {
           if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props[attribute]]))();
         }
       }
-      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props.domain.replace(/\(/g, '[').replace(/\)/g, ']')]))();
+      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
       props.isTreeView = true;
       components.push(React.createElement(component, props, recurse(element.children)));
     }

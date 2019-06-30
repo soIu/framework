@@ -41,7 +41,7 @@ function parseView(view, model) {
           if (api.hasValue(props[attribute], ' === ') || api.hasValue(props[attribute], ' !== ')) props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props[attribute]]))();
         }
       }
-      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props.domain.replace(/\(/g, '[').replace(/\)/g, ']')]))();
+      if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
       if (component === Tree) {
         props.model = window.models.env[model]._fields[parent_props.name].relation;
         props.field = window.models.env[model]._fields[parent_props.name].inverse;
