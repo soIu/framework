@@ -7,4 +7,4 @@ def create_data():
 
 csv = {}
 if v'typeof window' == 'undefined':
-   csv = require('./ir/csv.js')
+   csv = require(require('process').cwd() +'/ir/csv.js')
