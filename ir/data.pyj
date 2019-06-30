@@ -4,3 +4,7 @@ def create_data():
     for method in data:
         promises.push(method())
     return Promise.all(promises)
+
+csv = {}
+if v'typeof window' == 'undefined':
+   csv = require('./ir/csv.js')
