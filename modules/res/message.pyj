@@ -324,7 +324,7 @@ view.add({'model': 'res.message', 'mode': 'private', 'string': False, 'init': pr
 </div>
 """})
 
-if v"typeof window !== 'undefined'":
+"""if v"typeof window !== 'undefined'":
    interval = setInterval(
    def():
         if v"typeof user_socket === 'undefined'":
@@ -337,4 +337,4 @@ if v"typeof window !== 'undefined'":
                 container.f7Messages.addMessage(message)
         )
         clearInterval(interval)
-   , 500)
+   , 500)"""
