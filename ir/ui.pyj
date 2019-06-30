@@ -3,6 +3,7 @@ import orm.tools as tools
 
 if not tools.exist(tools.menu):
    tools.menu = {}
+   tools.menus = {}
 
 menu = {}
 menu.add = def add(args):
@@ -16,6 +17,7 @@ menu.add = def add(args):
                      if args.model not in schemas:
                         return
                   tools.menu[args.id] = tools.merge({'parent': False, 'childs': [], 'model': False, 'view_id': False, 'sequence': 1, 'action': []}, args)
+                  tools.menus[args.id] = tools.menu[args.id]
 
 menu.add({'id': 'settings', 'string': 'Settings', 'sequence': 1000})
 
