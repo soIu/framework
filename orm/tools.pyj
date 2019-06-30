@@ -242,7 +242,7 @@ def apply_domain_record(*domains, **kwargs):
 
 def get_onchanges(self):
     onchanges = {}
-    for key in Object.getOwnPropertyNames(self):
+    for key in Object.keys(self.constructor.prototype):
         if key in self._fields: continue
         if self[key] and type(self[key]) == Function and self[key]._onchange_function:
            for field in self[key]._onchange_fields:
