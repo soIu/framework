@@ -529,28 +529,28 @@ class Model():
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
-              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'float':
            value = parseFloat(value)
            if isNaN(value):
-              raise Exception("Not a valid Number on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
            elif value in ['false', 'False', None, undefined]:
               value = False
            elif type(value) == String:
-              raise Exception("Not a valid Boolean")
+              raise Error("Not a valid Boolean")
            else:
               value = Boolean(value)
         elif self._fields[key].type == 'binary':
            if exist(value) and not checkBase64(value):
-              raise Exception("Not a valid base64")
+              raise Error("Not a valid base64")
         elif self._fields[key].type == 'selection':
            if not exist(value):
               value = None
            elif not value in dict(self._fields[key].selection):
-              raise Exception("Incorrect value")
+              raise Error("Incorrect value")
         elif self._fields[key].type in ['date', 'datetime']:
            if not exist(value):
               value = None
@@ -560,9 +560,9 @@ class Model():
               try:
                   value = v'new Date(value).toISOString()'
               except:
-                  raise Exception("Can't parse Date")
+                  raise Error("Can't parse Date")
            else:
-              raise Exception("Can't parse Date")
+              raise Error("Can't parse Date")
            if exist(value) and self._fields[key].type == 'date':
               value = value.split('T')[0] + 'T00:00:00.000Z'
         elif self._fields[key].type in ['many2one', 'one2one']:
@@ -803,7 +803,7 @@ class Model():
         recordsets = Array.prototype.slice.call(arguments)
         for records in recordsets:
             if records._name != self._name:
-               raise Exception('Not the same model')
+               raise Error('Not the same model')
             if records.length < 1: continue
             #if not records.id: records = [records]
             for record in records:
