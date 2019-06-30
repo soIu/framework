@@ -56,11 +56,11 @@ def dict(entries):
 
 def btoa(string):
     if v'typeof window' != 'undefined': return window.btoa(string)
-    return Buffer.from(string, 'binary').toString('base64')
+    return require('buffer').Buffer.from(string, 'binary').toString('base64')
 
 def atob(string):
     if v'typeof window' != 'undefined': return window.atob(string)
-    return Buffer.from(string, 'base64').toString('binary')
+    return require('buffer').Buffer.from(string, 'base64').toString('binary')
 
 def checkBase64(string):
     try:
