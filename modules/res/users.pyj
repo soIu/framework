@@ -14,7 +14,7 @@ class ResUsers(models.Model):
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
-           raise Exception("Never set anyone except admin as superuser")
+           raise Error("Never set anyone except admin as superuser")
         result = self.__super__('create')(values=values, is_client=is_client)
         if v"typeof window === 'undefined'":
            result = result.then(
@@ -26,7 +26,7 @@ class ResUsers(models.Model):
 
     def write(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
-           raise Exception("Never set anyone except admin as superuser")
+           raise Error("Never set anyone except admin as superuser")
         return self.__super__('write')(values=values, is_client=is_client)
 
     @api.server
