@@ -58,9 +58,11 @@ def btoa(string):
     if v'typeof window' != 'undefined': return window.btoa(string)
     return require('buffer').Buffer.from(string, 'binary').toString('base64')
 
-def atob(string):
+def atob(string, buffer):
     if v'typeof window' != 'undefined': return window.atob(string)
-    return require('buffer').Buffer.from(string, 'base64').toString('binary')
+    result = require('buffer').Buffer.from(string, 'base64')
+    if not buffer: result = result.toString('binary')
+    return result
 
 def checkBase64(string):
     try:
