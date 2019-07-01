@@ -332,7 +332,7 @@ class Model():
                              del value.rev
                              del value._rev
                              del value._id
-                             db.rel.save(records._name, value)
+                             db.rel.save(records._name, value).then(configuration.warning).catch(configuration.warning)
                   ).catch(
                   #Possible duplication is from here, need to check
                   def (error):
@@ -341,7 +341,7 @@ class Model():
                           del value.rev
                           del value._rev
                           del value._id
-                          db.rel.save(record._name, value)
+                          db.rel.save(record._name, value).then(configuration.warning).catch(configuration.warning)
                   )
                return record
            ).catch(
