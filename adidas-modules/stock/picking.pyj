@@ -64,7 +64,7 @@ class StockPicking(models.Model):
         window.models.env.context.active_pack_ids = window.models.env.context.active_id.pack_ids
         tools.navigate('/form/stock.move')
 
-    @api.onchange('pack_ids')
+    #@api.onchange('pack_ids')
     def onchange_pack(self):
         if self.type != 'picking':
            return
