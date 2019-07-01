@@ -69,11 +69,10 @@ export default class extends React.Component {
     this.refresh = refresh.bind(this);
     window.models.env.context.refresh = this.refresh;
     let model = window.models.env.context.active_model;
-    if (props.f7route) {
+    if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
+    else window.models.env.context.active_url = '/';
+    if (props.f7route && props.f7route.params && props.f7route.params.model) {
       model = props.f7route.params.model;
-      window.models.env.context.active_url = props.f7route.url;
-    } else {
-      window.models.env.context.active_url = '/';
     }
     const id = props.f7route.query.id;
     const view = window.tools.view[model].form;

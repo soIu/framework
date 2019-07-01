@@ -16,8 +16,10 @@ var None = null;
 return `;
 
 
-function parseView(view, model) {
+function parseView(view, model, title) {
   view = new DOMParser().parseFromString(view, 'text/xml').children[0];
+  console.log(view);
+  if (title) view.setAttribute('title', title);
   function recurse(elements) {
     let components = [];
     for (let element of elements) {
@@ -51,22 +53,23 @@ const cachedViews = {};
 export default (props) => {
   console.log(props);
   let model = window.models.env.context.active_model;
-  if (props.f7route) {
+  if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
+  else window.models.env.context.active_url = '/';
+  if (props.f7route && props.f7route.params && props.f7route.params.model) {
     model = props.f7route.params.model;
-    window.models.env.context.active_url = props.f7route.url;
-  } else {
+  }/* else {
     window.models.env.context.active_url = '/';
-  }
+  }*/
   const view = window.tools.view[model].tree;
   window.models.env.context.active_model = model;
 
-  if (!cachedViews[view]) {
+  if (!cachedViews[view + (props.title ? '-' + props.title : '')]) {
     // eslint-disable-next-line
     //cachedViews[view] = evals(Parser(view, {presets: [preset]}).code);
-    cachedViews[view] = parseView(view, model);
+    cachedViews[view + (props.title ? '-' + props.title : '')] = parseView(view, model, props.title);
   }
 
-  return cachedViews[view];
+  return cachedViews[view + (props.title ? '-' + props.title : '')];
 
   /*return (
     <Parser components={{Tree}} jsx={view} renderInWrapper={false}/>

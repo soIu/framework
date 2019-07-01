@@ -7,6 +7,12 @@ export default class extends React.Component {
     super(props);
   }*/
 
+  componentWillUnmount() {
+    this.flatpickr.destroy()
+    if (this.props.customInput) delete this.props.customInput._flatpickr;
+    delete this.flatpickr;
+  }
+
   componentDidMount() {
     const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : this.refs.flatpickr.cloneNode(false));
     console.log(clone);

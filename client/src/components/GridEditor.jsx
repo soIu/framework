@@ -10,8 +10,8 @@ export default class extends Component {
 
   getValue() {
     if (this.refs.selectivity && this.refs.selectivity.selectivity) {
-      const value = this.refs.selectivity.selectivity.getData();
-      if (!value) return value;
+      let value = this.refs.selectivity.selectivity.getData();
+      if (!value) return this.props.tree.state.records[this.props.rowIndex][this.props.name];
       const colDef = window.tools.copy(this.props.column.colDef);
       delete colDef.cellEditorFramework;
       let temp_ids = this.refs.selectivity.selectivity.getValue();
@@ -31,9 +31,20 @@ export default class extends Component {
       }
       this.props.tree.onChange({colDef, data: this.props.tree.state.records[this.props.rowIndex], oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
       if (!Array.isArray(value)) {
-        return value.text;
+        value = value.text;
       }
-      return value.map((data) => data.text).join(', '); 
+      else {
+        value = value.map((data) => data.text).join(', ');
+      }
+      if (this.props.tree.state.selected) {
+        for (let row of this.props.tree.state.selected) {
+          if (row === this.props.tree.state.records[this.props.rowIndex]) continue;
+          this.props.tree.onChange({colDef, data: row, oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
+          row[this.props.name] = value;
+        }
+        api.wait(100).then(() => this.props.tree.gridOptions.api.deselectAll() || this.props.tree.setState({records: this.props.tree.state.records}));
+      }
+      return value;
     }
   }
 

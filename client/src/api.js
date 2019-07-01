@@ -44,9 +44,10 @@ function preload() {
     backdrop.className = 'preloader-backdrop';
     root.insertAdjacentElement('beforeend', backdrop);
     root.insertAdjacentElement('beforeend', preloader);
-    return {done: () => {
+    return {done: (value) => {
       preloader.remove();
       backdrop.remove();
+      return value;
     }};
   }
 }
@@ -256,6 +257,19 @@ function parseURI(data) {
   return array.join('&');
 }
 
+function readAsDataURL(file) {
+  const load = preload();
+  return new Promise((resolve, reject) => {
+    if (!file) reject(new Error('No file available'));
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(event.target.result);
+    reader.readAsDataURL(file);
+  }).then(load.done).catch((error) => {
+    load.done();
+    throw error;
+  });
+}
+
 function hasKey(object, key) {
   if (object === undefined || object === null || object === false) {
     return false;
@@ -273,4 +287,4 @@ function hasValue(object, value) {
   return object.indexOf(value) > -1;
 }
 
-export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, ajax, parseURI, hasValue, hasKey};
+export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, ajax, readAsDataURL, parseURI, hasValue, hasKey};
