@@ -71,7 +71,8 @@ class StockPicking(models.Model):
         move = self.env['stock.move'].search(['id', 'in', self.move_ids], ['pack_id', 'in', self.pack_ids])
         pack = self.env['stock.pack'].browse(self.pack_ids)
         return Promise.all([move, pack]).then(
-        def (move_ids, pack_ids):
+        def (result):
+            move_ids, pack_ids = result
             promises = []
             added_pack_ids = [move_id.pack_id for move_id in move_ids]
             for pack_id in pack_ids:
