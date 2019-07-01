@@ -214,11 +214,11 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch
 </tree>
 """})
 
-view.add({'model': 'stock.picking', 'mode': 'tree_picking', 'string': 'Picking', 'arch': """
+view.add({'model': 'stock.picking', 'mode': 'tree_picking', 'string': 'Operation', 'arch': """
 <tree-page title="Picking"/>
 """, 'context': {'default_operation_type': 'picking'}})
 
-view.add({'model': 'stock.picking', 'mode': 'tree_putting', 'string': 'Putting', 'arch': """
+view.add({'model': 'stock.picking', 'mode': 'tree_putting', 'string': 'Operation', 'arch': """
 <tree-page title="Putting"/>
 """, 'context': {'default_operation_type': 'putting'}})
 
@@ -285,7 +285,7 @@ def init_settings(props):
         select.onchange = onchange
     )
 
-view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, 'string': False, 'arch': """
+view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, 'string': 'Operation', 'arch': """
 <page title="WMS Settings">
     <list>
         <list-input label="Choose Station" type="select" id="wms_station_setting">
