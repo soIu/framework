@@ -1,0 +1,125 @@
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+import orm.api as api
+from ir.ui import menu, view
+
+class AdidasData(models.Model):
+    _name = 'adidas.data'
+
+    @api.server
+    def _get_number(self):
+        return self.env['adidas.data'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
+        def (data_id):
+            if data_id.length > 0:
+               name = 'Data ' + str.zfill((parseInt(data_id.name.split(' ')[1]) + 1).toString(), 3)
+               return name
+            return 'Data 001'
+        )
+
+    name = fields.Char(string="Data Number", defaults=_get_number, required=True)
+    date = fields.Datetime(string="Date", defaults=Date)
+    excel = fields.Binary(string="Excel Data", required=True)
+    imported = fields.Boolean(string="Imported")
+
+    @api.server
+    def import_data(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
+        row = -1
+        for data in sheet.data:
+            row += 1
+            if row < 7: continue
+            if not data[0]: continue
+            value = {}
+            index = 4
+            for field in ['model', 'article', 'name', 'customer_order', 'color', 'customer_cd', 'customer_identifier', 'customer_name']:
+                value[field] = data[index]
+                index += 1
+            console.log(data[16])
+            value['total_qty'] = data[16]
+            promise = self.env['adidas.po'].create(value)
+            promises.push(promise)
+        return Promise.all(promises).then(
+        def ():
+            return self.write({'imported': True})
+        )
+
+AdidasData()
+
+menu.add({'id': 'adidas_data', 'string': 'Data', 'sequence': 25})
+menu.add({'id': 'import_data', 'parent': 'adidas_data', 'string': 'Import', 'model': 'adidas.data', 'sequence': 1})
+
+view.add({'model': 'adidas.data', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="date"/>
+</tree>
+"""})
+
+view.add({'model': 'adidas.data', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <header>
+        <button name="import_data" string="Import" invisible="active_id.imported == True"/>
+    </header>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="excel"/>
+        </group>
+        <group>
+            <field name="date"/>
+            <field name="imported" readonly="True"/>
+        </group>
+    </sheet>
+</form>
+"""})
+
+class AdidasPO(models.Model):
+    _name = 'adidas.po'
+
+    name = fields.Char(string="PO Number", required=True)
+    model = fields.Char(string="Model")
+    article = fields.Char(string="Article")
+    color = fields.Char(string="Color")
+    total_qty = fields.Float(string="Total Qty")
+    customer_name = fields.Char(string="Customer Name")
+    customer_order = fields.Char(string="Customer Order")
+    customer_cd = fields.Char(string="Customer CD")
+    customer_identifier = fields.Char(string="Customer Identifier")
+
+AdidasPO()
+
+menu.add({'id': 'adidas_po', 'parent': 'adidas_data', 'string': 'Purchase Orders', 'model': 'adidas.po', 'sequence': 2})
+
+view.add({'model': 'adidas.po', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="customer_order"/>
+</tree>
+"""})
+
+view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="article"/>
+            <field name="total_qty"/>
+        </group>
+        <group>
+            <field name="model"/>
+            <field name="color"/>
+        </group>
+        <group title="Customer">
+            <field name="customer_name"/>
+            <field name="customer_cd"/>
+        </group>
+        <group>
+            <field name="customer_order"/>
+            <field name="customer_identifier"/>
+        </group>
+    </sheet>
+</form>
+"""})

@@ -66,12 +66,16 @@ class StockPicking(models.Model):
 
     @api.onchange('pack_ids')
     def onchange_pack(self):
-        if self.type == 'putting':
+        if self.type != 'picking':
            return
-        return self.env['stock.pack'].browse(self.pack_ids).then(
-        def (pack_ids):
+        move = self.env['stock.move'].search(['id', 'in', self.move_ids], ['pack_id', 'in', self.pack_ids])
+        pack = self.env['stock.pack'].browse(self.pack_ids)
+        return Promise.all([move, pack]).then(
+        def (move_ids, pack_ids):
             promises = []
+            added_pack_ids = [move_id.pack_id for move_id in move_ids]
             for pack_id in pack_ids:
+                if pack_id.id in added_pack_ids: continue
                 promise = self.env['stock.move'].browse(pack_id.move_ids).then(
                 def (move_ids):
                     values = tools.copy(move_ids._values)
@@ -200,8 +204,8 @@ class StockPicking(models.Model):
 
 StockPicking()
 
-menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'picking'}})
-menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'context': {'default_operation_type': 'putting'}})
+menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_picking', 'context': {'default_operation_type': 'picking'}})
+menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
 <tree>
@@ -209,6 +213,14 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch
     <field name="date"/>
 </tree>
 """})
+
+view.add({'model': 'stock.picking', 'mode': 'tree_picking', 'string': 'Picking', 'arch': """
+<tree-page title="Picking"/>
+""", 'context': {'default_operation_type': 'picking'}})
+
+view.add({'model': 'stock.picking', 'mode': 'tree_putting', 'string': 'Putting', 'arch': """
+<tree-page title="Putting"/>
+""", 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch': """
 <form>
@@ -233,9 +245,9 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="pack_ids">
                 <tree>
                     <field name="name"/>
+                    <field name="order_id"/>
                     <field name="category_id"/>
                     <field name="bucket" string="Bucket"/>
-                    <field name="level"/>
                 </tree>
             </field>
         </group>
@@ -253,4 +265,34 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
     </sheet>
 </form>
+"""})
+
+menu.add({'id': 'settings_wms', 'string': 'WMS', 'parent': 'settings', 'model': 'stock.picking', 'view_id': 'stock.picking.settings', 'sequence': 5})
+
+if v'typeof window' != 'undefined' and localStorage.wms_station_setting:
+   localStorage.rapyd_home_view = 'stock.picking.tree_' + localStorage.wms_station_setting
+
+def init_settings(props):
+    tools.wait_exist(
+    def (): return document.getElementById('wms_station_setting')
+    ).then(
+    def ():
+        def onchange(event):
+            localStorage.wms_station_setting = event.target.value
+            window.location.reload()
+        select = document.getElementById('wms_station_setting').querySelector('select')
+        select.value = localStorage.wms_station_setting or ""
+        select.onchange = onchange
+    )
+
+view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, 'string': False, 'arch': """
+<page title="WMS Settings">
+    <list>
+        <list-input label="Choose Station" type="select" id="wms_station_setting">
+            <option/>
+            <option value="picking">Picking Station</option>
+            <option value="putting">Putting Station</option>
+        </list-input>
+    </list>
+</page>
 """})

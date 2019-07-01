@@ -3,3 +3,4 @@ import stock.move
 import stock.pack
 import stock.picking
 import stock.wcs
+import stock.data

@@ -33,6 +33,8 @@ class StockPack(models.Model):
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
     date = fields.Datetime(string="Date")
     location_id = fields.Many2one('stock.location', string="Current Location")
+    order_id = fields.Many2one('adidas.po', string="PO Number", required=True)
+    article = fields.Char(string="Article")
     #picking_ids = fields.Many2many('stock.picking', string="Operations")
     bucket = fields.Selection(*WcsJob.prototype.bucket.selection, string="Current Bucket")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
@@ -41,20 +43,37 @@ class StockPack(models.Model):
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
-           printBarcode(self.name)
+           for record in self:
+               printBarcode(record.name)
+
+    @api.onchange('order_id')
+    def onchange_po(self):
+        if not self.order_id: return
+        return self.env['adidas.po'].browse(self.order_id).then(
+        def (order_id):
+            self.article = order_id.article
+        )
+
+    @api.onchange('category_id')
+    def onchange_category(self):
+        if not self.category_id: return
+        return self.env['product.category'].browse(self.category_id).then(
+        def (category_id):
+            self.level = category_id.level
+        )
 
 StockPack()
 
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
 
-
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
+    <field name="order_id"/>
     <field name="bucket"/>
     <field name="category_id"/>
 </tree>
-"""})
+""", 'action': {'print_barcode': 'Print'}})
 
 view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 <form>
@@ -64,10 +83,12 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <field name="category_id"/>
+            <field name="order_id"/>
+            <field name="article"/>
         </group>
         <group>
             <field name="bucket" string="Bucket"/>
+            <field name="category_id"/>
             <field name="level"/>
         </group>
         <group width="100%">
