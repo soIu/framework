@@ -51,7 +51,7 @@ export default class Tree extends React.Component {
     function onChange(params) {
       if (!params.colDef.cellEditorFramework && params.newValue != params.oldValue) {
         const value = params.newValue;
-        const record = params.data.id ? window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field].find(params.data.id) : this.state.new_records.values === params.data._original_object_for_id && this.state.new_records || Array.from(this.state.new_records.__iter__()).find((record) => record.values === params.data._original_object_for_id);
+        const record = params.data.id ? window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field].find(params.data.id) : this.state.new_records.values === params.data._original_object_for_id && this.state.new_records || this.state.new_records.find((object) => object === params.data._original_object_for_id);
         if (!this.pendingTask.write && record.id) {
           this.pendingTask.write = true;
         }
@@ -161,7 +161,7 @@ export default class Tree extends React.Component {
     const models = window.models;
     //const load = api.preload();
     if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
-    const args = this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : [];
+    const args = [];//this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : [];
     const values = [];
     for (let field in fields) {
       let conditions = [fields[field]];
@@ -227,7 +227,12 @@ export default class Tree extends React.Component {
     try {
       const models = window.models;
       if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
-      const args = this.args || (this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids || []] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : []);
+      if (params.deleting) {
+        if (!this.args) this.args = [];
+        this.args.push(['id', 'not in', this.state.active_ids]);
+      }
+      const args = (this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids || []] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : []);
+      if (this.args) args.push(...this.args);
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       let records = await models.env[this.state.model].search(...args, ...(this.props.domain || []));
@@ -246,7 +251,6 @@ export default class Tree extends React.Component {
       }
       if (records.length > 0) {
         if (this.args) {
-          console.log(this.args);
           records = records.filter((record) => {
             const domain = window.tools.copy(this.args);
             for (let args of domain) if (Array.isArray(args)) args[0] = record[args[0]];
@@ -318,11 +322,12 @@ export default class Tree extends React.Component {
       while (index--) {
         if (data === this.state.records[index]) this.state.records.splice(index);
       }
-      if (!window.models.env.context.active_id.id || type != 'one2many') {
+      if (!window.models.env.context.active_id.id || type != 'many2one') {
+        console.log(type)
         const records = window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field];
         const values = records.values;
         if (!Array.isArray(values)) {
-          if (type != 'one2many') {
+          if (type != 'many2one') {
             if (data._original_object_for_id && data._original_object_for_id === values) records._values[0] = {};
             else if (data.id === values.id) (records._values[0] = {}) && delete records._values[data.id];
             continue;
@@ -337,7 +342,7 @@ export default class Tree extends React.Component {
         }
         continue;
       }
-      if (type != 'one2many') continue;
+      if (type != 'many2one') continue;
       const params = {data};
       params.oldValue = "";
       params.newValue = null;
@@ -345,9 +350,11 @@ export default class Tree extends React.Component {
       this.onChange(params);
     }
     const selected = this.state.selected;
-    await this.setState({records: this.state.records, selected: []});
-    if (type != 'one2many') window.models.env.context.active_id[this.state.tree_field] = window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field];
-    this.gridOptions.api.updateRowData({remove: selected});
+    //await this.setState({records: this.state.records, selected: []});
+    if (type != 'many2one') window.models.env.context.active_id[this.state.tree_field] = window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field];
+    //this.gridOptions.api.updateRowData({remove: selected});
+    await this.paging.bind(this)(0, {newData: false, deleting: true});
+    return this.gridOptions.api.deselectAll();
   }
 
   render(props) {
@@ -382,7 +389,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    api.wait(500).then(() => !this.pagingCalled && !this.state.records.length && (this.pagingCalled = true) && this.paging(0, {newData: false}));
+    if (!props.isTreeView) api.wait(500).then(() => !this.pagingCalled && !this.state.records.length && (this.pagingCalled = true) && this.paging(0, {newData: false}));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
