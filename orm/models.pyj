@@ -229,7 +229,7 @@ class Model():
                               if key in value:
                                  value[key] = self.adapt(key, value[key], value)
                           if value.id: 
-                             self._values[value.id] = value
+                             new_array[value.id] = value
                           new_array.push(value)
                       self._values = new_array
                       #self.ids = [object.id for object in new_value]

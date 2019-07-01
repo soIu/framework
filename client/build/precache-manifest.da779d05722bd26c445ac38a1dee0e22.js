@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "d2b392100fa039335fdd",
-    "url": "static/css/main.f87d0b07.chunk.css"
+    "revision": "7492badeef922e3f95c6",
+    "url": "static/css/main.3383e44b.chunk.css"
   },
   {
-    "revision": "d2b392100fa039335fdd",
-    "url": "static/js/main.d2b39210.chunk.js"
+    "revision": "7492badeef922e3f95c6",
+    "url": "static/js/main.7492bade.chunk.js"
   },
   {
     "revision": "111ca8292b6369c11d0c",
@@ -24,28 +24,28 @@ self.__precacheManifest = [
     "url": "__offline_serviceworker"
   },
   {
+    "revision": "012cf6a10129e2275d79d6adac7f3b02",
+    "url": "static/media/MaterialIcons-Regular.012cf6a1.woff"
+  },
+  {
     "revision": "570eb83859dc23dd0eec423a49e147fe",
     "url": "static/media/MaterialIcons-Regular.570eb838.woff2"
   },
   {
-    "revision": "a37b0c01c0baf1888ca812cc0508f6e2",
-    "url": "static/media/MaterialIcons-Regular.a37b0c01.ttf"
-  },
-  {
-    "revision": "012cf6a10129e2275d79d6adac7f3b02",
-    "url": "static/media/MaterialIcons-Regular.012cf6a1.woff"
+    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
+    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
   },
   {
     "revision": "e79bfd88537def476913f3ed52f4f4b3",
     "url": "static/media/MaterialIcons-Regular.e79bfd88.eot"
   },
   {
-    "revision": "c0087d4d5ddd32ec52f1859b42956db6",
-    "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
+    "revision": "a37b0c01c0baf1888ca812cc0508f6e2",
+    "url": "static/media/MaterialIcons-Regular.a37b0c01.ttf"
   },
   {
-    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
-    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
+    "revision": "c0087d4d5ddd32ec52f1859b42956db6",
+    "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
   },
   {
     "revision": "2e9a0313ed02aed1e206340feb36ec5c",
@@ -56,7 +56,7 @@ self.__precacheManifest = [
     "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
   },
   {
-    "revision": "7d9a54a2df224d42d24d68396850edcb",
+    "revision": "3bd0098830d2fe065ff36d13c3c1b564",
     "url": "index.html"
   }
 ];
