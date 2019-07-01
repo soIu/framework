@@ -84,7 +84,7 @@ export default class Tree extends React.Component {
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
     const records = [];
-    this.state = {fields: fields, records: records, new_records: window.models.env[model], updated_records: {}, limit: 50, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};//, popupOpened: false};
+    this.state = {fields: fields, records: records, new_records: window.models.env[model], limit: 50, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};//, popupOpened: false};
     if (props.field) {
       this.state.tree_field = props.field;
     }
@@ -295,6 +295,7 @@ export default class Tree extends React.Component {
       const selected_ids = await window.models.env[this.props.model].browse(this.state.active_ids);
       const records = window.models.env.context.active_lines[this.props.model]['many2many_' + this.props.active_field].add(selected_ids);
       window.models.env.context.active_id[this.props.active_field] = records;
+      await window.models.env.context.active_id._wait_promise();
       await this.props.parent_tree.paging(0, {newData: false});
       this.gridOptions.api.deselectAll();
       this.props.parent_tree.refs.popup_modal.getDOMNode().className = this.props.parent_tree.refs.popup_modal.getDOMNode().className.replace('modal-in', 'modal-out');
@@ -359,6 +360,9 @@ export default class Tree extends React.Component {
         <Button onClick={this.chooseItem.bind(this)} style={{display: (props.choose || props.parent_model) && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
+        {window.tools.view[this.state.model].actions.tree && Object.entries(window.tools.view[this.state.model].actions.tree).map(([function_name, string]) => (
+          <Button onClick={(() => models.env[this.state.model].browse(this.state.active_ids).then((records) => records[function_name]()).then(() => this.gridOptions.api.deselectAll())).bind(this)} style={{display: (props.isTreeView || !models.env.context.editing) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>{string}</Button>
+        ))}
         {!props.isTreeView && props.parent_model &&
         <Popup ref="popup_modal" backdrop={false} animate={true}>{/* opened={this.state.popupOpened} onPopupClosed={() => this.setState({popupOpened : false})}>*/}
           <Page popup title={window.tools.view[this.state.model] ? window.tools.view[this.state.model].string : 'Choose'}>
@@ -384,11 +388,11 @@ export default class Tree extends React.Component {
       return grid;
     }
     return (
-      <Page title={window.tools.view[this.state.model].string}>
+      <Page title={props.title || window.tools.view[this.state.model].string}>
         <div className="card">
           <div className="card-header">
             <div className="data-table-title">
-              {window.tools.view[this.state.model].string}
+              {props.title || window.tools.view[this.state.model].string}
               <br/>
               <Button onClick={() => api.globals.app.views.main.router.navigate('/form/' + model)} style={{display: 'inline-block'}} fill>Create</Button>
             </div>

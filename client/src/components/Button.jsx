@@ -9,14 +9,19 @@ async function button(props) {
   if (props.name) {
     try {
       if (window.models.env.context.editing) await window.models.env.context.edit_function();
-      await window.models.env.context.active_id[props.name]();
+      await window.models.env.context.refresh();
+      if (!window.models.env.context.active_error) {
+        await window.models.env.context.active_id[props.name]();
+        await window.models.env.context.refresh();
+      }
     }
     catch(error) {
       console.log(error);
+      await window.models.env.context.refresh();
       load.done();
     }
   }
-  await window.models.env.context.refresh();
+  //await window.models.env.context.refresh();
   load.done();
 }
 
