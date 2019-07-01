@@ -79,6 +79,7 @@ class StockPicking(models.Model):
                 if pack_id.id in added_pack_ids: continue
                 promise = self.env['stock.move'].browse(pack_id.move_ids).then(
                 def (move_ids):
+                    if not move_ids.length: return
                     values = tools.copy(move_ids._values)
                     for value in values:
                         value.picking_id = self.id
