@@ -242,6 +242,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
         <group width="100%">
             <button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>
+            <scanner-button invisible="active_id.type != 'picking'"/>
         </group>
         <group width="100%">
             <field name="pack_ids">
