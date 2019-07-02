@@ -33,13 +33,14 @@ class StockPack(models.Model):
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
     date = fields.Datetime(string="Date")
     location_id = fields.Many2one('stock.location', string="Current Location")
-    order_id = fields.Many2one('adidas.po', string="PO Number", required=True)
+    order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
     #picking_ids = fields.Many2many('stock.picking', string="Operations")
     bucket = fields.Selection(*WcsJob.prototype.bucket.selection, string="Current Bucket")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
     level = fields.Selection(['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], string="Level")
+    size = fields.Selection(*list(str(index) for index in range(3, 15)).concat([str(index) + 'T' for index in range(3, 15)]), string="Size")
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -85,6 +86,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="name"/>
             <field name="order_id"/>
             <field name="article"/>
+            <field name="size"/>
         </group>
         <group>
             <field name="bucket" string="Bucket"/>
