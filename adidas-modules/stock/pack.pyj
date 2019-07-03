@@ -41,6 +41,8 @@ class StockPack(models.Model):
     category_id = fields.Many2one('product.category', string="Category")
     level = fields.Selection(['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], string="Level")
     size = fields.Selection(*list([str(index), str(index)] for index in range(3, 15)).concat(list([str(index) + 'T', str(index) + 'T'] for index in range(3, 15))), string="Size")
+    adidas_product_id = fields.Many2one('product.product', string="Product")
+    adidas_product_qty = fields.Float(string="Quantity")
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -62,6 +64,15 @@ class StockPack(models.Model):
         def (category_id):
             self.level = category_id.level
         )
+
+    @api.onchange('article', 'category_id', 'size')
+    def onchange_for_product(self):
+        if self.article and self.category_id and self.size:
+           return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
+           def (product_id):
+               if product_id.length:
+                  self.adidas_product_id = product_id.id
+           )
 
 StockPack()
 
@@ -93,11 +104,19 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="category_id"/>
             <field name="level"/>
         </group>
-        <group width="100%">
+        <group title="Product" invisible="active_id.env.context.is_add_pack != true">
+            <field name="adidas_product_id"/>
+        </group>
+        <group invisible="active_id.env.context.is_add_pack != true">
+            <field name="adidas_product_qty"/>
+        </group>
+        <group title="Movements" width="100%" invisible="active_id.env.context.is_add_pack == true">
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
+                    <field name="location_src_id"/>
+                    <field name="location_dest_id"/>
                 </tree>
             </field>
         </group>

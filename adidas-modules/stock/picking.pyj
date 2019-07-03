@@ -39,23 +39,32 @@ class StockPicking(models.Model):
            value = values if Array.isArray(values) else [values]
            for object in value:
                if object.type == 'putting':
-                  object.location_src_id = location_default.internal_id
-                  object.location_dest_id = location_default.external_id
-               elif object.type == 'picking':
                   object.location_dest_id = location_default.internal_id
                   object.location_src_id = location_default.external_id
+               elif object.type == 'picking':
+                  object.location_src_id = location_default.internal_id
+                  object.location_dest_id = location_default.external_id
         result = self.__super__('create')(values=values, is_client=is_client)
         return result
 
     def add_pack(self):
         if v'typeof window' == 'undefined': return
         picking_id = window.models.env.context.active_id
+        picking_id.env.context.is_add_pack = True
         tools.navigate('/form/stock.pack')
         setTimeout(
         def ():
             def assign_picking():
-                return picking_id.write({'pack_ids': (picking_id.pack_ids or []).concat(window.models.env.context.active_id.ids)})
+                return picking_id.write({'pack_ids': (picking_id.pack_ids or []).concat(window.models.env.context.active_id.ids)}).then(
+                def (result):
+                    del picking_id.env.context.is_add_pack
+                    return result
+                )
+            def create_moves():
+                pack_id = window.models.env.context.active_id
+                return self.env['stock.move'].create({'picking_id': picking_id.id, 'pack_id': pack_id.id, 'product_id': pack_id.adidas_product_id, 'product_qty': pack_id.adidas_product_qty})
             window.models.env.context.active_task.push(assign_picking)
+            window.models.env.context.active_task.push(create_moves)
         , 0)
 
     def add_move(self):
@@ -128,8 +137,8 @@ class StockPicking(models.Model):
                unassigned_move = False
                for move_id in move_ids:
                    if move_id.pack_id and move_id.pack_id not in selected_packs: selected_packs.push(move_id.pack_id)
-                   elif not move_id.pack_id: unassigned_pack = True
-               if unassigned_pack:
+                   elif not move_id.pack_id: unassigned_move = True
+               if unassigned_move:
                   promises = []
                   for move_id in move_ids:
                       if not move_id.pack_id:
@@ -251,13 +260,15 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                     <field name="order_id"/>
                     <field name="category_id"/>
                     <field name="bucket" string="Bucket"/>
+                    <field name="adidas_product_id" invisible="parent.type != 'putting'"/>
+                    <field name="adidas_product_qty" invisible="parent.type != 'putting'"/>
                 </tree>
             </field>
         </group>
-        <group width="100%">
+        <group width="100%" invisible="active_id.type != 'picking'">
             <button name="add_move" string="Add Items"/>
         </group>
-        <group width="100%">
+        <group width="100%" invisible="active_id.type != 'picking'">
             <field name="move_ids">
                 <tree>
                     <field name="product_id"/>

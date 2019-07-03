@@ -38,30 +38,27 @@ view.add({'model': 'product.category', 'mode': 'form', 'string': False, 'arch': 
 </form>
 """})
 
+categories = ['Insole', 'Outsole', 'Upper', 'Strobel']
+
 def create_categories():
-    insole = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Insole'])
-    outsole = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Outsole'])
-    upper = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-Upper'])
-    return Promise.all([insole, outsole, upper]).then(
+    promises = []
+    levels = ['3', '1', '2', '3']
+    for category in categories:
+        promise = models.env['product.category'].with_context(limit=1).search(['reference', '=', 'ADS-' + category])
+        promises.push(promise)
+    return Promise.all(promises).then(
     def (result):
         promises = []
-        insole_id, outsole_id, upper_id = result
-        if insole_id.length:
-           defaults.insole_id = insole_id.ids[0]
-        else:
-           promises.push(models.env['product.category'].create({'name': 'Insole', 'reference': 'ADS-Insole', 'level': '3'}))
-        if outsole_id.length:
-           defaults.outsole_id = outsole_id.ids[0]
-        else:
-           promises.push(models.env['product.category'].create({'name': 'Outsole', 'reference': 'ADS-Outsole', 'level': '1'}))
-        if upper_id.length:
-           defaults.uppper_id = upper_id.ids[0]
-        else:
-           promises.push(models.env['product.category'].create({'name': 'Upper', 'reference': 'ADS-Upper', 'level': '2'}))
+        for index, category in enumerate(categories):
+            if result[index].length:
+               defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
+            else:
+               promises.push(models.env['product.category'].create({'name': category, 'reference': 'ADS-' + category, 'level': levels[index]}))
         if promises.length:
            return Promise.all(promises).then(
            def (result):
-               defaults.insole_id, defaults.outsole_id, defaults.upper_id = [record.id for record in result]
+               for index, category in enumerate(categories):
+                   defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
            )
     )
 

@@ -2,6 +2,8 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
+from stock.pack import StockPack
+from product.category import categories, defaults
 from ir.ui import menu, view
 
 class AdidasData(models.Model):
@@ -28,6 +30,7 @@ class AdidasData(models.Model):
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
         row = -1
+        articles = []
         for data in sheet.data:
             row += 1
             if row < 7: continue
@@ -36,11 +39,26 @@ class AdidasData(models.Model):
             index = 4
             for field in ['model', 'article', 'name', 'customer_order', 'color', 'customer_cd', 'customer_identifier', 'customer_name']:
                 value[field] = data[index]
+                if field == 'article':
+                   if value[field] not in articles: articles.push(value[field])
                 index += 1
-            console.log(data[16])
             value['total_qty'] = data[16]
             promise = self.env['adidas.po'].create(value)
             promises.push(promise)
+        articles.forEach(
+        def (article):
+            promise = self.env['product.product'].with_context(limit=1).search(['article', '=', article]).then(
+            def (product_id):
+                if product_id.length: return
+                promises = []
+                for size in StockPack.size.selection:
+                    for category in categories:
+                        category_id = defaults[category.toLowerCase() + '_id']
+                        promises.push(self.env['product.product'].create({'name': [category, article, size[0]].join('-'), 'category_id': category_id, 'article': article, 'size': size[0]}))
+                return Promise.all(promises)
+            )
+            promises.push(promise)
+        )
         return Promise.all(promises).then(
         def ():
             return self.write({'imported': True})
