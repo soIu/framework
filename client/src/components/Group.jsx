@@ -1,5 +1,6 @@
 import React from 'react';
 import {BlockTitle} from 'framework7-react';
+import api from 'api';
 
 export default class extends React.Component {
   constructor(props) {
@@ -8,7 +9,8 @@ export default class extends React.Component {
     this.state.previousTitle = false;
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    await api.wait(500);
     if (!this.props.title) {
       let index = 0
       for (let element of [this.refs.group.previousElementSibling, this.refs.group.nextElementSibling]) {
