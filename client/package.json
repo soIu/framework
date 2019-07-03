@@ -5,7 +5,7 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js && mkdir build/static/css/static && cp -r build/static/media build/static/css/static && sed -i 's/,e.respondWith(f)/;try{e.respondWith(f)}catch(error){}/g' build/sw.js",
     "copy-fonts": "node node_modules/cpy-cli/cli.js node_modules/framework7-icons/fonts/*.* src/fonts && node node_modules/cpy-cli/cli.js node_modules/material-design-icons/iconfont/*.{eot,ttf,woff,woff2} src/fonts",
-    "postinstall": "npm run copy-fonts && cp node_modules/preact/dist/preact.min.js public/ && cp node_modules/preact-compat/dist/preact-compat.min.js public/ && cp patch/react-component-el.js node_modules/framework7-react/runtime-helpers/react-component-el.js && cp patch/list-input.js node_modules/framework7-react/components/"
+    "postinstall": "echo 'window.rapyd_config = {};' > public/config.js && cp public/config.js build/config.js && npm run copy-fonts && cp node_modules/preact/dist/preact.min.js public/ && cp node_modules/preact-compat/dist/preact-compat.min.js public/ && cp patch/react-component-el.js node_modules/framework7-react/runtime-helpers/react-component-el.js && cp patch/list-input.js node_modules/framework7-react/components/"
   },
   "devDependencies": {
     "ag-grid-community": "^19.1.4",

@@ -23,7 +23,7 @@ export default class extends React.Component {
     }
     let onChange = this.props.onChange;
     if (this.props.readOnly) onChange = (value) => value !== this.props.defaultDate && (this.props.defaultDate ? this.flatpickr.setDate(this.props.defaultDate) : this.flatpickr.clear());
-    this.flatpickr = clone._flatpickr || flatpickr(clone, {...this.props, onChange: async (value) => {await onChange(value); this.flatpickr.open()}});
+    this.flatpickr = clone._flatpickr || flatpickr(clone, {...this.props, allowKeyboard: false, onChange: async (value) => {await onChange(value); this.flatpickr.open()}});
   }
 
   componentDidUpdate() {

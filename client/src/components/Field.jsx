@@ -49,6 +49,7 @@ export default class extends React.Component {
     const field = window.models.env[model]._fields[props.name];
     const type = field.type;
     if (!model) {
+      console.log('dordor')
       return;// this.setState({value: null});
     }
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {

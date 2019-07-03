@@ -8,7 +8,7 @@ import api from 'api';
 function autoSizeAll(gridOptions, listener) {
   if (this) {
     this.gridOptions = gridOptions;
-    for (let column of this.state.fields) {
+    for (let column of gridOptions.api.gridCore.gridOptions.columnDefs) {
       gridOptions.api.getFilterInstance(column.field).eClearButton.addEventListener('click', () => gridOptions.api.onFilterChanged());
     }
   }

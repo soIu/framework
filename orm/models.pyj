@@ -587,7 +587,7 @@ class Model():
                   values[field] = value
         return value
 
-    def update(self, values=False):
+    def update(self, values=False, no_onchange=False):
         if self._is_env:
            return
         if not exist(values): return
@@ -597,13 +597,14 @@ class Model():
            else:
               index = 0
               for record in self:
-                  record.update(values[index])
+                  record.update(values[index], no_onchange=no_onchange)
                   index += 1
            return
         for record in self:
             for key in values:
-                if self._fields[key]:
-                   record[key] = values[key]
+                if key != 'id' and self._fields[key]:
+                   if not no_onchange: record[key] = values[key]
+                   else: record._values[0] = self.adapt(key, values[key], values)
         if self.length == 1 and values.id: self.id = values.id
         return self
 
@@ -621,14 +622,14 @@ class Model():
         return result
 
     def create(self, values=False, is_client=configuration.client):
-        self.update()
+        self.update(no_onchange=True)
         if not exist(values):
            values = self.read()
         if not exist(values) and self.length < 1:
            return
         if self._is_env:
            self = self.browse()
-           self.update(values)
+           self.update(values, no_onchange=True)
         required_fields = []
         for value in values if is_array(values) else [values]:
             for key in self._fields:
@@ -638,7 +639,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
-               self.update(result.values)
+               self.update(result.values, no_onchange=True)
                self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
@@ -655,7 +656,7 @@ class Model():
            del values['_rev']
         def process_result(record):
             #queryInverse(self._name, record, self._one2many_fields, self._fields)
-            self.update(record[self._name][0])
+            self.update(record[self._name][0], no_onchange=True)
             return self
         if is_array(values):
            promises = []
@@ -674,11 +675,11 @@ class Model():
     def write(self, values=False, is_client=configuration.client):
         if not exist(self.id) and not exist(self.ids):
            return self
-        self.update()
+        self.update(no_onchange=True)
         if not exist(values):
            values = self.read()
         elif self.length < 2:
-           self.update(values)
+           self.update(values, no_onchange=True)
            values = self.read()
         if not exist(values) or self.length < 1:
            return
@@ -691,7 +692,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'values': values}, self._context).then(
            def (result):
-               self.update(result.values)
+               self.update(result.values, no_onchange=True)
                self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
@@ -711,7 +712,7 @@ class Model():
                values.rev = record._rev
                return db.rel.save(self._name, values).then(
                def (result):
-                   self.update(values)
+                   self.update(values, no_onchange=True)
                    return self
                )
            )
