@@ -8,7 +8,7 @@ export default class extends React.Component {
   }*/
 
   componentWillUnmount() {
-    this.flatpickr.destroy()
+    if (this.flatpickr) this.flatpickr.destroy()
     if (this.props.customInput) delete this.props.customInput._flatpickr;
     delete this.flatpickr;
   }
