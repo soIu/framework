@@ -604,7 +604,7 @@ class Model():
             for key in values:
                 if key != 'id' and self._fields[key]:
                    if not no_onchange: record[key] = values[key]
-                   else: record._values[0] = self.adapt(key, values[key], values)
+                   else: record._values[0][key] = self.adapt(key, values[key], values)
         if self.length == 1 and values.id: self.id = values.id
         return self
 
