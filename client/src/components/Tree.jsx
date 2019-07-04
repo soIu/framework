@@ -63,8 +63,14 @@ export default class Tree extends React.Component {
           this.taskJob();
         }
         record[params.colDef.field] = value;
-        console.log(record)
-        console.log(record[params.colDef.field])
+        if (!params.selectedOnchange && this.state.selected) {
+          for (let row of this.state.selected) {
+            if (row === params.data) continue;
+            this.onChange({colDef: params.colDef, selectedOnchange: true, data: row, oldValue: null, newValue: value});
+            if (!params.colDef.cellEditorParams) row[params.colDef.field] = value;
+          }
+          api.wait(100).then(() => this.gridOptions.api.deselectAll()).then(() => this.setState({records: this.state.records})).then(() => !params.colDef.cellEditorParams && this.gridOptions.api.refreshCells());
+        }
       }
     }
     this.onChange = onChange.bind(this);
