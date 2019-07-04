@@ -66,6 +66,14 @@ class StockMove(models.Model):
             return self.__super__('write')(values=values, is_client=is_client)
         )
 
+    @api.onchange('pack_id')
+    def onchange_pack(self):
+        if not self.pack_id: return
+        return self.env['stock.pack'].browse(self.pack_id).then(
+        def (pack_id):
+            if pack_id.adidas_product_id: self.product_id = pack_id.adidas_product_id
+        )
+
 StockMove()
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})

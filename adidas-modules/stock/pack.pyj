@@ -74,6 +74,17 @@ class StockPack(models.Model):
                   self.adidas_product_id = product_id.id
            )
 
+    @api.onchange('adidas_product_id')
+    def onchange_product(self):
+        if not self.adidas_product_id: return
+        if self.size and self.article and self.category_id: return
+        return self.env['product.product'].browse(self.adidas_product_id).then(
+        def (product_id):
+            if not self.size: self.size = product_id.size
+            if not self.article: self.article = product_id.article
+            if not self.category_id: self.category_id = product_id.category_id
+        )
+
 StockPack()
 
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})

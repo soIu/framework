@@ -270,7 +270,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         <group width="100%" invisible="active_id.type != 'picking'">
             <field name="move_ids">
                 <tree>
-                    <field name="product_id"/>
+                    <field name="product_id" domain="active_id.product_id ? ['id', '=', active_id.product_id] : ['id', 'not in', []]"/>
                     <field name="product_qty"/>
                     <field name="pack_id" domain="['id', 'in', parent.pack_ids || []]"/>
                 </tree>
