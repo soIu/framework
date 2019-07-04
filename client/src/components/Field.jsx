@@ -38,7 +38,7 @@ export default class extends React.Component {
   }
 
   async setSelectivityValue(value) {
-    if (!value) return;
+    if (!window.tools.exist(value)) return;
     await api.wait_exist(() => this.refs.selectivity);
     if (value && value === this.lastSelectivity) return;
     console.log(value);
@@ -49,7 +49,6 @@ export default class extends React.Component {
     const field = window.models.env[model]._fields[props.name];
     const type = field.type;
     if (!model) {
-      console.log('dordor')
       return;// this.setState({value: null});
     }
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
@@ -111,7 +110,7 @@ export default class extends React.Component {
       return this.setSelectivityValue(value);
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
-      return this.setState({value, input: this.refs.date_input.$listEl[0].querySelector('input')});
+      return this.setState({value, input: this.refs.date_input.base.querySelector('input')});
     }
     else {
       return this.setState({value});

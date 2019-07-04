@@ -32,6 +32,7 @@ export default class extends React.Component {
     models.env.context.active_id = await models.env[model].browse(models.env.context.active_ids);
     //}
     return models.env.context.refresh();
+    //api.globals.app.views.main.router.refreshPage();
   }
 
   async edit() {
@@ -80,7 +81,8 @@ export default class extends React.Component {
     models.env.context.editing = false;
     if (offline) models.env.context.unsaved = {...models.env.context.unsaved, [model]: {...(models.env.context.unsaved && models.env.context.unsaved[model]), [models.env.context.active_id.id]: models.env.context.active_id.id}};
     await api.update_session({unsaved: models.env.context.unsaved});
-    return await this.setState({...models.env.context, offline});
+    await this.setState({...models.env.context, offline});
+    //api.globals.app.views.main.router.refreshPage();
   }
 
   async upload() {

@@ -10,6 +10,7 @@ export default class extends React.Component {
   }
 
   async componentDidMount() {
+    await api.wait_exist(() => this.refs.group);
     await api.wait(500);
     if (!this.props.title) {
       let index = 0

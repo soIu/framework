@@ -51,7 +51,8 @@ export default class Tree extends React.Component {
     function onChange(params) {
       if (!params.colDef.cellEditorFramework && params.newValue != params.oldValue) {
         const value = params.newValue;
-        const record = params.data.id ? window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field].find(params.data.id) : this.state.new_records.values === params.data._original_object_for_id && this.state.new_records || this.state.new_records.find((object) => object === params.data._original_object_for_id);
+        const records = window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field];
+        const record = params.data.id ? records.find(params.data.id) : records.find(params.data._original_object_for_id);
         if (!this.pendingTask.write && record.id) {
           this.pendingTask.write = true;
         }
@@ -62,6 +63,8 @@ export default class Tree extends React.Component {
           this.taskJob();
         }
         record[params.colDef.field] = value;
+        console.log(record)
+        console.log(record[params.colDef.field])
       }
     }
     this.onChange = onChange.bind(this);

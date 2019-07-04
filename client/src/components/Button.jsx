@@ -10,6 +10,7 @@ async function button(props) {
     try {
       if (window.models.env.context.editing) await window.models.env.context.edit_function();
       await window.models.env.context.refresh();
+      //await api.globals.app.views.main.router.refreshPage();
       if (!window.models.env.context.active_error) {
         await window.models.env.context.active_id[props.name]();
         await window.models.env.context.refresh();
@@ -18,6 +19,7 @@ async function button(props) {
     catch(error) {
       console.log(error);
       await window.models.env.context.refresh();
+      //await api.globals.app.views.main.router.refreshPage();
       load.done();
     }
   }
