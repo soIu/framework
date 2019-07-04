@@ -58,7 +58,7 @@ export default function (props) {
       {/* Main View */}
       <View id="main-view" url="/" main className="ios-edges" preloadPreviousPage={false} pushState/>
 
-      {/* Popup */}
+      {/*
       <Popup id="popup">
         <View>
           <Page>
@@ -70,7 +70,7 @@ export default function (props) {
             <Block>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Neque, architecto. Cupiditate laudantium rem nesciunt numquam, ipsam. Voluptates omnis, a inventore atque ratione aliquam. Omnis iusto nemo quos ullam obcaecati, quod.</Block>
           </Page>
         </View>
-      </Popup>
+      </Popup>*/}
 
       {/* Login Screen */}
       <LoginScreen id="login-screen">
