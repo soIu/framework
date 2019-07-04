@@ -191,9 +191,7 @@ export default class extends React.Component {
       return component;
     }
 
-    let isSelectivity;
     if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one', 'selection'], type)) {
-      isSelectivity = true;
       let ajax;
       let items = null;
       if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type)) {
@@ -204,7 +202,7 @@ export default class extends React.Component {
       }
       component = (
         <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
-          <Selectivity ref="selectivity" slot="input" data={this.state.value || null} ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownOpen={() => this.setState({'selectivityOpened': true})} onDropdownClose={() => (props.onSelect ? props.onSelect() : true) && this.setState({'selectivityOpened': false})} allowClear closeOnSelect/>
+          <Selectivity ref="selectivity" slot="input" data={window.tools.exist(this.state.value) ? this.state.value : null} ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownOpen={() => this.setState({'selectivityOpened': true})} onDropdownClose={() => (props.onSelect ? props.onSelect() : true) && this.setState({'selectivityOpened': false})} allowClear closeOnSelect/>
         </ListInput>
       );
       if (props.cellEdit) return component.children[0];
