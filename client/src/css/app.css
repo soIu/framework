@@ -55,14 +55,19 @@
 .popup, .popup:not(.popup-tablet-fullscreen) {
     position: fixed;
     display: inherit !important;
-    left: calc(calc(100vw - 77.67vw) / 2);
-    top: 60vh;
-    margin-left: 0px;
-    margin-top: -43vh;
-    width: 77.67vw;
-    height: 100%;
+    right: 0;
+    left: 0;
+    top: 8vh;
+    margin-top: 30px;
+    margin-left: 2.5vw;
+    margin-right: 2.5vw;
+    width: 95%;
+    height: 85vh;
     box-shadow: 0px 20px 44px rgba(0,0,0,0.5);
-    max-width: 630px;
+}
+
+.popup:not(.modal-in) {
+    top: 20vh;
 }
 
 /*@media screen and (min-width: 630px) {
@@ -70,12 +75,6 @@
     margin-left: -34vw;
   }
 }*/
-
-@media screen and (min-height: 630px) {
-  .popup, .popup:not(.popup-tablet-fullscreen) {
-    height: 600px;
-  }
-}
 
 .ag-theme-material {
   clear: both;
@@ -87,6 +86,18 @@
 
 .ag-overlay-no-rows-center {
   display: none;
+}
+
+.ag-root.ag-layout-normal, .ag-root.ag-layout-auto-height {
+  overflow: unset;
+}
+
+.ag-body-viewport-wrapper {
+  overflow: unset;
+}
+
+.ag-body-viewport.ag-layout-normal {
+  overflow: unset;
 }
 
 .card-header {
@@ -249,8 +260,18 @@ div:focus {
     background-color: unset;
 }
 
+.selectivity-results-container {
+    max-height: 150px;
+}
+
 .selectivity-dropdown {
-    position: unset;
+    position: absolute;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.ag-theme-material .ag-cell-inline-editing.editable-special-cell .selectivity-dropdown {
+    position: inherit;
 }
 
 .ag-theme-material .ag-cell-inline-editing {
@@ -261,6 +282,8 @@ div:focus {
     padding-top: 5px;
     padding-right: 5px;
     padding-left: 3px;
+    padding-bottom: 5px;
+    overflow: unset;
 }
 
 .ag-theme-material .ag-paging-panel {
