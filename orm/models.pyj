@@ -793,7 +793,6 @@ class Model():
                 return -1
              elif b[field] != 0 and not b[field] and a[field]:
                 return 1
-             else: return 0
              if a[field] < b[field]:
                 return -1
              elif a[field] > b[field]:
