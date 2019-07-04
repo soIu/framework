@@ -1,5 +1,5 @@
-import stock.location
 import stock.move
+import stock.location
 import stock.pack
 import stock.picking
 import stock.wcs

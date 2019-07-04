@@ -258,10 +258,9 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                 <tree>
                     <field name="name"/>
                     <field name="order_id"/>
-                    <field name="category_id"/>
                     <field name="bucket" string="Bucket"/>
-                    <field name="adidas_product_id" invisible="parent.type != 'putting'"/>
-                    <field name="adidas_product_qty" invisible="parent.type != 'putting'"/>
+                    <field name="adidas_product_id"/>
+                    <field name="adidas_product_qty"/>
                 </tree>
             </field>
         </group>

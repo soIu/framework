@@ -2,6 +2,7 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
+import stock.move
 from stock.wcs import WcsJob
 from ir.ui import menu, view
 
@@ -18,7 +19,6 @@ class StockPack(models.Model):
                name = pack_id.name if pack_id.length and pack_id.name else 'Pack 000'
                if last_box and type(last_box) == String:
                   name = tools.max(name, last_box) or 'Pack 000'
-               console.log(name)
                name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
                return name
         )
@@ -31,7 +31,7 @@ class StockPack(models.Model):
         )
 
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
-    date = fields.Datetime(string="Date")
+    date = fields.Datetime(string="Date", defaults=Date)
     location_id = fields.Many2one('stock.location', string="Current Location")
     order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
@@ -84,6 +84,9 @@ view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
     <field name="order_id"/>
     <field name="bucket"/>
     <field name="category_id"/>
+    <field name="article"/>
+    <field name="size"/>
+    <field name="date" sort="asc"/>
 </tree>
 """, 'action': {'print_barcode': 'Print'}})
 
