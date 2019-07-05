@@ -351,9 +351,11 @@ def format_date(object, format):
 
 date.format = format_date
 
-array = [ρσ_list_constructor, Array]
+date.now = def (): return Date()
 
 month = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+array = [ρσ_list_constructor, Array]
 
 configuration = {}
 configuration.client = False
