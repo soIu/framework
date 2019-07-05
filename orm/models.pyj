@@ -35,6 +35,8 @@ class Model():
         self._values = [{}]
         self._related = {}
         self._one2many_fields = []
+        self._unstored_fields = []
+        self._compute_cache = {}
         self._is_env = _is_env if _is_env != undefined else False
         self._is_singleton = _is_singleton if _is_singleton != undefined else False
         self._inherited_keys = []
@@ -123,6 +125,8 @@ class Model():
                      self._pending_promises.push(result)
                   else:
                      self._values[0][key] = result
+            field = self[key]
+            if not field.store: self._unstored_fields.push(key)
             #self[key] = self._fields[key].defaults
             del self[key]
             Object.defineProperty(self, key, {
@@ -132,11 +136,19 @@ class Model():
                   if ids.length == 0:
                      return self._values[0][key]
                   elif ids.length == 1:
+                     if field.compute and type(field.compute) == Function:
+                        if field.store and self._compute_cache[key]: return self._compute_cache[key]
+                        result = field.compute.apply(self, [self])
+                        if field.store:
+                           self._compute_cache[key] = result
+                           self._values[0][key] = result
+                        return result
                      return self._values[ids[0]][key]
                   return None
               ,
               'set':
               def (value):
+                  if not field.store: return
                   ids = self.ids
                   if ids.length == 0:
                      self._values[0][key] = self.adapt(key, value, self._values[0]) if key != 'id' else id
@@ -187,7 +199,7 @@ class Model():
                       return self._values[0].id
                    return None
         ,
-        'set': def (id): 
+        'set': def (id):
                    if self._values.length == 1 and not self._values[0].id:
                       id = id.toString()
                       self._values[0].id = id
@@ -197,7 +209,7 @@ class Model():
         'get': def ():
                    values = self._values
                    if values.length == 1:
-                      values = self._values[0]     
+                      values = self._values[0]
                       values._search_count = self._search_count
                    else:
                       for value in values:
@@ -214,7 +226,7 @@ class Model():
                       self._is_singleton = True
                       self._values = [new_value]
                       for key in self._fields:
-                          if key in new_value:
+                          if key in new_value and key not in self._unstored_fields:
                              self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
                       if new_value.id:
                          self._values[new_value.id] = self._values[0]
@@ -226,7 +238,7 @@ class Model():
                       new_array = []
                       for value in new_value:
                           for key in self._fields:
-                              if key in value:
+                              if key in value and key not in self._unstored_fields:
                                  value[key] = self.adapt(key, value[key], value)
                           if value.id: 
                              new_array[value.id] = value
@@ -483,28 +495,38 @@ class Model():
                if not value.id:
                   value._original_object_for_id = oldvalue
                new_values.push(value)
-               queue(keys(value),
+               queue(keys(value).concat(self._unstored_fields),
                def (key, next):
                    if fields and key not in fields: return next()
                    field = self._fields[key]
-                   if not field or (value[key] == None and field.type != 'float'): return next()
-                   if field.type in ['date', 'datetime']:
-                      value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
-                   elif field.type == 'float' and Number.isInteger(value[key]):
-                      value[key] = value[key].toFixed(2)
-                   elif field.type == 'selection':
-                      value[key] = tools.dict(field.selection)[value[key]]
-                   elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
-                      promise = self.env[field.relation].browse(value[key])
-                      promise.then(
-                      def (records):
-                          names = []
-                          for record in records:
-                              names.push(record[record._rec_name or 'name'])
-                          value[key] = names.join(', ')
-                      )
-                      promises.push(promise)
-                   next()
+                   def after_promise(result):
+                       if result: value[key] = result
+                       if not field or (value[key] == None and field.type != 'float'): return next()
+                       if field.type in ['date', 'datetime']:
+                          value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
+                       elif field.type == 'float' and Number.isInteger(value[key]):
+                          value[key] = value[key].toFixed(2)
+                       elif field.type == 'selection':
+                          value[key] = tools.dict(field.selection)[value[key]]
+                       elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
+                          promise = self.env[field.relation].browse(value[key])
+                          promise.then(
+                          def (records):
+                              names = []
+                              for record in records:
+                                  names.push(record[record._rec_name or 'name'])
+                              value[key] = names.join(', ')
+                          )
+                          if result: return promise
+                          promises.push(promise)
+                       if not result: next()
+                   if field.compute:
+                      record = self.find(value.id or value._original_object_for_id)
+                      value[key] = record[key]
+                      if value[key] and type(value[key]) == Promise:
+                         promises.push(value[key].then(after_promise))
+                         return next()
+                   after_promise()
                )
                next()
            )
@@ -549,7 +571,7 @@ class Model():
         elif self._fields[key].type == 'selection':
            if not exist(value):
               value = None
-           elif not value in dict(self._fields[key].selection):
+           elif self._fields[key].selection and is_array(self._fields[key].selection) and value not in dict(self._fields[key].selection):
               raise Error("Incorrect value")
         elif self._fields[key].type in ['date', 'datetime']:
            if not exist(value):
@@ -602,7 +624,7 @@ class Model():
            return
         for record in self:
             for key in values:
-                if key != 'id' and self._fields[key]:
+                if key != 'id' and self._fields[key] and key not in self._unstored_fields:
                    if not no_onchange: record[key] = values[key]
                    else: record._values[0][key] = self.adapt(key, values[key], values)
         if self.length == 1 and values.id: self.id = values.id
