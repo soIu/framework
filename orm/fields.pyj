@@ -4,48 +4,48 @@ from orm.tools import merge
 attributes = ['required', 'readonly', 'defaults', 'compute', 'related', 'no_offline']
 
 def Char(string, **args):
-    return merge({'type': 'char', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'char', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Text(string, **args):
-    return merge({'type': 'text', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'text', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Integer(string, **args):
-    return merge({'type': 'integer', 'string': string, 'store': True, 'defaults': 0}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'integer', 'string': string, 'store': args.store or True, 'defaults': args.defaults or 0}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Float(string, **args):
-    return merge({'type': 'float', 'string': string, 'store': True, 'defaults': 0.0}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'float', 'string': string, 'store': args.store or True, 'defaults': args.defaults or 0.0}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 #While javascript have the same Number type for integer and float, we will differentiate them for data-storing purposes. Integer will be stored with parseInt and float will be stored with parseFloat
 
 def Boolean(string, **args):
-    return merge({'type': 'boolean', 'string': string, 'store': True, 'defaults': False}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'boolean', 'string': string, 'store': args.store or True, 'defaults': args.defaults or False}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Binary(string, **args):
-    return merge({'type': 'binary', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'binary', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 #Boolean will be stored True or False and Binary will be stored as base64 (btoa and atob), or should we store it with just plain Buffer/Blob? (remember https://pouchdb.com/faq.html#data_types not all browsers support storing Blob)
 
 def Many2one(relation, string, **args):
-    return merge({'type': 'many2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'many2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2many(relation, inverse, string, **args):
-    return merge({'type': 'one2many', 'relation': relation, 'ondelete': 'cascade', 'inverse': inverse, 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'one2many', 'relation': relation, 'ondelete': 'cascade', 'inverse': inverse, 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Many2many(relation, string, **args):
-    return merge({'type': 'many2many', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'many2many', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2one(relation, string, **args):
-    return merge({'type': 'one2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'one2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Selection(*selection, **args):
     return merge({'type': 'selection', 'selection': list(selection[0]) if selection[0] and selection[0].next else selection[0] if selection[0] and type(selection[0]) == Function else selection, 'string': args.string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Date(string, **args):
-    return merge({'type': 'date', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'date', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Datetime(string, **args):
-    return merge({'type': 'datetime', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'datetime', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 #Add fields.Data for storing JSON
 def Data(string, **args):
-    return merge({'type': 'data', 'string': string, 'store': True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'data', 'string': string, 'store': args.store or True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
