@@ -137,11 +137,18 @@ class Model():
                      return self._values[0][key]
                   elif ids.length == 1:
                      if field.compute and type(field.compute) == Function:
-                        if field.store and self._compute_cache[key]: return self._compute_cache[key]
+                        if field.store and key in self._compute_cache: return self._compute_cache[key]
                         result = field.compute.apply(self, [self])
                         if field.store:
                            self._compute_cache[key] = result
-                           self._values[0][key] = result
+                           if result and type(result) == Promise:
+                              result.then(
+                              def (result):
+                                  self._compute_cache[key] = result
+                                  self._values[0][key] = result
+                              )
+                           else:
+                              self._values[0][key] = result
                         return result
                      return self._values[ids[0]][key]
                   return None
