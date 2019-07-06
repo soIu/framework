@@ -38,7 +38,7 @@ def One2one(relation, string, **args):
     return merge({'type': 'one2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Selection(*selection, **args):
-    return merge({'type': 'selection', 'selection': list(selection[0]) if selection[0] and selection[0].next else selection[0] if selection[0] and type(selection[0]) == Function else selection, 'string': args.string}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'selection', 'selection': list(selection[0]) if selection[0] and selection[0].next else selection[0] if selection[0] and type(selection[0]) == Function else selection, 'string': args.string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Date(string, **args):
     return merge({'type': 'date', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
