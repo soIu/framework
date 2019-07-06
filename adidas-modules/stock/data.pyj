@@ -138,6 +138,23 @@ class AdidasPO(models.Model):
         )
 
     @api.server
+    def _get_incoming_qty_size(self, size):
+        if not self.id: return 0.0
+        return self.env['stock.pack'].search(['order_id', '=', self.id], ['size', '=', size] if size else ['size', 'not in', []]).then(
+        def (pack_ids):
+            qty = 0.0
+            if not pack_ids.length: return qty
+            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_default.internal_id]).then(
+            def (move_ids):
+                nonlocal qty
+                if not move_ids.length: return qty
+                for move_id in move_ids:
+                    qty += move_id.product_qty
+                return qty
+            )
+        )
+
+    @api.server
     def _get_actual_qty(self):
         if not self.id: return 0.0
         return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
