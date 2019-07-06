@@ -87,7 +87,7 @@ export default class extends React.Component {
       }
     }
     else if (type === 'selection') {
-      const selections = typeof field.selection === 'function' ? field.selection.apply(models.env.context.active_id, [models.env.context.active_id]) : field.selection;
+      const selections = typeof field.selection === 'function' ? field.selection.apply(null) : field.selection;
       return window.tools.dict(selections)[value] && this.setState({value: value && {id: value, text: window.tools.dict(selections)[value]}});
     }
   }
