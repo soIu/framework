@@ -36,6 +36,7 @@ export default class extends React.Component {
   }
 
   async edit() {
+    await api.wait_exist(() => !api.globals.onchange_running);
     const models = window.models;
     const model = models.env.context.active_id._name;
     const offline = this.props.offline ? JSON.parse(this.props.offline) : false;
@@ -86,6 +87,7 @@ export default class extends React.Component {
   }
 
   async upload() {
+    await api.wait_exist(() => !api.globals.onchange_running);
     const models = window.models;
     const model = models.env.context.active_id._name;
     let record = await models.env[model].browse(models.env.context.active_id.id);
