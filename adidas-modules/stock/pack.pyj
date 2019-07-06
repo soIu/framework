@@ -44,7 +44,7 @@ class StockPack(models.Model):
             self._set_allowed_sizes(order_id)
             return order_id.incoming_qty.then(
             def (incoming_qty):
-                return order_id.total_qty - incoming_qty
+                return order_id.total_qty - (incoming_qty or 0)
             )
         )
 
@@ -84,7 +84,7 @@ class StockPack(models.Model):
             self._set_allowed_sizes(order_id)
             return order_id.incoming_qty.then(
             def (incoming_qty):
-                self.available_qty = order_id.total_qty - incoming_qty
+                self.available_qty = order_id.total_qty - (incoming_qty or 0)
             )
         )
 
