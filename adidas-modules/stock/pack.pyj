@@ -100,6 +100,7 @@ class StockPack(models.Model):
     @api.onchange('article', 'category_id', 'size')
     def onchange_for_product(self):
         if self.article and self.category_id and self.size:
+           self.order_id = self.order_id
            return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
            def (product_id):
                if product_id.length:
