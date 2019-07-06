@@ -669,6 +669,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
                self.update(result.values, no_onchange=True)
+               self._compute_cache = {}
                self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
@@ -722,6 +723,7 @@ class Model():
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'values': values}, self._context).then(
            def (result):
                self.update(result.values, no_onchange=True)
+               self._compute_cache = {}
                self.with_context(no_preload=True).browse(self.ids)
                return self
            ).catch(
