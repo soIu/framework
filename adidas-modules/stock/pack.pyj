@@ -42,9 +42,9 @@ class StockPack(models.Model):
         return self.env['adidas.po'].browse(self.order_id).then(
         def (order_id):
             self._set_allowed_sizes(order_id)
-            return order_id.actual_qty.then(
-            def (actual_qty):
-                return order_id.total_qty - actual_qty
+            return order_id.incoming_qty.then(
+            def (incoming_qty):
+                return order_id.total_qty - incoming_qty
             )
         )
 
@@ -82,9 +82,9 @@ class StockPack(models.Model):
         def (order_id):
             self.article = order_id.article
             self._set_allowed_sizes(order_id)
-            return order_id.actual_qty.then(
-            def (actual_qty):
-                self.available_qty = order_id.total_qty - actual_qty
+            return order_id.incoming_qty.then(
+            def (incoming_qty):
+                self.available_qty = order_id.total_qty - incoming_qty
             )
         )
 
