@@ -3,7 +3,8 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from stock.pack import StockPack
-from product.category import categories, defaults
+from product.category import categories, defaults as category_defaults
+from stock.location import defaults as location_defaults
 from ir.ui import menu, view
 
 class AdidasData(models.Model):
@@ -20,7 +21,7 @@ class AdidasData(models.Model):
         )
 
     name = fields.Char(string="Data Number", defaults=_get_number, required=True)
-    date = fields.Datetime(string="Date", defaults=Date)
+    date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True)
     imported = fields.Boolean(string="Imported")
 
@@ -51,9 +52,9 @@ class AdidasData(models.Model):
             def (product_id):
                 if product_id.length: return
                 promises = []
-                for size in StockPack.size.selection:
+                for size in StockPack.size.selection.apply(None):
                     for category in categories:
-                        category_id = defaults[category.toLowerCase() + '_id']
+                        category_id = category_defaults[category.toLowerCase() + '_id']
                         promises.push(self.env['product.product'].create({'name': [category, article, size[0]].join('-'), 'category_id': category_id, 'article': article, 'size': size[0]}))
                 return Promise.all(promises)
             )
@@ -97,15 +98,35 @@ view.add({'model': 'adidas.data', 'mode': 'form', 'string': False, 'arch': """
 class AdidasPO(models.Model):
     _name = 'adidas.po'
 
+    def _get_remaining_qty(self):
+        if not self.id: return 0.0
+        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
+        def (pack_ids):
+            qty = self.total_qty
+            if not pack_ids.length: return qty
+            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_defaults.external_id]).then(
+            def (move_ids):
+                nonlocal qty
+                if not move_ids.length: return qty
+                for move_id in move_ids:
+                    qty -= move_id.product_qty
+                return qty
+            )
+        )
+
     name = fields.Char(string="PO Number", required=True)
     model = fields.Char(string="Model")
     article = fields.Char(string="Article")
     color = fields.Char(string="Color")
     total_qty = fields.Float(string="Total Qty")
+    remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
     customer_name = fields.Char(string="Customer Name")
     customer_order = fields.Char(string="Customer Order")
     customer_cd = fields.Char(string="Customer CD")
     customer_identifier = fields.Char(string="Customer Identifier")
+
+for size in StockPack.size.selection.apply(None):
+    AdidasPO.prototype['size_' + size[0]] = fields.Float(string=size[0])
 
 AdidasPO()
 
@@ -118,6 +139,9 @@ view.add({'model': 'adidas.po', 'mode': 'tree', 'string': False, 'arch': """
 </tree>
 """})
 
+sizes = [str.format('<field name="size_{}"/>', str(index)) for index in range(3, 15)].join('\n')
+sizes_t = [str.format('<field name="size_{}"/>', str(index) + 'T') for index in range(3, 15)].join('\n')
+
 view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <sheet>
@@ -129,6 +153,7 @@ view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="model"/>
             <field name="color"/>
+            <field name="remaining_qty"/>
         </group>
         <group title="Customer">
             <field name="customer_name"/>
@@ -137,6 +162,12 @@ view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="customer_order"/>
             <field name="customer_identifier"/>
+        </group>
+        <group title="Sizes">
+            """ + sizes + """
+        </group>
+        <group>
+            """ + sizes_t + """
         </group>
     </sheet>
 </form>

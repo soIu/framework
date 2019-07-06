@@ -30,6 +30,28 @@ class StockPack(models.Model):
             return result
         )
 
+    def _get_sizes(self):
+        sizes = []
+        for index in range(3, 15):
+            if (self and (not self._context.allowed_sizes or str(index) in self._context.allowed_sizes)) or not self: sizes.push([str(index), str(index)])
+            if (self and (not self._context.allowed_sizes or str(index) + 'T' in self._context.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
+        return sizes
+
+    def _get_max_qty(self):
+        if not self.order_id and not self.size: return
+        return self.env['adidas.po'].browse(self.order_id).then(
+        def (order_id):
+            self.size_qty = order_id['size_' + self.size] or 0.0
+            self._set_allowed_sizes(order_id)
+        )
+
+    def _set_allowed_sizes(self, order_id):
+        allowed_sizes = []
+        self._context.allowed_sizes = allowed_sizes
+        for index in range(3, 15):
+            if order_id['size_' + str(index)]: allowed_sizes.push(str(index))
+            if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
+
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
     date = fields.Datetime(string="Date", defaults=Date)
     location_id = fields.Many2one('stock.location', string="Current Location")
@@ -40,9 +62,10 @@ class StockPack(models.Model):
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
     level = fields.Selection(['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], string="Level")
-    size = fields.Selection(*list([str(index), str(index)] for index in range(3, 15)).concat(list([str(index) + 'T', str(index) + 'T'] for index in range(3, 15))), string="Size")
+    size = fields.Selection(_get_sizes, string="Size")
     adidas_product_id = fields.Many2one('product.product', string="Product")
     adidas_product_qty = fields.Float(string="Quantity")
+    size_qty = fields.Float(string="Maximum Size Quantity", compute=_get_max_qty)
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -55,6 +78,7 @@ class StockPack(models.Model):
         return self.env['adidas.po'].browse(self.order_id).then(
         def (order_id):
             self.article = order_id.article
+            self._set_allowed_sizes(order_id)
         )
 
     @api.onchange('category_id')
@@ -117,6 +141,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="bucket" string="Bucket"/>
             <field name="category_id"/>
             <field name="level"/>
+            <field name="size_qty" invisible="True"/>
         </group>
         <group title="Product" invisible="active_id.env.context.is_add_pack != true">
             <field name="adidas_product_id"/>

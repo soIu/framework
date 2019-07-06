@@ -12,7 +12,7 @@ class ProductProduct(models.Model):
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", required=True)
     article = fields.Char(string="Article Number")
-    size = fields.Selection(*StockPack.size.selection, string="Size")
+    size = fields.Selection(StockPack.size.selection, string="Size")
 
 ProductProduct()
 
