@@ -44,6 +44,11 @@ class AdidasData(models.Model):
                    if value[field] not in articles: articles.push(value[field])
                 index += 1
             value['total_qty'] = data[16]
+            index = 23
+            for field in StockPack.size.selection.apply(None):
+                field = field[0]
+                value['size_' + field] = data[index]
+                index += 1
             promise = self.env['adidas.po'].create(value)
             promises.push(promise)
         articles.forEach(
