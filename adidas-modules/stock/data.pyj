@@ -47,7 +47,7 @@ class AdidasData(models.Model):
             index = 22
             for field in StockPack.size.selection.apply(None):
                 field = field[0]
-                value['size_' + field] = data[index]
+                value['size_' + field] = data[index] or 0.0
                 index += 1
             promise = self.env['adidas.po'].create(value)
             promises.push(promise)
