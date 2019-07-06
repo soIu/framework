@@ -119,12 +119,46 @@ class AdidasPO(models.Model):
             )
         )
 
+    def _get_incoming_qty(self):
+        if not self.id: return 0.0
+        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
+        def (pack_ids):
+            qty = 0.0
+            if not pack_ids.length: return qty
+            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_defaults.internal_id]).then(
+            def (move_ids):
+                nonlocal qty
+                if not move_ids.length: return qty
+                for move_id in move_ids:
+                    qty += move_id.product_qty
+                return qty
+            )
+        )
+
+    def _get_actual_qty(self):
+        if not self.id: return 0.0
+        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
+        def (pack_ids):
+            qty = 0.0
+            if not pack_ids.length: return qty
+            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids]).then(
+            def (move_ids):
+                nonlocal qty
+                if not move_ids.length: return qty
+                for move_id in move_ids:
+                    qty += move_id.product_qty if move_id.location_dest_id == location_defaults.internal_id else -move_id.product_qty
+                return qty
+            )
+        )
+
     name = fields.Char(string="PO Number", required=True)
     model = fields.Char(string="Model")
     article = fields.Char(string="Article")
     color = fields.Char(string="Color")
     total_qty = fields.Float(string="Total Qty")
     remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
+    incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
+    actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
     customer_name = fields.Char(string="Customer Name")
     customer_order = fields.Char(string="Customer Order")
     customer_cd = fields.Char(string="Customer CD")
@@ -154,11 +188,13 @@ view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
             <field name="name"/>
             <field name="article"/>
             <field name="total_qty"/>
+            <field name="remaining_qty"/>
         </group>
         <group>
             <field name="model"/>
             <field name="color"/>
-            <field name="remaining_qty"/>
+            <field name="incoming_qty"/>
+            <field name="actual_qty"/>
         </group>
         <group title="Customer">
             <field name="customer_name"/>

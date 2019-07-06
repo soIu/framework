@@ -37,12 +37,15 @@ class StockPack(models.Model):
             if (self and (not self._context.allowed_sizes or str(index) + 'T' in self._context.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
         return sizes
 
-    def _get_max_qty(self):
-        if not self.order_id and not self.size: return
+    def _get_available_qty(self):
+        if not self.order_id: return
         return self.env['adidas.po'].browse(self.order_id).then(
         def (order_id):
-            self.size_qty = order_id['size_' + self.size] or 0.0
             self._set_allowed_sizes(order_id)
+            return order_id.actual_qty.then(
+            def (actual_qty):
+                return order_id.total_qty - actual_qty
+            )
         )
 
     def _set_allowed_sizes(self, order_id):
@@ -65,7 +68,7 @@ class StockPack(models.Model):
     size = fields.Selection(_get_sizes, string="Size")
     adidas_product_id = fields.Many2one('product.product', string="Product")
     adidas_product_qty = fields.Float(string="Quantity")
-    size_qty = fields.Float(string="Maximum Size Quantity", compute=_get_max_qty)
+    available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -79,6 +82,10 @@ class StockPack(models.Model):
         def (order_id):
             self.article = order_id.article
             self._set_allowed_sizes(order_id)
+            return order_id.actual_qty.then(
+            def (actual_qty):
+                self.available_qty = order_id.total_qty - actual_qty
+            )
         )
 
     @api.onchange('category_id')
@@ -141,7 +148,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="bucket" string="Bucket"/>
             <field name="category_id"/>
             <field name="level"/>
-            <field name="size_qty" invisible="True"/>
+            <field name="available_qty"/>
         </group>
         <group title="Product" invisible="active_id.env.context.is_add_pack != true">
             <field name="adidas_product_id"/>
