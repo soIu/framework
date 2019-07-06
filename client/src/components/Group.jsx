@@ -11,7 +11,7 @@ export default class extends React.Component {
 
   async componentDidMount() {
     await api.wait_exist(() => this.refs.group);
-    await api.wait(500);
+    await api.wait(0);
     if (!this.props.title) {
       let index = 0
       for (let element of [this.refs.group.previousElementSibling, this.refs.group.nextElementSibling]) {

@@ -22,17 +22,17 @@ export default class extends React.Component {
       this.refs.flatpickr.insertAdjacentElement('afterend', clone);
     }
     let onChange = this.props.onChange;
-    if (this.props.readOnly) onChange = (value) => value !== this.props.defaultDate && (this.props.defaultDate ? this.flatpickr.setDate(this.props.defaultDate) : this.flatpickr.clear());
+    if (this.props.readOnly) onChange = async (value) => value !== await this.props.defaultDate && (await this.props.defaultDate ? this.flatpickr.setDate(await this.props.defaultDate) : this.flatpickr.clear());
     this.flatpickr = clone._flatpickr || flatpickr(clone, {...this.props, allowKeyboard: false, onChange: async (value) => {await onChange(value); this.flatpickr.open()}});
   }
 
-  componentDidUpdate() {
+  async componentDidUpdate() {
     if (this.props.customInput) this.componentDidMount();
     if (!this.flatpickr) return;
     let onChange = this.props.onChange;
-    if (this.props.readOnly) onChange = (value) => value !== this.props.defaultDate && (this.props.defaultDate ? this.flatpickr.setDate(this.props.defaultDate) : this.flatpickr.clear());
+    if (this.props.readOnly) onChange = async (value) => value !== await this.props.defaultDate && (await this.props.defaultDate ? this.flatpickr.setDate(await this.props.defaultDate) : this.flatpickr.clear());
     this.flatpickr.set('onChange', async (value) => {await onChange(value); this.flatpickr.open()});
-    if (this.props.defaultDate) this.flatpickr.setDate(this.props.defaultDate);
+    if (await this.props.defaultDate) this.flatpickr.setDate(await this.props.defaultDate);
     else {
       this.flatpickr.selectedDateObj = null;
       this.flatpickr.input.value = '';

@@ -172,6 +172,7 @@ async function ORM(session) {
   models.env.user.id = session.id;
   models.env.user.login = session.login;
   models.env.user.password = session.password;
+  console.log(session)
   /*for (let model in tools.view) {
     const views = tools.view[model];
     for (let mode in views) {
