@@ -37,7 +37,7 @@ def server(method, write=True, iterate=True):
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)
-            if result.method_result:
+            if 'method_result' in result:
                return result.method_result
             return self
         ).catch(
@@ -84,7 +84,7 @@ def client(method, write=True, iterate=True):
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)
-            if result.method_result:
+            if 'method_result' in result:
                return result.method_result
             return self
         ).catch(
@@ -132,7 +132,7 @@ def strict(method, write=True, iterate=True):
             self.values = result.values
             context = self._context
             self.env[self._name].with_context(**context).browse(self.ids)
-            if result.method_result:
+            if 'method_result' in result:
                return result.method_result
             return self
         ).catch(
