@@ -47,5 +47,6 @@ class Controller():
               _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'})]
 
     def run(self):
+        if require('process').env.PORT: configuration.port = require('process').env.PORT
         console.log('Running on port ' + configuration.port)
         server.listen(configuration.port)
