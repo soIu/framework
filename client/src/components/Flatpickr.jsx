@@ -32,7 +32,9 @@ export default class extends React.Component {
     let onChange = this.props.onChange;
     if (this.props.readOnly) onChange = async (value) => value !== await this.props.defaultDate && (await this.props.defaultDate ? this.flatpickr.setDate(await this.props.defaultDate) : this.flatpickr.clear());
     this.flatpickr.set('onChange', async (value) => {await onChange(value); this.flatpickr.open()});
-    if (await this.props.defaultDate) this.flatpickr.setDate(await this.props.defaultDate);
+    const date = await this.props.defaultDate;
+    if (!this.flatpickr) return;
+    if (date) this.flatpickr.setDate(date);
     else {
       this.flatpickr.selectedDateObj = null;
       this.flatpickr.input.value = '';

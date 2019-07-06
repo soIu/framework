@@ -62,6 +62,7 @@ export default class extends React.Component {
   async setSelectivityValue(value) {
     value = await value;
     if (!window.tools.exist(value)) return;
+    if (value && typeof value === 'object') return this.setState({value});
     await api.wait_exist(() => this.refs.selectivity);
     if (value && value === this.lastSelectivity) return;
     this.lastSelectivity = value;
@@ -76,7 +77,6 @@ export default class extends React.Component {
     else if (api.hasValue(['many2many', 'one2many', 'many2one', 'one2one'], type) && !props.children) {
       //const model = props.model || window.models.env.context.active_model;
       //const field = window.models.env[model]._fields[props.name];
-      if (value && typeof value === 'object' && !Array.isArray(value) && value.id) value = value.id;
       const records = await models.env[field.relation].browse(value);
       if (!records.length) return;
       if (value.constructor === String) {
@@ -88,7 +88,7 @@ export default class extends React.Component {
     }
     else if (type === 'selection') {
       const selections = typeof field.selection === 'function' ? field.selection.apply(null) : field.selection;
-      return window.tools.dict(selections)[value] && this.setState({value: value && {id: value, text: window.tools.dict(selections)[value]}});
+      return this.setState({value: value && {id: value, text: window.tools.dict(selections)[value]}});
     }
   }
 
