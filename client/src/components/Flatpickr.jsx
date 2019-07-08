@@ -8,17 +8,19 @@ export default class extends React.Component {
   }*/
 
   componentWillUnmount() {
+    if (this.props.inline) return document.getElementById('flatpickr-inline-clone') && document.getElementById('flatpickr-inline-clone').remove();
     if (this.flatpickr) this.flatpickr.destroy()
     if (this.props.customInput) delete this.props.customInput._flatpickr;
     delete this.flatpickr;
   }
 
   componentDidMount() {
-    const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : this.refs.flatpickr.cloneNode(false));
+    const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : document.getElementById('flatpickr-inline-clone') || this.refs.flatpickr.cloneNode(false));
     console.log(clone);
     if (!clone) return;
     if (this.props.inline) {
-      clone.style.display = '';
+      clone.id = 'flatpickr-inline-clone';
+      //clone.style.display = '';
       this.refs.flatpickr.insertAdjacentElement('afterend', clone);
     }
     let onChange = this.props.onChange;

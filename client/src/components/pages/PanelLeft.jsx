@@ -1,5 +1,5 @@
 import React from 'react';
-import {Page, Navbar, Link} from 'framework7-react';
+import {Page, Navbar, Button, Link} from 'framework7-react';
 
 import api from 'api';
 
@@ -34,6 +34,7 @@ export default () => (
         </li>
       </ul>))}
     </div>
+    <Button fill id="pwa_install_button" onClick={async () => api.globals.InstallPromp.prompt() || (await api.globals.InstallPromp.userChoice === 'accepted') && (document.getElementById('pwa_install_button').style.display = 'none')} style={{display: api.globals.InstallPrompt ? 'inline-block' : 'none', margin: '10px'}}>Install</Button>
     <Link iconMd="material:more_horiz" iconSize="30" onClick={hidePanel} style={{display: 'inline-block', margin: '10px'}}/>
   </Page>
 );

@@ -30,7 +30,7 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 
 import api from 'api';
 
-OfflinePluginRuntime.install();
+OfflinePluginRuntime.install({onInstalled: () => OfflinePluginRuntime.update(), onUpdateReady: () => window.tools ? api.globals.app.dialog.confirm('Update available, apply it?', () => OfflinePluginRuntime.applyUpdate(() => window.location.reload())) : OfflinePluginRuntime.applyUpdate(() => window.location.reload())});
 
 // Init Framework7-React plugin
 Framework7.use(Framework7React);
@@ -42,12 +42,27 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
 
 // Mount React App
 (async () => {
-  await api.get_session();
+  const wait_session = api.get_session();
+  try {
+    window.addEventListener('beforeinstallprompt', async (event) => {
+      event.preventDefault();
+      await wait_session;
+      api.globals.InstallPromp = event;
+      await api.wait_exist(() => document.getElementById('pwa_install_button'));
+      document.getElementById('pwa_install_button').style.display = 'inline-block';
+    });
+  }
+  catch (error) {
+    console.error(error);
+  }
+  await wait_session;
+  const tools = window.tools;
+  if (tools && (tools.configuration.long_name || tools.configuration.app_name)) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
   await ReactDOM.render(
     React.createElement(App),
     document.getElementById('app'),
   );
-  if (window.tools && window.tools.configuration.custom_navbar) {
+  if (tools && tools.configuration.custom_navbar) {
     var style = document.createElement('style');
     style.innerHTML = '.navbar, .toolbar {background-color: ' + window.tools.configuration.custom_navbar + '!important}';
     document.querySelector('head').append(style);
@@ -57,5 +72,6 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
     color_element.name = 'theme-color';
     color_element.content = '#' + getComputedStyle(document.querySelector('.navbar'), null).backgroundColor.replace('rgb(', '').replace(')', '').split(', ').map(function(c) {return parseInt(c).toString(16)}).map(function(hex) {return hex.length === 1 ? "0" + hex : hex}).join('');
     document.querySelector('head').appendChild(color_element);
+    api.globals.registerManifest();
   }
 })();

@@ -17,7 +17,7 @@ if (!window.localStorage.rapyd_server_url) {
     window.localStorage.rapyd_server_url = 'http://localhost:8069';
   }
   else {
-    window.localStorage.rapyd_server_url = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : ':8069');
+    window.localStorage.rapyd_server_url = ((href) => href.substring(0, href.lastIndexOf('/')) + '/')(window.location.origin + window.location.pathname);
   }
 }
 
