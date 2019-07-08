@@ -42,7 +42,15 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
 
 // Mount React App
 (async () => {
+  try {
+    window.addEventListener('beforeinstallprompt', (event) => event.preventDefault() || (window.models ? event.prompt() : null));
+  }
+  catch (error) {
+    console.error(error);
+  }
   await api.get_session();
+  const tools = window.tools;
+  if (tools.configuration.long_name || tools.configuration.app_name) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
   await ReactDOM.render(
     React.createElement(App),
     document.getElementById('app'),
@@ -57,5 +65,6 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
     color_element.name = 'theme-color';
     color_element.content = '#' + getComputedStyle(document.querySelector('.navbar'), null).backgroundColor.replace('rgb(', '').replace(')', '').split(', ').map(function(c) {return parseInt(c).toString(16)}).map(function(hex) {return hex.length === 1 ? "0" + hex : hex}).join('');
     document.querySelector('head').appendChild(color_element);
+    api.globals.registerManifest();
   }
 })();

@@ -22,14 +22,44 @@ import {
 
 import routes from '../routes';
 
-//import api from 'api';
+import api from 'api';
 
 export default function (props) {
+  const tools = window.tools;
 
-  // Framework7 parameters here
+  const manifest = {
+    "short_name": tools.configuration.app_name || "App",
+    "name": tools.configuration.long_name || tools.configuration.app_name || "App",
+    "description": tools.configuration.app_description || "A webclient for Rapydframework based apps",
+    "scope": ((href) => href.substring(0, href.lastIndexOf('/')) + '/')(window.location.origin + window.location.pathname),
+    "start_url": ((href) => href.substring(0, href.lastIndexOf('/')) + '/')(window.location.origin + window.location.pathname) + '/index.html',
+    "display": 'standalone',
+    "background_color": 'white',
+    "icons": [{
+      "src": ((href) => href.substring(0, href.lastIndexOf('/')) + '/')(window.location.origin + window.location.pathname) + '/' + (tools.configuration.icon_big || "icon-512.png"),
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": ((href) => href.substring(0, href.lastIndexOf('/')) + '/')(window.location.origin + window.location.pathname) + '/' + (tools.configuration.icon_small || "icon-192.png"),
+      "sizes": "192x192",
+      "type": "image/png"
+    }],
+  }
+
+  let manifestRegistered = false;
+  api.globals.registerManifest = () => {
+    if (manifestRegistered) return;
+    manifest.theme_color = document.querySelector('meta[name=theme-color]').content;
+    const manifest_string = JSON.stringify(manifest);
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    document.getElementById('rapyd-app-manifest').setAttribute('href', URL.createObjectURL(blob));
+    manifestRegistered = true;
+  }
+
   const f7params = {
     id: 'org.rapyd.client', // App bundle ID
-    name: 'App', // App name
+    name: manifest.name, // App name
     theme: 'md', // Automatic theme detection
     // App routes
     routes: routes(),
