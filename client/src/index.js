@@ -48,13 +48,13 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
       event.preventDefault();
       await wait_session;
       api.globals.InstallPromp = event;
-      if (document.getElementById('pwa_install_button')) document.getElementById('pwa_install_button').display = 'inline-block';
+      if (document.getElementById('pwa_install_button')) document.getElementById('pwa_install_button').style.display = 'inline-block';
       try {
         if (window.models) {
           await api.wait(3000);
           event.prompt();
           if (await event.userChoice === 'accepted') window.location.reload();
-          document.getElementById('pwa_install_button').display = 'none';
+          document.getElementById('pwa_install_button').style.display = 'none';
         }
       }
       catch (error) {
