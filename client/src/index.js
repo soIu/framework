@@ -30,7 +30,7 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 
 import api from 'api';
 
-OfflinePluginRuntime.install({onInstalled: () => OfflinePluginRuntime.update(), onUpdateReady: () => api.globals.app.dialog.confirm('Update available, apply it?', () => OfflinePluginRuntime.applyUpdate(() => window.location.reload()))});
+OfflinePluginRuntime.install({onInstalled: () => OfflinePluginRuntime.update(), onUpdateReady: () => window.tools ? api.globals.app.dialog.confirm('Update available, apply it?', () => OfflinePluginRuntime.applyUpdate(() => window.location.reload())) : OfflinePluginRuntime.applyUpdate(() => window.location.reload())});
 
 // Init Framework7-React plugin
 Framework7.use(Framework7React);
@@ -50,12 +50,12 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
   }
   await api.get_session();
   const tools = window.tools;
-  if (tools.configuration.long_name || tools.configuration.app_name) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
+  if (tools && tools.configuration.long_name || tools.configuration.app_name) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
   await ReactDOM.render(
     React.createElement(App),
     document.getElementById('app'),
   );
-  if (window.tools && window.tools.configuration.custom_navbar) {
+  if (tools && tools.configuration.custom_navbar) {
     var style = document.createElement('style');
     style.innerHTML = '.navbar, .toolbar {background-color: ' + window.tools.configuration.custom_navbar + '!important}';
     document.querySelector('head').append(style);
