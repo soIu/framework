@@ -514,7 +514,8 @@ class Model():
                        elif field.type == 'float' and Number.isInteger(value[key]):
                           value[key] = value[key].toFixed(2)
                        elif field.type == 'selection':
-                          value[key] = tools.dict(field.selection)[value[key]]
+                          selections = field.selection.apply(null) if field.selection and type(field.selection) == Function else field.selection
+                          value[key] = tools.dict(selections)[value[key]]
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
                           promise = self.env[field.relation].browse(value[key])
                           promise.then(
