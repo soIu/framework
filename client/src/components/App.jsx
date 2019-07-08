@@ -48,8 +48,15 @@ export default function (props) {
   } : null;
 
   let manifestRegistered = false;
-  api.globals.registerManifest = () => {
-    if (manifestRegistered || !tools || document.getElementById('rapyd-app-manifest').href) return;
+  api.globals.registerManifest = async () => {
+    if (manifestRegistered || !tools || !window.fetch) return;
+    let validManifest;
+    try {
+      const manifest_json = await fetch(document.getElementById('rapyd-app-manifest').href).then((result) => result.json());
+      if (manifest_json.start_url) validManifest = true;
+    }
+    catch (error) {}
+    if (validManifest) return;
     manifest.theme_color = document.querySelector('meta[name=theme-color]').content;
     const manifest_string = JSON.stringify(manifest);
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});

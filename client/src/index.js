@@ -47,9 +47,10 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
     window.addEventListener('beforeinstallprompt', async (event) => {
       event.preventDefault();
       await wait_session;
+      api.globals.InstallPromp = event;
       try {
         if (window.models) {
-          await api.wait(1000);
+          await api.wait(2000);
           event.prompt();
           if (await event.userChoice === 'accepted') window.location.reload();
         }
@@ -57,7 +58,6 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
       catch (error) {
         console.error(error);
       }
-      api.globals.InstallPrompt = event;
     });
   }
   catch (error) {
