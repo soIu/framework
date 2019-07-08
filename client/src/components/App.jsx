@@ -58,7 +58,6 @@ export default function (props) {
     catch (error) {}
     if (validManifest) return;
     manifest.theme_color = document.querySelector('meta[name=theme-color]').content;
-    const manifest_string = JSON.stringify(manifest);
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
     document.getElementById('rapyd-app-manifest').setAttribute('href', URL.createObjectURL(blob));
     manifestRegistered = true;
