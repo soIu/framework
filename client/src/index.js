@@ -30,7 +30,7 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 
 import api from 'api';
 
-OfflinePluginRuntime.install({onInstalled: () => OfflinePluginRuntime.update(), onUpdateReady: () => api.globals.app.dialog.confirm('Update available, apply it?', () => OfflinePluginRuntime.applyUpdate())});
+OfflinePluginRuntime.install({onInstalled: () => OfflinePluginRuntime.update(), onUpdateReady: () => api.globals.app.dialog.confirm('Update available, apply it?', () => OfflinePluginRuntime.applyUpdate(() => window.location.reload()))});
 
 // Init Framework7-React plugin
 Framework7.use(Framework7React);
