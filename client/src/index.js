@@ -50,7 +50,7 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
   }
   await api.get_session();
   const tools = window.tools;
-  if (tools && tools.configuration.long_name || tools.configuration.app_name) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
+  if (tools && (tools.configuration.long_name || tools.configuration.app_name)) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
   await ReactDOM.render(
     React.createElement(App),
     document.getElementById('app'),
