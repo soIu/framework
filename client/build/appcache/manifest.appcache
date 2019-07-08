@@ -1,23 +1,23 @@
 CACHE MANIFEST
-#ver:7/8/2019, 12:36:36 PM
+#ver:7/8/2019, 12:40:51 PM
 #plugin:5.0.7
 
 CACHE:
+../static/media/MaterialIcons-Regular.012cf6a1.woff
 ../static/media/MaterialIcons-Regular.e79bfd88.eot
 ../static/media/MaterialIcons-Regular.570eb838.woff2
-../static/media/MaterialIcons-Regular.012cf6a1.woff
-../static/media/MaterialIcons-Regular.a37b0c01.ttf
 ../static/media/Framework7Icons-Regular.c0087d4d.eot
 ../static/media/Framework7Icons-Regular.ae8767ca.woff2
+../static/media/MaterialIcons-Regular.a37b0c01.ttf
 ../static/media/Framework7Icons-Regular.2e9a0313.woff
 ../static/media/Framework7Icons-Regular.4348368a.ttf
 ../static/css/main.b3dbfae7.chunk.css
-../static/js/main.8cafa4d0.chunk.js
+../static/js/main.6d650653.chunk.js
 ../static/css/1.a4d128f4.chunk.css
 ../static/js/1.1e29cad2.chunk.js
 ../static/js/runtime~main.54148531.js
 ../
-../precache-manifest.3a47222eb713b83d81d83fc8d0b1631a.js
+../precache-manifest.1231e04ea3cc96ff7b04868714807d73.js
 ../service-worker.js
 
 NETWORK:

@@ -27,7 +27,7 @@ import api from 'api';
 export default function (props) {
   const tools = window.tools;
 
-  const manifest = {
+  const manifest = tools ? {
     "short_name": tools.configuration.app_name || "App",
     "name": tools.configuration.long_name || tools.configuration.app_name || "App",
     "description": tools.configuration.app_description || "A webclient for Rapydframework based apps",
@@ -45,11 +45,11 @@ export default function (props) {
       "sizes": "192x192",
       "type": "image/png"
     }],
-  }
+  } : null;
 
   let manifestRegistered = false;
   api.globals.registerManifest = () => {
-    if (manifestRegistered) return;
+    if (manifestRegistered || !tools) return;
     manifest.theme_color = document.querySelector('meta[name=theme-color]').content;
     const manifest_string = JSON.stringify(manifest);
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
@@ -59,7 +59,7 @@ export default function (props) {
 
   const f7params = {
     id: 'org.rapyd.client', // App bundle ID
-    name: manifest.name, // App name
+    name: 'App', // App name
     theme: 'md', // Automatic theme detection
     // App routes
     routes: routes(),
