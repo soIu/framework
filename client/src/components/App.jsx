@@ -49,7 +49,7 @@ export default function (props) {
 
   let manifestRegistered = false;
   api.globals.registerManifest = () => {
-    if (manifestRegistered || !tools) return;
+    if (manifestRegistered || !tools || document.getElementById('rapyd-app-manifest').href) return;
     manifest.theme_color = document.querySelector('meta[name=theme-color]').content;
     const manifest_string = JSON.stringify(manifest);
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
