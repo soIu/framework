@@ -507,7 +507,7 @@ class Model():
                    if fields and key not in fields: return next()
                    field = self._fields[key]
                    def after_promise(result):
-                       if result: value[key] = result
+                       if result != undefined: value[key] = result
                        if not field or (value[key] == None and field.type != 'float'): return next()
                        if field.type in ['date', 'datetime']:
                           value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
@@ -525,7 +525,7 @@ class Model():
                                   names.push(record[record._rec_name or 'name'])
                               value[key] = names.join(', ')
                           )
-                          if result: return promise
+                          if result != undefined: return promise
                           promises.push(promise)
                        if not result: next()
                    if field.compute:
