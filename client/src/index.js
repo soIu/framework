@@ -42,13 +42,20 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
 
 // Mount React App
 (async () => {
+  const wait_session = api.get_session();
   try {
-    window.addEventListener('beforeinstallprompt', (event) => event.preventDefault() || (window.models ? event.prompt() : null));
+    window.addEventListener('beforeinstallprompt', async (event) => {
+      event.preventDefault();
+      await wait_session;
+      if (window.models) event.prompt();
+      window.d = event;
+      console.log(event);
+    });
   }
   catch (error) {
     console.error(error);
   }
-  await api.get_session();
+  await wait_session;
   const tools = window.tools;
   if (tools && (tools.configuration.long_name || tools.configuration.app_name)) document.querySelector('title').innerHTML = tools.configuration.long_name || tools.configuration.app_name;
   await ReactDOM.render(
