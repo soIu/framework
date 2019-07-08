@@ -4,6 +4,7 @@ import orm.tools as tools
 import orm.api as api
 import stock.move
 from stock.wcs import WcsJob
+from stock.location import defaults as location_default
 from ir.ui import menu, view
 
 pack = {}
@@ -48,6 +49,17 @@ class StockPack(models.Model):
             )
         )
 
+    @api.server
+    def _get_current_qty(self):
+        if not self.id: return 0.0
+        return self.env['stock.move'].browse(self.move_ids).then(
+        def (move_ids):
+            qty = 0.0
+            for move_id in move_ids:
+                qty += move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty
+            return qty
+        )
+
     def _set_allowed_sizes(self, order_id):
         allowed_sizes = []
         self._context.allowed_sizes = allowed_sizes
@@ -69,6 +81,16 @@ class StockPack(models.Model):
     adidas_product_id = fields.Many2one('product.product', string="Product")
     adidas_product_qty = fields.Float(string="Quantity")
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
+    current_qty = fields.Float(string="On Hand", compute=_get_current_qty, store=False)
+
+    def create(self, values=False, is_client=tools.configuration.client):
+        promises = []
+        if v"typeof window !== 'undefined'":
+           for record in self:
+               if record.adidas_product_qty and record.adidas_product_qty > record.values.available_qty:
+                  if tools.dialog: tools.dialog.alert('Quantity Insufficient')
+                  raise Error('Quantity is Insufficient')
+        return self.__super__('create')(values=values, is_client=is_client)
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -130,6 +152,7 @@ view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
     <field name="category_id"/>
     <field name="article"/>
     <field name="size"/>
+    <field name="current_qty"/>
     <field name="date" sort="asc"/>
 </tree>
 """, 'action': {'print_barcode': 'Print'}})
