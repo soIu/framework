@@ -388,7 +388,7 @@ export default class Tree extends React.Component {
         <Popup ref="popup_modal" backdrop={false} animate={true}>{/* opened={this.state.popupOpened} onPopupClosed={() => this.setState({popupOpened : false})}>*/}
           <Page popup title={window.tools.view[this.state.model] ? window.tools.view[this.state.model].string : 'Choose'}>
             <div className="card">
-              <Tree ref="popup" isTreeView isPopup parent_tree={this} active_field={this.state.tree_field} model={this.state.model} domain={this.state.records.length > 0 && [['id', 'not in', window.models.env.context.active_lines[props.model]['many2many_' + props.field].ids]].concat(props.domain ? props.domain(models.env.context.active_id) : [])}>
+              <Tree ref="popup" isTreeView isPopup parent_tree={this} active_field={this.state.tree_field} model={this.state.model} domain={(this.state.records.length > 0 ? [['id', 'not in', window.models.env.context.active_lines[props.model]['many2many_' + props.field].ids]] : []).concat(props.domain ? props.domain(models.env.context.active_id) : [])}>
                 {Array.prototype.slice.call(new DOMParser().parseFromString(window.tools.view[this.state.model].tree || props.tree_arch || '<tree><field name="' + (window.models.env[this.state.model]._rec_name || 'name') + '"/></tree>', 'text/xml').children[0].children).map((element) => {
                   const props = {model};
                   for (let attribute of element.attributes) {
