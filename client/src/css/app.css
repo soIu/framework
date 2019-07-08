@@ -2,8 +2,8 @@
 .panel-left.panel-visible-by-breakpoint:before {
   position: absolute;
   right: 0;
-  top: 0;
-  height: 100%;
+  top: 64px;
+  height: calc(100% - 64px);
   width: 1px;
   background: rgba(0,0,0,0.1);
   content: '';
