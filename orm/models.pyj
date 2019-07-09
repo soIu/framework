@@ -556,28 +556,28 @@ class Model():
         elif self._fields[key].type == 'integer':
            value = parseInt(value)
            if isNaN(value):
-              raise Error("Not a valid Number on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number " + value + " on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'float':
            value = parseFloat(value)
            if isNaN(value):
-              raise Error("Not a valid Number on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number " + value + " on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
            elif value in ['false', 'False', None, undefined]:
               value = False
            elif type(value) == String:
-              raise Error("Not a valid Boolean")
+              raise Error("Not a valid Boolean " + value + " on field " + key + " on model " + self._name)
            else:
               value = Boolean(value)
         elif self._fields[key].type == 'binary':
            if exist(value) and not checkBase64(value):
-              raise Error("Not a valid base64")
+              raise Error("Not a valid base64 on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'selection':
            if not exist(value):
               value = None
            elif self._fields[key].selection and is_array(self._fields[key].selection) and value not in dict(self._fields[key].selection):
-              raise Error("Incorrect value")
+              raise Error("Incorrect value " + value + " on field " + key + " on model " + self._name)
         elif self._fields[key].type in ['date', 'datetime']:
            if not exist(value):
               value = None
@@ -587,9 +587,9 @@ class Model():
               try:
                   value = v'new Date(value).toISOString()'
               except:
-                  raise Error("Can't parse Date")
+                  raise Error("Can't parse Date " + value + " on field " + key + " on model " + self._name)
            else:
-              raise Error("Can't parse Date")
+              raise Error("Can't parse Date " + value + " on field " + key + " on model " + self._name)
            if exist(value) and self._fields[key].type == 'date':
               value = value.split('T')[0] + 'T00:00:00.000Z'
         elif self._fields[key].type in ['many2one', 'one2one']:
