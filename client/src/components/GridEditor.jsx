@@ -29,21 +29,21 @@ export default class extends Component {
           records.add(record);
         }
       }
-      this.props.tree.onChange({colDef, data: this.props.tree.state.records[this.props.rowIndex], oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
       if (!Array.isArray(value)) {
         value = value.text;
       }
       else {
         value = value.map((data) => data.text).join(', ');
       }
-      if (this.props.tree.state.selected) {
+      this.props.tree.onChange({colDef, data: this.props.tree.state.records[this.props.rowIndex], specialValue: value, oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
+      /*if (this.props.tree.state.selected) {
         for (let row of this.props.tree.state.selected) {
           if (row === this.props.tree.state.records[this.props.rowIndex]) continue;
           this.props.tree.onChange({colDef, data: row, oldValue: null, newValue: field.relation ? records : this.refs.selectivity.selectivity.getValue()});
           row[this.props.name] = value;
         }
         api.wait(100).then(() => this.props.tree.gridOptions.api.deselectAll() || this.props.tree.setState({records: this.props.tree.state.records}));
-      }
+      }*/
       return value;
     }
   }
