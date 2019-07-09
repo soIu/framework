@@ -7,7 +7,7 @@ env = {}
 schemas = {}
 raw_models = {}
 onchange_models = {}
-pending_browses = {}
+pending_sync = {}
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
@@ -307,7 +307,12 @@ class Model():
 
     def __sync__(self):
         promises = []
-        for record in self:
+        self.queue(
+        def (record, next):
+            if not record.id: next()
+            if pending_sync[record.id]: next()
+            pending_sync[record.id] = True
+            def remove_pending(): del pending_sync[record.id]
             values = copy(record.values)
             promise = db.get(db.rel.makeDocID({'type': self._name, 'id': record.id})).then(
             def (doc):
@@ -315,15 +320,17 @@ class Model():
                 del values._rev
                 del values.rev
                 values.rev = doc._rev
-                return db.rel.save(self._name, values)
+                return db.rel.save(self._name, values).then(remove_pending)
             ).catch(
             def (error):
                 del values._id
                 del values._rev
                 del values.rev
-                return db.rel.save(self._name, values)
+                return db.rel.save(self._name, values).then(remove_pending)
             )
             promises.push(promise)
+            next()
+        )
         return Promise.all(promises)
 
     def __view__(self, view, view_type):
