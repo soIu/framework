@@ -66,9 +66,10 @@ export default class Tree extends React.Component {
         if (!params.selectedOnchange && this.state.selected) {
           for (let row of this.state.selected) {
             if (row === params.data) continue;
-            this.onChange({colDef: params.colDef, selectedOnchange: true, data: row, oldValue: null, newValue: value});
-            if (!params.colDef.cellEditorParams) row[params.colDef.field] = value;
+            this.onChange({colDef: params.colDef, selectedOnchange: true, data: row, specialValue: params.specialValue, oldValue: null, newValue: value});
+            row[params.colDef.field] = params.specialValue || value;
           }
+          //api.wait(100).then(() => this.gridOptions.api.deselectAll()).then(() => this.setState({records: this.state.records})).then(() => this.gridOptions.api.refreshCells());
           api.wait(100).then(() => this.gridOptions.api.deselectAll()).then(() => this.setState({records: this.state.records})).then(() => !params.colDef.cellEditorParams && this.gridOptions.api.refreshCells());
         }
       }
