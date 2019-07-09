@@ -305,6 +305,27 @@ class Model():
             self[method_name] = original_method
             return result
 
+    def __sync__(self):
+        promises = []
+        for record in self:
+            values = copy(record.values)
+            promise = db.get(db.rel.makeDocID({'type': self._name, 'id': record.id})).then(
+            def (doc):
+                del values._id
+                del values._rev
+                del values.rev
+                values.rev = doc._rev
+                return db.rel.save(self._name, values)
+            ).catch(
+            def (error):
+                del values._id
+                del values._rev
+                del values.rev
+                return db.rel.save(self._name, values)
+            )
+            promises.push(promise)
+        return Promise.all(promises)
+
     def __view__(self, view, view_type):
         return view
 
@@ -325,43 +346,11 @@ class Model():
                console.log(result)
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
-               if result.values.map:
+               if is_array(result.values):
                   record._search_count = result.values[0]._search_count
                else:
                   record._search_count = result.values._search_count
-               if exist(record):
-                  self.browse(ids=ids, is_client=False).then(
-                  def (records):
-                      if exist(records):
-                         for value in result.values if Array.isArray(result.values) else [result.values]:
-                             if not pending_browses[records._name]: pending_browses[records._name] = {}
-                             elif pending_browses[records._name][value.id]: continue
-                             pending_browses[records._name][value.id] = True
-                             def delete_pending(record):
-                                 del pending_browses[records._name][value.id]
-                             record = records.find(value.id)
-                             if record.length: record.write(value, is_client=False).then(delete_pending).catch(delete_pending);
-                             else:
-                                del value.rev
-                                del value._rev
-                                del value._id
-                                db.rel.save(records._name, value).then(delete_pending).catch(delete_pending)
-                      else:
-                         for value in result.values if Array.isArray(result.values) else [result.values]:
-                             del value.rev
-                             del value._rev
-                             del value._id
-                             db.rel.save(records._name, value).then(configuration.warning).catch(configuration.warning)
-                  ).catch(
-                  #Possible duplication is from here, need to check
-                  def (error):
-                      console.error(error)
-                      for value in result.values if Array.isArray(result.values) else [result.values]:
-                          del value.rev
-                          del value._rev
-                          del value._id
-                          db.rel.save(record._name, value).then(configuration.warning).catch(configuration.warning)
-                  )
+               record.__sync__().catch(def (error): console.error(error);)
                return record
            ).catch(
            def (error):
@@ -415,11 +404,12 @@ class Model():
            def (result):
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
-               if result.values.map:
+               if is_array(result.values):
                   record._search_count = result.values[0]._search_count
                else:
                   record._search_count = result.values._search_count
-               self.with_context(no_preload=True).browse(self.ids)
+               #self.with_context(no_preload=True).browse(self.ids)
+               record.__sync__().catch(def (error): console.error(error);)
                return record
            ).catch(
            def (error):
@@ -671,7 +661,8 @@ class Model():
            def (result):
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
-               self.with_context(no_preload=True).browse(self.ids)
+               #self.with_context(no_preload=True).browse(self.ids)
+               self.__sync__().catch(def (error): console.error(error);)
                return self
            ).catch(
            def (error):
@@ -725,7 +716,8 @@ class Model():
            def (result):
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
-               self.with_context(no_preload=True).browse(self.ids)
+               #self.with_context(no_preload=True).browse(self.ids)
+               self.__sync__().catch(def (error): console.error(error);)
                return self
            ).catch(
            def (error):
