@@ -309,8 +309,8 @@ class Model():
         promises = []
         self.queue(
         def (record, next):
-            if not record.id: next()
-            if pending_sync[record.id]: next()
+            if not record.id: return next()
+            if pending_sync[record.id]: return next()
             pending_sync[record.id] = True
             def remove_pending(): del pending_sync[record.id]
             values = copy(record.values)
