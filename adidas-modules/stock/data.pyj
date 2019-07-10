@@ -32,6 +32,7 @@ class AdidasData(models.Model):
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
         row = -1
         articles = []
+        sizes = StockPack.size.selection.apply(None)
         for data in sheet.data:
             row += 1
             if row < 7: continue
@@ -45,7 +46,7 @@ class AdidasData(models.Model):
                 index += 1
             value['total_qty'] = data[16]
             index = 22
-            for field in StockPack.size.selection.apply(None):
+            for field in sizes:
                 field = field[0]
                 value['size_' + field] = data[index] or 0.0
                 index += 1
@@ -115,7 +116,7 @@ class AdidasPO(models.Model):
                 nonlocal qty
                 if not move_ids.length: return qty
                 for move_id in move_ids:
-                    qty -= move_id.product_qty
+                    qty -= move_id.product_qty / 4
                 return qty
             )
         )
@@ -132,15 +133,15 @@ class AdidasPO(models.Model):
                 nonlocal qty
                 if not move_ids.length: return qty
                 for move_id in move_ids:
-                    qty += move_id.product_qty
+                    qty += move_id.product_qty / 4
                 return qty
             )
         )
 
     @api.server
-    def _get_incoming_qty_size(self, size):
+    def _get_incoming_qty_size(self, size, category_id):
         if not self.id: return 0.0
-        return self.env['stock.pack'].search(['order_id', '=', self.id], ['size', '=', size] if size else ['size', 'not in', []]).then(
+        return self.env['stock.pack'].search(['order_id', '=', self.id], ['size', '=', size], ['category_id', '=', category_id]).then(
         def (pack_ids):
             qty = 0.0
             if not pack_ids.length: return qty
@@ -166,7 +167,7 @@ class AdidasPO(models.Model):
                 nonlocal qty
                 if not move_ids.length: return qty
                 for move_id in move_ids:
-                    qty += move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty
+                    qty += (move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty) / 4
                 return qty
             )
         )

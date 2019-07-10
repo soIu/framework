@@ -39,11 +39,11 @@ class StockPack(models.Model):
         return sizes
 
     def _get_available_qty(self):
-        if not self.order_id and not self.size: return 0
+        if not self.order_id or not self.size or not self.category_id: return 0
         return self.env['adidas.po'].browse(self.order_id).then(
         def (order_id):
             self._set_allowed_sizes(order_id)
-            return order_id._get_incoming_qty_size(self.size).then(
+            return order_id._get_incoming_qty_size(self.size, self.category_id).then(
             def (incoming_qty):
                 return order_id['size_' + self.size] - (incoming_qty or 0)
             )
@@ -104,8 +104,8 @@ class StockPack(models.Model):
         def (order_id):
             self.article = order_id.article
             self._set_allowed_sizes(order_id)
-            if not self.size or not order_id['size_' + self.size]: return
-            return order_id._get_incoming_qty_size(self.size).then(
+            if not self.size or not self.category_id or not order_id['size_' + self.size]: return
+            return order_id._get_incoming_qty_size(self.size, self.category_id).then(
             def (incoming_qty):
                 self.available_qty = order_id['size_' + self.size] - (incoming_qty or 0)
             )
