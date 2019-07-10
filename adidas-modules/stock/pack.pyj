@@ -122,7 +122,7 @@ class StockPack(models.Model):
     @api.onchange('article', 'category_id', 'size')
     def onchange_for_product(self):
         if self.adidas_product_id: return
-        if self.size and self.order_id and not self._values[0].available_qty: self.order_id = self.order_id
+        if self.size and self.category_id and  self.order_id and not self._values[0].available_qty: self.order_id = self.order_id
         if self.article and self.category_id and self.size:
            return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
            def (product_id):
