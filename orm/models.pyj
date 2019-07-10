@@ -157,11 +157,14 @@ class Model():
               def (value):
                   if not field.store: return
                   ids = self.ids
+                  old_value = None
                   if ids.length == 0:
+                     old_value = self._values[0][key]
                      self._values[0][key] = self.adapt(key, value, self._values[0]) if key != 'id' else id
                   elif ids.length == 1:
                      self._values[ids[0]][key] = self.adapt(key, value, self._values[ids[0]])
-                  if onchange_models[self._name] and onchange_models[self._name][key]:
+                     old_value = self._values[0][key]
+                  if ids.length < 2 and value != old_value and onchange_models[self._name] and onchange_models[self._name][key]:
                      for method in onchange_models[self._name][key]:
                          result = self[method].apply(self)
                          if result and type(result) == Promise:
