@@ -159,7 +159,7 @@ export default class extends React.Component {
     const active_id = props.cellEdit ? this.props.tree.state.records[this.props.rowIndex].id && context.active_lines[this.props.tree.state.model][(field.type !== 'one2many' ? 'many2many_' : '') + this.props.tree.state.tree_field].find(this.props.tree.state.records[this.props.rowIndex].id) || this.props.tree.state.records[this.props.rowIndex]._original_object_for_id : context.active_id;
     const invisible = props.invisible instanceof Function && active_id ? props.invisible(active_id, models.env.context.active_id) : props.invisible;
     props.readonly = field.readonly || props.readonly;
-    const readonly = props.readonly instanceof Function && active_id ? props.readonly(active_id) : props.readonly;
+    const readonly = props.readonly instanceof Function ? props.readonly(active_id) : props.readonly;
     const value = props.cellEdit ? null : context.active_id && context.active_id[this.props.name];
 
     async function fetch(url, init, query) {
