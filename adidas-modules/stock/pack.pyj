@@ -114,6 +114,7 @@ class StockPack(models.Model):
     @api.onchange('category_id')
     def onchange_category(self):
         if not self.category_id: return
+        if self.size and self.category_id and self.order_id: self.order_id = self.order_id
         return self.env['product.category'].browse(self.category_id).then(
         def (category_id):
             self.level = category_id.level
@@ -121,7 +122,7 @@ class StockPack(models.Model):
 
     @api.onchange('article', 'category_id', 'size')
     def onchange_for_product(self):
-        if self.size and self.category_id and self.order_id: self.order_id = self.order_id
+        if self.size and self.category_id and self.order_id: self.onchange_po()
         if self.adidas_product_id: return
         if self.article and self.category_id and self.size:
            return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
