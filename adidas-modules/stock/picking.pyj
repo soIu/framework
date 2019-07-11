@@ -187,7 +187,7 @@ class StockPicking(models.Model):
         )
 
     @api.server
-    def validate(self):
+    def validate_server(self):
         """processes = []
         processes.push(self.env['wcs.job'].browse(self.job_ids))
         #if self.type == 'putting':
@@ -211,6 +211,13 @@ class StockPicking(models.Model):
         ).then(
         def ():
             return self.write({'state': 'validated'})
+        )
+
+    def validate(self):
+        return self.validate_server().then(
+        def (result):
+            window.history.back()
+            return result
         )
 
 StockPicking()
