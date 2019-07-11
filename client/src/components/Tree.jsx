@@ -404,7 +404,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    if (!props.isTreeView) api.wait(500).then(() => !this.pagingCalled && !this.state.records.length && (this.pagingCalled = true) && this.paging(0, {newData: false}));
+    if (!props.isTreeView) api.wait(500).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceOnRender: true}) : api.wait(1000).then(() => this.pagingCalled = false));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
