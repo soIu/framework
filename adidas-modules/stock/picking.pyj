@@ -259,7 +259,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                     <field name="name"/>
                     <field name="order_id"/>
                     <field name="bucket" string="Rack"/>
-                    <field name="adidas_product_id" domain="(active_id.article ? ['article', '=', active_id.article] : ['id', 'not in', []]), (active_id.size ? ['size', '=', active_id.size] : ['id', 'not in', []])"/>
+                    <field name="adidas_product_id" domain="(active_id.article ? ['article', '=', active_id.article] : ['id', 'not in', []]), (active_id._context.allowed_sizes ? ['size', 'in', active_id._context.allowed_sizes] : ['id', 'not in', []])"/>
                     <field name="adidas_product_qty"/>
                 </tree>
             </field>
