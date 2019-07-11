@@ -34,8 +34,8 @@ class StockPack(models.Model):
     def _get_sizes(self):
         sizes = []
         for index in range(3, 15):
-            if (self and (not self._context.allowed_sizes or str(index) in self._context.allowed_sizes)) or not self: sizes.push([str(index), str(index)])
-            if (self and (not self._context.allowed_sizes or str(index) + 'T' in self._context.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
+            if (self and (not self.allowed_sizes or str(index) in self.allowed_sizes)) or not self: sizes.push([str(index), str(index)])
+            if (self and (not self.allowed_sizes or str(index) + 'T' in self.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
         return sizes
 
     def _get_available_qty(self):
@@ -62,7 +62,7 @@ class StockPack(models.Model):
 
     def _set_allowed_sizes(self, order_id):
         allowed_sizes = []
-        self._context.allowed_sizes = allowed_sizes
+        self.allowed_sizes = allowed_sizes
         for index in range(3, 15):
             if order_id['size_' + str(index)]: allowed_sizes.push(str(index))
             if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
@@ -82,6 +82,7 @@ class StockPack(models.Model):
     adidas_product_qty = fields.Float(string="Quantity")
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     current_qty = fields.Float(string="On Hand", compute=_get_current_qty, store=False)
+    allowed_sizes = fields.Object(string="Allowed Size from PO")
 
     """def create(self, values=False, is_client=tools.configuration.client):
         promises = []
