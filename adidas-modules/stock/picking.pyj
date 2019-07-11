@@ -219,7 +219,7 @@ menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'sto
 menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
-<tree domain="['state', '!=', 'validated'], ['type', '=', context.default_operation_type]">
+<tree domain="['state', '!=', 'validated']">
     <field name="name"/>
     <field name="date"/>
 </tree>
