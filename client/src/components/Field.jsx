@@ -208,7 +208,7 @@ export default class extends React.Component {
       const selection = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
       const selections = window.tools.copy(selection).reverse();
       component = (
-        <div style={invisible ? {display: 'none'} : {}}>
+        <div style={{...(invisible ? {display: 'none'} : {}), overflow: 'overlay'}}>
           {selections.map((selection) =>
           first ? <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{(first = false) || selection[1]}</Button> : [<span className="rapyd-statusbars rapyd-statusbar-arrow">{'>'}</span>, <Button raised={models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]} className="rapyd-statusbars">{selection[1]}</Button>]
           )}

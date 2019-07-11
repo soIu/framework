@@ -306,6 +306,10 @@ div:focus {
   color: #fff !important;
 }
 
+.rapyd-statusbars.button-raised {
+  background-color: #696969;
+}
+
 .rapyd-statusbar-arrow {
   font-size: 20px;
   margin-top: 12px;

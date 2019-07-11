@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "65802dc5cdc31bdb8483",
-    "url": "static/css/main.6d37dfd8.chunk.css"
+    "revision": "b6e5348397203c471180",
+    "url": "static/css/main.adfc9462.chunk.css"
   },
   {
-    "revision": "65802dc5cdc31bdb8483",
-    "url": "static/js/main.65802dc5.chunk.js"
+    "revision": "b6e5348397203c471180",
+    "url": "static/js/main.b6e53483.chunk.js"
   },
   {
     "revision": "d9230a2f329006f17577",
@@ -32,20 +32,20 @@ self.__precacheManifest = [
     "url": "static/media/MaterialIcons-Regular.570eb838.woff2"
   },
   {
-    "revision": "e79bfd88537def476913f3ed52f4f4b3",
-    "url": "static/media/MaterialIcons-Regular.e79bfd88.eot"
-  },
-  {
     "revision": "c0087d4d5ddd32ec52f1859b42956db6",
     "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
   },
   {
-    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
-    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
-  },
-  {
     "revision": "a37b0c01c0baf1888ca812cc0508f6e2",
     "url": "static/media/MaterialIcons-Regular.a37b0c01.ttf"
+  },
+  {
+    "revision": "e79bfd88537def476913f3ed52f4f4b3",
+    "url": "static/media/MaterialIcons-Regular.e79bfd88.eot"
+  },
+  {
+    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
+    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
   },
   {
     "revision": "2e9a0313ed02aed1e206340feb36ec5c",
@@ -56,7 +56,7 @@ self.__precacheManifest = [
     "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
   },
   {
-    "revision": "731e6f5116762f00e9391d473579d529",
+    "revision": "00deafee6abb592d83c2e4ceb6fff728",
     "url": "index.html"
   }
 ];
