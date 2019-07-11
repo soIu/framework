@@ -250,7 +250,7 @@ export default class Tree extends React.Component {
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
-      let records = await models.env[this.state.model].search(...args, ...((typeof this.props.domain === 'function' ? this.props.domain(models.env.context.active_id) : this.props.domain) || []));
+      let records = await models.env[this.state.model].search(...args, ...((this.props.domain instanceof Function ? this.props.domain(models.env.context.active_id) : this.props.domain) || []));
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
         if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
