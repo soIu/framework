@@ -196,6 +196,7 @@ view.add({'model': 'adidas.po', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="customer_order"/>
+    <field name="article"/>
 </tree>
 """})
 
