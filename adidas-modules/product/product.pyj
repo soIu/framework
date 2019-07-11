@@ -2,10 +2,67 @@ import orm.models as models
 import orm.fields as fields
 import orm.api as api
 from stock.pack import StockPack
+from stock.location import defaults as location_default
 from ir.ui import menu, view
 
 class ProductProduct(models.Model):
     _name = 'product.product'
+
+    @api.server
+    def _get_total_qty(self):
+         if not self.article or not self.size: return 0.0
+         return self.env['adidas.po'].search(['article', '=', self.article]).then(
+         def (order_ids):
+             qty = 0.0
+             for order_id in order_ids:
+                 qty += order_id['size_' + self.size]
+             return qty
+         )
+
+    @api.server
+    def _get_remaining_qty(self):
+        if not self.article or not self.size or not self.id: return 0.0
+        return self.total_qty.then(
+        def (total_qty):
+            return self.env['stock.move'].search(['product_id', '=', self.id], ['location_dest_id', '=', location_default.external_id]).then(
+            def (move_ids):
+                nonlocal total_qty
+                if not move_ids.length: return total_qty
+                for move_id in move_ids:
+                    total_qty -= move_id.product_qty
+                return total_qty
+            )
+        )
+
+    @api.server
+    def _get_incoming_qty(self):
+        if not self.article or not self.size or not self.id: return 0.0
+        return self.total_qty.then(
+        def (total_qty):
+            return self.env['stock.move'].search(['product_id', '=', self.id], ['location_dest_id', '=', location_default.internal_id]).then(
+            def (move_ids):
+                nonlocal total_qty
+                if not move_ids.length: return total_qty
+                for move_id in move_ids:
+                    total_qty += move_id.product_qty
+                return total_qty
+            )
+        )
+
+    @api.server
+    def _get_actual_qty(self):
+        if not self.article or not self.size or not self.id: return 0.0
+        return self.total_qty.then(
+        def (total_qty):
+            return self.env['stock.move'].search(['product_id', '=', self.id]).then(
+            def (move_ids):
+                nonlocal total_qty
+                if not move_ids.length: return total_qty
+                for move_id in move_ids:
+                    total_qty += (move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty)
+                return total_qty
+            )
+        )
 
     name = fields.Char(string="Product Name", required=True)
     code = fields.Char(string="Product Code")
@@ -13,6 +70,10 @@ class ProductProduct(models.Model):
     category_id = fields.Many2one('product.category', string="Category", required=True)
     article = fields.Char(string="Article Number")
     size = fields.Selection(StockPack.size.selection, string="Size")
+    total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
+    remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
+    incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
+    actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
 
 ProductProduct()
 
@@ -20,9 +81,12 @@ menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'stock', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
 
 view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
-<tree>
+<tree limit="5">
     <field name="name"/>
-    <field name="code"/>
+    <field name="total_qty"/>
+    <field name="incoming_qty"/>
+    <field name="actual_qty"/>
+    <field name="remaining_qty"/>
 </tree>
 """})
 
@@ -36,6 +100,14 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         </group>
         <group>
             <field name="description"/>
+        </group>
+        <group>
+            <field name="total_qty"/>
+            <field name="remaining_qty"/>
+        </group>
+        <group>
+            <field name="incoming_qty"/>
+            <field name="actual_qty"/>
         </group>
     </sheet>
 </form>
