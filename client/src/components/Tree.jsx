@@ -304,7 +304,9 @@ export default class Tree extends React.Component {
   async chooseItem() {
     //await this.setState({popupOpened: true});
     await this.refs.popup.paging(0, {newData: false, forcePopup: true});
-    this.refs.popup_modal.getDOMNode().className = 'popup modal-in';
+    const node = this.refs.popup_modal.getDOMNode();
+    node.className = 'popup modal-in';
+    node.children[0].className = node.children[0].className.replace('page-next', '');
     autoSizeAll(this.refs.popup.gridOptions);
     return;
   }
