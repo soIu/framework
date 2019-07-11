@@ -84,14 +84,22 @@ class StockPack(models.Model):
     current_qty = fields.Float(string="On Hand", compute=_get_current_qty, store=False)
     allowed_sizes = fields.Data(string="Allowed Size from PO")
 
-    """def create(self, values=False, is_client=tools.configuration.client):
-        promises = []
-        if v"typeof window !== 'undefined'":
+    def create(self, values=False, is_client=tools.configuration.client):
+        """if v"typeof window !== 'undefined'":
            for record in self:
                if record.adidas_product_qty and record.adidas_product_qty > record.values.available_qty:
                   if tools.dialog: tools.dialog.alert('Quantity Insufficient')
-                  raise Error('Quantity is Insufficient')
-        return self.__super__('create')(values=values, is_client=is_client)"""
+                  raise Error('Quantity is Insufficient')"""
+        return self.__super__('create')(values=values, is_client=is_client).then(
+        def ():
+            promises = []
+            for record in self:
+                promise = self.env['stock.move'].create({'picking_id': record.picking_id.id, 'pack_id': record.id, 'product_id': record.adidas_product_id, 'product_qty': record.adidas_product_qty})
+                promises.push(promise)
+            return Promise.all(promises).then(
+            def (records): return self
+            )
+        )
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
