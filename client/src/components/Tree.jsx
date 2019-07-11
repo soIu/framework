@@ -93,8 +93,9 @@ export default class Tree extends React.Component {
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
+    const limit = parseInt(props.limit) || 50;
     const records = [];
-    this.state = {fields: fields, records: records, new_records: window.models.env[model], limit: 50, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};//, popupOpened: false};
+    this.state = {fields: fields, records: records, new_records: window.models.env[model], limit: limit, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};//, popupOpened: false};
     if (props.field) {
       this.state.tree_field = props.field;
     }
@@ -249,7 +250,7 @@ export default class Tree extends React.Component {
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
-      let records = await models.env[this.state.model].search(...args, ...(this.props.domain || []));
+      let records = await models.env[this.state.model].search(...args, ...((typeof this.props.domain === 'function' ? this.props.domain(models.env.context.active_id) : this.props.domain) || []));
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
         if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
