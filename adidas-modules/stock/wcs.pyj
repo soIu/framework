@@ -19,7 +19,7 @@ class WcsJob(models.Model):
     name = fields.Char(string="Job Number", defaults=_get_job_number, required=True)
     date = fields.Datetime(string="Date", required=True)
     state = fields.Selection(['draft', 'Draft'], ['submitted', 'Submitted'], ['returned', 'Returned'], string="Status", defaults='draft')
-    bucket = fields.Selection(*[[str(index + 1), 'Bucket ' + (index + 1)] for index in range(34)], string="Bucket", required=True)
+    bucket = fields.Selection(*[[str(index + 1), 'Rack ' + (index + 1)] for index in range(34)], string="Rack", required=True)
     workface = fields.Selection(*[[str(index), str(index)] for index in range(5)], string="Workface", defaults='0', required=True)
     type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True)
     flag = fields.Selection(['online', 'Online'], ['offline', 'Offline'], string="Flag", defaults='online', required=True)

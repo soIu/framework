@@ -11,7 +11,7 @@ class ProductCategory(models.Model):
 
     name = fields.Char(string="Name", required=True)
     reference = fields.Char(string="Reference")
-    level = fields.Selection(['1', 'Level 1'], ['2', 'Level 2'], ['3', 'Level 3'], string="Level on Rack")
+    level = fields.Selection(['1', 'Layer 1'], ['2', 'Layer 2'], ['3', 'Layer 3'], string="Layer on Rack")
 
 ProductCategory()
 
