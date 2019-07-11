@@ -83,14 +83,14 @@ class StockPack(models.Model):
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     current_qty = fields.Float(string="On Hand", compute=_get_current_qty, store=False)
 
-    def create(self, values=False, is_client=tools.configuration.client):
+    """def create(self, values=False, is_client=tools.configuration.client):
         promises = []
         if v"typeof window !== 'undefined'":
            for record in self:
                if record.adidas_product_qty and record.adidas_product_qty > record.values.available_qty:
                   if tools.dialog: tools.dialog.alert('Quantity Insufficient')
                   raise Error('Quantity is Insufficient')
-        return self.__super__('create')(values=values, is_client=is_client)
+        return self.__super__('create')(values=values, is_client=is_client)"""
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
