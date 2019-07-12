@@ -58,7 +58,7 @@ function parseView(view, model) {
 
 const cachedViews = {};
 
-export default (props) => {
+const render = (props) => {
   let model = window.models.env.context.active_model;
   let mode = window.models.env.context.active_mode;
   if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
@@ -69,6 +69,8 @@ export default (props) => {
     mode = view_id[view_id.length - 1];
     //window.models.env.context.active_url = props.f7route.url;
   }
+  this.model = model;
+  this.mode = mode;
   //const id = props.f7route.query.id;
   const view = window.tools.view[model][mode];
   if (window.tools.view[model].contexts[mode]) Object.assign(window.models.env.context, window.tools.view[model].contexts[mode]);
@@ -86,5 +88,17 @@ export default (props) => {
   if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode](props);
 
   return cachedViews[view];
+
+}
+
+export default class extends React.Component {
+  componentDidMount() {
+    const model = this.model, mode = this.mode;
+    if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
+  }
+
+  render(props) {
+    return render.bind(this)(props);
+  }
 
 }
