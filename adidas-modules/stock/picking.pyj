@@ -46,6 +46,7 @@ class StockPicking(models.Model):
                   object.location_dest_id = location_default.external_id
         return self.__super__('create')(values=values, is_client=is_client).then(
         def ():
+            if v"typeof window === 'undefined'": return self
             promises = []
             for record in self:
                 promise = self.env['stock.pack'].browse(record.pack_ids).then(
