@@ -59,8 +59,7 @@ function render(props) {
   }/* else {
     window.models.env.context.active_url = '/';
   }*/
-  this.model = model;
-  this.mode = 'tree';
+  const mode = 'tree';
   const view = window.tools.view[model].tree;
   window.models.env.context.active_model = model;
 
@@ -70,6 +69,8 @@ function render(props) {
     cachedViews[view + (props.title ? '-' + props.title : '')] = parseView(view, model, props.title);
   }
 
+  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
+
   return cachedViews[view + (props.title ? '-' + props.title : '')];
 
   /*return (
@@ -78,10 +79,10 @@ function render(props) {
 }
 
 export default class extends React.Component {
-  componentDidUpdate() {
+  /*componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
-  }
+  }*/
 
   render = render;
 

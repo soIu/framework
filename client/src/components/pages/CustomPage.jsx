@@ -85,17 +85,17 @@ function render(props) {
     cachedViews[view] = parseView(view, model);
   }
 
-  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode](props);
+  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
 
   return cachedViews[view];
 
 }
 
 export default class extends React.Component {
-  componentDidUpdate() {
+  /*componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
-  }
+  }*/
 
   render = render;
 
