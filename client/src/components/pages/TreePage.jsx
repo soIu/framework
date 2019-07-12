@@ -50,7 +50,7 @@ function parseView(view, model, title) {
 
 const cachedViews = {};
 
-const render = (props) => {
+function render(props) {
   let model = window.models.env.context.active_model;
   if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
   else window.models.env.context.active_url = '/';
@@ -83,8 +83,6 @@ export default class extends React.Component {
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
   }
 
-  render(props) {
-    return render.bind(this)(props);
-  }
+  render = render;
 
 }
