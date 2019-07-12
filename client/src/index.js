@@ -64,7 +64,7 @@ window.rapydComponents = {...Framework7Components, ...window.rapydComponents, Pa
   );
   if (tools && tools.configuration.custom_navbar) {
     var style = document.createElement('style');
-    style.innerHTML = '.navbar, .toolbar {background-color: ' + window.tools.configuration.custom_navbar + '!important}';
+    style.innerHTML = '.navbar, .toolbar, .statusbar {background-color: ' + window.tools.configuration.custom_navbar + '!important}';
     document.querySelector('head').append(style);
   }
   if (document.querySelector('div.navbar')) {
