@@ -92,7 +92,7 @@ function render(props) {
 }
 
 export default class extends React.Component {
-  componentDidMount() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
   }
