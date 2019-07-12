@@ -53,8 +53,13 @@ function parseView(view, model) {
         if (parent_props.invisible) props.invisible = parent_props.invisible;
         if (parent_props.domain) props.domain = parent_props.domain;
       }
-      components.push(React.createElement(component, props, recurse(element.children, props)));
+      if (parent_props) components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
+      else {
+        const args = [component, props, recurse(element.children)];
+        components.push(() => React.createElement(...args))
+      }
     }
+    if (!components.length) return null;
     components = components.length === 1 ? components[0] : components;
     return components
   }
@@ -64,10 +69,10 @@ function parseView(view, model) {
 const cachedViews = {};
 
 export default class extends React.Component {
-  /*componentDidUpdate() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
-  }*/
+  }
 
   render(props) {
     const refresh = () => this.setState({});
@@ -99,8 +104,8 @@ export default class extends React.Component {
       cachedViews[view] = parseView(view, model);
     }
 
-    if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
+    //if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
 
-    return cachedViews[view];
+    return cachedViews[view]();
   }
 }

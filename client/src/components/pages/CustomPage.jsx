@@ -47,7 +47,11 @@ function parseView(view, model) {
         props.model = window.models.env[model]._fields[parent_props.name].relation;
         props.field = window.models.env[model]._fields[parent_props.name].inverse;
       }
-      components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
+      if (parent_props) components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
+      else {
+        const args = [component, props, recurse(element.children)];
+        components.push(() => React.createElement(...args))
+      }
     }
     if (!components.length) return null;
     components = components.length === 1 ? components[0] : components;
@@ -85,17 +89,17 @@ function render(props) {
     cachedViews[view] = parseView(view, model);
   }
 
-  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
+  //if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
 
-  return cachedViews[view];
+  return cachedViews[view]();
 
 }
 
 export default class extends React.Component {
-  /*componentDidUpdate() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
-  }*/
+  }
 
   render = render;
 

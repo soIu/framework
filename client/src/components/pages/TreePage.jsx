@@ -20,7 +20,7 @@ function parseView(view, model, title) {
   view = new DOMParser().parseFromString(view, 'text/xml').children[0];
   console.log(view);
   if (title) view.setAttribute('title', title);
-  function recurse(elements) {
+  function recurse(elements, parent) {
     let components = [];
     for (let element of elements) {
       const component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] || customComponents[element.tagName] || element.tagName;
@@ -40,12 +40,17 @@ function parseView(view, model, title) {
       }
       if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
       props.isTreeView = true;
-      components.push(React.createElement(component, props, recurse(element.children)));
+      if (!parent) components.push(React.createElement(component, props, recurse(element.children)));
+      else {
+        const args = [component, props, recurse(element.children)];
+        components.push(() => React.createElement(...args))
+      }
     }
+    if (!components.length) return null;
     components = components.length === 1 ? components[0] : components;
     return components
   }
-  return recurse([view]);
+  return recurse([view], true);
 }
 
 const cachedViews = {};
@@ -69,9 +74,9 @@ function render(props) {
     cachedViews[view + (props.title ? '-' + props.title : '')] = parseView(view, model, props.title);
   }
 
-  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
+  //if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
 
-  return cachedViews[view + (props.title ? '-' + props.title : '')];
+  return cachedViews[view + (props.title ? '-' + props.title : '')]();
 
   /*return (
     <Parser components={{Tree}} jsx={view} renderInWrapper={false}/>
@@ -79,10 +84,10 @@ function render(props) {
 }
 
 export default class extends React.Component {
-  /*componentDidUpdate() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
-  }*/
+  }
 
   render = render;
 
