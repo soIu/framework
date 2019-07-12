@@ -53,17 +53,13 @@ function parseView(view, model) {
         if (parent_props.invisible) props.invisible = parent_props.invisible;
         if (parent_props.domain) props.domain = parent_props.domain;
       }
-      if (parent_props) components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
-      else {
-        const args = [component, props, recurse(element.children, props) || element.innerHTML];
-        components.push(() => React.createElement(...args))
-      }
+      const children = recurse(element.children, props) || [(() => element.innerHTML)];
+      components.push(() => React.createElement(component, props, children.map((result) => result())));
     }
     if (!components.length) return null;
-    components = components.length === 1 ? components[0] : components;
     return components
   }
-  return recurse([view]);
+  return recurse([view])[0];
 }
 
 const cachedViews = {};

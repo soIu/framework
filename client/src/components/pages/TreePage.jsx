@@ -20,7 +20,7 @@ function parseView(view, model, title) {
   view = new DOMParser().parseFromString(view, 'text/xml').children[0];
   console.log(view);
   if (title) view.setAttribute('title', title);
-  function recurse(elements, parent) {
+  function recurse(elements, parent_props) {
     let components = [];
     for (let element of elements) {
       const component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] || customComponents[element.tagName] || element.tagName;
@@ -40,17 +40,13 @@ function parseView(view, model, title) {
       }
       if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
       props.isTreeView = true;
-      if (!parent) components.push(React.createElement(component, props, recurse(element.children)));
-      else {
-        const args = [component, props, recurse(element.children)];
-        components.push(() => React.createElement(...args))
-      }
+      const children = recurse(element.children, props) || [(() => element.innerHTML)];
+      components.push(() => React.createElement(component, props, children.map((result) => result())));
     }
     if (!components.length) return null;
-    components = components.length === 1 ? components[0] : components;
     return components
   }
-  return recurse([view], true);
+  return recurse([view], true)[0];
 }
 
 const cachedViews = {};
