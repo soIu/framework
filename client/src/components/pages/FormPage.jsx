@@ -55,7 +55,7 @@ function parseView(view, model) {
       }
       if (parent_props) components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
       else {
-        const args = [component, props, recurse(element.children)];
+        const args = [component, props, recurse(element.children, props) || element.innerHTML];
         components.push(() => React.createElement(...args))
       }
     }
