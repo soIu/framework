@@ -53,18 +53,19 @@ function parseView(view, model) {
         if (parent_props.invisible) props.invisible = parent_props.invisible;
         if (parent_props.domain) props.domain = parent_props.domain;
       }
-      components.push(React.createElement(component, props, recurse(element.children, props)));
+      const children = recurse(element.children, props) || [(() => element.innerHTML)];
+      components.push(() => React.createElement(component, props, children.map((result) => result())));
     }
-    components = components.length === 1 ? components[0] : components;
+    if (!components.length) return null;
     return components
   }
-  return recurse([view]);
+  return recurse([view])[0];
 }
 
 const cachedViews = {};
 
 export default class extends React.Component {
-  componentDidMount() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
   }
@@ -79,8 +80,9 @@ export default class extends React.Component {
     if (props.f7route && props.f7route.params && props.f7route.params.model) {
       model = props.f7route.params.model;
     }
+    const mode = 'form';
     this.model = model;
-    this.mode = 'form';
+    this.mode = mode;
     const id = props.f7route.query.id;
     const view = window.tools.view[model].form;
     window.models.env.context.active_model = model;
@@ -100,6 +102,8 @@ export default class extends React.Component {
       cachedViews[view] = parseView(view, model);
     }
 
-    return cachedViews[view];
+    //if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
+
+    return cachedViews[view]();
   }
 }

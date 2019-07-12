@@ -47,56 +47,52 @@ function parseView(view, model) {
         props.model = window.models.env[model]._fields[parent_props.name].relation;
         props.field = window.models.env[model]._fields[parent_props.name].inverse;
       }
-      components.push(React.createElement(component, props, recurse(element.children, props) || element.innerHTML));
+      const children = recurse(element.children, props) || [(() => element.innerHTML)];
+      components.push(() => React.createElement(component, props, console.log(children) || children.map((result) => result())));
     }
     if (!components.length) return null;
-    components = components.length === 1 ? components[0] : components;
     return components
   }
-  return recurse([view]);
+  return recurse([view])[0];
 }
 
 const cachedViews = {};
 
-function render(props) {
-  let model = window.models.env.context.active_model;
-  let mode = window.models.env.context.active_mode;
-  if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
-  else window.models.env.context.active_url = '/';
-  if (props.f7route && props.f7route.params && props.f7route.params.view_id) {
-    const view_id = props.f7route.params.view_id.split('.');
-    model = view_id.slice(0, -1).join('.');
-    mode = view_id[view_id.length - 1];
-    //window.models.env.context.active_url = props.f7route.url;
-  }
-  this.model = model;
-  this.mode = mode;
-  //const id = props.f7route.query.id;
-  const view = window.tools.view[model][mode];
-  if (window.tools.view[model].contexts[mode]) Object.assign(window.models.env.context, window.tools.view[model].contexts[mode]);
-  window.models.env.context.active_model = model;
-  //window.models.env.context.active_ids = [id];
-  /*if (id) {
-    window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
-  }*/
-  if (!cachedViews[view]) {
-    // eslint-disable-next-line
-    //cachedViews[view] = eval(Parser(view, {presets: [preset]}).code);
-    cachedViews[view] = parseView(view, model);
-  }
-
-  if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode](props);
-
-  return cachedViews[view];
-
-}
-
 export default class extends React.Component {
-  componentDidMount() {
+  componentDidUpdate() {
     const model = this.model, mode = this.mode;
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
   }
 
-  render = render;
+  render(props) {
+    let model = window.models.env.context.active_model;
+    let mode = window.models.env.context.active_mode;
+    if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
+    else window.models.env.context.active_url = '/';
+    if (props.f7route && props.f7route.params && props.f7route.params.view_id) {
+      const view_id = props.f7route.params.view_id.split('.');
+      model = view_id.slice(0, -1).join('.');
+      mode = view_id[view_id.length - 1];
+      //window.models.env.context.active_url = props.f7route.url;
+    }
+    this.model = model;
+    this.mode = mode;
+    //const id = props.f7route.query.id;
+    const view = window.tools.view[model][mode];
+    if (window.tools.view[model].contexts[mode]) Object.assign(window.models.env.context, window.tools.view[model].contexts[mode]);
+    window.models.env.context.active_model = model;
+    //window.models.env.context.active_ids = [id];
+    /*if (id) {
+      window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
+    }*/
+    if (!cachedViews[view]) {
+      // eslint-disable-next-line
+      //cachedViews[view] = eval(Parser(view, {presets: [preset]}).code);
+      cachedViews[view] = parseView(view, model);
+    }
 
+    //if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(props);
+
+    return cachedViews[view]();
+  }
 }
