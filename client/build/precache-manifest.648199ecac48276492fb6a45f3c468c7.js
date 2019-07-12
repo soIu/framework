@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "b181db0cff2a78736730",
+    "revision": "a92c3ab6006faba4f630",
     "url": "static/css/main.adfc9462.chunk.css"
   },
   {
-    "revision": "b181db0cff2a78736730",
-    "url": "static/js/main.b181db0c.chunk.js"
+    "revision": "a92c3ab6006faba4f630",
+    "url": "static/js/main.a92c3ab6.chunk.js"
   },
   {
     "revision": "d9230a2f329006f17577",
@@ -28,35 +28,35 @@ self.__precacheManifest = [
     "url": "static/media/MaterialIcons-Regular.570eb838.woff2"
   },
   {
-    "revision": "c0087d4d5ddd32ec52f1859b42956db6",
-    "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
-  },
-  {
     "revision": "012cf6a10129e2275d79d6adac7f3b02",
     "url": "static/media/MaterialIcons-Regular.012cf6a1.woff"
-  },
-  {
-    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
-    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
-  },
-  {
-    "revision": "2e9a0313ed02aed1e206340feb36ec5c",
-    "url": "static/media/Framework7Icons-Regular.2e9a0313.woff"
-  },
-  {
-    "revision": "a37b0c01c0baf1888ca812cc0508f6e2",
-    "url": "static/media/MaterialIcons-Regular.a37b0c01.ttf"
-  },
-  {
-    "revision": "4348368ab857cb57b18e1a87ba8ff284",
-    "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
   },
   {
     "revision": "e79bfd88537def476913f3ed52f4f4b3",
     "url": "static/media/MaterialIcons-Regular.e79bfd88.eot"
   },
   {
-    "revision": "dec6619faffca7f35ca8c77c09a297f2",
+    "revision": "c0087d4d5ddd32ec52f1859b42956db6",
+    "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
+  },
+  {
+    "revision": "ae8767ca8ecf4b090af58eff5dd6d3a7",
+    "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
+  },
+  {
+    "revision": "a37b0c01c0baf1888ca812cc0508f6e2",
+    "url": "static/media/MaterialIcons-Regular.a37b0c01.ttf"
+  },
+  {
+    "revision": "2e9a0313ed02aed1e206340feb36ec5c",
+    "url": "static/media/Framework7Icons-Regular.2e9a0313.woff"
+  },
+  {
+    "revision": "4348368ab857cb57b18e1a87ba8ff284",
+    "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
+  },
+  {
+    "revision": "2149fa53eb85c9090f8b2a3d5f99dfe8",
     "url": "index.html"
   }
 ];

@@ -65,6 +65,8 @@ function render(props) {
     window.models.env.context.active_url = '/';
   }*/
   const mode = 'tree';
+  this.model = model;
+  this.mode = mode;
   const view = window.tools.view[model].tree;
   window.models.env.context.active_model = model;
 

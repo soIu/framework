@@ -85,6 +85,8 @@ export default class extends React.Component {
       model = props.f7route.params.model;
     }
     const mode = 'form';
+    this.model = model;
+    this.mode = mode;
     const id = props.f7route.query.id;
     const view = window.tools.view[model].form;
     window.models.env.context.active_model = model;
