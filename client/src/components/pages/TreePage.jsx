@@ -50,8 +50,7 @@ function parseView(view, model, title) {
 
 const cachedViews = {};
 
-export default (props) => {
-  console.log(props);
+function render(props) {
   let model = window.models.env.context.active_model;
   if (props.f7route && props.f7route.url) window.models.env.context.active_url = props.f7route.url;
   else window.models.env.context.active_url = '/';
@@ -60,6 +59,8 @@ export default (props) => {
   }/* else {
     window.models.env.context.active_url = '/';
   }*/
+  this.model = model;
+  this.mode = 'tree';
   const view = window.tools.view[model].tree;
   window.models.env.context.active_model = model;
 
@@ -74,4 +75,14 @@ export default (props) => {
   /*return (
     <Parser components={{Tree}} jsx={view} renderInWrapper={false}/>
   );*/
+}
+
+export default class extends React.Component {
+  componentDidMount() {
+    const model = this.model, mode = this.mode;
+    if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
+  }
+
+  render = render;
+
 }

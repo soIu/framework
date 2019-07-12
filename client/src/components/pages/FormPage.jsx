@@ -64,6 +64,11 @@ function parseView(view, model) {
 const cachedViews = {};
 
 export default class extends React.Component {
+  componentDidMount() {
+    const model = this.model, mode = this.mode;
+    if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
+  }
+
   render(props) {
     const refresh = () => this.setState({});
     this.refresh = refresh.bind(this);
@@ -74,6 +79,8 @@ export default class extends React.Component {
     if (props.f7route && props.f7route.params && props.f7route.params.model) {
       model = props.f7route.params.model;
     }
+    this.model = model;
+    this.mode = 'form';
     const id = props.f7route.query.id;
     const view = window.tools.view[model].form;
     window.models.env.context.active_model = model;
