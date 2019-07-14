@@ -15,6 +15,10 @@
   display: none;
 }
 
+.md .color-theme-gray .statusbar {
+  background-color: #009688;
+}
+
 /*
   Extra borders for main view and left panel for iOS theme when it behaves as panel (before breakpoint size)
 */

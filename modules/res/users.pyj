@@ -8,9 +8,9 @@ class ResUsers(models.Model):
     _name = 'res.users'
 
     name = fields.Char(string="Name", required=True)
-    login = fields.Char(string="Username/Email", required=True)
-    password = fields.Char(string="Password")
-    is_superuser = fields.Boolean(string="Is Superuser")
+    login = fields.Char(string="Username/Email", required=True, index=True)
+    password = fields.Char(string="Password", index=True)
+    is_superuser = fields.Boolean(string="Is Superuser", index=True)
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:

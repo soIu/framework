@@ -1,6 +1,6 @@
 import orm.fields as fields
 import orm.exceptions as exceptions
-from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, query
 from orm.pouchdb import db
 
 env = {}
@@ -8,6 +8,7 @@ schemas = {}
 raw_models = {}
 onchange_models = {}
 pending_sync = {}
+indexed_fields = {}
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
@@ -20,6 +21,12 @@ def queryInverse(field_type, records, fields, _fields):
                 if result[_fields[field].inverse] == record.id:
                    record[field].push(result.id)
     return records
+
+def queryFind(db, type, args):
+    return query(db, type, args).then(
+    def (ids):
+      return db.rel.find(type, ids)
+    )
 
 class Model():
     _name = undefined
@@ -108,6 +115,12 @@ class Model():
                if type == 'belongsTo':
                   db.createIndex({'index': {'fields': ['data.'+key, '_id']}})
             self._fields[key] = self[key]
+            if self[key].index:
+               if not indexed_fields[self._name]: indexed_fields[self._name] = {}
+               else:
+                  if not indexed_fields[self._name][self._name]:
+                     indexed_fields[self._name][self._name] = True
+                     db.createIndex({'index': {'fields': ['data.' + key]}})
             if self._is_singleton and not self._is_env:
                if exist(self._fields[key].related):
                   if not exist(self._related[self._fields[key].related]):
@@ -436,7 +449,7 @@ class Model():
               def (resolve, reject):
                   resolve(result)
               )
-           return db.rel.find(result._name).then(
+           return queryFind(db, result._name, args).then(
            def (records):
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
                if exist(options.order):
@@ -451,7 +464,7 @@ class Model():
                return result
            )
         else:
-           return db.rel.find(result._name).then(
+           return queryFind(db, result._name, args).then(
            def (records):
                v'var result = new self.constructor(true, false)'
                records = queryInverse(result._name, records, result._one2many_fields, result._fields)
