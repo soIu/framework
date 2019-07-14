@@ -174,7 +174,7 @@ class AdidasPO(models.Model):
 
     name = fields.Char(string="PO Number", required=True)
     model = fields.Char(string="Model")
-    article = fields.Char(string="Article")
+    article = fields.Char(string="Article", index=True)
     color = fields.Char(string="Color")
     total_qty = fields.Float(string="Total Qty")
     remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
