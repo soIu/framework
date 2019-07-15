@@ -273,12 +273,12 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="type"/>
         </group>
         <group width="100%">
-            <button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>
+            <!--<button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>-->
             <scanner-button invisible="active_id.type != 'picking'"/>
         </group>
         <group width="100%">
             <field name="pack_ids">
-                <tree>
+                <tree create="active_id.type == 'putting'" choose"active_id.type == 'picking'">
                     <field name="name"/>
                     <field name="order_id"/>
                     <field name="bucket" string="Rack"/>
