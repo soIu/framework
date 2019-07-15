@@ -1,9 +1,12 @@
 import PouchDB from 'pouchdb-browser';
 import PouchFind from 'pouchdb-find';
+import PouchSearch from 'pouchdb-quick-search';
 import RelationalPouch from 'relational-pouch';
 
 PouchDB.plugin(PouchFind);
+PouchDB.plugin(PouchSearch);
 PouchDB.plugin(RelationalPouch);
+PouchDB.plugin(require('pouchdb-debug').default);
 window.PouchDB = PouchDB;
 window.session_db = new PouchDB('session');
 
@@ -287,5 +290,86 @@ function hasValue(object, value) {
   }
   return object.indexOf(value) > -1;
 }
+
+/*function query(db, type, args) {
+  const makeDocID = db.rel.makeDocID;
+  const selectors = {_id: {$gt: makeDocID({type}), $lt: makeDocID({type, id: {}})}};
+  const promises = [];
+  for (let arg of args) {
+    let need_orm;
+    if (!arg || !arg[0] || !arg[0].length) continue;
+    if (arg[0] === 'id') {
+      selectors._id = {};
+      if (Array.isArray(arg[2])) arg[2] = arg[2].map((id) => makeDocID({type, id}));
+      else arg[2] = makeDocID({type, id: arg[2]})
+      arg[0] = '_id';
+    }
+    else arg[0] = 'data.' + arg[0];
+    if (!selectors[arg[0]]) selectors[arg[0]] = {};
+    if (arg[1] === '=') {
+      if (arg[2] != false) selectors[arg[0]]['$eq'] =  arg[2];
+      else selectors[arg[0]]['$lte'] = false;
+    }
+    else if (arg[1] === '!=') {
+      if (arg[2] != false) {
+        need_orm = true;
+        promises.push(db.find({selector: {[arg[0]]: {$gt: arg[2]}}, fields: ['_id']}));
+        promises.push(db.find({selector: {[arg[0]]: {$lt: arg[2]}}, fields: ['_id']}));
+      }
+      else selectors[arg[0]]['$gt'] = false;
+    }
+    else if (arg[1] === '>') selectors[arg[0]]['$gt'] = typeof arg[2] === 'number' ? (arg[2] + 0.000000000000001) : arg[2];
+    else if (arg[1] === '>=') selectors[arg[0]]['$gte'] = arg[2];
+    else if (arg[1] === '<') selectors[arg[0]]['$lt'] = arg[2];
+    else if (arg[1] === '<=') selectors[arg[0]]['$lte'] = arg[2];
+    else if (arg[1] === 'in' && Array.isArray(arg[2])) {
+      for (let value of arg[2]) {
+        promises.push(db.find({selector: {[arg[0]]: {$eq: value}}, fields: ['_id']}));
+      }
+    }
+    else if (arg[1] === 'not in' && Array.isArray(arg[2])) {
+      if (arg[2].length) need_orm = true;
+      for (let value of arg[2]) {
+        promises.push(db.find({selector: {[arg[0]]: {$gt: value}}, fields: ['_id']}));
+        promises.push(db.find({selector: {[arg[0]]: {$lt: value}}, fields: ['_id']}));
+      }
+    }
+    else if (arg[1] === 'like') {
+      selectors[arg[0]]['$gte'] = arg[2];
+      promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
+      need_orm = true;
+    }
+    else if (arg[1] === 'ilike') {
+      selectors[arg[0]]['$gte'] = arg[2];
+      promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
+      need_orm = true;
+    }
+    if (!Object.keys(selectors[arg[0]]).length) {
+      delete selectors[arg[0]];
+      if (!need_orm) arg.splice(0, arg.length);
+      else arg[0] = arg[0].replace('data.', '')
+      continue;
+    }
+    if (!need_orm) arg.splice(0, arg.length);
+    else arg[0] = arg[0].replace('data.', '')
+  }
+  for (let key in selectors) {
+    promises.push(db.find({selector: {[key]: selectors[key]}, fields: ['_id']}))
+  }
+  return Promise.all(promises).then((results) => {
+    let ids = [];
+    for (let result of results) {
+      const docs = result.docs || result.rows;
+      for (let doc of docs) {
+        ids.push(doc._id || doc.id)
+      }
+    }
+    if (promises.length > 1) ids = ids.filter((value, index, self) => self.indexOf(value) !== index && value.split('_')[0] === type);
+    ids = ids.map((id) => db.rel.parseDocID(id).id);
+    return ids;
+  });
+}
+
+window.qe = query;*/
 
 export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, ajax, readAsDataURL, parseURI, hasValue, hasKey};

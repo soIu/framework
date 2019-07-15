@@ -31,7 +31,7 @@ function parseView(view, model) {
       for (let attribute of element.attributes) {
         props[attribute.name] = attribute.value;
       }
-      for (let attribute of ['invisible', 'required', 'readonly', 'create']) {
+      for (let attribute of ['invisible', 'required', 'readonly', 'create', 'choose']) {
         if (api.hasKey(props, attribute)) {
           if (api.hasValue(['true', 'True'], props[attribute])) props[attribute] = true;
           if (api.hasValue(['false', 'False'], props[attribute])) props[attribute] = false;
