@@ -27,7 +27,14 @@ def queryFind(db, type, args):
     if result == 'orm_only': return db.rel.find(type)
     return result.then(
     def (ids):
-      return db.rel.find(type, ids)
+      return db.rel.find(type, ids).then(
+      def (result):
+          #Fix this by turning off async on schemas and make custom queryInverse
+          result[type] = result[type].filter(
+          def (object): return object.id in ids
+          )
+          return result
+      )
     )
 
 class Model():
@@ -369,7 +376,6 @@ class Model():
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids, 'context': self._context}, self._context).then(
            def (result):
-               console.log(result)
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
                if is_array(result.values):
