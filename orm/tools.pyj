@@ -382,7 +382,7 @@ def query(db, type, args):
            if is_array(arg[2]):
               arg[2] = arg[2].map(
               def (id):
-                  return makeDocID({'type': type, 'id': id}))
+                  return makeDocID({'type': type, 'id': id})
               )
            else: arg[2] = makeDocID({'type': type, 'id': arg[2]})
            arg[0] = '_id';
@@ -390,10 +390,10 @@ def query(db, type, args):
         if not selectors[index][arg[0]]:
            selectors[index][arg[0]] = {}
         if arg[1] == '=':
-           if arg[2] != false: selectors[index][arg[0]]['$eq'] =  arg[2];
-           else: selectors[index][arg[0]]['$lte'] = false;
+           if arg[2] != False: selectors[index][arg[0]]['$eq'] =  arg[2];
+           else: selectors[index][arg[0]]['$lte'] = False;
         elif arg[1] == '!=':
-           if arg[2] != false:
+           if arg[2] != False:
               [arg[2]].forEach(
               def (value):
                   promises.push(db.find({'selector': {arg[0]: {'$eq': value}}, 'fields': ['_id']}).then(
@@ -405,10 +405,10 @@ def query(db, type, args):
                           return result
                       )
                   ))
-                  promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, fields: ['_id']}));
+                  promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, 'fields': ['_id']}));
               )
            else:
-              selectors[index][arg[0]]['$gt'] = false;
+              selectors[index][arg[0]]['$gt'] = False;
         elif arg[1] == '>': selectors[index][arg[0]]['$gt'] = v"typeof arg[2] === 'number' ? (arg[2] + 0.000000000000001) : arg[2]";
         elif arg[1] == '>=': selectors[index][arg[0]]['$gte'] = arg[2];
         elif arg[1] == '<': selectors[index][arg[0]]['$lt'] = arg[2];
@@ -433,16 +433,16 @@ def query(db, type, args):
                        return result
                    )
                ))
-               promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, fields: ['_id']}));
+               promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, 'fields': ['_id']}));
            )
         elif arg[1] == 'like':
            #selectors[index][arg[0]]['$gte'] = arg[2];
-           #promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
-           need_orm = true;
+           #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
+           need_orm = True;
         elif arg[1] == 'ilike':
            #selectors[index][arg[0]]['$gte'] = arg[2];
-           #promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
-           need_orm = true;
+           #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
+           need_orm = True;
         if not Object.keys(selectors[index][arg[0]]).length:
            del selectors[index][arg[0]];
            selectors.pop(index);
@@ -454,7 +454,7 @@ def query(db, type, args):
         index += 1;
     if selectors.length == 1: new Promise(def (resolve, reject): return resolve('orm_only');)
     for selector in selectors:
-        promises.push(db.find({'selector': selector, fields: ['_id']}))
+        promises.push(db.find({'selector': selector, 'fields': ['_id']}))
     return Promise.all(promises).then(
     def (results):
         ids = []
