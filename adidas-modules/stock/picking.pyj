@@ -47,20 +47,28 @@ class StockPicking(models.Model):
         return self.__super__('create')(values=values, is_client=is_client).then(
         def (result):
             if v"typeof window === 'undefined'": return result
-            promises = []
-            for record in self:
-                promise = self.env['stock.pack'].browse(record.pack_ids).then(
+            def create_move(record):
+                return self.env['stock.pack'].browse(record.pack_ids).then(
                 def (pack_ids):
                     promises = []
-                    for pack_id in pack_ids:
-                        promise = self.env['stock.move'].create({'picking_id': record.id, 'pack_id': pack_id.id, 'product_id': pack_id.adidas_product_id, 'product_qty': pack_id.adidas_product_qty})
+                    pack_ids.queue(
+                    def (pack_id, next):
+                        promise = pack_id.current_qty.then(
+                        def (qty):
+                            return self.env['stock.move'].create({'picking_id': record.id, 'pack_id': pack_id.id, 'product_id': pack_id.adidas_product_id, 'product_qty': qty if record.type == 'picking' else pack_id.adidas_product_qty})
+                        )
                         promises.push(promise)
+                        next()
+                    )
                     return Promise.all(promises)
                 )
-                promises.push(promise)
-            return Promise.all(promises).then(
-            def (records): return result
-            )
+            def each_picking():
+                promises = []
+                for record in self:
+                    promises.push(create_move(record))
+                return Promise.all(promises)
+            models.env.context.active_task.push(each_picking)
+            return result
         )
 
     def add_pack(self):
@@ -242,7 +250,7 @@ menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'sto
 menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
-<tree domain="['state', '!=', 'validated']">
+<tree domain="['state', '!=', 'validated'], ['type', '=', context.default_operation_type]">
     <field name="name"/>
     <field name="date"/>
 </tree>
