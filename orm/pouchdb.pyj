@@ -2,7 +2,7 @@ def loadPlugin(PouchDB):
     PouchDB.plugin(require('pouchdb-find'));
     PouchDB.plugin(require('pouchdb-adapter-http'))
     PouchDB.plugin(require('pouchdb-adapter-memory'))
-    PouchDB.plugin(require('pouchdb-quick-search'))
+    #PouchDB.plugin(require('pouchdb-quick-search'))
     PouchDB.plugin(require('relational-pouch'))
 
 
