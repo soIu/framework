@@ -44,6 +44,7 @@ class Model():
         self._one2many_fields = []
         self._unstored_fields = []
         self._compute_cache = {}
+        self._read_cache = {}
         self._is_env = _is_env if _is_env != undefined else False
         self._is_singleton = _is_singleton if _is_singleton != undefined else False
         self._inherited_keys = []
@@ -530,13 +531,19 @@ class Model():
                           selections = field.selection.apply(None) if field.selection and type(field.selection) == Function else field.selection
                           value[key] = tools.dict(selections)[value[key]]
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
+                          if self._read_cache[key] and self._read_cache[key][JSON.stringify(value[key])]:
+                             value[key] = self._read_cache[key][JSON.stringify(value[key])]
+                             if result != undefined: return
+                             return next()
                           promise = self.env[field.relation].browse(value[key])
                           promise.then(
                           def (records):
+                              original_value = value[key]
                               names = []
                               for record in records:
                                   names.push(record[record._rec_name or 'name'])
                               value[key] = names.join(', ')
+                              self._read_cache[key] = {JSON.stringify(original_value): value[key]}
                           )
                           if result != undefined: return promise
                           promises.push(promise)
