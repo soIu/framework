@@ -81,6 +81,8 @@ export default class Tree extends React.Component {
       for (let data of selected) {
         if (data.id) ids.push(data.id);
       }
+      this.pagingCalled = true;
+      api.wait(1000).then(() => this.pagingCalled = false);
       return this.setState({active_ids: ids, selected});
     }
     this.onSelectionChanged = onSelectionChanged.bind(this);
@@ -233,7 +235,7 @@ export default class Tree extends React.Component {
   }
 
   async paging(index, params) {
-    if (params.newData !== false) {
+    if (params.newData !== false || (!this.pagingCalled && !params.forceOnRender)) {
       return;
     }
     if (this.props.isPopup && !params.forcePopup) return;
@@ -407,7 +409,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    if (!props.isTreeView) api.wait(500).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceOnRender: true}) : api.wait(1000).then(() => this.pagingCalled = false));
+    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceOnRender: true}) : api.wait(1000).then(() => this.pagingCalled = false));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
