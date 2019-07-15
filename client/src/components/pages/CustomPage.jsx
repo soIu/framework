@@ -16,6 +16,7 @@ window.rapydComponents = {...window.rapydComponents, TreePage, Form, Header, But
 
 const function_string =
 `if (!active_id) return false;
+var context = window.models.env.context;
 var True = true;
 var False = false;
 var None = null;
