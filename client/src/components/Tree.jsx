@@ -95,7 +95,7 @@ export default class Tree extends React.Component {
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
-    const limit = parseInt(props.limit) || 50;
+    const limit = parseInt(props.limit) || (props.isTreeView ? 50 : 500);
     const records = [];
     this.state = {fields: fields, records: records, new_records: window.models.env[model], limit: limit, model: model, frameworkComponents: {specialEditor: GridEditor}, selected: []};//, popupOpened: false};
     if (props.field) {
@@ -168,6 +168,7 @@ export default class Tree extends React.Component {
     else {
       params.newData = false;
       params.forcePopup = true;
+      params.forceUpdate = true;
       this.paging.bind(this)(0, params);
     }
   }
@@ -230,12 +231,13 @@ export default class Tree extends React.Component {
     else {
       params.newData = false;
       params.forcePopup = true;
+      params.forceUpdate = true;
       this.paging.bind(this)(0, params);
     }
   }
 
   async paging(index, params) {
-    if (params.newData !== false || (!this.pagingCalled && !params.forceOnRender && !this.props.isTreeView)) {
+    if (params.newData !== false || (!this.pagingCalled && !params.forceUpdate && !this.props.isTreeView)) {
       return;
     }
     if (this.props.isPopup && !params.forcePopup) return;
@@ -252,7 +254,7 @@ export default class Tree extends React.Component {
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
-      let records = await models.env[this.state.model].search(...args, ...((this.props.domain instanceof Function ? this.props.domain(models.env.context.active_id) : this.props.domain) || []));
+      let records = await models.env[this.state.model].search(...args, ...((this.props.domain instanceof Function ? this.props.domain({}) : this.props.domain) || []));
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
         if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
@@ -308,7 +310,7 @@ export default class Tree extends React.Component {
     await this.refs.popup.paging(0, {newData: false, forcePopup: true});
     const node = this.refs.popup_modal.getDOMNode();
     node.className = 'popup modal-in';
-    node.children[0].className = node.children[0].className.replace('page-next', '');
+    node.children[0].className = node.children[0].className.replace('page-next', '').replace('page-previous', '');
     autoSizeAll(this.refs.popup.gridOptions);
     return;
   }
@@ -319,7 +321,7 @@ export default class Tree extends React.Component {
       const records = window.models.env.context.active_lines[this.props.model]['many2many_' + this.props.active_field].add(selected_ids);
       window.models.env.context.active_id[this.props.active_field] = records;
       await window.models.env.context.active_id._wait_promise();
-      await this.props.parent_tree.paging(0, {newData: false});
+      await this.props.parent_tree.paging(0, {newData: false, forceUpdate: true});
       this.gridOptions.api.deselectAll();
       this.props.parent_tree.refs.popup_modal.getDOMNode().className = this.props.parent_tree.refs.popup_modal.getDOMNode().className.replace('modal-in', 'modal-out');
       //return await this.parent_tree.setState({popupOpened: false});
@@ -372,7 +374,7 @@ export default class Tree extends React.Component {
     //await this.setState({records: this.state.records, selected: []});
     if (type != 'many2one') window.models.env.context.active_id[this.state.tree_field] = window.models.env.context.active_lines[this.state.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field];
     //this.gridOptions.api.updateRowData({remove: selected});
-    await this.paging.bind(this)(0, {newData: false, deleting: true});
+    await this.paging.bind(this)(0, {newData: false, deleting: true, forceUpdate: true});
     return this.gridOptions.api.deselectAll();
   }
 
@@ -409,7 +411,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceOnRender: true}) : api.wait(1000).then(() => this.pagingCalled = false));
+    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceUpdate: true}) : api.wait(1000).then(() => this.pagingCalled = false));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;

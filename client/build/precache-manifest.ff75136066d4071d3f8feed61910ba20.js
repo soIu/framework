@@ -4,8 +4,8 @@ self.__precacheManifest = [
     "url": "static/media/Framework7Icons-Regular.2e9a0313.woff"
   },
   {
-    "revision": "c1bc669843f3639e0448",
-    "url": "static/css/main.cbb866fc.chunk.css"
+    "revision": "814153533dbd7fd6f64a",
+    "url": "static/css/main.94d59ec6.chunk.css"
   },
   {
     "revision": "e79bfd88537def476913f3ed52f4f4b3",
@@ -28,20 +28,20 @@ self.__precacheManifest = [
     "url": "static/media/Framework7Icons-Regular.ae8767ca.woff2"
   },
   {
-    "revision": "c1bc669843f3639e0448",
-    "url": "static/js/main.c1bc6698.chunk.js"
+    "revision": "814153533dbd7fd6f64a",
+    "url": "static/js/main.81415353.chunk.js"
   },
   {
     "revision": "570eb83859dc23dd0eec423a49e147fe",
     "url": "static/media/MaterialIcons-Regular.570eb838.woff2"
   },
   {
-    "revision": "4348368ab857cb57b18e1a87ba8ff284",
-    "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
-  },
-  {
     "revision": "c0087d4d5ddd32ec52f1859b42956db6",
     "url": "static/media/Framework7Icons-Regular.c0087d4d.eot"
+  },
+  {
+    "revision": "4348368ab857cb57b18e1a87ba8ff284",
+    "url": "static/media/Framework7Icons-Regular.4348368a.ttf"
   },
   {
     "revision": "012cf6a10129e2275d79d6adac7f3b02",
@@ -52,7 +52,7 @@ self.__precacheManifest = [
     "url": "static/css/1.a4d128f4.chunk.css"
   },
   {
-    "revision": "ea12ba3cef1fcad4149b9bf86e605146",
+    "revision": "ead9b166f3aa44c2abbb4edc8e47556f",
     "url": "index.html"
   },
   {

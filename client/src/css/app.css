@@ -10,6 +10,10 @@
   z-index: 6000;
 }
 
+.page-current.page-previous {
+  pointer-events: unset;
+}
+
 /* Hide navbar link which opens left panel when it is visible by breakpoint */
 .panel-left.panel-visible-by-breakpoint ~ .view .navbar .panel-open[data-panel="left"] {
   display: none;

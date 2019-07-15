@@ -29,6 +29,21 @@ const globals = {};
 function preload() {
   const root = document.getElementById('app');
   if (root) {
+    const object = {done: (value) => {
+      globals.preload_count -= 1;
+      if (globals.preload_count != 0) return value;
+      else delete globals.preload_count;
+      globals.preload_loader.remove();
+      globals.preload_backdrop.remove();
+      return value;
+    }};
+    if (!globals.preload_count) {
+      globals.preload_count = 1;
+    }
+    else {
+      globals.preload_count += 1;
+      return object;
+    }
     const preloader = document.createElement('div');
     preloader.className = 'preloader-modal';
     preloader.insertAdjacentHTML('beforeend',`
@@ -47,11 +62,9 @@ function preload() {
     backdrop.className = 'preloader-backdrop';
     root.insertAdjacentElement('beforeend', backdrop);
     root.insertAdjacentElement('beforeend', preloader);
-    return {done: (value) => {
-      preloader.remove();
-      backdrop.remove();
-      return value;
-    }};
+    globals.preload_loader = preloader;
+    globals.preload_backdrop = backdrop;
+    return object;
   }
 }
 
