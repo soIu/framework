@@ -235,7 +235,7 @@ export default class Tree extends React.Component {
   }
 
   async paging(index, params) {
-    if (params.newData !== false || (!this.pagingCalled && !params.forceOnRender)) {
+    if (params.newData !== false || (!this.pagingCalled && !params.forceOnRender && !this.props.isTreeView)) {
       return;
     }
     if (this.props.isPopup && !params.forcePopup) return;
