@@ -452,7 +452,7 @@ def query(db, type, args):
         if not need_orm: arg.splice(0, arg.length);
         else: arg[0] = arg[0].replace('data.', '')
         index += 1;
-    if selectors.length == 1: new Promise(def (resolve, reject): return resolve('orm_only');)
+    if selectors.length == 1: return 'orm_only'
     for selector in selectors:
         promises.push(db.find({'selector': selector, 'fields': ['_id']}))
     return Promise.all(promises).then(
