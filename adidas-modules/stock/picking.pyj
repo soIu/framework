@@ -278,7 +278,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
         <group width="100%">
             <field name="pack_ids">
-                <tree create="active_id.type == 'putting'" choose"active_id.type == 'picking'">
+                <tree create="active_id.type == 'putting'" choose="active_id.type == 'picking'">
                     <field name="name"/>
                     <field name="order_id"/>
                     <field name="bucket" string="Rack"/>
