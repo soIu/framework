@@ -172,7 +172,7 @@ class AdidasPO(models.Model):
             )
         )
 
-    name = fields.Char(string="PO Number", required=True)
+    name = fields.Char(string="PO Number", required=True, index=True)
     model = fields.Char(string="Model")
     article = fields.Char(string="Article", index=True)
     color = fields.Char(string="Color")
