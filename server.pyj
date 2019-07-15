@@ -47,7 +47,8 @@ def (request, response, next):
     request.params = Object.assign(request.params, request.query, request.body or {});
     params = http.parse(request.params)
     if exist(request.params.login):
-       old_login = params.login, old_password = params.password
+       old_login = params.login
+       old_password = params.password
        if params.encrypted == True:
           if login_cache[params.login] == params.password:
              #request.env.context.user = user_id
