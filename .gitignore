@@ -4,4 +4,6 @@ modules/modules.pyj
 modules/controllers.pyj
 app.conf
 main
+main.json
+main-*
 package-lock.json
