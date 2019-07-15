@@ -368,11 +368,110 @@ configuration.ajax_load = ajax_load
 configuration.ajax_resolve = ajax_resolve
 configuration.ajax_reject = ajax_reject
 
-v"""
-function _defineProperty(e,r,t){return r in e?Object.defineProperty(e,r,{value:t,enumerable:!0,configurable:!0,writable:!0}):e[r]=t,e}function query(v,h,e){var r=v.rel.makeDocID,t=[{_id:{$gt:r({type:h}),$lt:r({type:h,id:{}})}}],_=[],i=1,l=!0,n=!1,a=void 0;try{for(var o,f=e[Symbol.iterator]();!(l=(o=f.next()).done);l=!0){var d=o.value,u=void 0;if(d&&d[0]&&d[0].length){if(t[i]={},"id"===d[0]?(t[i]._id={},Array.isArray(d[2])?d[2]=d[2].map(function(e){return r({type:h,id:e})}):d[2]=r({type:h,id:d[2]}),d[0]="_id"):d[0]="data."+d[0],t[i][d[0]]||(t[i][d[0]]={}),"="===d[1])0!=d[2]?t[i][d[0]].$eq=d[2]:t[i][d[0]].$lte=!1;else if("!="===d[1])0!=d[2]?(u=!0,_.push(v.find({selector:_defineProperty({},d[0],{$gt:d[2]}),fields:["_id"]})),_.push(v.find({selector:_defineProperty({},d[0],{$lt:d[2]}),fields:["_id"]}))):t[i][d[0]].$gt=!1;else if(">"===d[1])t[i][d[0]].$gt="number"==typeof d[2]?d[2]+1e-15:d[2];else if(">="===d[1])t[i][d[0]].$gte=d[2];else if("<"===d[1])t[i][d[0]].$lt=d[2];else if("<="===d[1])t[i][d[0]].$lte=d[2];else if("in"===d[1]&&Array.isArray(d[2])){var y=!0,s=!1,c=void 0;try{for(var p,g=d[2][Symbol.iterator]();!(y=(p=g.next()).done);y=!0){var $=p.value;_.push(v.find({selector:_defineProperty({},d[0],{$eq:$}),fields:["_id"]}))}}catch(e){s=!0,c=e}finally{try{y||null==g.return||g.return()}finally{if(s)throw c}}if(!d[2].length)return new Promise(function(e,r){return e([])})}else if("not in"===d[1]&&Array.isArray(d[2])){d[2].length&&(u=!0);var m=!0,b=!1,P=void 0;try{for(var w,x=d[2][Symbol.iterator]();!(m=(w=x.next()).done);m=!0){var A=w.value;_.push(v.find({selector:_defineProperty({},d[0],{$gt:A}),fields:["_id"]})),_.push(v.find({selector:_defineProperty({},d[0],{$lt:A}),fields:["_id"]}))}}catch(e){b=!0,P=e}finally{try{m||null==x.return||x.return()}finally{if(b)throw P}}}else"like"===d[1]?u=!0:"ilike"===d[1]&&(u=!0);Object.keys(t[i][d[0]]).length?(u?d[0]=d[0].replace("data.",""):d.splice(0,d.length),i+=1):(delete t[i][d[0]],t.pop([i]),u?d[0]=d[0].replace("data.",""):d.splice(0,d.length))}}}catch(e){n=!0,a=e}finally{try{l||null==f.return||f.return()}finally{if(n)throw a}}for(var S=0,k=t;S<k.length;S++){var D=k[S];_.push(v.find({selector:D,fields:["_id"]}))}return Promise.all(_).then(function(e){var r=[],t=!0,i=!1,l=void 0;try{for(var n,a=e[Symbol.iterator]();!(t=(n=a.next()).done);t=!0){var o=n.value,f=o.docs||o.rows,d=!0,u=!1,y=void 0;try{for(var s,c=f[Symbol.iterator]();!(d=(s=c.next()).done);d=!0){var p=s.value;r.push(p._id||p.id)}}catch(e){u=!0,y=e}finally{try{d||null==c.return||c.return()}finally{if(u)throw y}}}}catch(e){i=!0,l=e}finally{try{t||null==a.return||a.return()}finally{if(i)throw l}}return 1<_.length&&(r=r.filter(function(e,r,t){return t.indexOf(e)!==r&&e.split("_")[0]===h})),r=r.map(function(e){return v.rel.parseDocID(e).id})})}
-"""
-
-query = query
+def query(db, type, args):
+    makeDocID = db.rel.makeDocID;
+    selectors = [{'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}];
+    promises = [];
+    index = 1;
+    for arg in args:
+        need_orm = None
+        if not arg or not arg[0] or not arg[0].length: continue
+        selectors[index] = {};
+        if arg[0] == 'id':
+           selectors[index]._id = {}
+           if is_array(arg[2]):
+              arg[2] = arg[2].map(
+              def (id):
+                  return makeDocID({'type': type, 'id': id}))
+              )
+           else: arg[2] = makeDocID({'type': type, 'id': arg[2]})
+           arg[0] = '_id';
+        else: arg[0] = 'data.' + arg[0];
+        if not selectors[index][arg[0]]:
+           selectors[index][arg[0]] = {}
+        if arg[1] == '=':
+           if arg[2] != false: selectors[index][arg[0]]['$eq'] =  arg[2];
+           else: selectors[index][arg[0]]['$lte'] = false;
+        elif arg[1] == '!=':
+           if arg[2] != false:
+              [arg[2]].forEach(
+              def (value):
+                  promises.push(db.find({'selector': {arg[0]: {'$eq': value}}, 'fields': ['_id']}).then(
+                  def (result):
+                      ids = [doc._id for doc in result.docs]
+                      return db.find({'selector': {arg[0]: {'$gt': value}}, 'fields': ['_id']}).then(
+                      def (result):
+                          result.docs = [doc for doc in result.docs if doc._id not in ids]
+                          return result
+                      )
+                  ))
+                  promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, fields: ['_id']}));
+              )
+           else:
+              selectors[index][arg[0]]['$gt'] = false;
+        elif arg[1] == '>': selectors[index][arg[0]]['$gt'] = v"typeof arg[2] === 'number' ? (arg[2] + 0.000000000000001) : arg[2]";
+        elif arg[1] == '>=': selectors[index][arg[0]]['$gte'] = arg[2];
+        elif arg[1] == '<': selectors[index][arg[0]]['$lt'] = arg[2];
+        elif arg[1] == '<=': selectors[index][arg[0]]['$lte'] = arg[2];
+        elif arg[1] == 'in' and is_array(arg[2]):
+           for value in arg[2]:
+               promises.push(db.find({'selector': {arg[0]: {'$eq': value}}, 'fields': ['_id']}));
+           if not arg[2].length:
+              return new Promise(
+              def (resolve, reject):
+                  return resolve([])
+              )
+        elif arg[1] == 'not in' and is_array(arg[2]):
+           arg[2].forEach(
+           def (value):
+               promises.push(db.find({'selector': {arg[0]: {'$eq': value}}, 'fields': ['_id']}).then(
+               def (result):
+                   ids = [doc._id for doc in result.docs]
+                   return db.find({'selector': {arg[0]: {'$gt': value}}, 'fields': ['_id']}).then( 
+                   def (result):
+                       result.docs = [doc for doc in result.docs if doc._id not in ids]
+                       return result
+                   )
+               ))
+               promises.push(db.find({'selector': {arg[0]: {'$lt': value}}, fields: ['_id']}));
+           )
+        elif arg[1] == 'like':
+           #selectors[index][arg[0]]['$gte'] = arg[2];
+           #promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
+           need_orm = true;
+        elif arg[1] == 'ilike':
+           #selectors[index][arg[0]]['$gte'] = arg[2];
+           #promises.push(db.search({query: arg[2], fields: [arg[0]], include_docs: false}));
+           need_orm = true;
+        if not Object.keys(selectors[index][arg[0]]).length:
+           del selectors[index][arg[0]];
+           selectors.pop(index);
+           if not need_orm: arg.splice(0, arg.length)
+           else: arg[0] = arg[0].replace('data.', '')
+           continue;
+        if not need_orm: arg.splice(0, arg.length);
+        else: arg[0] = arg[0].replace('data.', '')
+        index += 1;
+    if selectors.length == 1: new Promise(def (resolve, reject): return resolve('orm_only');)
+    for selector in selectors:
+        promises.push(db.find({'selector': selector, fields: ['_id']}))
+    return Promise.all(promises).then(
+    def (results):
+        ids = []
+        for result in results:
+          docs = result.docs or result.rows
+          for doc in docs:
+              ids.push(doc._id or doc.id)
+        if promises.length > 1:
+           ids = ids.filter(
+           def (value, index, self):
+               return self.indexOf(value) != index and value.split('_')[0] == type
+           )
+        ids = ids.map(
+        def (id): return db.rel.parseDocID(id).id
+        )
+        return ids
+    )
 
 v"""
 if (typeof window !== 'undefined' && typeof window.HTMLBodyElement !== 'undefined') {configuration.client = true}

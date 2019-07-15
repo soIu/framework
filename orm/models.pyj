@@ -25,6 +25,7 @@ def queryInverse(field_type, records, fields, _fields):
 def queryFind(db, type, args):
     return query(db, type, args).then(
     def (ids):
+      if ids == 'orm_only': return db.rel.find(type)
       return db.rel.find(type, ids)
     )
 
