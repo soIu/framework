@@ -540,7 +540,7 @@ class Model():
                           selections = field.selection.apply(None) if field.selection and type(field.selection) == Function else field.selection
                           value[key] = tools.dict(selections)[value[key]]
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
-                          if not read_cache[self._name]: {}
+                          if not read_cache[self._name]: read_cache[self._name] = {}
                           if read_cache[self._name][key] and read_cache[self._name][key][JSON.stringify(value[key])]:
                              value[key] = read_cache[self._name][key][JSON.stringify(value[key])]
                              if result != undefined: return
