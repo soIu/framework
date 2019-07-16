@@ -6,7 +6,7 @@ import RelationalPouch from 'relational-pouch';
 PouchDB.plugin(PouchFind);
 //PouchDB.plugin(PouchSearch);
 PouchDB.plugin(RelationalPouch);
-//PouchDB.plugin(require('pouchdb-debug').default);
+PouchDB.plugin(require('pouchdb-debug').default);
 window.PouchDB = PouchDB;
 window.session_db = new PouchDB('session');
 

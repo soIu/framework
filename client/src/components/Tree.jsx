@@ -237,7 +237,8 @@ export default class Tree extends React.Component {
   }
 
   async paging(index, params) {
-    if (params.newData !== false || (!this.pagingCalled && !params.forceUpdate && !this.props.isTreeView)) {
+    if (this.pagingStarted && !document.getElementsByClassName('preloader-modal').length) this.pagingStarted = false;
+    if (params.newData !== false || (!params.forceUpdate && !this.props.isTreeView) || this.pagingStarted) {
       return;
     }
     if (this.props.isPopup && !params.forcePopup) return;
@@ -245,6 +246,7 @@ export default class Tree extends React.Component {
     try {
       const models = window.models;
       if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
+      if (this.props.view_model && this.props.view_model !== models.env.context.active_id._name) return;
       if (params.deleting) {
         if (!this.args) this.args = [];
         this.args.push(['id', 'not in', this.state.active_ids]);
@@ -254,6 +256,7 @@ export default class Tree extends React.Component {
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
+      this.pagingStarted = true;
       let records = await models.env[this.state.model].search(...args, ...((this.props.domain instanceof Function ? this.props.domain({}) : this.props.domain) || []));
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
@@ -411,7 +414,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceUpdate: true}) : api.wait(1000).then(() => this.pagingCalled = false));
+    if (!props.isTreeView) api.wait(0).then(() => (!this.pagingCalled && !this.pagingStarted) ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceUpdate: true}) : api.wait(1000).then(() => this.pagingCalled = false));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
