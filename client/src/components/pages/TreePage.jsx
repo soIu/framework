@@ -25,7 +25,7 @@ function parseView(view, model, title) {
     let components = [];
     for (let element of elements) {
       const component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] || customComponents[element.tagName] || element.tagName;
-      const props = {model};
+      const props = {model, view_model: model};
       for (let attribute of element.attributes) {
         props[attribute.name] = attribute.value;
       }

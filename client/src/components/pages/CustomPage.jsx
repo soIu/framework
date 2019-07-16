@@ -45,8 +45,16 @@ function parseView(view, model) {
       }
       if (props.domain) props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
       if (component === Tree) {
-        props.model = window.models.env[model]._fields[parent_props.name].relation;
-        props.field = window.models.env[model]._fields[parent_props.name].inverse;
+        const field = window.models.env[model]._fields[parent_props.name];
+        props.view_model = model;
+        props.model = field.relation;
+        props.field = field.type === 'one2many' ? field.inverse : parent_props.name;
+        if (field.type !== 'one2many') {
+          props.parent_model = model;
+          props.tree_arch = element.outerHTML;
+        }
+        if (parent_props.invisible) props.invisible = parent_props.invisible;
+        if (parent_props.domain) props.domain = parent_props.domain;
       }
       const children = recurse(element.children, props) || [(() => element.innerHTML)];
       components.push(() => React.createElement(component, props, console.log(children) || children.map((result) => result())));

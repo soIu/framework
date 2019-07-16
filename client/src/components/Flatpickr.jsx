@@ -2,24 +2,28 @@ import React from 'react';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
+let flatpickr_count = 0;
+
 export default class extends React.Component {
-  /*constructor(props) {
+  constructor(props) {
     super(props);
-  }*/
+    flatpickr_count += 1;
+    this.count = flatpickr_count;
+  }
 
   componentWillUnmount() {
-    if (this.props.inline) return document.getElementById('flatpickr-inline-clone') && document.getElementById('flatpickr-inline-clone').remove();
+    if (this.props.inline) return document.getElementById('flatpickr-inline-clone-' + this.count) && document.getElementById('flatpickr-inline-clone-' + this.count).remove();
     if (this.flatpickr) this.flatpickr.destroy()
     if (this.props.customInput) delete this.props.customInput._flatpickr;
     delete this.flatpickr;
   }
 
   componentDidMount() {
-    const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : document.getElementById('flatpickr-inline-clone') || this.refs.flatpickr.cloneNode(false));
+    const clone = this.props.customComponent ? this.props.customInput : (!this.props.inline ? this.refs.flatpickr : document.getElementById('flatpickr-inline-clone-' + this.count) || this.refs.flatpickr.cloneNode(false));
     console.log(clone);
     if (!clone) return;
     if (this.props.inline) {
-      clone.id = 'flatpickr-inline-clone';
+      clone.id = 'flatpickr-inline-clone-' + this.count;
       //clone.style.display = '';
       this.refs.flatpickr.insertAdjacentElement('afterend', clone);
     }
