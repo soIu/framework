@@ -21,7 +21,7 @@ def queryInverse(field_type, records, fields, _fields):
         fields.forEach(
         def (field):
             record[field] = []
-            promise = models.env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
+            promise = env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
             def (result):
                 record[field] = record[field].concat(result.ids)
             )
@@ -34,7 +34,7 @@ def queryInverse(field_type, records, fields, _fields):
 
 def queryFind(db, type, args, inverse=False):
     def processInverse(records):
-        return queryInverse(type, records, models.env[type]._one2many_fields, models.env[type]._fields)
+        return queryInverse(type, records, env[type]._one2many_fields, env[type]._fields)
     if inverse: db.rel.find(type, args).then(processInverse)
     result = query(db, type, args)
     if result == 'orm_only': return db.rel.find(type).then(processInverse)
