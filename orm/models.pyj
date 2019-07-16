@@ -541,11 +541,7 @@ class Model():
                           value[key] = tools.dict(selections)[value[key]]
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
                           if not read_cache[self._name]: read_cache[self._name] = {}
-                          if read_cache[self._name][key] and read_cache[self._name][key][JSON.stringify(value[key])]:
-                             value[key] = read_cache[self._name][key][JSON.stringify(value[key])]
-                             if result != undefined: return
-                             return next()
-                          promise = self.env[field.relation].browse(value[key])
+                          promise = self.env[field.relation].with_context(no_preload=True if promises.length else False).browse(value[key])
                           promise.then(
                           def (records):
                               original_value = value[key]
@@ -555,6 +551,14 @@ class Model():
                               value[key] = names.join(', ')
                               read_cache[self._name][key] = {JSON.stringify(original_value): value[key]}
                           )
+                          if promises.length:
+                             cache_promise = promises[-(promises.length - 1)].then(
+                             def ():
+                                 if read_cache[self._name][key] and read_cache[self._name][key][JSON.stringify(value[key])]:
+                                    value[key] = read_cache[self._name][key][JSON.stringify(value[key])]
+                                 else: return promise
+                             )
+                             promise = cache_promise
                           if result != undefined: return promise
                           promises.push(promise)
                        if not result: next()
