@@ -370,13 +370,14 @@ configuration.ajax_reject = ajax_reject
 
 def query(db, type, args):
     makeDocID = db.rel.makeDocID;
+    default_selector = {'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}
     selectors = [] #{'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}];
     promises = [];
     index = 0;
     for arg in args:
         need_orm = None
         if not arg or not arg[0] or not arg[0].length: continue
-        selectors[index] = {};
+        selectors[index] = copy(default_selector);
         if arg[0] == 'id':
            selectors[index]._id = {}
            if is_array(arg[2]):
@@ -394,10 +395,13 @@ def query(db, type, args):
            else: selectors[index][arg[0]]['$lte'] = False;
         elif arg[1] == '!=':
            if arg[2] != False:
-              eq = db.find({'selector': {arg[0]: {'$eq': arg[2]}}, 'fields': ['_id']})
-              gt = db.find({'selector': {arg[0]: {'$gt': arg[2]}}, 'fields': ['_id']})
-              lt = db.find({'selector': {arg[0]: {'$lt': arg[2]}}, 'fields': ['_id']})
-              promises.push(Promise.all([eq, gt, lt]).then(
+              queries = []
+              for operator in ['eq', 'gt', 'lt']:
+                  selector = copy(default_selector)
+                  selector[arg[0]] = {'$' + operator: arg[2]}
+                  query = db.find({'selector': selector, 'fields': ['_id']})
+                  queries.push(query)
+              promises.push(Promise.all(queries).then(
               def (result):
                   equal, greater, less = result
                   ids = [doc._id for doc in equal.docs]
@@ -413,7 +417,9 @@ def query(db, type, args):
         elif arg[1] == 'in' and is_array(arg[2]):
            in_promises = []
            for value in arg[2]:
-               in_promises.push(db.find({'selector': {arg[0]: {'$eq': value}}, 'fields': ['_id']}));
+               selector = copy(default_selector)
+               selector[arg[0]] = {'$eq': value}
+               in_promises.push(db.find({'selector': selector, 'fields': ['_id']}));
            if not arg[2].length:
               return new Promise(
               def (resolve, reject):
@@ -430,10 +436,13 @@ def query(db, type, args):
            [[arg[0], value] for value in arg[2]].forEach(
            def (result):
                field, value = result
-               eq = db.find({'selector': {field: {'$eq': value}}, 'fields': ['_id']})
-               gt = db.find({'selector': {field: {'$gt': value}}, 'fields': ['_id']})
-               lt = db.find({'selector': {field: {'$lt': value}}, 'fields': ['_id']})
-               promises.push(Promise.all([eq, gt, lt]).then(
+               queries = []
+               for operator in ['eq', 'gt', 'lt']:
+                   selector = copy(default_selector)
+                   selector[field] = {'$' + operator: value}
+                   query = db.find({'selector': selector, 'fields': ['_id']})
+                   queries.push(query)
+               promises.push(Promise.all(queries).then(
                def (result):
                    equal, greater, less = result
                    ids = [doc._id for doc in equal.docs]
@@ -471,7 +480,7 @@ def query(db, type, args):
         if promises.length > 1:
            ids = ids.filter(
            def (value, index, self):
-               return self.indexOf(value) != index and value.split('_')[0] == type
+               return self.indexOf(value) != index
            )
         ids = ids.map(
         def (id): return db.rel.parseDocID(id).id
