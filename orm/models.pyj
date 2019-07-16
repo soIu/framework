@@ -540,8 +540,15 @@ class Model():
                           selections = field.selection.apply(None) if field.selection and type(field.selection) == Function else field.selection
                           value[key] = tools.dict(selections)[value[key]]
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
-                          if not read_cache[self._name]: read_cache[self._name] = {}
-                          promise = self.env[field.relation].with_context(no_preload=True if promises.length else False).browse(value[key])
+                          if not read_cache[field.relation]: read_cache[field.relation] = {}
+                          promise = None
+                          #push = False
+                          if read_cache[field.relation] and read_cache[field.relation][JSON.stringify(value[key])]:
+                             promise = read_cache[field.relation][JSON.stringify(value[key])]
+                          if not promise:
+                             promise = self.env[field.relation].browse(value[key])
+                             #push = True
+                             read_cache[field.relation][JSON.stringify(value[key])] = promise
                           promise.then(
                           def (records):
                               original_value = value[key]
@@ -549,16 +556,8 @@ class Model():
                               for record in records:
                                   names.push(record[record._rec_name or 'name'])
                               value[key] = names.join(', ')
-                              read_cache[self._name][key] = {JSON.stringify(original_value): value[key]}
+                              return records
                           )
-                          if promises.length:
-                             cache_promise = promises[-(promises.length - 1)].then(
-                             def ():
-                                 if read_cache[self._name][key] and read_cache[self._name][key][JSON.stringify(value[key])]:
-                                    value[key] = read_cache[self._name][key][JSON.stringify(value[key])]
-                                 else: return promise
-                             )
-                             promise = cache_promise
                           if result != undefined: return promise
                           promises.push(promise)
                        if not result: next()
@@ -574,7 +573,7 @@ class Model():
            )
            return Promise.all(promises).then(
            def ():
-               read_cache[self._name] = {}
+               read_cache = {}
                return new_values
            )
         if self._is_env:
