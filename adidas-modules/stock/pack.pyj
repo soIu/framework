@@ -14,7 +14,7 @@ class StockPack(models.Model):
 
     @api.server
     def _get_box_number_server(self, last_box):
-        return self.env['stock.pack'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
+        return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(
         def (pack_id):
             if pack_id:
                name = pack_id.name if pack_id.length and pack_id.name else 'Pack 000'
@@ -67,7 +67,7 @@ class StockPack(models.Model):
             if order_id['size_' + str(index)]: allowed_sizes.push(str(index))
             if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
 
-    name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True)
+    name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True, index=True)
     date = fields.Datetime(string="Date", defaults=Date)
     location_id = fields.Many2one('stock.location', string="Current Location")
     order_id = fields.Many2one('adidas.po', string="PO Number")

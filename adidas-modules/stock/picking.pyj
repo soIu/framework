@@ -10,7 +10,7 @@ class StockPicking(models.Model):
 
     @api.server
     def _get_picking_number(self):
-        return self.env['stock.picking'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
+        return self.env['stock.picking'].with_context(order='name desc', limit=1).search().then(
         def (picking_id):
             if picking_id.length > 0:
                name = 'Operation ' + str.zfill((parseInt(picking_id.name.split(' ')[1]) + 1).toString(), 3)
@@ -22,7 +22,7 @@ class StockPicking(models.Model):
          if v'typeof window' != 'undefined':
             return window.models.env.context.default_operation_type or None
 
-    name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True)
+    name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True, index=True)
     date = fields.Datetime(string="Date", defaults=Date)
     reference = fields.Char(string="Reference")
     state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
