@@ -246,7 +246,7 @@ export default class Tree extends React.Component {
     try {
       const models = window.models;
       if (this.state.tree_field) await api.wait_exist(() => models.env.context.active_id);
-      if (this.props.view_model && this.props.view_model !== models.env.context.active_id._name) return;
+      if (this.state.tree_field && this.props.view_model !== models.env.context.active_id._name) return;
       if (params.deleting) {
         if (!this.args) this.args = [];
         this.args.push(['id', 'not in', this.state.active_ids]);
