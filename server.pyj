@@ -255,6 +255,8 @@ controller = http.Controller()
 if not configuration.serverless:
    controller.run()
 else:
+   exports.controller = controller
+   exports.app = http.server
    serverless_route = {}
    for route in http._controllers:
        #entry = configuration.ENTRY_POINT or configuration.X_GOOGLE_ENTRY_POINT
