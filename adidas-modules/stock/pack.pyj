@@ -49,7 +49,7 @@ class StockPack(models.Model):
             )
         )
 
-    @api.server
+    #@api.server
     def _get_current_qty(self):
         if not self.id: return 0.0
         return self.env['stock.move'].browse(self.move_ids).then(
