@@ -54,7 +54,7 @@ class StockPicking(models.Model):
                     pack_ids.queue(
                     def (pack_id, next):
                         def create_move(qty):
-                            return self.env['stock.move'].create({'picking_id': record.id, 'pack_id': pack_id.id, 'product_id': pack_id.adidas_product_id, 'product_qty': qty})
+                            return self.env['stock.move'].with_context(no_preload=True).create({'picking_id': record.id, 'pack_id': pack_id.id, 'product_id': pack_id.adidas_product_id, 'product_qty': qty})
                         if record.type != 'picking':
                            promise = create_move(pack_id.adidas_product_qty)
                            promises.push(promise)
@@ -66,7 +66,7 @@ class StockPicking(models.Model):
                         promises.push(promise)
                         next()
                     )
-                    return Promise.all(promises)
+                    return Promise.all([] if record.type != 'picking' else promises)
                 )
             def each_picking():
                 promises = []
