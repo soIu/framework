@@ -22,7 +22,7 @@ export default class extends React.Component {
     models.env.context.active_lines = {};
     models.env.context.active_task = [];
     const form = this;
-    if (!models.env.context.active_ids || models.env.context.active_ids.length < 1 || !models.env.context.active_ids[0]) {
+    if (this.props.isCustomView || !models.env.context.active_ids || models.env.context.active_ids.length < 1 || !models.env.context.active_ids[0]) {
       models.env.context.active_id = models.env[model].browse();
       await window.models.env.context.active_id._wait_promise();
       models.env.context.editing = true;
@@ -79,7 +79,7 @@ export default class extends React.Component {
       }
       await Promise.all(promises);
     }
-    models.env.context.editing = false;
+    if (!this.props.isCustomView) models.env.context.editing = false;
     if (offline) models.env.context.unsaved = {...models.env.context.unsaved, [model]: {...(models.env.context.unsaved && models.env.context.unsaved[model]), [models.env.context.active_id.id]: models.env.context.active_id.id}};
     await api.update_session({unsaved: models.env.context.unsaved});
     await this.setState({...models.env.context, offline});
@@ -113,6 +113,7 @@ export default class extends React.Component {
     const buttonStyle = {width: 'auto', float: 'left', 'margin-right': '10px'};
     const uploadStyle = {};
     if (!this.state.offline) uploadStyle['display'] = 'none';
+    if (props.isCustomView) return (<Page title={window.tools.view[model].string}/>);
     return (
       <Page title={window.tools.view[model].string}>
         <div className="card" style={{margin: 0, boxShadow: 'none'}}>

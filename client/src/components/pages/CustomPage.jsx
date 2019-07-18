@@ -56,6 +56,7 @@ function parseView(view, model) {
         if (parent_props.invisible) props.invisible = parent_props.invisible;
         if (parent_props.domain) props.domain = parent_props.domain;
       }
+      props.isCustomView = true;
       const children = recurse(element.children, props) || [(() => element.innerHTML)];
       components.push(() => React.createElement(component, props, console.log(children) || children.map((result) => result())));
     }
