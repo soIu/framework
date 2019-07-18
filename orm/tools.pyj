@@ -28,6 +28,7 @@ def sort(object, key, desc=False):
 
 def merge(*args, **kwargs):
     if kwargs.reverse: args = args.reverse()
+    args = [arg for arg in args if arg]
     target = args[0]
     for object in args[1:]:
         for key in object:
