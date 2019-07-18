@@ -6,6 +6,7 @@ if not tools.exist(tools.menu):
 
 menu = {}
 menu.add = def add(args):
+               args = tools.merge(args, kwargs)
                if 'id' in args and 'string' in args:
                   if args.id in tools.menu:
                      return
@@ -24,6 +25,7 @@ if not tools.exist(tools.view):
 
 view = {}
 view.add = def add(args):
+               args = tools.merge(args, kwargs)
                if 'model' in args and 'mode' in args and 'arch' in args:
                   if args.model not in schemas:
                      return
