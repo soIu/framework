@@ -1,4 +1,5 @@
 from orm.tools import exist, keys, configuration
+from ir.data import create_data
 
 configuration.port = 8069
 
@@ -48,5 +49,10 @@ class Controller():
 
     def run(self):
         if require('process').env.PORT: configuration.port = require('process').env.PORT
-        console.log('Running on port ' + configuration.port)
-        server.listen(configuration.port)
+        create_data().then(
+        def ():
+            console.log('Running on port ' + configuration.port)
+            server.listen(configuration.port)
+        ).then(
+        def (error): console.error(error)
+        )
