@@ -70,6 +70,7 @@ export default function (props) {
     // App routes
     routes: routes(),
     panel: {
+      swipe: 'left',
       leftBreakpoint: 960,
     },
   };

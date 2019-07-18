@@ -17,7 +17,7 @@ configuration.client = tools.configuration.client
 tools.configuration = Object.assign(tools.configuration, configuration)
 
 #if not tools.configuration.client:
-create_data()
+tools.create_data = create_data
 
 for key in tools.menu:
     if tools.exist(tools.menu[key].parent):
