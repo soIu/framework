@@ -16,8 +16,8 @@ configuration = v'{"home_view": window.localStorage.rapyd_home_view || "res.mess
 configuration.client = tools.configuration.client
 tools.configuration = Object.assign(tools.configuration, configuration)
 
-if not tools.configuration.client:
-   create_data()
+#if not tools.configuration.client:
+create_data()
 
 for key in tools.menu:
     if tools.exist(tools.menu[key].parent):
