@@ -16,7 +16,6 @@ class IrSequence(models.Model):
             return sequence_id.write({'sequence': sequence_id.sequence + 1}).then(
             def (sequence_id): return sequence_id.sequence
             )
-        )
         if not self.ids.length: return self.env['ir.sequence'].with_context(limit=1).search(['code', '=', code]).then(next_sequence)
         return next_sequence(self)
 
