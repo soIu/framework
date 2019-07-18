@@ -28,11 +28,11 @@ def sort(object, key, desc=False):
 
 def merge(*args, **kwargs):
     if kwargs.reverse: args = args.reverse()
-    new = args[0]
+    target = args[0]
     for object in args[1:]:
         for key in object:
-           new[key] = object[key]
-    return new
+           target[key] = object[key]
+    return target
     #target = args[0]
     #for object in args[1:]:
     #    target = Object.assign(target, object)
