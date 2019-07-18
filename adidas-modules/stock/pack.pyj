@@ -41,11 +41,6 @@ class StockPack(models.Model):
         )
 
     def _get_box_number(self):
-        if not pack.last_box:
-           return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(
-           def (pack_id):
-               
-           )
         return self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None).then(
         def (result):
             pack.last_box = result
