@@ -205,8 +205,9 @@ export default class extends React.Component {
 
     if (type === 'selection' && props.widget === 'statusbar') {
       let first = true;
-      const selection = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
-      const selections = window.tools.copy(selection).reverse();
+      let selections = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
+      selections = window.tools.copy(selections).reverse();
+      if (props.visible) selections = selections.filter((selection) => props.visible.split(',').indexOf(selection[0]) > -1 || (models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]))
       component = (
         <div style={{...(invisible ? {display: 'none'} : {}), overflow: 'overlay'}}>
           {selections.map((selection) =>
