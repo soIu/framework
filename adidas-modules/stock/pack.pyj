@@ -33,7 +33,7 @@ class StockPack(models.Model):
         def (sequence_id):
             name = 'Pack ' + str.zfill(str(sequence_id.sequence or 0), 3)
             if last_box and type(last_box) == String:
-               if sequence_id.length and parseInt(last_box.split(' ')[1]) > sequence_id.sequence and not pack.updated:
+               if sequence_id.length and not last_box:
                   return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(update_sequence.bind(sequence_id))
                name = tools.max(name, last_box) or last_box or 'Pack 000'
             name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
@@ -41,6 +41,11 @@ class StockPack(models.Model):
         )
 
     def _get_box_number(self):
+        if not pack.last_box:
+           return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(
+           def (pack_id):
+               
+           )
         return self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None).then(
         def (result):
             pack.last_box = result
