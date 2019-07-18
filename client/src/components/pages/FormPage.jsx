@@ -46,6 +46,7 @@ function parseView(view, model) {
       if (component === Tree) {
         const field = window.models.env[model]._fields[parent_props.name];
         props.view_model = model;
+        props.field_name = parent_props.name;
         props.model = field.relation;
         props.field = field.type === 'one2many' ? field.inverse : parent_props.name;
         if (field.type !== 'one2many') {

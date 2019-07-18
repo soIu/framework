@@ -251,7 +251,7 @@ export default class Tree extends React.Component {
         if (!this.args) this.args = [];
         this.args.push(['id', 'not in', this.state.active_ids]);
       }
-      const args = (this.state.tree_field ? [!this.props.parent_model && [this.state.tree_field, 'in', window.models.env.context.active_ids || []] || ['id', 'in', window.models.env.context.active_id[this.state.tree_field] || []]] : []);
+      const args = (this.props.field_name ? [['id', 'in', window.models.env.context.active_id[this.props.field_name] || []]] : []);
       if (this.args) args.push(...this.args);
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
@@ -321,8 +321,8 @@ export default class Tree extends React.Component {
   async selectItem() {
     if (this.state.active_ids.length > 0) {
       const selected_ids = await window.models.env[this.props.model].browse(this.state.active_ids);
-      const records = window.models.env.context.active_lines[this.props.model]['many2many_' + this.props.active_field].add(selected_ids);
-      window.models.env.context.active_id[this.props.active_field] = records;
+      const records = window.models.env.context.active_lines[this.props.model][(this.props.many2many ? 'many2many_' : '') + this.props.active_field].add(selected_ids);
+      window.models.env.context.active_id[this.props.active_field_name] = records;
       await window.models.env.context.active_id._wait_promise();
       await this.props.parent_tree.paging(0, {newData: false, forceUpdate: true});
       this.gridOptions.api.deselectAll();
@@ -385,21 +385,22 @@ export default class Tree extends React.Component {
     const model = props.model || window.models.env.context.active_model;
     const models = window.models;
     const editableHeight = () => this.isEditable() ? (30) : 0
+    const choose = (props.choose !== undefined ? (props.choose instanceof Function ? props.choose(models.env.context.active_id) : props.choose) : props.parent_model);
     const grid = (
       <div className="card-body" style={{height: Math.min(this.state.records.length, this.state.limit) * 48 + 112 + editableHeight()/* <= 440 ? this.state.records.length * 48 + 112 + editableHeight() + 'px' : '67vh'*/ + 'px', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
         <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', this.resizeListener = () => autoSizeAll(params, this.resizeListener))).bind(this)} onRowClicked={(params) => models.env[this.state.model].browse(null).then((record) => delete models.env.context.active_id).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields.filter((field) => !props.isTreeView && models.env.context.active_id && field.invisible instanceof Function ? !field.invisible({}, models.env.context.active_id) : !field.invisible)} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
         <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() && (props.create instanceof Function ? props.create(models.env.context.active_id) : props.create) !== false ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
-        <Button onClick={this.chooseItem.bind(this)} style={{display: (props.choose !== undefined ? (props.choose instanceof Function ? props.choose(models.env.context.active_id) : props.choose) : props.parent_model) && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
+        <Button onClick={this.chooseItem.bind(this)} style={{display: choose && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
         {!props.isPopup && window.tools.view[this.state.model].actions.tree && Object.entries(window.tools.view[this.state.model].actions.tree).map(([function_name, string]) => (
           <Button onClick={(() => models.env[this.state.model].browse(this.state.active_ids).then((records) => records[function_name]()).then(() => this.gridOptions.api.deselectAll())).bind(this)} style={{display: (props.isTreeView || !models.env.context.editing) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>{string}</Button>
         ))}
-        {!props.isTreeView && props.parent_model &&
+        {!props.isTreeView && (props.parent_model || choose) &&
         <Popup ref="popup_modal" backdrop={false} animate={true}>{/* opened={this.state.popupOpened} onPopupClosed={() => this.setState({popupOpened : false})}>*/}
           <Page popup title={window.tools.view[this.state.model] ? window.tools.view[this.state.model].string : 'Choose'}>
             <div className="card">
-              <Tree ref="popup" isTreeView isPopup parent_tree={this} active_field={this.state.tree_field} model={this.state.model} domain={(this.state.records.length > 0 ? [['id', 'not in', window.models.env.context.active_lines[props.model]['many2many_' + props.field].ids]] : []).concat(props.domain ? props.domain(models.env.context.active_id) : [])}>
+              <Tree ref="popup" isTreeView isPopup many2many={!!props.parent_model} parent_tree={this} active_field={this.state.tree_field} active_field_name={props.field_name} model={this.state.model} domain={(this.state.records.length > 0 ? [['id', 'not in', window.models.env.context.active_lines[props.model][(this.props.many2many ? 'many2many_' : '') + props.field].ids]] : []).concat(props.domain ? props.domain(models.env.context.active_id) : [])}>
                 {Array.prototype.slice.call(new DOMParser().parseFromString(window.tools.view[this.state.model].tree || props.tree_arch || '<tree><field name="' + (window.models.env[this.state.model]._rec_name || 'name') + '"/></tree>', 'text/xml').children[0].children).map((element) => {
                   const props = {model};
                   for (let attribute of element.attributes) {
