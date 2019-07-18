@@ -241,7 +241,7 @@ export default class Tree extends React.Component {
     if (params.newData !== false || (!params.forceUpdate && !this.props.isTreeView) || this.pagingStarted) {
       return;
     }
-    if (this.props.isPopup && !params.forcePopup) return;
+    if (index === 0 && this.props.isPopup && !params.forcePopup) return;
     //const load = api.preload();
     try {
       const models = window.models;
