@@ -28,16 +28,15 @@ def sort(object, key, desc=False):
 
 def merge(*args, **kwargs):
     if kwargs.reverse: args = args.reverse()
-    #new = {}
-    #for object in args:
-    #    for key in object:
-    #        new[key] = object[key]
-    #return new
-    #This is a standard operation for merging objects, but for now we will use Object.assign
-    target = args[0]
+    new = args[0]
     for object in args[1:]:
-        target = Object.assign(target, object)
-    return target
+        for key in object:
+           new[key] = object[key]
+    return new
+    #target = args[0]
+    #for object in args[1:]:
+    #    target = Object.assign(target, object)
+    #return target
 
 def copy(object):
     if exist(object):
