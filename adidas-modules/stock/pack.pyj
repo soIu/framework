@@ -49,7 +49,7 @@ class StockPack(models.Model):
 
     def _get_sizes(self):
         sizes = []
-        for index in range(3, 15):
+        for index in range(1, 15):
             if (self and (not self.allowed_sizes or str(index) in self.allowed_sizes)) or not self: sizes.push([str(index), str(index)])
             if (self and (not self.allowed_sizes or str(index) + 'T' in self.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
         return sizes
@@ -79,7 +79,7 @@ class StockPack(models.Model):
     def _set_allowed_sizes(self, order_id):
         allowed_sizes = []
         self.allowed_sizes = allowed_sizes
-        for index in range(3, 15):
+        for index in range(1, 15):
             if order_id['size_' + str(index)]: allowed_sizes.push(str(index))
             if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
 
