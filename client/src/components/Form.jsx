@@ -113,7 +113,7 @@ export default class extends React.Component {
     const buttonStyle = {width: 'auto', float: 'left', 'margin-right': '10px'};
     const uploadStyle = {};
     if (!this.state.offline) uploadStyle['display'] = 'none';
-    if (props.isCustomView) return (<Page title={window.tools.view[model].string}/>);
+    if (props.isCustomView) return (<Page title={window.tools.view[model].string}>{props.children}</Page>);
     return (
       <Page title={window.tools.view[model].string}>
         <div className="card" style={{margin: 0, boxShadow: 'none'}}>
