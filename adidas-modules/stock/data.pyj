@@ -29,7 +29,7 @@ class AdidasData(models.Model):
     def import_data(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         articles = []
         #sizes = StockPack.size.selection.apply(None)
