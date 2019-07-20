@@ -38,15 +38,15 @@ class AdidasData(models.Model):
             if row < 7: continue
             if not data[0]: continue
             value = {}
-            index = 4
+            index = 5
             for field in ['model', 'article', 'name', 'customer_order', 'color', 'customer_cd', 'customer_identifier', 'customer_name']:
                 value[field] = data[index]
                 if field == 'article':
                    if value[field] not in articles: articles.push(value[field])
                 index += 1
-            value['total_qty'] = data[16]
-            size = data[20]
-            index = 22
+            value['total_qty'] = data[17]
+            size = data[21]
+            index = 23
             fields = range(3, 15) if size in ['M', 'W'] else range(1, 10) if size == 'I' else list(range(10, 14)).concat(list(range(1, 8)))
             skip_7T = Array.isArray(fields)
             for field in fields:
