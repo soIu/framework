@@ -257,7 +257,7 @@ view.add(model='adidas.graph', mode='category', string=False, arch="""
 </page>
 """)
 
-menu.add(id='graph_category', parent='graph', model='adidas.graph', view_id='adidas.graph.size', string="By Size", sequence=1)
+menu.add(id='graph_size', parent='graph', model='adidas.graph', view_id='adidas.graph.size', string="By Size", sequence=2)
 
 view.add(model='adidas.graph', mode='size', string=False, arch="""
 <page>
