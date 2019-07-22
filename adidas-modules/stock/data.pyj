@@ -240,3 +240,19 @@ view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
     </sheet>
 </form>
 """})
+
+class AdidasGraph(models.Model):
+    _name = 'adidas.graph'
+
+    name = fields.Char(string="Name")
+
+AdidasGraph()
+
+menu.add(id='graph', string="Graph", sequence=20)
+menu.add(id='graph_category', parent='graph', model='adidas.graph', view_id='adidas.graph.category', string="By Category", sequence=1)
+
+view.add(model='adidas.graph', mode='category', string=False, arch="""
+<page>
+    <graphic-chart model="product.product" field="category_id"/>
+</page>
+""")
