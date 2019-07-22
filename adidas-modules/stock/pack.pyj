@@ -12,6 +12,12 @@ pack = {}
 sequence = {}
 add_sequence('stock.pack', sequence)
 
+class StockPackDisposed(models.Model):
+    _name = 'stock.pack.disposed'
+
+    name = fields.Char(string="Pack Number", readonly=True)
+    data = fields.Data(string="Raw Data", readonly=True)
+
 class StockPack(models.Model):
     _name = 'stock.pack'
 
@@ -169,6 +175,16 @@ class StockPack(models.Model):
             if not self.category_id: self.category_id = product_id.category_id
         )
 
+    @api.server
+    def dispose(self):
+        promises = self.map(
+        def (record):
+            disposed = self.env['stock.pack.disposed'].create({'name': record.name, 'data': record.values})
+            unlink = record.unlink()
+            return Promise.all([disposed, unlink])
+        )
+        return Promise.all(promises)
+
 StockPack()
 
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
@@ -184,7 +200,7 @@ view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
     <field name="current_qty"/>
     <field name="date" sort="asc"/>
 </tree>
-""", 'action': {'print_barcode': 'Print'}})
+""", 'action': {'print_barcode': 'Print', 'dispose': 'Dispose'}})
 
 view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 <form>
