@@ -9,7 +9,7 @@ defaults = {}
 class StockLocation(models.Model):
     _name = 'stock.location'
 
-    defaults = defaults
+    location_defaults = defaults
 
     name = fields.Char(string="Location Name", required=True)
     code = fields.Char(string="Code")
