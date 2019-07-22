@@ -248,7 +248,7 @@ export default class extends React.Component {
       (
         !props.cellEdit && type !== 'selection' && <i className="icon material-icons" onClick={async () => api.globals.app.views.main.router.navigate('/form/' + field.relation) && !(await api.wait(100)) && window.models.env.context.active_task.push(after_create)} style={{'top': '-30px', 'left': '280px', 'display': !icon_create ? 'none' : 'unset'}}>open_in_new</i>
       )];
-      if (props.cellEdit) return component.children[0];
+      if (props.cellEdit) return component[0].children[0];
       api.wait(500).then(() => api.wait_exist(() => context.active_id)).then(async () => await context.active_id[props.name] && this.setSelectivityValue(await context.active_id[props.name]));
     }
     else if (api.hasValue(['date', 'datetime'], type)) {
