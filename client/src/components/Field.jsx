@@ -9,7 +9,6 @@ import 'selectivity/styles/selectivity-react.css';
 import Flatpickr from './Flatpickr';
 import api from 'api';
 
-
 const singleSelectInput = Templates.singleSelectInput;
 Templates.singleSelectInput = (options) => singleSelectInput(options).replace('<i class="fa fa-sort-desc selectivity-caret"></i>', '<i class="selectivity-caret material-icons">expand_more</i>');
 const singleSelectedItem = Templates.singleSelectedItem;
@@ -205,8 +204,9 @@ export default class extends React.Component {
 
     if (type === 'selection' && props.widget === 'statusbar') {
       let first = true;
-      const selection = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
-      const selections = window.tools.copy(selection).reverse();
+      let selections = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
+      selections = window.tools.copy(selections).reverse();
+      if (props.visible) selections = selections.filter((selection) => props.visible.split(',').indexOf(selection[0]) > -1 || (models.env.context.active_id && models.env.context.active_id[props.name] === selection[0]))
       component = (
         <div style={{...(invisible ? {display: 'none'} : {}), overflow: 'overlay'}}>
           {selections.map((selection) =>
@@ -227,11 +227,27 @@ export default class extends React.Component {
         const selections = typeof field.selection === 'function' ? field.selection.apply(context.active_id, [context.active_id]) : field.selection;
         items = selections.map((selection) => ({id: selection[0], text: selection[1]}));
       }
-      component = (
-        <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required">
+      const active_id = window.models.env.context.active_id;
+      const after_create = () => {
+        const record = window.models.env.context.active_id;
+        const assign_record = () => {
+          window.models.env.context.active_id.values = active_id.values;
+          window.models.env.context.active_id[props.name] = record.id;
+          if (!window.models.env.context.editing) window.models.env.context.active_id.write();
+          //window.models.env.context.refresh();
+          //this.setState(this.state);
+        }
+        api.wait(100).then(() => api.globals.app.views.main.router.back() && api.wait_exist(() => window.models.env.context.active_id._name === model).then(assign_record));
+      }
+      const icon_create = (!readonly && context.editing) && (window.models.env.context.active_id && !window.models.env.context.active_id[props.name]);
+      component = [(
+        <ListInput label={string} input={false} disabled={readonly || !context.editing} errorMessageForce={window.models.env.context.active_error ? window.models.env.context.active_error.field_map[props.name] : false} errorMessage="Field required" style={!props.cellEdit && type !== 'selection' && icon_create && {'height': '65px'}}>
           <Selectivity ref="selectivity" slot="input" data={window.tools.exist(this.state.value) && this.state.value.constructor !== Promise ? this.state.value : null} ajax={ajax} items={items} placeholder={props.placeholder || ''} readOnly={readonly || !context.editing} multiple={api.hasValue(['many2many', 'one2many'], type)} onChange={(event) => this.setValue(event.value, event.data)} onDropdownOpen={() => this.setState({'selectivityOpened': true})} onDropdownClose={() => (props.onSelect ? props.onSelect() : true) && this.setState({'selectivityOpened': false})} allowClear closeOnSelect/>
         </ListInput>
-      );
+      ),
+      (
+        !props.cellEdit && type !== 'selection' && <i className="icon material-icons" onClick={async () => api.globals.app.views.main.router.navigate('/form/' + field.relation) && !(await api.wait(100)) && window.models.env.context.active_task.push(after_create)} style={{'top': '-30px', 'left': '280px', 'display': !icon_create ? 'none' : 'unset'}}>open_in_new</i>
+      )];
       if (props.cellEdit) return component.children[0];
       api.wait(500).then(() => api.wait_exist(() => context.active_id)).then(async () => await context.active_id[props.name] && this.setSelectivityValue(await context.active_id[props.name]));
     }

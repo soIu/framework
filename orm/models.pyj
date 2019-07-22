@@ -608,7 +608,7 @@ class Model():
               value = True
            elif value in ['false', 'False', None, undefined]:
               value = False
-           elif type(value) == String:
+           elif value and type(value) == String:
               raise Error("Not a valid Boolean " + value + " on field " + key + " on model " + self._name)
            else:
               value = Boolean(value)

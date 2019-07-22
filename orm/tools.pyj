@@ -28,6 +28,7 @@ def sort(object, key, desc=False):
 
 def merge(*args, **kwargs):
     if kwargs.reverse: args = args.reverse()
+    args = [arg for arg in args if arg]
     target = args[0]
     for object in args[1:]:
         for key in object:
@@ -40,10 +41,10 @@ def merge(*args, **kwargs):
 
 def copy(object):
     if exist(object):
-       if type(object) == Object:
-          return {key: copy(object[key]) if exist(object[key]) and type(object[key]) in [Object, Array] else object[key] for key in object}
-       elif type(object) == Array:
-          return [copy(value) if exist(value) and type(value) in [Object, Array] else value for value in object]
+       if is_array(object):
+          return [copy(value) for value in object]
+       elif is_json(object):
+          return {key: copy(object[key]) for key in object}
     return object
 
 def dict(entries):

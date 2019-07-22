@@ -11,7 +11,11 @@ export default class extends React.Component {
 
   async componentDidMount(props) {
     api.globals.app = this.$f7;
-    if (api.globals.app.device.ios) document.body.style.height = 'calc(100% + 20px)';
+    if (api.globals.app.device.ios) {
+      var style = document.createElement('style');
+      style.innerHTML = '#framework7-root {padding-top: 24px !important} .statusbar {display: block !important}';
+      document.querySelector('head').append(style);
+    }
     window.tools.navigate = api.globals.app.views.main.router.navigate.bind(api.globals.app.views.main.router);
     window.tools.dialog = api.globals.app.dialog;
     this.setState({'name': await window.models.env.user.browse(window.models.env.user.id.toString()).then((record) => record.name)});
