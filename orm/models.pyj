@@ -111,10 +111,10 @@ class Model():
         self._fields.rev = fields.Char(string="DB Revision Number", related='_rev', store=True)
         self._fields._rev = fields.Char(string="DB Revision Number")
         valid_fields = [key for key in Object.getOwnPropertyNames(self.constructor.prototype) if key[0] != '_' and key not in ['constructor', 'env', 'values']].concat(reserved).concat(self._inherited_keys)
-        queue(valid_fields,
-        def (key, next):
+        valid_fields.forEach(
+        def (key):
             if not exist(self[key]) or type(self[key]) != Object or (type(self[key]) == Object and 'compute' not in self[key]):
-               return next()
+               return
             #if key in self._fields:
             #   self[key] = self._fields[key]
             if self[key].type in ['many2one', 'one2many', 'many2many', 'one2one']:
@@ -199,7 +199,6 @@ class Model():
                          if result and type(result) == Promise:
                             self._pending_promises.push(result)
             })
-            next()
         )
         #if exist(self._fields):
         #   self.env[self._name]._fields = self._fields
@@ -338,15 +337,14 @@ class Model():
             return result
 
     def __sync__(self):
-        promises = []
-        self.queue(
-        def (record, next):
-            if not record.id: return next()
-            if pending_sync[record.id]: return next()
+        promises = self.map(
+        def (record):
+            if not record.id: return
+            if pending_sync[record.id]: return
             pending_sync[record.id] = True
             def remove_pending(): del pending_sync[record.id]
             values = copy(record.values)
-            promise = db.get(db.rel.makeDocID({'type': self._name, 'id': record.id})).then(
+            return db.get(db.rel.makeDocID({'type': self._name, 'id': record.id})).then(
             def (doc):
                 del values._id
                 del values._rev
@@ -360,8 +358,6 @@ class Model():
                 del values.rev
                 return db.rel.save(self._name, values).then(remove_pending)
             )
-            promises.push(promise)
-            next()
         )
         return Promise.all(promises)
 
@@ -522,8 +518,8 @@ class Model():
         if format:
            promises = []
            new_values = []
-           self.queue(
-           def (record, next):
+           self.map(
+           def (record):
                value = record.values
                oldvalue = value
                value = copy(value)
@@ -574,7 +570,6 @@ class Model():
                          return next()
                    after_promise()
                )
-               next()
            )
            return Promise.all(promises).then(
            def ():
@@ -915,3 +910,9 @@ class Model():
         for record in self:
             if filter_function(record): records.add(record)
         return records
+
+    def map(self, map_function):
+        values = []
+        for record in self:
+            values.push(map_function(record))
+        return values
