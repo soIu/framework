@@ -21,7 +21,7 @@ def queryInverse(field_type, records, fields, _fields):
         fields.forEach(
         def (field):
             record[field] = []
-            promise = query(db, _fields[field].relation, [[_fields[field].inverse, '=', record.id]]) #env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
+            promise = query(db, _fields[field].relation, [[_fields[field].inverse, '=', record.id]]).then( #env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
             def (result):
                 record[field] = record[field].concat(result)
             )
