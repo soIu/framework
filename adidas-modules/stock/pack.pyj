@@ -18,6 +18,8 @@ class StockPackDisposed(models.Model):
     name = fields.Char(string="Pack Number", readonly=True)
     data = fields.Data(string="Raw Data", readonly=True)
 
+StockPackDisposed()
+
 class StockPack(models.Model):
     _name = 'stock.pack'
 
