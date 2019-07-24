@@ -253,6 +253,10 @@ def get_onchanges(self):
                onchanges[field].push(self[key].name)
     return onchanges
 
+def each(arraylike):
+    if is_array(arraylike) or v'typeof arraylike.length !== "undefined"': return arraylike
+    return [arraylike]
+
 def queue(values, method):
     v'var index = 0'
     def next():
