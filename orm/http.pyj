@@ -42,9 +42,8 @@ class Controller():
             server.post(key, _controllers[key])
             server.get(key, _controllers[key])
         if configuration.local_app == True:
-           if configuration.serverless != True:
-              server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'}))
-           else:
+           server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'}))
+           if configuration.serverless:
               _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './client/build', 'default': 'index.html'})]
 
     def run(self):

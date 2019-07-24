@@ -1,6 +1,6 @@
 import orm.fields as fields
 import orm.exceptions as exceptions
-from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, query
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, query, each
 from orm.pouchdb import db
 
 env = {}
@@ -21,9 +21,9 @@ def queryInverse(field_type, records, fields, _fields):
         fields.forEach(
         def (field):
             record[field] = []
-            promise = env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
+            promise = query(db, _fields[field].relation, [[_fields[field].inverse, '=', record.id]]) #env[_fields[field].relation].search([_fields[field].inverse, '=', record.id]).then(
             def (result):
-                record[field] = record[field].concat(result.ids)
+                record[field] = record[field].concat(result)
             )
             promises.push(promise)
         )
@@ -159,9 +159,10 @@ class Model():
             Object.defineProperty(self, key, {
               'get':
               def ():
+                  result = None
                   ids = self.ids
                   if ids.length == 0:
-                     return self._values[0][key]
+                     result = self._values[0][key]
                   elif ids.length == 1:
                      if field.compute and type(field.compute) == Function:
                         if field.store and key in self._compute_cache: return self._compute_cache[key]
@@ -172,13 +173,14 @@ class Model():
                               result.then(
                               def (result):
                                   self._compute_cache[key] = result
-                                  self._values[0][key] = result
+                                  self._values[ids[0]][key] = result
                               )
                            else:
-                              self._values[0][key] = result
+                              self._values[ids[0]][key] = result
                         return result
-                     return self._values[ids[0]][key]
-                  return None
+                     result = self._values[ids[0]][key]
+                  if key in self._one2many_fields and not exist(value): value = []
+                  return result
               ,
               'set':
               def (value):
@@ -189,8 +191,8 @@ class Model():
                      old_value = self._values[0][key]
                      self._values[0][key] = self.adapt(key, value, self._values[0]) if key != 'id' else id
                   elif ids.length == 1:
+                     old_value = self._values[ids[0]][key]
                      self._values[ids[0]][key] = self.adapt(key, value, self._values[ids[0]])
-                     old_value = self._values[0][key]
                   if ids.length < 2 and value != old_value and onchange_models[self._name] and onchange_models[self._name][key]:
                      for method in onchange_models[self._name][key]:
                          result = self[method].apply(self)
@@ -531,7 +533,9 @@ class Model():
                    def after_promise(result):
                        if result != undefined: value[key] = result
                        if not field or (value[key] == None and field.type != 'float'): return next()
-                       if field.type in ['date', 'datetime']:
+                       if field.type == 'date':
+                          value[key] = date.format(v'new Date(value[key])', 'Y-m-d')
+                       elif field.type == 'datetime':
                           value[key] = date.format(v'new Date(value[key])', 'Y-m-d H:M:S')
                        elif field.type == 'float' and Number.isInteger(value[key]):
                           value[key] = value[key].toFixed(2)
@@ -625,8 +629,17 @@ class Model():
                   raise Error("Can't parse Date " + value + " on field " + key + " on model " + self._name)
            else:
               raise Error("Can't parse Date " + value + " on field " + key + " on model " + self._name)
-           if exist(value) and self._fields[key].type == 'date':
-              value = value.split('T')[0] + 'T00:00:00.000Z'
+           #if exist(value) and self._fields[key].type == 'date':
+           #   value = value.split('T')[0] + 'T00:00:00.000Z'
+        elif self._fields[key].type == 'data':
+           if v'typeof value' != 'object':
+              if type(value) == String:
+                 try:
+                     value = JSON.parse(value)
+                 except:
+                     raise Error("Can't parse Data " + value + " on field " + key + " on model " + self._name)
+              else:
+                 raise Error("Can't parse Data " + value + " on field " + key + " on model " + self._name)
         elif self._fields[key].type in ['many2one', 'one2one']:
            if not exist(value):
               return None
@@ -689,11 +702,15 @@ class Model():
            values = self.read()
         if not exist(values) and self.length < 1:
            return
+        default_values = self.browse().values
+        for key in default_values:
+            for value in each(values):
+                if not value[key] and default_values[key] and type(default_values[key]) != Promise: values[key] = default_values[key]
         if self._is_env:
            self = self.browse()
            self.update(values, no_onchange=True)
         required_fields = []
-        for value in values if is_array(values) else [values]:
+        for value in each(values):
             for key in self._fields:
                 if self._fields[key].required and value[key] != False and not exist(value[key]):
                    required_fields.push(key)
