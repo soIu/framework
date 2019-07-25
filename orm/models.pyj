@@ -702,10 +702,15 @@ class Model():
            values = self.read()
         if not exist(values) and self.length < 1:
            return
-        default_values = self.browse().values
-        for key in default_values:
-            for value in each(values):
-                if not value[key] and default_values[key] and type(default_values[key]) != Promise: values[key] = default_values[key]
+        default_values = self.brows
+        for value in each(values):
+            for key in self._fields:
+                if not self._fields[key].store: continue
+                defaults = self._fields[key].defaults
+                if v'typeof defaults' == 'function':
+                   if not value[key]: defaults = defaults.apply(self, [self])
+                   else: continue
+                if not value[key] and defaults and type(defaults) != Promise: values[key] = defaults
         if self._is_env:
            self = self.browse()
            self.update(values, no_onchange=True)
