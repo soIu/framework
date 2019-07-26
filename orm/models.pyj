@@ -593,13 +593,15 @@ class Model():
            else:
               value = v'String(value)'
         elif self._fields[key].type == 'integer':
+           oldvalue = value
            value = parseInt(value)
            if isNaN(value):
-              raise Error("Not a valid Number " + value + " on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number " + oldvalue + " on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'float':
+           oldvalue = value
            value = parseFloat(value)
            if isNaN(value):
-              raise Error("Not a valid Number " + value + " on field " + key + " on model " + self._name)
+              raise Error("Not a valid Number " + oldvalue + " on field " + key + " on model " + self._name)
         elif self._fields[key].type == 'boolean':
            if value in ['true', 'True']:
               value = True
