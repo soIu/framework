@@ -258,7 +258,7 @@ export default class extends React.Component {
         </ul>
       );
       component = (
-        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={value || this.state.value} onChange={(value) => this.setValue(value)}/>
+        <Flatpickr customComponent={input} customInput={this.state.input} enableTime={type === 'datetime' && true} enableSeconds={type === 'datetime' && true} defaultDate={this.state.value || value} onChange={(value) => console.log(value) || this.setValue(value)}/>
       );
       if (props.cellEdit) return component.children.children;
     }

@@ -89,6 +89,10 @@ export default class extends React.Component {
     if (window.tools.view[model].custom_init && window.tools.view[model].custom_init[model + '.' + mode]) window.tools.view[model].custom_init[model + '.' + mode].bind(this)(this.props);
   }
 
+  componentDidMount() {
+    return this.componentDidUpdate();
+  }
+
   render = render;
 
 }
