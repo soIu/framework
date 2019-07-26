@@ -11,7 +11,7 @@ class IrSequence(models.Model):
     sequence = fields.Integer(string="Sequence", defaults=0)
 
     @api.server
-    def get_sequence_next(self, code):
+    def get_next(self, code):
         def next_sequence(sequence_id):
             return sequence_id.write({'sequence': sequence_id.sequence + 1}).then(
             def (sequence_id): return sequence_id.sequence
