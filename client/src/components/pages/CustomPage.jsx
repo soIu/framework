@@ -47,6 +47,7 @@ function parseView(view, model) {
       if (component === Tree) {
         const field = window.models.env[model]._fields[parent_props.name];
         props.view_model = model;
+        props.field_name = parent_props.name;
         props.model = field.relation;
         props.field = field.type === 'one2many' ? field.inverse : parent_props.name;
         if (field.type !== 'one2many') {
@@ -98,6 +99,14 @@ export default class extends React.Component {
     /*if (id) {
       window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
     }*/
+    const id = props.f7route.query.id;
+    if (id) {
+      window.models.env.context.active_ids = [id];
+      //delete window.models.env.context.active_id;
+    }
+    else {
+      delete window.models.env.context.active_ids;
+    }
     if (!cachedViews[view]) {
       // eslint-disable-next-line
       //cachedViews[view] = eval(Parser(view, {presets: [preset]}).code);

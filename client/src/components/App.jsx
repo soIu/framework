@@ -72,6 +72,7 @@ export default function (props) {
     panel: {
       swipe: 'left',
       leftBreakpoint: 960,
+      swipeThreshold: 230,
     },
   };
 
@@ -109,30 +110,6 @@ export default function (props) {
         </View>
       </Popup>*/}
 
-      {/* Login Screen */}
-      <LoginScreen id="login-screen">
-        <View>
-          <Page loginScreen>
-            <LoginScreenTitle>Login</LoginScreenTitle>
-            <List form>
-              <ListItem>
-                <Label>Username</Label>
-                <Input name="username" placeholder="Username" type="text"></Input>
-              </ListItem>
-              <ListItem>
-                <Label>Password</Label>
-                <Input name="password" type="password" placeholder="Password"></Input>
-              </ListItem>
-            </List>
-            <List>
-              <ListButton title="Sign In" loginScreenClose></ListButton>
-              <BlockFooter>
-                <p>Click Sign In to close Login Screen</p>
-              </BlockFooter>
-            </List>
-          </Page>
-        </View>
-      </LoginScreen>
     </App>
   );
 }
