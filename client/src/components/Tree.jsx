@@ -3,6 +3,8 @@ import Page from './Page';
 import Grid from './Grid';
 import GridEditor from './GridEditor';
 import {Button, Popup} from 'framework7-react';
+import csv from 'csv.js';
+import FileSaver from 'file-saver';
 import api from 'api';
 
 function autoSizeAll(gridOptions, listener) {
@@ -76,7 +78,7 @@ export default class Tree extends React.Component {
     }
     this.onChange = onChange.bind(this);
     function onSelectionChanged(event) {
-      const selected = event.api.getSelectedRows();
+      const selected = event.api.getSelectedRows().slice(this.state.limit * event.api.paginationGetCurrentPage(), this.state.limit);
       const ids = [];
       for (let data of selected) {
         if (data.id) ids.push(data.id);
@@ -108,6 +110,15 @@ export default class Tree extends React.Component {
   }
 
   componentDidMount() {
+    const prompt_limit = () => {
+      api.globals.app.dialog.prompt('', 'Limit', (limit) => (this.state.limit = parseInt(limit)) && this.paging(0, {newData: false, forceUpdate: true}))
+      const input = document.querySelector('input.dialog-input');
+      if (input) {
+        input.type = 'number';
+        input.value = this.state.limit;
+      }
+    }
+    if (this.props.isTreeView && this.refs.grid && this.refs.grid.base && this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel')) this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel').onclick = prompt_limit;
     document.addEventListener('mousedown', this.handleOutside);
     //return autoSizeAll.bind(this)(this.gridOptions);
   }
@@ -279,7 +290,7 @@ export default class Tree extends React.Component {
             return window.tools.apply_domain(...domain);
           });
         }
-        await this.setState({records: this.paginate(await records.sort_by(...(!models.env.context.active_sort ? [records._rec_name || 'name', false] : models.env.context.active_sort.split(' ').map((value) => value == 'asc' ? false : value))).read(true, this.state.fields.map((field) => field.field)), index)})
+        await this.setState({records: this.paginate(await records.sort_by(...(!models.env.context.active_sort ? [records._rec_name || 'name', false] : models.env.context.active_sort.split(' ').map((value) => value == 'asc' ? false : value))).read(true, this.state.fields.map((field) => field.field)), index), limit: this.state.limit})
       }
       else if (records.length === 0) await this.setState({records: []});
     }
@@ -381,6 +392,12 @@ export default class Tree extends React.Component {
     return this.gridOptions.api.deselectAll();
   }
 
+  exportItem() {
+    if (!this.state.selected) return this.gridOptions.api.deselectAll();
+    FileSaver.saveAs(new Blob([csv.serialize({fields: Object.keys(this.state.selected[0]).map((key) => ({id: key})), records: this.state.selected})], {type: 'text/csv;charset=utf-8'}), document.getElementById('main-view').querySelector('div.title').innerText + '.csv');
+    return this.gridOptions.api.deselectAll();
+  }
+
   render(props) {
     const model = props.model || window.models.env.context.active_model;
     const models = window.models;
@@ -393,6 +410,7 @@ export default class Tree extends React.Component {
         <Button onClick={this.chooseItem.bind(this)} style={{display: choose && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
+        <Button onClick={this.exportItem.bind(this)} style={{display: props.isTreeView && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Export</Button>
         {!props.isPopup && window.tools.view[this.state.model].actions.tree && Object.entries(window.tools.view[this.state.model].actions.tree).map(([function_name, string]) => (
           <Button onClick={(() => models.env[this.state.model].browse(this.state.active_ids).then((records) => records[function_name]()).then(() => this.gridOptions.api.deselectAll())).bind(this)} style={{display: (props.isTreeView || !models.env.context.editing) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>{string}</Button>
         ))}
