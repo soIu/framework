@@ -711,7 +711,7 @@ class Model():
                 if v'typeof defaults' == 'function':
                    if not value[key]: defaults = defaults.apply(self, [self])
                    else: continue
-                if not value[key] and defaults and type(defaults) != Promise: value[key] = defaults
+                if not value[key] and type(defaults) != Promise: value[key] = defaults
         if self._is_env:
            self = self.browse()
            self.update(values, no_onchange=True)
