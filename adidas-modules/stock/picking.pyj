@@ -2,8 +2,14 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
+from orm.tools import each
 from ir.ui import menu, view
+from ir.sequence import add_sequence
 from stock.location import defaults as location_default
+
+sequence = {}
+add_sequence('stock.picking', sequence)
+add_sequence('stock.picking.putting', sequence)
 
 class StockPicking(models.Model):
     _name = 'stock.picking'
@@ -22,8 +28,8 @@ class StockPicking(models.Model):
          if v'typeof window' != 'undefined':
             return window.models.env.context.default_operation_type or None
 
-    name = fields.Char(string="Operation Number", defaults=_get_picking_number, required=True, index=True)
-    date = fields.Datetime(string="Date", defaults=Date)
+    name = fields.Char(string="Operation Number", readonly=True, index=True)
+    date = fields.Datetime(string="Date", defaults=tools.date.now)
     reference = fields.Char(string="Reference")
     state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
     type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True, defaults=_get_type)
@@ -35,17 +41,23 @@ class StockPicking(models.Model):
     job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
 
     def create(self, values=False, is_client=tools.configuration.client):
+        promises = []
         if v"typeof window === 'undefined'":
-           value = values if Array.isArray(values) else [values]
-           for object in value:
+           for object in each(values):
                if object.type == 'putting':
                   object.location_dest_id = location_default.internal_id
                   object.location_src_id = location_default.external_id
                elif object.type == 'picking':
                   object.location_src_id = location_default.internal_id
                   object.location_dest_id = location_default.external_id
-        return self.__super__('create')(values=values, is_client=is_client).then(
-        def (result):
+               promise = self.env['ir.sequence'].browse(sequence['stock.picking' if object.type == 'picking' else 'stock.picking.putting']).then(
+               def (sequence_id): return sequence_id.get_next()
+               ).then(
+               def (sequence):
+                   object['name'] = ('Picking ' if object.type == 'picking' else 'Putting ') + str.zfill(sequence.toString(), 3)
+               )
+               promises.push(promise)
+        def after_create(result):
             if v"typeof window === 'undefined'": return result
             def create_move(record):
                 return self.env['stock.pack'].browse(record.pack_ids).then(
@@ -76,7 +88,10 @@ class StockPicking(models.Model):
                 if record and record.type == 'picking': return Promise.all(promises)
             models.env.context.active_task.push(each_picking)
             return result
+        if promises.length: return Promise.all(promises).then(
+        def (): return self.__super__('create')(values=values, is_client=is_client).then(after_create)
         )
+        return self.__super__('create')(values=values, is_client=is_client).then(after_create)
 
     def add_pack(self):
         if v'typeof window' == 'undefined': return
