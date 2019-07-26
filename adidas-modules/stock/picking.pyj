@@ -271,8 +271,11 @@ StockPicking()
 menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_picking', 'context': {'default_operation_type': 'picking'}})
 menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
 
+menu.add({'id': 'picking_historical', 'parent': 'historical', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.historical_picking', 'context': {'default_operation_type': 'picking'}})
+menu.add({'id': 'putting_historical', 'parent': 'historical', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 2, 'view_id': 'stock.picking.historical_putting', 'context': {'default_operation_type': 'putting'}})
+
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
-<tree domain="['state', '!=', 'validated'], ['type', '=', context.default_operation_type]">
+<tree domain="(context.no_validated ? ['state', '!=', 'validated'] : []), ['type', '=', context.default_operation_type]">
     <field name="name"/>
     <field name="date"/>
 </tree>
@@ -280,11 +283,19 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch
 
 view.add({'model': 'stock.picking', 'mode': 'tree_picking', 'string': 'Operation', 'arch': """
 <tree-page title="Picking"/>
-""", 'context': {'default_operation_type': 'picking'}})
+""", 'context': {'default_operation_type': 'picking', 'no_validated': True}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree_putting', 'string': 'Operation', 'arch': """
 <tree-page title="Putting"/>
-""", 'context': {'default_operation_type': 'putting'}})
+""", 'context': {'default_operation_type': 'putting', 'no_validated': True}})
+
+view.add({'model': 'stock.picking', 'mode': 'historical_picking', 'string': 'Operation', 'arch': """
+<tree-page title="Picking"/>
+""", 'context': {'default_operation_type': 'picking', 'no_validated': False}})
+
+view.add({'model': 'stock.picking', 'mode': 'historical_putting', 'string': 'Operation', 'arch': """
+<tree-page title="Putting"/>
+""", 'context': {'default_operation_type': 'putting', 'no_validated': False}})
 
 view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch': """
 <form>

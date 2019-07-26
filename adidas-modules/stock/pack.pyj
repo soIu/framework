@@ -20,6 +20,27 @@ class StockPackDisposed(models.Model):
 
 StockPackDisposed()
 
+menu.add(id='pack_disposed', parent='historical', string='Disposed Packs', model='stock.pack.disposed', sequence=4)
+
+view.add(model='stock.pack.disposed', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+</tree>
+""")
+
+view.add(model='stock.pack.disposed', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="data"/>
+        </group>
+    </sheet>
+</form>
+""")
+
 class StockPack(models.Model):
     _name = 'stock.pack'
 
@@ -190,6 +211,7 @@ class StockPack(models.Model):
 StockPack()
 
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
+menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing Packs', 'model': 'stock.pack', 'sequence': 3})
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
