@@ -216,7 +216,7 @@ menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing P
 
 def pack_list_init():
     page = this
-    if page.props.isPopup or not page.props.isTreeView: return
+    #if page.refs and (not page.refs.tree_component or page.refs.tree_component.props.isPopup): return
     Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
     def (value): return models.env['stock.pack'].search(['category_id', 'in', category_default[value+ '_id']])
     ).then(
@@ -234,7 +234,7 @@ def pack_list_init():
     )
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
-<tree>
+<tree ref="tree_component">
     <field name="name"/>
     <field name="order_id"/>
     <field name="bucket"/>
