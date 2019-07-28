@@ -4,6 +4,7 @@ import orm.tools as tools
 import orm.api as api
 import stock.move
 from stock.wcs import WcsJob
+from product.category import categories, defaults as category_default
 from stock.location import defaults as location_default
 from ir.ui import menu, view
 from ir.sequence import add_sequence
@@ -213,7 +214,26 @@ StockPack()
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
 menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing Packs', 'model': 'stock.pack', 'sequence': 3})
 
-view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
+def pack_list_init():
+    page = this
+    if page.props.isPopup or not page.props.isTreeView: return
+    Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
+    def (value): return models.env['stock.pack'].search(['category_id', 'in', category_default[value+ '_id']])
+    ).then(
+    def (pack_ids): return models.env['stock.move'].search(['pack_id', 'in', pack_ids.ids])
+    )).then(
+    def (result):
+        upper_ids, insole_ids, outsole_ids, strobel_ids = result
+        results_element = document.getElementById('pack_categories_count')
+        if not results_element:
+           results_element = document.createElement('div')
+           results_element.id = 'pack_categories_count'
+           card_header = document.querySelector('div.card-header')
+           if card_header: card_header.appendChild(results_element);
+        results_element.innerHTML = 'Upper: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in upper_ids).toString() + ' Insole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in insole_ids).toString() + ' Outsole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in outsole_ids) + ' Strobel: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in strobel_ids)
+    )
+
+view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="order_id"/>
