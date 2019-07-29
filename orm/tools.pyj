@@ -483,18 +483,22 @@ def query(db, type, args):
     return Promise.all(promises).then(
     def (results):
         ids = []
+        ids_map = {}
+        index = 0
         for result in results:
-          docs = result.docs or result.rows
-          for doc in docs:
-              ids.push(doc._id or doc.id)
-        if promises.length > 1:
-           ids = ids.filter(
-           def (value, index, self):
-               return self.indexOf(value) != index
-           )
-        ids = ids.map(
-        def (id): return db.rel.parseDocID(id).id
-        )
+            for doc in result.docs:
+                if index == 0: ids_map[doc._id] = 1
+                elif doc._id in ids_map: ids_map[doc._id] += 1
+                if ids_map[doc._id] == results.length: ids.push(db.rel.parseDocID(doc._id).id)
+            index += 1
+        #if promises.length > 1:
+           #ids = ids.filter(
+           #def (value, index, self):
+           #    return self.indexOf(value) != index
+           #)
+        #ids = ids.map(
+        #def (id): return db.rel.parseDocID(id).id
+        #)
         return ids
     )
 
