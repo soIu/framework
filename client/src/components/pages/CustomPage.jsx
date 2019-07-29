@@ -99,7 +99,7 @@ export default class extends React.Component {
     /*if (id) {
       window.models.env[model].browse(id).then((record) => window.models.env.context.active_id = record);
     }*/
-    const id = props.f7route.query.id;
+    const id = props.f7route && props.f7route.query.id;
     if (id) {
       window.models.env.context.active_ids = [id];
       //delete window.models.env.context.active_id;
