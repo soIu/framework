@@ -220,22 +220,26 @@ last_args = None
 def pack_list_init():
     page = this
     #if page.refs and (not page.refs.tree_component or page.refs.tree_component.props.isPopup): return
-    Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
-    def (value):
-        return models.env['stock.pack'].search(['category_id', '=', category_default[value+ '_id']], *(models.env.context.active_args or [])).then(
+    #Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
+    #def (value):
+    return models.env['stock.pack'].search(*(models.env.context.active_args or [])).then(
         def (pack_ids):
             return models.env['stock.move'].search(['pack_id', 'in', pack_ids.ids])
         )
-    )).then(
-    def (result):
-        upper_ids, insole_ids, outsole_ids, strobel_ids = result
+    ).then(
+    def (move_ids):
+        locations = {category_default[key]: key for key in category_default}
+        quantities = {key: 0 for key in Object.keys(category_default)}
+        for move_id in move_ids:
+            quantities[locations[move_id.category_id]] += move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty
         results_element = document.getElementById('pack_categories_count')
         if not results_element:
            results_element = document.createElement('div')
            results_element.id = 'pack_categories_count'
            card_header = document.querySelector('div.card-header')
            if card_header: card_header.appendChild(results_element);
-        results_element.innerHTML = 'Upper: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in upper_ids).toString() + ' Insole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in insole_ids).toString() + ' Outsole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in outsole_ids) + ' Strobel: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in strobel_ids)
+        results_element.innerHTML = [category + ': ' + quantities[category.toLowerCase() + '_id'] for category in ['Upper', 'Insole', 'Outsole', 'Strobel']].join(' ')
+        #'Upper: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in upper_ids).toString() + ' Insole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in insole_ids).toString() + ' Outsole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in outsole_ids) + ' Strobel: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in strobel_ids)
         nonlocal last_args
         last_args = models.env.context.active_args
         tools.wait_exist(
