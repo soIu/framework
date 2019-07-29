@@ -40,12 +40,17 @@ def merge(*args, **kwargs):
     #return target
 
 def copy(object):
+ try:
     if exist(object):
        if is_array(object):
           return [copy(value) for value in object]
        elif is_json(object):
           return {key: copy(object[key]) for key in object}
     return object
+ except Exception as error:
+    console.log(object)
+    window.q = object
+    raise error
 
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair
@@ -71,7 +76,8 @@ def checkBase64(string):
        return False
 
 def exist(object):
-    if object in ['', False, None, undefined, 0.0, {}, []]:
+    #if object in ['', False, None, undefined, 0.0, {}, []]:
+    if not object or object == {} or object == []:
        return False
     elif v'typeof object === "object"' and v'typeof object.length === "number"':
        return object.length > 0
@@ -477,18 +483,22 @@ def query(db, type, args):
     return Promise.all(promises).then(
     def (results):
         ids = []
+        ids_map = {}
+        index = 0
         for result in results:
-          docs = result.docs or result.rows
-          for doc in docs:
-              ids.push(doc._id or doc.id)
-        if promises.length > 1:
-           ids = ids.filter(
-           def (value, index, self):
-               return self.indexOf(value) != index
-           )
-        ids = ids.map(
-        def (id): return db.rel.parseDocID(id).id
-        )
+            for doc in result.docs:
+                if index == 0: ids_map[doc._id] = 1
+                elif doc._id in ids_map: ids_map[doc._id] += 1
+                if ids_map[doc._id] == results.length: ids.push(db.rel.parseDocID(doc._id).id)
+            index += 1
+        #if promises.length > 1:
+           #ids = ids.filter(
+           #def (value, index, self):
+           #    return self.indexOf(value) != index
+           #)
+        #ids = ids.map(
+        #def (id): return db.rel.parseDocID(id).id
+        #)
         return ids
     )
 
