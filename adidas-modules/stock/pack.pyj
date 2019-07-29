@@ -203,10 +203,11 @@ class StockPack(models.Model):
     def dispose(self):
         promises = self.map(
         def (record):
-            disposed = self.env['stock.pack.disposed'].create({'name': record.name, 'data': record.values})
-            unlink = record.unlink()
-            return Promise.all([disposed, unlink])
+            return self.env['stock.pack.disposed'].create({'name': record.name, 'data': record.values})
+            #unlink = record.unlink()
+            #return Promise.all([disposed, unlink])
         )
+        promises.push(self.unlink())
         return Promise.all(promises)
 
 StockPack()
