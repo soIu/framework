@@ -114,7 +114,7 @@ class StockPack(models.Model):
             if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
 
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True, index=True)
-    date = fields.Datetime(string="Date", defaults=Date)
+    date = fields.Datetime(string="Date", defaults=tools.date.now)
     location_id = fields.Many2one('stock.location', string="Current Location")
     order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
@@ -285,3 +285,35 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
     </sheet>
 </form>
 """})
+
+class HistoricalData(models.Model):
+    _name = 'historical.data'
+
+    date_from = fields.Datetime(string="Date From", required=True)
+    date_to = fields.Datetime(string="Date To", required=True)
+    view = fields.Selection(['stock.picking.historical_picking', "Picking"], ['stock.picking.historical_putting', 'Putting'], ['stock.pack', 'Existing Packs'], ['stock.pack.disposed', 'Disposed Packs'], string="Data", required=True)
+
+    def show(self):
+        domain = [['date', '>=', self.date_from], ['date', '<=', self.date_to]]
+        tools.navigate(('/tree/' if 'stock.pack' in self.view else '/view/') + self.view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
+
+HistoricalData()
+
+menu.add(id='historical_by_date', parent='historical', model='historical.data', view_id='historical.data.filter', string="Filter by Date", sequence=10)
+
+view.add(model='historical.data', mode='filter', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="date_from"/>
+            <field name="view"/>
+        </group>
+        <group>
+            <field name="date_to"/>
+        </group>
+        <group>
+            <button name="show" string="Show"/>
+        </group>
+    </sheet>
+</form>
+""")
