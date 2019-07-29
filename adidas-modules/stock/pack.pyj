@@ -215,12 +215,14 @@ StockPack()
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
 menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing Packs', 'model': 'stock.pack', 'sequence': 3})
 
+last_args = None
+
 def pack_list_init():
     page = this
     #if page.refs and (not page.refs.tree_component or page.refs.tree_component.props.isPopup): return
     Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
     def (value):
-        return models.env['stock.pack'].search(['category_id', 'in', category_default[value+ '_id']]).then(
+        return models.env['stock.pack'].search(['category_id', 'in', category_default[value+ '_id']], *(models.env.context.active_args or [])).then(
         def (pack_ids):
             return models.env['stock.move'].search(['pack_id', 'in', pack_ids.ids])
         )
@@ -234,6 +236,11 @@ def pack_list_init():
            card_header = document.querySelector('div.card-header')
            if card_header: card_header.appendChild(results_element);
         results_element.innerHTML = 'Upper: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in upper_ids).toString() + ' Insole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in insole_ids).toString() + ' Outsole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in outsole_ids) + ' Strobel: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in strobel_ids)
+        nonlocal last_args
+        last_args = models.env.context.active_args
+        tools.wait_exist(
+        def (): return last_args != models.env.context.active_args
+        ).then(pack_list_init.bind(page))
     )
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
