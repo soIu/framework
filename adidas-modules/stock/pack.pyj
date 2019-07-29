@@ -225,7 +225,6 @@ def pack_list_init():
     return models.env['stock.pack'].search(*(models.env.context.active_args or [])).then(
         def (pack_ids):
             return models.env['stock.move'].search(['pack_id', 'in', pack_ids.ids])
-        )
     ).then(
     def (move_ids):
         locations = {category_default[key]: key for key in category_default}
