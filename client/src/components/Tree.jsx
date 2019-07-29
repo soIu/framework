@@ -93,7 +93,7 @@ export default class Tree extends React.Component {
     }
     this.handleOutside = handleOutside.bind(this);
     const children = props.children.constructor === Array ? props.children : [props.children];
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true, newRowsAction: 'keep'}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
@@ -148,7 +148,6 @@ export default class Tree extends React.Component {
   }
 
   sort(fields, params) {
-    console.log(this);
     const models = window.models;
     if (fields.length > 0) {
       models.env.context.active_sort = fields[0].colId + ' ' + fields[0].sort;
@@ -227,24 +226,25 @@ export default class Tree extends React.Component {
     catch(error) {
       console.log(error);
     }*/
-    let index = 0;
-    for (let input of window.document.getElementsByClassName('ag-filter-filter')) {
-      if (values[index] !== undefined) {
-        let value = values[index];
-        setTimeout(() => input.value = value, 1000);
-      }
-      index += 1;
-    }
     //load.done();
     if (params.api.paginationGetCurrentPage() !== 0) {
-      params.api.paginationGoToFirstPage();
+      await params.api.paginationGoToFirstPage();
     }
     else {
       params.newData = false;
       params.forcePopup = true;
       params.forceUpdate = true;
-      this.paging.bind(this)(0, params);
+      await this.paging.bind(this)(0, params);
     }
+    /*let index = 0;
+    for (let input of window.document.getElementsByClassName('ag-filter-filter')) {
+      if (values[index] !== undefined) {
+        let value = values[index];
+        input.value = value;
+        //setTimeout(() => input.value = value, 1000);
+      }
+      index += 1;
+    }*/
   }
 
   async paging(index, params) {
@@ -268,6 +268,7 @@ export default class Tree extends React.Component {
       }
       const args = (this.props.field_name ? [['id', 'in', window.models.env.context.active_id[this.props.field_name] || []]] : []).concat(this.page_domain || []);
       if (this.args) args.push(...this.args);
+      models.env.context.active_args = args;
       models.env.context.active_limit = this.state.limit;
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
