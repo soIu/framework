@@ -226,11 +226,10 @@ def pack_list_init():
         def (pack_ids):
             promises = ['upper_id', 'insole_id', 'outsole_id', 'strobel_id'].map(
             def (category):
-                nonlocal pack_ids
-                pack_ids = pack_ids.filter(
+                pack_filtered_ids = pack_ids.filter(
                 def (pack_id): return pack_id.category_id == category_default[category]
                 )
-                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_ids.ids]).then(
+                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids]).then(
                 def (move_ids): return [category[0].toUpperCase() + category[1:], move_ids]
                 )
             )
