@@ -236,7 +236,7 @@ def pack_list_init():
             )
             return Promise.all(promises)
     ).then(
-    def (result):
+    def (results):
         #locations = {category_default[key]: key for key in category_default}
         #quantities = {key: 0 for key in Object.keys(category_default)}
         #for move_id in move_ids:
