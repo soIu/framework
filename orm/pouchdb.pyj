@@ -16,6 +16,10 @@ if v"typeof window === 'undefined'":
            PouchDB.plugin(require(require('process').env.server_db_custom_adapter))
         loadPlugin(PouchDB)
         db = PouchDB((require('process').env.server_db_url or "" if require('process').env.server_db_adapter in ['http', 'https'] else "") + (require('process').env.server_db or 'cache'), {'adapter': require('process').env.server_db_adapter or 'memory'})
+        if db.adapter in ['http', 'https']:
+           require('http').globalAgent.maxSockets = 25
+           require('http').globalAgent.keepAlive = True
+           require('http').globalAgent.options.keepAlive = True
     except: #Exception as error:
         if require('process').env.server_db_fallback_adapter not in ['False', undefined]:
            if require('process').env.server_db_fallback in old_adapters:
@@ -23,6 +27,10 @@ if v"typeof window === 'undefined'":
            loadPlugin(PouchDB)
            PouchDB.plugin(require(require('process').env.server_db_fallback_adapter))
            db = PouchDB((require('process').env.server_db_url or "" if require('process').env.server_db_fallback in ['http', 'https'] else "") + require('process').env.server_db, {'adapter': require('process').env.server_db_fallback})
+           if db.adapter in ['http', 'https']:
+              require('http').globalAgent.maxSockets = 25
+              require('http').globalAgent.keepAlive = True
+              require('http').globalAgent.options.keepAlive = True
         else:
            raise #error
 else:
