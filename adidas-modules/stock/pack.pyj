@@ -222,7 +222,7 @@ def pack_list_init():
     #if page.refs and (not page.refs.tree_component or page.refs.tree_component.props.isPopup): return
     Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
     def (value):
-        return models.env['stock.pack'].search(['category_id', 'in', category_default[value+ '_id']], *(models.env.context.active_args or [])).then(
+        return models.env['stock.pack'].search(['category_id', '=', category_default[value+ '_id']], *(models.env.context.active_args or [])).then(
         def (pack_ids):
             return models.env['stock.move'].search(['pack_id', 'in', pack_ids.ids])
         )
