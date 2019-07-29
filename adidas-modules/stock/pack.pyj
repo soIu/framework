@@ -226,6 +226,7 @@ def pack_list_init():
         def (pack_ids):
             promises = ['upper_id', 'insole_id', 'outsole_id', 'strobel_id'].map(
             def (category):
+                nonlocal pack_ids
                 pack_ids = pack_ids.filter(
                 def (pack_id): return pack_id.category_id == category_default[category]
                 )
