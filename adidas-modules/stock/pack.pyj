@@ -129,7 +129,7 @@ class StockPack(models.Model):
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
     allowed_sizes = fields.Data(string="Allowed Size from PO")
-    disposed = fields.Boolean(string="Disposed")
+    disposed = fields.Boolean(string="Disposed", index=True)
 
     """def create(self, values=False, is_client=tools.configuration.client):
         if v"typeof window !== 'undefined'":
