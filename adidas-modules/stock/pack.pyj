@@ -200,7 +200,6 @@ class StockPack(models.Model):
             if not self.category_id: self.category_id = product_id.category_id
         )
 
-    @api.server
     def dispose(self):
         promises = self.map(
         def (record):
