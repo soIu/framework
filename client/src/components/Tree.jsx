@@ -78,7 +78,8 @@ export default class Tree extends React.Component {
     }
     this.onChange = onChange.bind(this);
     function onSelectionChanged(event) {
-      const selected = event.api.getSelectedRows().slice(this.state.limit * event.api.paginationGetCurrentPage(), this.state.limit);
+      let selected = event.api.getSelectedRows();
+      if (selected.length > this.state.limit) selected = selected.slice(this.state.limit * event.api.paginationGetCurrentPage(), this.state.limit * (event.api.paginationGetCurrentPage() + 1));
       const ids = [];
       for (let data of selected) {
         if (data.id) ids.push(data.id);
@@ -134,15 +135,17 @@ export default class Tree extends React.Component {
     }
     //rows = rows.concat(this.state.new_records)
     const count = rows[0]._search_count;
+    const default_row = {...rows[0]};
+    for (let key in default_row) default_row[key] = null;
     if (index > 0) {
       let pushed = 0;
       while (pushed < this.state.limit * index) {
-        rows.unshift({});
+        rows.unshift(default_row);
         pushed += 1;
       }
     }
     while (rows.length < count) {
-      rows.push({});
+      rows.push(default_row);
     }
     return rows;
   }
@@ -263,7 +266,6 @@ export default class Tree extends React.Component {
         this.args.push(['id', 'not in', this.state.active_ids]);
       }
       if (!this.page_domain && api.globals.app.view.main.router.currentRoute.query.domain) {
-        console.log(api.globals.app.view.main.router.currentRoute.query.domain);
         this.page_domain = JSON.parse(api.globals.app.view.main.router.currentRoute.query.domain);
       }
       const args = (this.props.field_name ? [['id', 'in', window.models.env.context.active_id[this.props.field_name] || []]] : []).concat(this.page_domain || []);
@@ -288,7 +290,7 @@ export default class Tree extends React.Component {
         records.add(this.state.new_records);
       }
       if (records.length > 0) {
-        if (this.args) {
+        if (!this.props.isTreeView && this.args) {
           records = records.filter((record) => {
             const domain = window.tools.copy(this.args);
             for (let args of domain) if (Array.isArray(args)) args[0] = record[args[0]];
