@@ -129,6 +129,7 @@ class StockPack(models.Model):
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
     allowed_sizes = fields.Data(string="Allowed Size from PO")
+    disposed = fields.Boolean(string="Disposed")
 
     """def create(self, values=False, is_client=tools.configuration.client):
         if v"typeof window !== 'undefined'":
@@ -207,7 +208,7 @@ class StockPack(models.Model):
             #unlink = record.unlink()
             #return Promise.all([disposed, unlink])
         )
-        promises.push(self.unlink())
+        promises.push(self.write({'disposed': True}))
         return Promise.all(promises)
 
 StockPack()
@@ -256,7 +257,7 @@ def pack_list_init():
     )
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
-<tree>
+<tree domain="['disposed', '!=', True]">
     <field name="name"/>
     <field name="order_id"/>
     <field name="bucket"/>
