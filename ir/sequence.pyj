@@ -28,8 +28,8 @@ def add_sequence(code, sequences):
             if not sequence_id.length:
                return models.env['ir.sequence'].create({'code': code}).then(
                def (sequence_id):
-                   sequences[sequence_id.code] = sequence_id.id
+                   if sequences: sequences[sequence_id.code] = sequence_id.id
                )
-            sequences[sequence_id.code] = sequence_id.id
+            if sequences: sequences[sequence_id.code] = sequence_id.id
         )
     data.append(create_sequence)
