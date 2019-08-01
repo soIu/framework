@@ -514,7 +514,7 @@ class Model():
            )
         return result
 
-    def read(self, format, fields):
+    def read(self, format, fields, without_null):
         if format:
            promises = []
            new_values = []
@@ -532,7 +532,9 @@ class Model():
                    field = self._fields[key]
                    def after_promise(result):
                        if result != undefined: value[key] = result
-                       if not field or (value[key] == None and field.type != 'float'): return next()
+                       if not field or (value[key] == None and field.type != 'float'):
+                          if without_null: value[key] = ''
+                          return next()
                        if field.type == 'date':
                           value[key] = date.format(v'new Date(value[key])', 'Y-m-d')
                        elif field.type == 'datetime':
@@ -542,6 +544,7 @@ class Model():
                        elif field.type == 'selection':
                           selections = field.selection.apply(None) if field.selection and type(field.selection) == Function else field.selection
                           value[key] = tools.dict(selections)[value[key]]
+                          if not value[key] and without_null: value[key] = ''
                        elif field.type in ['many2many', 'many2one', 'one2many', 'one2one']:
                           if not read_cache[field.relation]: read_cache[field.relation] = {}
                           promise = None
@@ -575,6 +578,7 @@ class Model():
            )
            return Promise.all(promises).then(
            def ():
+               nonlocal read_cache
                read_cache = {}
                return new_values
            )
