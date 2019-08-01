@@ -152,7 +152,7 @@ class StockPack(models.Model):
         if v'typeof window' != 'undefined' and window.printBarcode:
            self.read(format=True, fields=['order_id']).then(
            def (values):
-               for record in values: printBarcode(record.name, record.article, record.order_id, record.size, record.adidas_product_qty)
+               for record in values: printBarcode(record.name, record.article, record.order_id, '', record.size, record.adidas_product_qty, "")
            )
 
     @api.onchange('order_id')
