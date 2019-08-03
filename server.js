@@ -1,3 +1,5 @@
+var async_await_polyfill = "function async(sync_function) {\n    if (typeof require !== 'undefined' && parseFloat(require('process').version.slice(1)) >= 7.6) return sync_function;\n    var make_async = require('asyncawait/async');\n    var async_function = make_async (function async_function() {return sync_function(this, Array.prototype.slice.call(arguments))});\n    return async_function;\n};";
+if (parseFloat(require('process').version.slice(1)) < 7.6) async_await_polyfill = "var await;\nif (parseFloat(require('process').version.slice(1)) < 7.6) await = require('asyncawait/await');\n" + async_await_polyfill;
 process.chdir(__dirname);
 process.on('uncaughtException', function(error) {
     if (process.argv.indexOf('--debug') !== -1) return;
@@ -69,52 +71,22 @@ if (process.argv.indexOf('--clear-cache') !== -1) {
     var clear_command = 'find . -name "*.pyj-cached" -type f -delete';
     child_process.execSync(clear_command, {cwd: __dirname, stdio: pipe, env: process.env});
 }
-if (process.argv.indexOf('--debug') !== -1) {
-    if (process.execArgv.indexOf('--experimental-vm-modules') !== -1) {
-        var vm = require('vm');
-        var global_module = module;
-        var runInNewContext = vm.runInNewContext;
-        vm.runInNewContext = function () {
-            var args = Array.prototype.slice.call(arguments);
-            if (args[2] && args[2] !== 'server.pyj') return runInNewContext.apply(vm, arguments);
-            if (typeof args[2] === 'string') args[2] = {filename: args[2]};
-            var options = args[2];
-            options.context = vm.createContext(args[1] || global);
-            var module = new vm.SourceTextModule(args[0], options);
-            module.link(function () {}).then(function () {
-                module.instantiate();
-                return module.evaluate()
-            }).catch(function (error) {
-                if (module.status === 'errored' && error.stack.indexOf('vm:module(0)') !== -1) {
-                    var line_end = parseInt(error.stack.split('\n')[1].split('vm:module(0):')[1].split(':')[0]);
-                    var line_start = line_end - 15;
-                    codes = args[0].split(/\n/);
-                    line_end += 10;
-                    var code = codes.slice(line_start, line_end).join('\n');
-                    console.error(error);
-                    console.error("\nCorresponding error lines:\n\n" + code + '\n\n');
-                }
-                else {
-                    console.error(error);
-                }
-            });
-        }
-    }
-    else {
-        var args = ['--experimental-vm-modules', module.filename].concat(process.argv.slice(2));
-        child_process.spawnSync(process.execPath, args, {stdio:'inherit'})/*.on('exit', function(code, signal) {
-            process.exit(code);
-        });*/
-        process.exit();
+if (process.argv.indexOf('--serverless') === -1) {
+    var vm = require('vm');
+    var runInNewContext = vm.runInNewContext;
+    vm.runInNewContext = function () {
+        var args = Array.prototype.slice.call(arguments);
+        if (args[2] === 'server.pyj') args[0] = async_await_polyfill + args[0];
+        return runInNewContext.apply(vm, arguments);
     }
 }
 if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
     if (process.argv.indexOf('--print-file') !== -1) {
-       console.log(result.toString());
+       console.log(async_await_polyfill + result.toString());
        process.exit();
     }
-    eval('var ρσ_module_doc__\n' + result.toString());
+    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + result.toString().replace(/async\(function/g, 'async(async function'));
 }
 else {
     process.argv = argv;
