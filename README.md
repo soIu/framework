@@ -3,7 +3,7 @@ An Object-Relational Mapping for PouchDB/CouchDB and Framework inspired by Odoo
 
 # What's New
 
-- New [Async/Await support](https://github.com/rafi16jan/rapyd-framework#async/await-support)
+- New [Async/Await support](https://github.com/rafi16jan/rapyd-framework#asyncawait-support)
 - New Frontend with React/Preact and full ES6, allowing ORM operations to be declared with async-await. Making it more performant and easier to do Parallel and Scalable code.
 - Full external JS libraries compatibility, using CommonJS on Node and Webpack on browser.
 - Full React Components compatibility, making it easier to build Frontend UI even on React Native.
