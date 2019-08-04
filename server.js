@@ -1,5 +1,6 @@
 var async_await_polyfill = "function async(sync_function) {\n    if (parseFloat(require('process').version.slice(1)) >= 7.6) return sync_function;\n    var make_async = require('asyncawait/async');\n    var async_function = make_async (sync_function);\n    return async_function;\n};";
 if (parseFloat(require('process').version.slice(1)) < 7.6) async_await_polyfill = "var await;\nif (parseFloat(require('process').version.slice(1)) < 7.6) await = require('asyncawait/await');\n" + async_await_polyfill;
+else async_await_polyfill = "function await_all(promises) {\n    if (Array.isArray(promises) return Promise.all(promises)\n    return promises\n}\n" + async_await_polyfill;
 process.chdir(__dirname);
 process.on('uncaughtException', function(error) {
     if (process.argv.indexOf('--debug') !== -1) return;
@@ -83,10 +84,10 @@ if (process.argv.indexOf('--serverless') === -1) {
 if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
     if (process.argv.indexOf('--print-file') !== -1) {
-       console.log(async_await_polyfill + result.toString().replace(/async\(function/g, 'async(async function'));
+       console.log(async_await_polyfill);
        process.exit();
     }
-    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + result.toString().replace(/async\(function/g, 'async(async function'));
+    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + (parseFloat(require('process').version.slice(1)) >= 7.6) ? result.toString().replace(/async\(function/g, 'async(async function')..replace(/await\(/g, 'await await_all(') : result.toString()));
 }
 else {
     process.argv = argv;

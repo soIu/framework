@@ -10,7 +10,7 @@ configuration = merge(configuration, {key: True if value in ['True', 'true'] els
 
 admin_password = configuration.admin_password
 
-client_js = require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString().replace(/async\(function/g, 'async(async function').replace('"use strict";', '"use strict";\n' + '    var function async(sync_function) {return async_function}\n' + '    var ρσ_module_doc__\n')
+client_js = require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString().replace(/async\(function/g, 'async(async function').replace('"use strict";', '"use strict";\n' + '    function await_all(promises) {\n  if (Array.isArray(promises) return Promise.all(promises)\n  return promises\n}\n' + '    var function async(sync_function) {return async_function}\n' + '    var ρσ_module_doc__\n')
 client_js = client_js.replace('{"home_view": window.localStorage.rapyd_home_view || "res.message.chat"}', JSON.stringify(configuration))
 client_js_time = Date().toISOString()
 
