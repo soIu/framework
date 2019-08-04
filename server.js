@@ -77,7 +77,7 @@ if (process.argv.indexOf('--serverless') === -1) {
     var runInNewContext = vm.runInNewContext;
     vm.runInNewContext = function () {
         var args = Array.prototype.slice.call(arguments);
-        if (args[2] === 'server.pyj') args[0] = async_await_polyfill + args[0].replace(/async\(function/g, 'async(async function');
+        if (args[2] === 'server.pyj') args[0] = async_await_polyfill + (parseFloat(require('process').version.slice(1)) >= 7.6) ? args[0].toString().replace(/async\(function/g, 'async(async function').replace(/await\(/g, 'await await_all(') : args[0].toString())
         return runInNewContext.apply(vm, arguments);
     }
 }
@@ -87,7 +87,7 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serve
        console.log(async_await_polyfill);
        process.exit();
     }
-    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + (parseFloat(require('process').version.slice(1)) >= 7.6) ? result.toString().replace(/async\(function/g, 'async(async function').replace(/await\(/g, 'await await_all(') : result.toString()));
+    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + (parseFloat(require('process').version.slice(1)) >= 7.6) ? result.toString().replace(/async\(function/g, 'async(async function').replace(/await\(/g, 'await await_all(') : result.toString());
 }
 else {
     process.argv = argv;
