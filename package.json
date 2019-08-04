@@ -12,7 +12,7 @@
     "pouchdb-mapreduce": "^7.0.0",
     "pouchdb-stable": "^6.3.5",
     "rapydscript-ng": "^0.7.18",
-    "regenerator": "^0.10.1",
+    "regenerator": "^0.12.1",
     "relational-pouch": "^3.2.0",
     "restify": "^6.0.1",
     "restify-cors-middleware": "^1.0.1",
