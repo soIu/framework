@@ -1,4 +1,4 @@
-var async_await_polyfill = "function async(sync_function) {\n    if (typeof require !== 'undefined' && parseFloat(require('process').version.slice(1)) >= 7.6) return sync_function;\n    var make_async = require('asyncawait/async');\n    var async_function = make_async (function async_function() {return sync_function(this, Array.prototype.slice.call(arguments))});\n    return async_function;\n};";
+var async_await_polyfill = "function async(sync_function) {\n    if (parseFloat(require('process').version.slice(1)) >= 7.6) return sync_function;\n    var make_async = require('asyncawait/async');\n    var async_function = make_async (sync_function);\n    return async_function;\n};";
 if (parseFloat(require('process').version.slice(1)) < 7.6) async_await_polyfill = "var await;\nif (parseFloat(require('process').version.slice(1)) < 7.6) await = require('asyncawait/await');\n" + async_await_polyfill;
 process.chdir(__dirname);
 process.on('uncaughtException', function(error) {
@@ -76,14 +76,14 @@ if (process.argv.indexOf('--serverless') === -1) {
     var runInNewContext = vm.runInNewContext;
     vm.runInNewContext = function () {
         var args = Array.prototype.slice.call(arguments);
-        if (args[2] === 'server.pyj') args[0] = async_await_polyfill + args[0];
+        if (args[2] === 'server.pyj') args[0] = async_await_polyfill + args[0].replace(/async\(function/g, 'async(async function');
         return runInNewContext.apply(vm, arguments);
     }
 }
 if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
     result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env});
     if (process.argv.indexOf('--print-file') !== -1) {
-       console.log(async_await_polyfill + result.toString());
+       console.log(async_await_polyfill + result.toString().replace(/async\(function/g, 'async(async function'));
        process.exit();
     }
     eval(async_await_polyfill + 'var ρσ_module_doc__\n' + result.toString().replace(/async\(function/g, 'async(async function'));
