@@ -86,6 +86,11 @@ def exist(object):
 def empty(object):
     return exist(object) == False
 
+def wait():
+    args = Array.prototype.slice.call(arguments)
+    if args.length == 1 and is_array(args[0]): args = args[0]
+    return Promise.all(args)
+
 def wait_exist(fn):
     return Promise(
     def (resolve, reject):
