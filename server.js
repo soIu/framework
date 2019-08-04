@@ -1,6 +1,6 @@
 var async_await_polyfill = "function async(sync_function) {\n    if (parseFloat(require('process').version.slice(1)) >= 7.6) return sync_function;\n    var make_async = require('asyncawait/async');\n    var async_function = make_async (sync_function);\n    return async_function;\n};";
 if (parseFloat(require('process').version.slice(1)) < 7.6) async_await_polyfill = "var await;\nif (parseFloat(require('process').version.slice(1)) < 7.6) await = require('asyncawait/await');\n" + async_await_polyfill;
-else async_await_polyfill = "function await_all(promises) {\n    if (Array.isArray(promises) return Promise.all(promises)\n    return promises\n}\n" + async_await_polyfill;
+else async_await_polyfill = "function await_all(promises) {\n    if (Array.isArray(promises)) return Promise.all(promises)\n    return promises\n}\n" + async_await_polyfill;
 process.chdir(__dirname);
 process.on('uncaughtException', function(error) {
     if (process.argv.indexOf('--debug') !== -1) return;
