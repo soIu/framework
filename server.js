@@ -87,7 +87,7 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serve
        console.log(async_await_polyfill);
        process.exit();
     }
-    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + (parseFloat(require('process').version.slice(1)) >= 7.6) ? result.toString().replace(/async\(function/g, 'async(async function')..replace(/await\(/g, 'await await_all(') : result.toString()));
+    eval(async_await_polyfill + 'var ρσ_module_doc__\n' + (parseFloat(require('process').version.slice(1)) >= 7.6) ? result.toString().replace(/async\(function/g, 'async(async function').replace(/await\(/g, 'await await_all(') : result.toString()));
 }
 else {
     process.argv = argv;
