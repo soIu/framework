@@ -164,7 +164,7 @@ class Model():
                   if ids.length == 0:
                      result = self._values[0][key]
                   elif ids.length == 1:
-                     if field.compute and type(field.compute) == Function:
+                     if field.compute and v'typeof field.compute' == 'function':
                         if field.store and key in self._compute_cache: return self._compute_cache[key]
                         result = field.compute.apply(self, [self])
                         if field.store:
