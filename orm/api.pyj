@@ -1,7 +1,7 @@
 import orm.models as models
 import orm.tools as tools
 
-def server(method):
+def nonasync_server(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -48,7 +48,7 @@ def server(method):
         )
     return wrap
 
-def client(method):
+def nonasync_client(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -96,7 +96,7 @@ def client(method):
         )
     return wrap
 
-def strict(method):
+def nonasync_strict(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -142,10 +142,6 @@ def strict(method):
             raise error
         )
     return wrap
-
-nonasync_server = server
-nonasync_client = client
-nonasync_strict = strict
 
 def server(method, **args):
     if not method and args.async:
