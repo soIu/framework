@@ -146,24 +146,24 @@ def nonasync_strict(method):
 def server(method, **args):
     if not method and args.async:
        def wrap(method):
-           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_server(method))
-           return nonasync_server(method)
+           #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_server(method))
+           return async (nonasync_server(method))
        return wrap
     return method
 
 def client(method, **args):
     if not method and args.async:
        def wrap(method):
-           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_client(method))
-           return nonasync_client(method)
+           #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_client(method))
+           return  async (nonasync_client(method))
        return wrap
     return method
 
 def strict(method, **args):
     if not method and args.async:
        def wrap(method):
-           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_strict(method))
-           return nonasync_strict(method)
+           #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_strict(method))
+           return async (nonasync_strict(method))
        return wrap
     return method
 
@@ -174,8 +174,8 @@ def onchange(*fields, **args):
     def wrap(method):
         method._onchange_function = True
         method._onchange_fields = fields
-        if parseFloat(require('process').version.slice(1)) < 7.6 and args.async: return async (method)
-        return method
+        #if parseFloat(require('process').version.slice(1)) < 7.6 and args.async: return async (method)
+        return async (method)
     return wrap
 
 #I plan to make depends to listen at adapt or write, not really sure.
