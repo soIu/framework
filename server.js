@@ -78,7 +78,7 @@ if (process.argv.indexOf('--serverless') === -1) {
     vm.runInNewContext = function () {
         var args = Array.prototype.slice.call(arguments);
         if (args[0].match('ρσ_regenerator.regeneratorRuntime = Object.prototype;')) args[0] = args[0].replace('ρσ_regenerator.regeneratorRuntime = Object.prototype;', '(function(global) {\n      "use strict";\n    \n      var Op = Object.prototype;').replace('    })(\n    \n      (function() { return this })() || Function("return this")()\n    );', '');
-        if (args[2] && (args[2] === 'server.pyj' || args[2].filename === 'server.pyj')) args[0] = async_await_polyfill + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: args[0].toString().replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : args[0].toString());
+        if (args[2] && (args[2] === 'server.pyj' || args[2].filename === 'server.pyj')) args[0] = async_await_polyfill + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: args[0].toString().replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : args[0].toString());
         return runInNewContext.apply(vm, args);
     }
 }
@@ -89,7 +89,7 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serve
        console.log(async_await_polyfill + result);
        process.exit();
     }
-    eval(async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(')}).replace(/async\(function/g, 'async(async function').replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result));
+    eval(async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result));
 }
 else {
     process.argv = argv;

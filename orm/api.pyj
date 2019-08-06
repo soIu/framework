@@ -1,7 +1,7 @@
 import orm.models as models
 import orm.tools as tools
 
-def server(method, write=True, iterate=True):
+def server(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -19,8 +19,8 @@ def server(method, write=True, iterate=True):
               )
            self[method.name] = method
            result = self[method.name].apply(self, args)
-           if write and v'result instanceof models.Model' == True:
-              result = result.write()
+           #if write and v'result instanceof models.Model' == True:
+           #   result = result.write()
            if tools.exist(result) and type(result) == Promise:
               return result
            return Promise(
@@ -48,7 +48,7 @@ def server(method, write=True, iterate=True):
         )
     return wrap
 
-def client(method, write=True, iterate=True):
+def client(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -66,8 +66,8 @@ def client(method, write=True, iterate=True):
               )
            self[method.name] = method
            result = self[method.name].apply(self, args)
-           if write and v'result instanceof models.Model' == True: 
-              result = result.write()
+           #if write and v'result instanceof models.Model' == True: 
+           #   result = result.write()
            if tools.exist(result) and type(result) == Promise:
               return result
            return Promise(
@@ -96,7 +96,7 @@ def client(method, write=True, iterate=True):
         )
     return wrap
 
-def strict(method, write=True, iterate=True):
+def strict(method):
     def wrap():
         v'var self = this'
         args = Array.prototype.slice.call(arguments)
@@ -114,8 +114,8 @@ def strict(method, write=True, iterate=True):
               )
            self[method.name] = method
            result = self[method.name].apply(self, args)
-           if write and v'result instanceof models.Model' == True: 
-              result = result.write()
+           #if write and v'result instanceof models.Model' == True:
+           #   result = result.write()
            if tools.exist(result) and type(result) == Promise:
               return result
            return Promise(
@@ -143,13 +143,42 @@ def strict(method, write=True, iterate=True):
         )
     return wrap
 
+nonasync_server = server
+nonasync_client = client
+nonasync_strict = strict
+
+def server(method, **args):
+    if not method and args.async:
+       def wrap(method):
+           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_server(method))
+           return nonasync_server(method)
+       return wrap
+    return method
+
+def client(method, **args):
+    if not method and args.async:
+       def wrap(method):
+           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_client(method))
+           return nonasync_client(method)
+       return wrap
+    return method
+
+def strict(method, **args):
+    if not method and args.async:
+       def wrap(method):
+           if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_strict(method))
+           return nonasync_strict(method)
+       return wrap
+    return method
+
 #if not tools.exist(tools.onchanges):
 #   tools.onchanges = {}
 
-def onchange(*fields):
+def onchange(*fields, **args):
     def wrap(method):
         method._onchange_function = True
         method._onchange_fields = fields
+        if parseFloat(require('process').version.slice(1)) < 7.6 && args.async: return async (method)
         return method
     return wrap
 
