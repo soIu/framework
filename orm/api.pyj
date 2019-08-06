@@ -178,7 +178,7 @@ def onchange(*fields, **args):
     def wrap(method):
         method._onchange_function = True
         method._onchange_fields = fields
-        if parseFloat(require('process').version.slice(1)) < 7.6 && args.async: return async (method)
+        if parseFloat(require('process').version.slice(1)) < 7.6 and args.async: return async (method)
         return method
     return wrap
 
