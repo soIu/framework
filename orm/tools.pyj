@@ -257,7 +257,7 @@ def get_onchanges(self):
     onchanges = {}
     for key in Object.keys(self.constructor.prototype):
         if key in self._fields: continue
-        if self[key] and type(self[key]) == Function and self[key]._onchange_function:
+        if self[key] and v'typeof self[key]' == 'function' and self[key]._onchange_function:
            for field in self[key]._onchange_fields:
                if not exist(onchanges[field]):
                   onchanges[field] = []
