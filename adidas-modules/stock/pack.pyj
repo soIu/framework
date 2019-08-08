@@ -110,7 +110,7 @@ class StockPack(models.Model):
                 qty += move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty
             return qty
         if self.env.context.date_from_historical and self.env.context.date_to_historical:
-           return self.env['stock.move'].search(['date', '>=', self.env.context.date_from_historical], ['date', '<=', self.env.context.date_to_historical]).then(compute_qty)
+           return self.env['stock.move'].search(['date', '<=', self.env.context.date_to_historical]).then(compute_qty)
         return self.env['stock.move'].browse(self.move_ids).then(compute_qty)
 
     def _set_allowed_sizes(self, order_id):
@@ -249,7 +249,7 @@ def pack_list_init():
                 pack_filtered_ids = pack_ids.filter(
                 def (pack_id): return pack_id.category_id == category_default[category]
                 )
-                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids], *(['date', '>=', self.env.context.date_from_historical], ['date', '<=', self.env.context.date_to_historical] if self.env.context.date_from_historical and self.env.context.date_to_historical else [])).then(
+                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids], *(['date', '<=', self.env.context.date_to_historical] if self.env.context.date_from_historical and self.env.context.date_to_historical else [])).then(
                 def (move_ids): return [category[0].toUpperCase() + category[1:], move_ids]
                 )
             )
@@ -334,7 +334,7 @@ class HistoricalData(models.Model):
     view = fields.Selection(['stock.picking.historical_picking', "Picking"], ['stock.picking.historical_putting', 'Putting'], ['stock.pack', 'Packs'], string="Data", required=True)
 
     def show(self):
-        domain = [['date', '>=', self.date_from], ['date', '<=', self.date_to]]
+        domain = [['date', '<=', self.date_to]]
         self.env.context.date_from_historical = self.date_from
         self.env.context.date_to_historical = self.date_to
         tools.navigate(('/tree/' if 'stock.pack' in self.view else '/view/') + self.view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
