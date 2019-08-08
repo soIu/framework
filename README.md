@@ -3,6 +3,7 @@ An Object-Relational Mapping for PouchDB/CouchDB and Framework inspired by Odoo
 
 # What's New
 
+- New [Async/Await support](https://github.com/rafi16jan/rapyd-framework#asyncawait-support)
 - New Frontend with React/Preact and full ES6, allowing ORM operations to be declared with async-await. Making it more performant and easier to do Parallel and Scalable code.
 - Full external JS libraries compatibility, using CommonJS on Node and Webpack on browser.
 - Full React Components compatibility, making it easier to build Frontend UI even on React Native.
@@ -41,6 +42,24 @@ To execute it `node ./node_modules/.bin/rapydscript -x test.pyj`, or if you enco
 To test the Framework read the server.pyj file, it is the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
 
 To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -p modules -x server.pyj`
+
+# Async/Await support
+We added async/await support out of the box for modern [browsers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function#Browser_compatibility) and **older versions of node.js** (using yortus's [asyncawait](https://github.com/yortus/asyncawait)) to minimize Promise chaining and add readability for asynchronous operations. But, because we support old node.js versions (some platform like RHEL 6 on Power Architecture only have Node.js 6 compiled for the platform) the syntax is different with Python's Async/Await. For example instead of async and await being a keyword:
+
+```python
+async def get_current_qty(self):
+    move_ids = await self.env['stock.move'].search(['product_id', '=', somevariable])
+```
+
+Async become a decorator, and await become an identical keyword but function-like:
+
+```python
+@async
+def get_current_qty(self):
+    move_ids = await (self.env['stock.move'].search(['product_id', '=', somevariable]))
+```
+
+On Node.js version below 7.6.0 the async decorator will be translated to [asyncawait's](https://github.com/yortus/asyncawait) async call and make the function returns a Promise (just like native [async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)) and the function-like await to the library's await call. But on newer Node.js versions and modern browsers the decorator will only turn the function to an [async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
 
 # What's still undecided
 - Wether to use original Rapydscript https://github.com/atsepkov/RapydScript rather than https://github.com/kovidgoyal/rapydscript-ng (for now I use rapydscript-ng)
