@@ -331,13 +331,14 @@ class HistoricalData(models.Model):
 
     date_from = fields.Datetime(string="Date From", required=True)
     date_to = fields.Datetime(string="Date To", required=True)
-    view = fields.Selection(['stock.picking.historical_picking', "Picking"], ['stock.picking.historical_putting', 'Putting'], ['stock.pack', 'Packs'], string="Data", required=True)
+    view = fields.Selection(['stock.picking.historical_picking', "Picking"], ['stock.picking.historical_putting', 'Putting'], ['stock.pack', 'Packs'], ['stock.move', 'Moves'], string="Data", required=True)
 
     def show(self):
         domain = [['date', '<=', self.date_to]]
+        if self.view != 'stock.pack': domain = [['date', '>=', self.date_from]].concat(domain)
         self.env.context.date_from_historical = self.date_from
         self.env.context.date_to_historical = self.date_to
-        tools.navigate(('/tree/' if 'stock.pack' in self.view else '/view/') + self.view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
+        tools.navigate(('/tree/' if self.view in ['stock.pack', 'stock.move'] else '/view/') + self.view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
 
 HistoricalData()
 
