@@ -70,12 +70,24 @@ class StockPack(models.Model):
             return name
         )
 
+    @async
     def _get_box_number(self):
-        return self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None).then(
-        def (result):
-            pack.last_box = result
-            return result
-        )
+        if self.env.context.allowed_buckets: self.allowed_buckets = self.env.context.allowed_buckets
+        if not self.allowed_buckets:
+           bucket_selection = WcsJob.prototype.bucket.selection
+           buckets = []
+           @async
+           def search_bucket(bucket):
+               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
+               console.log(pack_ids.length)
+               if pack_ids.length <= 32:
+                  buckets.push(bucket)
+           await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
+           self.allowed_buckets = buckets
+           self.env.context.allowed_buckets = buckets
+        result = await (self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None))
+        pack.last_box = result
+        return result
 
     def _get_sizes(self):
         sizes = []
@@ -201,19 +213,6 @@ class StockPack(models.Model):
 
     @api.onchange('adidas_product_id', async=True)
     def onchange_product(self):
-        if self.env.context.allowed_buckets: self.allowed_buckets = self.env.context.allowed_buckets
-        if not self.allowed_buckets:
-           bucket_selection = WcsJob.prototype.bucket.selection
-           buckets = []
-           @async
-           def search_bucket(bucket):
-               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
-               console.log(pack_ids.length)
-               if pack_ids.length <= 32:
-                  buckets.push(bucket)
-           await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
-           self.allowed_buckets = buckets
-           self.env.context.allowed_buckets = buckets
         if not self.adidas_product_id: return
         if self.size and self.article and self.category_id: return
         product_id = await (self.env['product.product'].browse(self.adidas_product_id))
