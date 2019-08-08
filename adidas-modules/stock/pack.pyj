@@ -248,7 +248,7 @@ def pack_list_init():
                 pack_filtered_ids = pack_ids.filter(
                 def (pack_id): return pack_id.category_id == category_default[category]
                 )
-                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids], *(['date', '<=', models.env.context.date_to_historical] if self.env.context.date_from_historical and self.env.context.date_to_historical else [])).then(
+                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids], *(['date', '<=', models.env.context.date_to_historical] if models.env.context.date_from_historical and models.env.context.date_to_historical else [])).then(
                 def (move_ids): return [category[0].toUpperCase() + category[1:], move_ids]
                 )
             )
