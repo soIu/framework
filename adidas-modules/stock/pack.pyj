@@ -341,7 +341,7 @@ class HistoricalData(models.Model):
            domain = domain.concat([['location_dest_id', 'in', [location_default.external_id]]])
         elif self.view == 'stock.move.putting':
            view = 'stock.move'
-           domain = domain.concat([['location_dest_id', 'in', [location_default.internal_id]]])
+           domain = domain.concat([['location_src_id', 'in', [location_default.external_id]]])
         self.env.context.date_from_historical = self.date_from
         self.env.context.date_to_historical = self.date_to
         tools.navigate(('/tree/' if self.view else '/view/') + view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
