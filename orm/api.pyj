@@ -149,7 +149,7 @@ def server(method, **args):
            #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_server(method))
            return async (nonasync_server(method))
        return wrap
-    return method
+    return nonasync_server(method)
 
 def client(method, **args):
     if not method and args.async:
@@ -157,7 +157,7 @@ def client(method, **args):
            #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_client(method))
            return  async (nonasync_client(method))
        return wrap
-    return method
+    return nonasync_client(method)
 
 def strict(method, **args):
     if not method and args.async:
@@ -165,7 +165,7 @@ def strict(method, **args):
            #if parseFloat(require('process').version.slice(1)) < 7.6: return async (nonasync_strict(method))
            return async (nonasync_strict(method))
        return wrap
-    return method
+    return nonasync_strict(method)
 
 #if not tools.exist(tools.onchanges):
 #   tools.onchanges = {}
