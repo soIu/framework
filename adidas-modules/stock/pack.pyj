@@ -87,7 +87,7 @@ class StockPack(models.Model):
     def _get_buckets(self):
         buckets = []
         for bucket in WcsJob.prototype.bucket.selection:
-            if (self and (not self.allowed_buckets or bucket[0] in self.allowed_buckets)) or not self: buckets.push(bucket)
+            if (models.env.context.allowed_buckets and bucket[0] in self.env.context.allowed_buckets) or not models.env.context.allowed_buckets: buckets.push(bucket)
         return buckets
 
     def _get_available_qty(self):
@@ -208,9 +208,10 @@ class StockPack(models.Model):
            @async
            def search_bucket(bucket):
                pack_ids = await (self.env['stock.pack'].search(['bucket', '=', bucket]))
+               console.log(pack_ids.length)
                if pack_ids.length <= 32:
                   buckets.push(bucket)
-           await (map(bucket[0] for bucket in bucket_selection, search_bucket))
+           await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
            self.allowed_buckets = buckets
            self.env.context.allowed_buckets = buckets
         if not self.adidas_product_id: return
