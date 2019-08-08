@@ -80,7 +80,7 @@ class StockPack(models.Model):
            def search_bucket(bucket):
                pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
                buckets[bucket] = pack_ids.length
-               #console.log(pack_ids.length)
+               console.log(pack_ids.length)
                #if pack_ids.length <= 32:
                #   buckets.push(bucket)
            await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
