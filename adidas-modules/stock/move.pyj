@@ -83,6 +83,7 @@ menu.add(id='historical', string='Historical Data', sequence=30)
 view.add({'model': 'stock.move', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="product_id"/>
+    <field name="product_qty"/>
     <field name="date"/>
     <field name="location_src_id"/>
     <field name="location_dest_id"/>
