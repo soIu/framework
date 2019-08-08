@@ -72,8 +72,7 @@ class StockPack(models.Model):
 
     @async
     def _get_box_number(self):
-        if self.env.context.allowed_buckets: self.allowed_buckets = self.env.context.allowed_buckets
-        if not self.allowed_buckets:
+        if not self.env.context.allowed_buckets:
            bucket_selection = WcsJob.prototype.bucket.selection
            buckets = {}
            @async
@@ -84,7 +83,6 @@ class StockPack(models.Model):
                #if pack_ids.length <= 32:
                #   buckets.push(bucket)
            await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
-           self.allowed_buckets = buckets
            self.env.context.allowed_buckets = buckets
         result = await (self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None))
         pack.last_box = result
