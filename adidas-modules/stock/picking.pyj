@@ -210,7 +210,7 @@ class StockPicking(models.Model):
             promises = []
             count = 1
             for bucket in buckets:
-                promise = self.env['wcs.job'].create({'name': 'Job ' + count + ' ' + self.name, 'date': Date(), 'state': 'draft', 'bucket': bucket, 'workface': ('3' if parseInt(bucket) < 26 else '1') if self.type == 'picking' else ('1' if parseInt(bucket) < 26 else '3'), 'type': self.type, 'flag': 'online', 'priority': 1}).then(
+                promise = self.env['wcs.job'].create({'name': 'Job ' + count + ' ' + self.name, 'date': Date(), 'state': 'draft', 'bucket': bucket, 'workface': '2' if self.type == 'picking' else '4', 'type': self.type, 'flag': 'online', 'priority': 1}).then(
                 def (job_id):
                     def submit():
                         return job_id.submit().then(def (job_id): return job_id;)
@@ -257,7 +257,7 @@ class StockPicking(models.Model):
             return Promise.all(promises)
         ).then(
         def ():
-            del self.env.context.allowed_buckets
+            #del self.env.context.allowed_buckets
             return self.write({'state': 'validated'})
         )
 
