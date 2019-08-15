@@ -135,6 +135,11 @@ class Model():
                if not indexed_fields[key]:
                   indexed_fields[key] = True
                   db.createIndex({'index': {'fields': ['data.' + key, '_id']}})
+            if self[key].type == 'data' and is_array(self[key].index_fields) and self[key].index_fields.length:
+               for field in self[key].index_fields:
+                   field = key + '.' + field
+                   if not indexed_fields[field]:
+                      db.createIndex({'index': {'fields': ['data.' + field, '_id']}})
             if self._is_singleton and not self._is_env:
                if exist(self._fields[key].related):
                   if not exist(self._related[self._fields[key].related]):
