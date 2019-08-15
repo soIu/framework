@@ -72,12 +72,14 @@ class StockPack(models.Model):
 
     @async
     def _get_box_number(self):
-        if not self.env.context.allowed_buckets:
+        if True: #not self.env.context.allowed_buckets:
            bucket_selection = WcsJob.prototype.bucket.selection
            buckets = {}
            @async
            def search_bucket(bucket):
-               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
+               now = new Date().toISOString()
+               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True], *(['date', '>', pack.last_bucket_compute] if pack.last_bucket_compute else [])))
+               if not pack.last_bucket_compute: pack.last_bucket_compute = now
                buckets[bucket] = pack_ids.length
                console.log(pack_ids.length)
                #if pack_ids.length <= 32:
@@ -100,6 +102,7 @@ class StockPack(models.Model):
         for bucket in WcsJob.prototype.bucket.selection:
             if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + self.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
             else:
+               bucket = tools.copy(bucket)
                bucket[1] += ' FULL'
                buckets.push(bucket)
         return buckets
@@ -135,7 +138,7 @@ class StockPack(models.Model):
             if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
 
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True, index=True)
-    date = fields.Datetime(string="Date", defaults=tools.date.now)
+    date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
     location_id = fields.Many2one('stock.location', string="Current Location")
     order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
