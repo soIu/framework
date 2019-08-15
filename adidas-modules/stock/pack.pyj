@@ -78,7 +78,7 @@ class StockPack(models.Model):
            @async
            def search_bucket(bucket):
                now = new Date().toISOString()
-               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True], *(['date', '>', pack.last_bucket_compute] if pack.last_bucket_compute else [])))
+               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(*([('date', '>', pack.last_bucket_compute])] if pack.last_bucket_compute else []), ['bucket', '=', bucket], ['disposed', '!=', True]))
                if not pack.last_bucket_compute: pack.last_bucket_compute = now
                buckets[bucket] = pack_ids.length
                console.log(pack_ids.length)
