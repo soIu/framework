@@ -79,11 +79,13 @@ class StockPack(models.Model):
            @async
            def search_bucket(bucket):
                now = new Date().toISOString()
-               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else []), ['bucket', '=', bucket], ['disposed', '!=', True]))
+               pack_ids = await (self.env['stock.pack'].with_context(limit=900000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else []), *[('bucket', '=', bucket), ('disposed', '!=', True)]))
+               if not buckets[bucket]: buckets[bucket] = 0
+               if pack_ids.length: buckets[bucket] += pack_ids.length
+               if window.localStorage.last_bucket_compute:
+                  pack_ids = await (self.env['stock.pack'].with_context(limit=900000).search(['date', '>', window.localStorage.last_bucket_compute], ['bucket', '=', bucket], ['disposed', '=', True]))
+                  if pack_ids.length: buckets[bucket] -= pack_ids.length
                if not window.localStorage.last_bucket_compute: window.localStorage.last_bucket_compute = now
-               buckets[bucket] = pack_ids.length
-               console.log(pack_ids.length)
-               #if pack_ids.length <= 32:
                #   buckets.push(bucket)
            await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
            self.env.context.allowed_buckets = buckets
