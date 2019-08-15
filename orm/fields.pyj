@@ -48,4 +48,4 @@ def Datetime(string, **args):
 
 #Add fields.Data for storing JSON
 def Data(string, **args):
-    return merge({'type': 'data', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'data', 'string': string, 'store': args.store if 'store' in args else True, 'index_fields': []}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
