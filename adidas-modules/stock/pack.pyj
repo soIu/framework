@@ -82,7 +82,11 @@ class StockPack(models.Model):
                now = new Date().toISOString()
                pack_disposed = None
                if window.localStorage.last_bucket_compute: pack_disposed = self.env['stock.pack.disposed'].with_context(limit=900000).search(['date', '>', window.localStorage.last_bucket_compute], ['data.bucket', '=', bucket], ['data.disposed', '=', True])
-               pack_ids = await (self.env['stock.pack'].with_context(limit=900000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else []).concat([('bucket', '=', bucket), ('disposed', '!=', True)])))
+               pack_ids = await (self.env['stock.pack'].with_context(limit=900000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else [('disposed', '!=', True)]).concat([('bucket', '=', bucket)])))
+               if pack_disposed:
+                  pack_ids = pack_ids.filter(
+                  def (pack_id): return pack_id.disposed != True
+                  )
                if not buckets[bucket]: buckets[bucket] = 0
                if pack_ids.length: buckets[bucket] += pack_ids.length
                if pack_disposed:
