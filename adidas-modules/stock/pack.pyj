@@ -18,7 +18,7 @@ class StockPackDisposed(models.Model):
 
     name = fields.Char(string="Pack Number", readonly=True)
     data = fields.Data(string="Raw Data", readonly=True)
-    date = fields.Datetime(string="Date", defaults=tools.date.now)
+    date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
 
 StockPackDisposed()
 
