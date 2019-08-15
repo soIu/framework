@@ -75,7 +75,7 @@ class StockPack(models.Model):
         if not self.env.context.allowed_buckets:
            if window.localStorage.quicktron_allowed_buckets: self.env.context.allowed_buckets = JSON.parse(window.localStorage.quicktron_allowed_buckets)
            bucket_selection = WcsJob.prototype.bucket.selection
-           buckets = {}
+           buckets = self.env.context.allowed_buckets or {}
            @async
            def search_bucket(bucket):
                now = new Date().toISOString()
