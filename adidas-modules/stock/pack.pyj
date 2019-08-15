@@ -107,7 +107,7 @@ class StockPack(models.Model):
     def _get_buckets(self):
         buckets = []
         for bucket in WcsJob.prototype.bucket.selection:
-            if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + self.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
+            if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + models.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
             else:
                bucket = tools.copy(bucket)
                bucket[1] += ' FULL'
