@@ -184,12 +184,14 @@ class StockPack(models.Model):
     def create(self, values=False, is_client=tools.configuration.client):
         result = (self.__super__('create')(values=values, is_client=is_client))
         if v'typeof window' == 'undefined':
-           sequence_id = await (self.env['ir.sequence'].browse(sequence['stock.pack']))
-           sequence = 0
-           for record in tools.each(values):
-               number = parseInt(record.name.split(' ')[1])
-               if number > sequence: sequence = number
-           if sequence > sequence_id.sequence: (sequence_id.write({'sequence': sequence + 1}))
+           self.env['ir.sequence'].browse(sequence['stock.pack']).then(
+           def (sequence_id):
+               sequence = 0
+               for record in tools.each(values):
+                   number = parseInt(record.name.split(' ')[1])
+                   if number > sequence: sequence = number
+               if sequence > sequence_id.sequence: (sequence_id.write({'sequence': sequence + 1}))
+           )
         return result
 
     def print_barcode(self):
