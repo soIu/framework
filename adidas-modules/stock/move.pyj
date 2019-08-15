@@ -12,7 +12,7 @@ class StockMove(models.Model):
             return window.models.env.context.default_picking_id or None
 
     name = fields.Char(string="Move")
-    date = fields.Datetime(string="Date", defaults=Date, index=True)
+    date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
     product_id = fields.Many2one('product.product', string="Product", required=True, index=True)
     product_qty = fields.Float(string="Quantity")
     location_src_id = fields.Many2one('stock.location', string="Source Location", index=True)

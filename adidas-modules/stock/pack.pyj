@@ -62,9 +62,9 @@ class StockPack(models.Model):
         return self.env['ir.sequence'].browse(sequence['stock.pack']).then(
         def (sequence_id):
             name = 'Pack ' + str.zfill(str(sequence_id.sequence or 0), 3)
+            if sequence_id.length and not last_box:
+               return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(update_sequence.bind(sequence_id))
             if last_box and type(last_box) == String:
-               if sequence_id.length and not last_box:
-                  return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(update_sequence.bind(sequence_id))
                name = tools.max(name, last_box) or last_box or 'Pack 000'
             name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
             return name
@@ -72,18 +72,18 @@ class StockPack(models.Model):
 
     @async
     def _get_box_number(self):
-        #if not self.env.context.allowed_buckets:
-        #   bucket_selection = WcsJob.prototype.bucket.selection
-        #   buckets = {}
-        #   @async
-        #   def search_bucket(bucket):
-        #       pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
-        #       buckets[bucket] = pack_ids.length
-        #       console.log(pack_ids.length)
+        if not self.env.context.allowed_buckets:
+           bucket_selection = WcsJob.prototype.bucket.selection
+           buckets = {}
+           @async
+           def search_bucket(bucket):
+               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(['bucket', '=', bucket], ['disposed', '!=', True]))
+               buckets[bucket] = pack_ids.length
+               console.log(pack_ids.length)
                #if pack_ids.length <= 32:
                #   buckets.push(bucket)
-        #   await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
-        #   self.env.context.allowed_buckets = buckets
+           await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
+           self.env.context.allowed_buckets = buckets
         result = await (self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None))
         pack.last_box = result
         return result
@@ -96,9 +96,12 @@ class StockPack(models.Model):
         return sizes
 
     def _get_buckets(self):
-        buckets = WcsJob.prototype.bucket.selection #[]
-        #for bucket in WcsJob.prototype.bucket.selection:
-        #    if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + self.env.context.allowed_buckets[bucket[0]] <= 40)) or not models.env.context.allowed_buckets: buckets.push(bucket)
+        buckets = []
+        for bucket in WcsJob.prototype.bucket.selection:
+            if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + self.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
+            else:
+               bucket[1] += ' FULL'
+               buckets.push(bucket)
         return buckets
 
     def _get_available_qty(self):
@@ -342,8 +345,8 @@ class HistoricalData(models.Model):
         elif self.view == 'stock.move.putting':
            view = 'stock.move'
            domain = domain.concat([['location_src_id', 'in', [location_default.external_id]]])
-        self.env.context.date_from_historical = self.date_from
-        self.env.context.date_to_historical = self.date_to
+        #self.env.context.date_from_historical = self.date_from
+        #self.env.context.date_to_historical = self.date_to
         tools.navigate(('/tree/' if self.view else '/view/') + view + '?domain=' + encodeURIComponent(JSON.stringify(domain)))
 
 HistoricalData()
