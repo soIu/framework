@@ -72,20 +72,22 @@ class StockPack(models.Model):
 
     @async
     def _get_box_number(self):
-        if True: #not self.env.context.allowed_buckets:
+        if not self.env.context.allowed_buckets:
+           if window.localStorage.quicktron_allowed_buckets: self.env.context.allowed_buckets = JSON.parse(window.localStorage.quicktron_allowed_buckets)
            bucket_selection = WcsJob.prototype.bucket.selection
            buckets = {}
            @async
            def search_bucket(bucket):
                now = new Date().toISOString()
-               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(*([('date', '>', pack.last_bucket_compute)] if pack.last_bucket_compute else []), ['bucket', '=', bucket], ['disposed', '!=', True]))
-               if not pack.last_bucket_compute: pack.last_bucket_compute = now
+               pack_ids = await (self.env['stock.pack'].with_context(limit=9000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else []), ['bucket', '=', bucket], ['disposed', '!=', True]))
+               if not window.localStorage.last_bucket_compute: window.localStorage.last_bucket_compute = now
                buckets[bucket] = pack_ids.length
                console.log(pack_ids.length)
                #if pack_ids.length <= 32:
                #   buckets.push(bucket)
            await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
            self.env.context.allowed_buckets = buckets
+           window.localStorage.quicktron_allowed_buckets = JSON.stringify(buckets)
         result = await (self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None))
         pack.last_box = result
         return result

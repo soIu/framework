@@ -257,13 +257,13 @@ class StockPicking(models.Model):
             return Promise.all(promises)
         ).then(
         def ():
-            #del self.env.context.allowed_buckets
             return self.write({'state': 'validated'})
         )
 
     def validate(self):
         return self.validate_server().then(
         def (result):
+            del self.env.context.allowed_buckets
             window.history.back()
             return result
         )
