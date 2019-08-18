@@ -6,6 +6,8 @@ from stock.location import defaults as location_default
 from ir.ui import menu, view
 from ir.data import data
 
+defaults = {}
+
 class ProductProduct(models.Model):
     _name = 'product.product'
 
