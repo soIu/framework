@@ -131,7 +131,7 @@ def create_products():
             if result[index].length:
                defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
             else:
-               promises.push(models.env['product.category'].create({'name': category, 'code': 'WMS-' + category}))
+               promises.push(models.env['product.product'].create({'name': category, 'code': 'WMS-' + category}))
         if promises.length:
            return Promise.all(promises).then(
            def (result):
