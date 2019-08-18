@@ -38,7 +38,7 @@ view.add({'model': 'product.category', 'mode': 'form', 'string': False, 'arch': 
 </form>
 """})
 
-categories = ['Insole', 'Outsole', 'Upper', 'Strobel']
+"""categories = ['Insole', 'Outsole', 'Upper', 'Strobel']
 
 def create_categories():
     promises = []
@@ -62,4 +62,4 @@ def create_categories():
            )
     )
 
-data.append(create_categories)
+data.append(create_categories)"""

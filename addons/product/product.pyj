@@ -4,6 +4,7 @@ import orm.api as api
 from stock.pack import StockPack
 from stock.location import defaults as location_default
 from ir.ui import menu, view
+from ir.data import data
 
 class ProductProduct(models.Model):
     _name = 'product.product'
@@ -65,7 +66,7 @@ class ProductProduct(models.Model):
         )
 
     name = fields.Char(string="Product Name", required=True, index=True)
-    code = fields.Char(string="Product Code")
+    code = fields.Char(string="Product Code", index=True)
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", required=True, index=True)
     article = fields.Char(string="Article Number", index=True)
@@ -112,3 +113,29 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
     </sheet>
 </form>
 """})
+
+categories = ['Product A', 'Product B', 'Product C']
+
+def create_products():
+    promises = []
+    levels = ['3', '1', '2', '3']
+    for category in categories:
+        promise = models.env['product.product'].with_context(limit=1).search(['code', '=', 'WMS-' + category])
+        promises.push(promise)
+    return Promise.all(promises).then(
+    def (result):
+        promises = []
+        for index, category in enumerate(categories):
+            if result[index].length:
+               defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
+            else:
+               promises.push(models.env['product.category'].create({'name': category, 'code': 'WMS-' + category}))
+        if promises.length:
+           return Promise.all(promises).then(
+           def (result):
+               for index, category in enumerate(categories):
+                   defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
+           )
+    )
+
+data.append(create_products)
