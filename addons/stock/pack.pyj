@@ -151,7 +151,7 @@ class StockPack(models.Model):
     name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True, index=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
     location_id = fields.Many2one('stock.location', string="Current Location")
-    order_id = fields.Many2one('adidas.po', string="PO Number")
+    #order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
     #picking_ids = fields.Many2many('stock.picking', string="Operations")
     bucket = fields.Selection(_get_buckets, string="Current Rack")
@@ -200,12 +200,12 @@ class StockPack(models.Model):
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
-           self.read(format=True, fields=['order_id']).then(
+           self.read(format=True).then(
            def (values):
-               for record in values: printBarcode(record.name, record.article, record.order_id, '', record.size, record.adidas_product_qty, "")
+               for record in values: printBarcode(record.name, record.article, '', '', record.size, record.adidas_product_qty, "")
            )
 
-    @api.onchange('order_id')
+    #@api.onchange('order_id')
     def onchange_po(self):
         if not self.order_id: return
         return self.env['adidas.po'].browse(self.order_id).then(
@@ -222,7 +222,7 @@ class StockPack(models.Model):
     @api.onchange('category_id')
     def onchange_category(self):
         if not self.category_id: return
-        if self.size and self.category_id and self.order_id: self.order_id = self.order_id
+        #if self.size and self.category_id and self.order_id: self.order_id = self.order_id
         return self.env['product.category'].browse(self.category_id).then(
         def (category_id):
             self.level = category_id.level
@@ -231,7 +231,7 @@ class StockPack(models.Model):
     @api.onchange('article', 'category_id', 'size')
     def onchange_for_product(self):
         onchange_po = None
-        if self.size and self.category_id and self.order_id and models.env.context.default_operation_type != 'putting': onchange_po = self.onchange_po()
+        #if self.size and self.category_id and self.order_id and models.env.context.default_operation_type != 'putting': onchange_po = self.onchange_po()
         if self.adidas_product_id: return onchange_po
         if self.article and self.category_id and self.size:
            return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
@@ -308,7 +308,7 @@ def pack_list_init():
 view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
 <tree domain="(context.date_from_historical ? [] : ['disposed', '!=', True])">
     <field name="name"/>
-    <field name="order_id"/>
+    <!--<field name="order_id"/>-->
     <field name="bucket"/>
     <field name="category_id"/>
     <field name="article"/>
@@ -326,7 +326,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <field name="order_id"/>
+            <!--<field name="order_id"/>-->
             <field name="article"/>
             <field name="size"/>
         </group>
