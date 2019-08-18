@@ -38,7 +38,7 @@ class StockPicking(models.Model):
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
     pack_ids = fields.Many2many('stock.pack', string="Packs")
-    job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
+    #job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
 
     def create(self, values=False, is_client=tools.configuration.client):
         promises = []
@@ -205,6 +205,7 @@ class StockPicking(models.Model):
 
     @api.server
     def confirm(self):
+        return self.write({'state': 'confirmed'})
         return self.get_buckets().then(
         def (buckets):
             promises = []
@@ -235,6 +236,7 @@ class StockPicking(models.Model):
 
     @api.server
     def validate_server(self):
+        return self.write({'state': 'validated'})
         """processes = []
         processes.push(self.env['wcs.job'].browse(self.job_ids))
         #if self.type == 'putting':

@@ -2,5 +2,5 @@ import stock.move
 import stock.location
 import stock.pack
 import stock.picking
-import stock.wcs
-import stock.data
+#import stock.wcs
+#import stock.data

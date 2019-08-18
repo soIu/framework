@@ -1,1 +1,1 @@
-git pull http://gitlab.com/rafi16jan/adidas-quicktron master --allow-unrelated-histories
+git pull http://github.com/rafi16jan/hppm-wms master --allow-unrelated-histories
