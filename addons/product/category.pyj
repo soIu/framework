@@ -63,3 +63,5 @@ def create_categories():
     )
 
 data.append(create_categories)"""
+
+categories = []
