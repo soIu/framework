@@ -70,7 +70,7 @@ class ProductProduct(models.Model):
     name = fields.Char(string="Product Name", required=True, index=True)
     code = fields.Char(string="Product Code", index=True)
     description = fields.Text(string="Description")
-    category_id = fields.Many2one('product.category', string="Category", required=True, index=True)
+    category_id = fields.Many2one('product.category', string="Category", index=True)
     article = fields.Char(string="Article Number", index=True)
     size = fields.Selection(StockPack.size.selection, string="Size", index=True)
     total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
