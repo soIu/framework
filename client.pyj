@@ -3,7 +3,7 @@ import orm.models as models
 import orm.exceptions as exceptions
 import orm.tools as tools
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
-from ir.data import create_data
+from ir.data import data, create_data
 
 tools.exceptions = exceptions
 
@@ -17,6 +17,14 @@ configuration.client = tools.configuration.client
 tools.configuration = Object.assign(tools.configuration, configuration)
 
 #if not tools.configuration.client:
+def restrict_menus():
+    return models.env['res.users.menu'].search(['user_id', '=', models.env.user.id]).then(
+    def (menu_ids):
+        for menu_id in menu_ids:
+            for menu in tools.menu:
+                if menu != menu_id.menu: del tools.menu[menu]
+    )
+data.push(restrict_menus)
 tools.create_data = create_data
 
 for key in tools.menu:

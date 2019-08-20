@@ -483,10 +483,10 @@ def query(db, type, args):
            del selectors[index][arg[0]];
            selectors.pop(index);
            if not need_orm: arg.splice(0, arg.length)
-           else: arg[0] = arg[0].replace('data.', '')
+           elif arg[0] != 'id': arg[0] = arg[0][5:] #.replace('data.', '')
            continue;
         if not need_orm: arg.splice(0, arg.length);
-        else: arg[0] = arg[0].replace('data.', '')
+        elif arg[0] != 'id': arg[0] = arg[0][5:] #.replace('data.', '')
         index += 1;
     if not selectors.length and not promises.length: return 'orm_only'
     for selector in selectors:
