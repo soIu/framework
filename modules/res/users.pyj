@@ -32,7 +32,7 @@ class ResUsers(models.Model):
     login = fields.Char(string="Username/Email", required=True, index=True)
     password = fields.Char(string="Password", index=True)
     is_superuser = fields.Boolean(string="Is Superuser", index=True)
-    menu_ids = fields.One2many('res.users.menu', 'menu_id', string="Available Menus")
+    menu_ids = fields.One2many('res.users.menu', 'user_id', string="Available Menus")
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
