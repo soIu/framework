@@ -19,6 +19,13 @@ class ResUsersMenu(models.Model):
 
 ResUsersMenu()
 
+view.add({'model': 'res.users.menu', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="menu"/>
+    <field name="user_id"/>
+</tree>
+"""})
+
 class ResUsers(models.Model):
     _name = 'res.users'
 
