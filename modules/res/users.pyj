@@ -6,7 +6,6 @@ from ir.ui import menu, view
 from ir.data import data
 class ResUsersMenu(models.Model):
     _name = 'res.users.menu'
-    _rec_name = 'menu'
 
     def _get_menus(self):
         menus = []
