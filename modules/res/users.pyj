@@ -99,7 +99,7 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="login"/>
         </group>
-        <group widht="100%" title="Available Menus">
+        <group width="100%" title="Available Menus">
             <field name="menu_ids">
                 <tree>
                     <field name="menu"/>
