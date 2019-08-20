@@ -17,6 +17,8 @@ class ResUsersMenu(models.Model):
     menu = fields.Selection(_get_menus, string="Menu")
     user_id = fields.Many2one('res.users', string="User")
 
+ResUsersMenu()
+
 class ResUsers(models.Model):
     _name = 'res.users'
 
