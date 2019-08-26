@@ -73,10 +73,10 @@ class ProductProduct(models.Model):
     category_id = fields.Many2one('product.category', string="Category", index=True)
     article = fields.Char(string="Article Number", index=True)
     size = fields.Selection(StockPack.size.selection, string="Size", index=True)
-    total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
-    remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
-    incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
-    actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
+    #total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
+    #remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
+    #incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
+    #actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
 
 ProductProduct()
 
@@ -84,12 +84,13 @@ menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'stock', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
 
 view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
-<tree limit="5">
+<tree>
     <field name="name"/>
-    <field name="total_qty"/>
+    <field name="code"/>
+    <!--<field name="total_qty"/>
     <field name="incoming_qty"/>
     <field name="actual_qty"/>
-    <field name="remaining_qty"/>
+    <field name="remaining_qty"/>-->
 </tree>
 """})
 
@@ -104,40 +105,48 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         <group>
             <field name="description"/>
         </group>
-        <group>
+        <!--<group>
             <field name="total_qty"/>
             <field name="remaining_qty"/>
         </group>
         <group>
             <field name="incoming_qty"/>
             <field name="actual_qty"/>
-        </group>
+        </group>-->
     </sheet>
 </form>
 """})
 
-categories = ['Product A', 'Product B', 'Product C']
+categories = {'PLATE C,PULLEY BRG SET': '21101-5T0 -0001', 'PLATE A, OIL GUIDE': '21103-5T0 -0000', 'CASE TC SOZAI': '21111-5T0 -0000-NA'}
 
 def create_products():
     promises = []
-    levels = ['3', '1', '2', '3']
+    #levels = ['3', '1', '2', '3']
     for category in categories:
-        promise = models.env['product.product'].with_context(limit=1).search(['code', '=', 'WMS-' + category])
+        promise = models.env['product.product'].with_context(limit=1).search(['code', '=', categories[category]])
         promises.push(promise)
-    return Promise.all(promises).then(
+    create_default = Promise.all(promises).then(
     def (result):
         promises = []
         for index, category in enumerate(categories):
             if result[index].length:
-               defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
+               defaults[category] = result[index].ids[0]
             else:
-               promises.push(models.env['product.product'].create({'name': category, 'code': 'WMS-' + category}))
+               promises.push(models.env['product.product'].create({'name': category, 'code': categories[category]}))
         if promises.length:
            return Promise.all(promises).then(
            def (result):
                for index, category in enumerate(categories):
-                   defaults[category.toLowerCase() + '_id'] = result[index].ids[0]
+                   defaults[category] = result[index].ids[0]
            )
     )
+    if v'typeof window' != 'undefined': return create_default
+    @async
+    def after_create():
+        product_id = await (models.env['product.product'].create({'name': 'BRIO CVT MISSION ASSY 2J5YEC0000', 'code': '2003G-5YE-0000-18'}))
+        bom_id = await (models.env['mrp.bom'].create({'name': 'BRIO CVT MISSION ASSY 2J5YEC0000 2003G-5YE-0000-18', 'product_id': product_id.id}))
+        for product in Object.values(defaults):
+            models.env['mrp.bom.line'].create({'bom_id': bom_id.id, 'product_id': product, 'product_qty': 1})
+    return create_default.then(after_create)
 
 data.append(create_products)

@@ -1,0 +1,55 @@
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+import orm.api as api
+from ir.ui import view, menu
+
+class MrpBom(models.Model):
+    _name = 'mrp.bom'
+
+    name = fields.Char(string="Model")
+    product_id = fields.Many2one('product.product', string="Finish Good")
+    reference = fields.Char(string="Reference")
+    line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
+
+MrpBom()
+
+class MrpBomLine(models.Model):
+    _name = 'mrp.bom.line'
+
+    product_id = fields.Many2one('product.product', string="Part", required=True)
+    product_qty = fields.Float(string="Quantity")
+
+MrpBomLine()
+
+menu.add(id='mrp_bom', string="Bill of Materials", sequence=3)
+menu.add(id='mrp_bom_model', string="Models", parent='mrp_bom', model='mrp.bom', sequence=1)
+
+view.add(model='mrp.bom', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="reference"/>
+</tree>
+""")
+
+view.add(model='mrp.bom', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="reference"/>
+        </group>
+        <group>
+            <field name="product_id"/>
+        </group>
+        <group width="100%">
+            <field name="line_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                </tree>
+            </field>
+        </group>
+    </sheet>
+</form>
+""")

@@ -32,7 +32,7 @@ class StockPicking(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     reference = fields.Char(string="Reference")
     state = fields.Selection(['draft', 'Draft'], ['confirmed', 'Confirmed'], ['validated', 'Validated'], string="Status", defaults='draft')
-    type = fields.Selection(['picking', 'Picking'], ['putting', 'Putting'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['picking', 'Picking'], ['putting', 'Receiving'], string="Type", required=True, defaults=_get_type)
     #picking_type = fields.Selection(['incoming', 'Incoming'], ['outgoing', 'Outgoing'], ['internal', 'Internal'], string="Picking Type")
     location_src_id = fields.Many2one('stock.location', string="Source Location")
     location_dest_id = fields.Many2one('stock.location', string="Destination Location")
@@ -273,7 +273,7 @@ class StockPicking(models.Model):
 StockPicking()
 
 menu.add({'id': 'picking', 'parent': 'stock', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_picking', 'context': {'default_operation_type': 'picking'}})
-menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
+menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Receiving', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.tree_putting', 'context': {'default_operation_type': 'putting'}})
 
 #menu.add({'id': 'picking_historical', 'parent': 'historical', 'string': 'Picking', 'model': 'stock.picking', 'sequence': 1, 'view_id': 'stock.picking.historical_picking', 'context': {'default_operation_type': 'picking'}})
 #menu.add({'id': 'putting_historical', 'parent': 'historical', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 2, 'view_id': 'stock.picking.historical_putting', 'context': {'default_operation_type': 'putting'}})
