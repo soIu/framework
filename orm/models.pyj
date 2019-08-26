@@ -146,7 +146,9 @@ class Model():
                      self._related[self._fields[key].related] = []
                   self._related[self._fields[key].related].push(key)
                if v'typeof self[key].defaults' != 'function':
-                  self._values[0][key] = self[key].defaults
+                  defaults = self[key].defaults
+                  if is_array(defaults): defaults = copy(defaults)
+                  self._values[0][key] = defaults
                else:
                   result = self[key].defaults.apply(self, [self])
                   if result and type(result) == Promise:

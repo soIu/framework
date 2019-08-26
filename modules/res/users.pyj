@@ -4,6 +4,27 @@ import orm.api as api
 import orm.tools as tools
 from ir.ui import menu, view
 from ir.data import data
+class ResUsersMenu(models.Model):
+    _name = 'res.users.menu'
+
+    def _get_menus(self):
+        menus = []
+        for menu in tools.menu:
+            menus.push([menu, tools.menu[menu].string])
+        return menus
+
+    menu = fields.Selection(_get_menus, string="Menu")
+    user_id = fields.Many2one('res.users', string="User")
+
+ResUsersMenu()
+
+view.add({'model': 'res.users.menu', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="menu"/>
+    <field name="user_id"/>
+</tree>
+"""})
+
 class ResUsers(models.Model):
     _name = 'res.users'
 
@@ -11,6 +32,7 @@ class ResUsers(models.Model):
     login = fields.Char(string="Username/Email", required=True, index=True)
     password = fields.Char(string="Password", index=True)
     is_superuser = fields.Boolean(string="Is Superuser", index=True)
+    menu_ids = fields.One2many('res.users.menu', 'user_id', string="Available Menus")
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
@@ -75,6 +97,13 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
         </group>
         <group>
             <field name="login"/>
+        </group>
+        <group width="100%" title="Available Menus">
+            <field name="menu_ids">
+                <tree>
+                    <field name="menu"/>
+                </tree>
+            </field>
         </group>
     </sheet>
 </form>

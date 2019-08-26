@@ -417,7 +417,7 @@ export default class Tree extends React.Component {
         <Button onClick={this.chooseItem.bind(this)} style={{display: choose && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
         <Button onClick={this.selectItem.bind(this)} style={{display: props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Select</Button>
         <Button onClick={this.exportItem.bind(this)} style={{display: props.isTreeView && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Export</Button>
-        {!props.isPopup && window.tools.view[this.state.model].actions.tree && Object.entries(window.tools.view[this.state.model].actions.tree).map(([function_name, string]) => (
+        {!props.isPopup && window.tools.view[this.state.model] && window.tools.view[this.state.model].actions.tree && Object.entries(window.tools.view[this.state.model].actions.tree).map(([function_name, string]) => (
           <Button onClick={(() => models.env[this.state.model].browse(this.state.active_ids).then((records) => records[function_name]()).then(() => this.gridOptions.api.deselectAll())).bind(this)} style={{display: (props.isTreeView || !models.env.context.editing) && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>{string}</Button>
         ))}
         <Button className="rapyd-tree-delete-button" onClick={this.removeItem.bind(this)} style={{display: (props.isTreeView || this.isEditable()) && !props.isPopup && this.state.selected.length > 0 ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Delete</Button>
@@ -426,7 +426,7 @@ export default class Tree extends React.Component {
           <Page popup title={window.tools.view[this.state.model] ? window.tools.view[this.state.model].string : 'Choose'}>
             <div className="card">
               <Tree ref="popup" isTreeView isPopup many2many={!!props.parent_model} parent_tree={this} active_field={this.state.tree_field} active_field_name={props.field_name} model={this.state.model} domain={(this.state.records.length > 0 ? [['id', 'not in', window.models.env.context.active_lines[props.model][(this.props.parent_model ? 'many2many_' : '') + this.state.tree_field].ids]] : []).concat(props.domain ? props.domain(models.env.context.active_id) : [])}>
-                {Array.prototype.slice.call(new DOMParser().parseFromString(window.tools.view[this.state.model].tree || props.tree_arch || '<tree><field name="' + (window.models.env[this.state.model]._rec_name || 'name') + '"/></tree>', 'text/xml').children[0].children).map((element) => {
+                {Array.prototype.slice.call(new DOMParser().parseFromString((window.tools.view[this.state.model] && window.tools.view[this.state.model].tree) || props.tree_arch || '<tree><field name="' + (window.models.env[this.state.model]._rec_name || 'name') + '"/></tree>', 'text/xml').children[0].children).map((element) => {
                   const props = {model};
                   for (let attribute of element.attributes) {
                     props[attribute.name] = attribute.value;
