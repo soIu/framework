@@ -12,8 +12,9 @@ export default class extends React.Component {
   async componentDidMount(props) {
     api.globals.app = this.$f7;
     if (api.globals.app.device.ios) {
-      var style = document.createElement('style');
-      style.innerHTML = '#framework7-root {padding-top: 24px !important} .statusbar {display: block !important}';
+      let color = document.querySelector('meta[name=theme-color]').content;
+      let style = document.createElement('style');
+      style.innerHTML = '#framework7-root {padding-top: 24px !important; background-color: ' + color + ' !important} .panel {padding-top: 24px !important; background-color: ' + color + ' !important}';
       document.querySelector('head').append(style);
     }
     window.tools.navigate = api.globals.app.views.main.router.navigate.bind(api.globals.app.views.main.router);

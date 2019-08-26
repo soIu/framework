@@ -18,8 +18,9 @@ async function button(props) {
       }
     }
     catch(error) {
-      console.log(error);
+      //console.log(error);
       await window.models.env.context.refresh();
+      throw error;
       //await api.globals.app.views.main.router.refreshPage();
     }
   }
