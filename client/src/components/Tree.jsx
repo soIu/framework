@@ -7,6 +7,10 @@ import csv from 'csv.js';
 import FileSaver from 'file-saver';
 import api from 'api';
 
+function isOverflown(element) {
+  return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+}
+
 function autoSizeAll(gridOptions, listener) {
   if (this) {
     this.gridOptions = gridOptions;
@@ -19,7 +23,22 @@ function autoSizeAll(gridOptions, listener) {
     return;
   }*/
   //let grid = gridOptions.api
-  gridOptions.api.sizeColumnsToFit();
+  let availableWidth = gridOptions.api.gridPanel.getWidthForSizeColsToFit();
+  let columns = gridOptions.api.gridPanel.columnController.getAllDisplayedColumns();
+  let usedWidth = gridOptions.api.gridPanel.columnController.getWidthOfColsInList(columns);
+  if (true) {
+    const maxWidth = Math.max(...Array.prototype.slice.call(document.querySelectorAll('div.ag-header-row')).filter((element) => element.offsetParent).map((element) => parseFloat(element.style.width.replace('px', ''))));
+    const style = document.getElementById('rapyd-maximum-tree-width') || document.createElement('style');
+    style.id = 'rapyd-maximum-tree-width';
+    style.innerHTML = '.rapyd-card-sheet {min-width: ' + (maxWidth + 20) + 'px}';
+    document.querySelector('head').append(style);
+  }
+  if (usedWidth <= availableWidth + 6) return gridOptions.api.sizeColumnsToFit();
+  const allColumnIds = [];
+  gridOptions.columnApi.getAllColumns().forEach(function(column) {
+    allColumnIds.push(column.colId);
+  });
+  gridOptions.columnApi.autoSizeColumns(allColumnIds);
 }
 
 export default class Tree extends React.Component {
@@ -27,7 +46,16 @@ export default class Tree extends React.Component {
     super(props);
 
     const model = props.model || window.models.env.context.active_model;
-    function isEditable() {
+    const this_tree = this;
+    function isEditable(params) {
+      if (this && this != this_tree) {
+        const context = window.models.env.context;
+        const model = props.model || window.models.env.context.active_model;
+        const field = window.models.env[model]._fields[this.props.name];
+        const active_id = context.active_lines[this_tree.state.model][(this_tree.props.parent_model ? 'many2many_' : '') + this_tree.state.tree_field].find(this_tree.state.records[params.node.rowIndex].id || this_tree.state.records[params.node.rowIndex]._original_object_for_id);
+        const readonly = field.readonly || this.props.readonly;
+        return !(readonly instanceof Function ? readonly(active_id) : readonly);
+      }
       if (props.isTreeView && !props.editable) {
         return false;
       }
@@ -94,7 +122,7 @@ export default class Tree extends React.Component {
     }
     this.handleOutside = handleOutside.bind(this);
     const children = props.children.constructor === Array ? props.children : [props.children];
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true, newRowsAction: 'keep'}, editable: isEditable, invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true, newRowsAction: 'keep'}, editable: isEditable.bind(child), invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
@@ -127,6 +155,8 @@ export default class Tree extends React.Component {
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.handleOutside);
     window.removeEventListener('resize', this.resizeListener);
+    //delete window.models.env.context.maxTreeWidth;
+    if (document.getElementById('rapyd-maximum-tree-width')) document.getElementById('rapyd-maximum-tree-width').remove();
   }
 
   paginate(rows, index=0) {
@@ -410,8 +440,9 @@ export default class Tree extends React.Component {
     const models = window.models;
     const editableHeight = () => this.isEditable() ? (30) : 0
     const choose = (props.choose !== undefined ? (props.choose instanceof Function ? props.choose(models.env.context.active_id) : props.choose) : props.parent_model);
+    const invisible = props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible;
     const grid = (
-      <div className="card-body" style={{height: Math.min(this.state.records.length, this.state.limit) * 48 + 112 + editableHeight()/* <= 440 ? this.state.records.length * 48 + 112 + editableHeight() + 'px' : '67vh'*/ + 'px', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
+      <div className={"card-body" + (invisible ? ' rapyd-tree-is-invisible' : '')} style={{height: Math.min(this.state.records.length, this.state.limit) * 48 + 112 + editableHeight()/* <= 440 ? this.state.records.length * 48 + 112 + editableHeight() + 'px' : '67vh'*/ + 'px', ...(invisible ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
         <Grid ref="grid" onGridReady={((params) => autoSizeAll.bind(this)(params) || window.addEventListener('resize', this.resizeListener = () => autoSizeAll(params, this.resizeListener))).bind(this)} onRowClicked={(params) => models.env[this.state.model].browse(null).then((record) => delete models.env.context.active_id).then(() => api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id))} onPaginationChanged={(params) => this.paging.bind(this)(params.api.paginationGetCurrentPage(), params)} onSortChanged={(params) => this.sort.bind(this)(params.api.getSortModel(), params)} onFilterChanged={(params) => this.filter.bind(this)(params.api.getFilterModel(), params)} onSelectionChanged={this.onSelectionChanged} paginationPageSize={this.state.limit} columnDefs={this.state.fields.filter((field) => !props.isTreeView && models.env.context.active_id && field.invisible instanceof Function ? !field.invisible({}, models.env.context.active_id) : !field.invisible)} rowData={this.state.records} frameworkComponents={this.state.frameworkComponents}/>
         <Button onClick={this.addItem.bind(this)} style={{display: this.isEditable() && (props.create instanceof Function ? props.create(models.env.context.active_id) : props.create) !== false ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Add</Button>
         <Button onClick={this.chooseItem.bind(this)} style={{display: choose && this.isEditable() ? 'inline-block' : 'none', top: '-45px', backgroundColor: '#fff'}}>Choose</Button>
