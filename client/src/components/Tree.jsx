@@ -52,7 +52,7 @@ export default class Tree extends React.Component {
     function isEditable(params) {
       let result;
       if (props.isTreeView && !props.editable) {
-        result = false;
+        return false;
       }
       if (window.models.env.context.editing) {
         result = true;
