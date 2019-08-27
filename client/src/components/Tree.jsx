@@ -48,7 +48,14 @@ export default class Tree extends React.Component {
     const model = props.model || window.models.env.context.active_model;
     const this_tree = this;
     function isEditable(params) {
-      if (this && this != this_tree) {
+      let result;
+      if (props.isTreeView && !props.editable) {
+        result = false;
+      }
+      if (window.models.env.context.editing) {
+        result = true;
+      }
+      if (result && this && this != this_tree) {
         const context = window.models.env.context;
         const model = props.model || window.models.env.context.active_model;
         const field = window.models.env[model]._fields[this.props.name];
@@ -56,13 +63,7 @@ export default class Tree extends React.Component {
         const readonly = field.readonly || this.props.readonly;
         return !(readonly instanceof Function ? readonly(active_id) : readonly);
       }
-      if (props.isTreeView && !props.editable) {
-        return false;
-      }
-      if (window.models.env.context.editing) {
-        return true;
-      }
-      return false;
+      return result || false;
     }
     this.isEditable = isEditable;
     this.pendingTask = {create: false, write: false, tasked: false};
