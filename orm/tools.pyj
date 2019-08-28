@@ -388,6 +388,7 @@ def query(db, type, args):
     default_selector = {'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}
     selectors = [] #{'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}];
     promises = [];
+    except_ids = {};
     index = 0;
     for arg in args:
         need_orm = None
@@ -411,21 +412,26 @@ def query(db, type, args):
         elif arg[1] == '!=':
            if arg[2] != False:
               queries = []
-              queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
+              #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
               for operator in ['eq']: #, 'gt', 'lt']:
                   selector = copy(default_selector)
                   selector[arg[0]] = {'$' + operator: arg[2]}
                   query = db.find({'selector': selector, 'fields': ['_id']})
                   queries.push(query)
-              promises.push(Promise.all(queries).then(
+              #promises.push(
+              Promise.all(queries).then(
               def (result):
                   #equal, greater, less = result
-                  all, equal = result
-                  ids = [doc._id for doc in equal.docs]
-                  if not ids.length: return all
-                  all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
-                  return all
-              ))
+                  #all, equal = result
+                  equal = result[0]
+                  for doc in equal.docs: except_ids[doc._id] = True
+                  return
+                  #ids = [doc._id for doc in equal.docs]
+                  #if not ids.length: return all
+                  #all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
+                  #return all
+              )
+              #)
            else:
               selectors[index][arg[0]]['$gt'] = False;
         elif arg[1] == '>': selectors[index][arg[0]]['$gt'] = v"typeof arg[2] === 'number' ? (arg[2] + 0.000000000000001) : arg[2]";
@@ -455,21 +461,25 @@ def query(db, type, args):
            def (result):
                field, value = result
                queries = []
-               queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
+               #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
                for operator in ['eq']: #, 'gt', 'lt']:
                    selector = copy(default_selector)
                    selector[field] = {'$' + operator: value}
                    query = db.find({'selector': selector, 'fields': ['_id']})
                    queries.push(query)
-               promises.push(Promise.all(queries).then(
+               #promises.push(
+               Promise.all(queries).then(
                def (result):
                    #equal, greater, less = result
-                   all, equal = result
-                   ids = [doc._id for doc in equal.docs]
-                   if not ids.length: return all
-                   all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
-                   return all
-               ))
+                   #all, equal = result
+                   equal = result[0]
+                   for doc in equal.docs: except_ids[doc._id] = True
+                   return
+                   #ids = [doc._id for doc in equal.docs]
+                   #if not ids.length: return all
+                   #all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
+                   #return all
+               ) #)
            )
         elif arg[1] == 'like':
            #selectors[index][arg[0]]['$gte'] = arg[2];
@@ -498,6 +508,7 @@ def query(db, type, args):
         index = 0
         for result in results:
             for doc in result.docs:
+                if doc._id in except_ids: continue
                 if index == 0: ids_map[doc._id] = 1
                 elif doc._id in ids_map: ids_map[doc._id] += 1
                 if ids_map[doc._id] == results.length: ids.push(db.rel.parseDocID(doc._id).id)
