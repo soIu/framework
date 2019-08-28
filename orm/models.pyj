@@ -851,10 +851,11 @@ class Model():
                #return False
                raise error
            )
-        if self._is_singleton:
+        if self.length == 1:
            return db.get(db.rel.makeDocID({'type': self._name, 'id': self.id})).then(
            def (record):
-               db.remove(record)
+               record._deleted = True
+               return db.put(record)
            )
         else:
            processes = []
