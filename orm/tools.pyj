@@ -40,17 +40,12 @@ def merge(*args, **kwargs):
     #return target
 
 def copy(object):
- try:
     if exist(object):
        if is_array(object):
           return [copy(value) for value in object]
        elif is_json(object):
           return {key: copy(object[key]) for key in object}
     return object
- except Exception as error:
-    console.log(object)
-    window.q = object
-    raise error
 
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair

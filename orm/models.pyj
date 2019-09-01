@@ -385,6 +385,7 @@ class Model():
         elif is_client:
            return ajax('post', 'json', configuration.url + '/api/browse', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': ids, 'context': self._context}, self._context).then(
            def (result):
+               if result.error: configuration.exception(new exceptions.ServerError(result.error, result.error_type))
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
                if is_array(result.values):
@@ -443,6 +444,7 @@ class Model():
            options.fields = Object.keys(self._fields)
            return ajax('post', 'json', configuration.url + '/api/search', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'args': args, 'options': options}, self._context).then(
            def (result):
+               if result.error: configuration.exception(new exceptions.ServerError(result.error, result.error_type))
                record = self.browse(is_singleton=not is_array(result.values), is_env=True)
                record.values = result.values
                if is_array(result.values):
@@ -455,7 +457,7 @@ class Model():
            ).catch(
            def (error):
                configuration.warning(error, True)
-               return self.with_context(is_client=False).search(args)
+               return self.with_context(is_client=False).search(*args)
            )
         def query(record):
             return apply_domain_record(*args, record=record)
@@ -735,6 +737,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/create', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'values': values}, self._context).then(
            def (result):
+               if result.error: configuration.exception(new exceptions.ServerError(result.error, result.error_type))
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
                #self.with_context(no_preload=True).browse(self.ids)
@@ -790,6 +793,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/write', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'values': values}, self._context).then(
            def (result):
+               if result.error: configuration.exception(new exceptions.ServerError(result.error, result.error_type))
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
                #self.with_context(no_preload=True).browse(self.ids)
@@ -843,6 +847,7 @@ class Model():
         if is_client:
            return ajax('post', 'json', configuration.url + '/api/unlink', {'login': self.env.user.login, 'password': self.env.user.password, 'encrypted': True, 'model': self._name, 'ids': [record.id for record in self.__iter__()]}, self._context).then(
            def (result):
+               if result.error: configuration.exception(new exceptions.ServerError(result.error, result.error_type))
                return True
            ).catch(
            def (error):

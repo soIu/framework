@@ -33,7 +33,7 @@ def nonasync_server(method):
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
             if result.error:
-               tools.configuration.exception(result.error)
+               tools.configuration.exception(new tools.exceptions.ServerError(result.error, result.error_type))
             self.values = result.values
             context = self._context
             #self.env[self._name].with_context(**context).browse(self.ids)
@@ -80,7 +80,7 @@ def nonasync_client(method):
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
             if result.error:
-               tools.configuration.exception(result.error)
+               tools.configuration.exception(new tools.exceptions.ServerError(result.error, result.error_type))
             self.values = result.values
             context = self._context
             #self.env[self._name].with_context(**context).browse(self.ids)
@@ -128,7 +128,7 @@ def nonasync_strict(method):
         return tools.ajax('post', 'json', tools.configuration.url + '/api/methods', {'login': models.env.user.login, 'password': models.env.user.password, 'encrypted': True, 'model': self._name, 'ids': self.ids, 'method': method.name, 'args': args}, self._context).then(
         def (result):
             if result.error:
-               tools.configuration.exception(result.error)
+               tools.configuration.exception(new tools.exceptions.ServerError(result.error, result.error_type))
             self.values = result.values
             context = self._context
             #self.env[self._name].with_context(**context).browse(self.ids)
