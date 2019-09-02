@@ -89,7 +89,7 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--serve
        console.log(async_await_polyfill + result);
        process.exit();
     }
-    eval(async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function').replace(/async: true}\)\]\)\(function/g, 'async: true})])(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result);
+    eval(async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function').replace(/async: true}\)\]\)\(function/g, 'async: true})])(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result));
 }
 else {
     process.argv = argv;
