@@ -91,7 +91,7 @@ if (process.argv.indexOf('--serverless') === -1) {
     }
 }
 if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--client') !== -1 || process.argv.indexOf('--serverless') !== -1 || require.main !== module) {
-    result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env, maxBuffer: 100000 * 1024}).toString();
+    result = child_process.execSync(command, {cwd: __dirname, stdio: pipe, env: process.env}).toString();
     if (result.match('ρσ_regenerator.regeneratorRuntime = Object.prototype;')) result = result.replace('ρσ_regenerator.regeneratorRuntime = Object.prototype;', '(function(global) {\n      "use strict";\n    \n      var Op = Object.prototype;').replace('    })(\n    \n      (function() { return this })() || Function("return this")()\n    );', '');
     var code = async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function').replace(/async: true}\)\]\)\(function/g, 'async: true})])(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result);
     if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--client') !== -1) {
