@@ -154,7 +154,7 @@ class StockPack(models.Model):
     #order_id = fields.Many2one('adidas.po', string="PO Number")
     article = fields.Char(string="Article")
     #picking_ids = fields.Many2many('stock.picking', string="Operations")
-    bucket = fields.Selection(_get_buckets, string="Current Rack")
+    bucket = fields.Selection(_get_buckets, string="Current Daisha")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
     level = fields.Selection(['1', 'Layer 1'], ['2', 'Layer 2'], ['3', 'Layer 3'], string="Layer")
@@ -163,7 +163,7 @@ class StockPack(models.Model):
     adidas_product_qty = fields.Float(string="Quantity")
     available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
-    allowed_buckets = fields.Data(string="Allowed Racks that are empty at that time")
+    allowed_buckets = fields.Data(string="Allowed Daisha that are empty at that time")
     allowed_sizes = fields.Data(string="Allowed Size from PO")
     disposed = fields.Boolean(string="Disposed", index=True)
 
@@ -331,7 +331,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
             <field name="size"/>
         </group>
         <group>
-            <field name="bucket" string="Rack"/>
+            <field name="bucket" string="Daisha"/>
             <field name="category_id"/>
             <field name="level"/>
             <field name="available_qty"/>

@@ -22,8 +22,8 @@ class MrpBomLine(models.Model):
 
 MrpBomLine()
 
-menu.add(id='mrp_bom', string="Bill of Materials", sequence=3)
-menu.add(id='mrp_bom_model', string="Models", parent='mrp_bom', model='mrp.bom', sequence=1)
+menu.add(id='mrp_planning', string="Planning", sequence=3)
+menu.add(id='mrp_bom', string="Bill of Materials", parent='mrp_planning', model='mrp.bom', sequence=1)
 
 view.add(model='mrp.bom', mode='tree', arch="""
 <tree>

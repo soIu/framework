@@ -45,11 +45,11 @@ class StockPicking(models.Model):
         if v"typeof window === 'undefined'":
            for object in each(values):
                if object.type == 'putting':
-                  object.location_dest_id = location_default.internal_id
-                  object.location_src_id = location_default.external_id
+                  if not object.location_dest_id: object.location_dest_id = location_default.internal_id
+                  if not object.location_src_id: object.location_src_id = location_default.external_id
                elif object.type == 'picking':
-                  object.location_src_id = location_default.internal_id
-                  object.location_dest_id = location_default.external_id
+                  if not object.location_src_id: object.location_src_id = location_default.internal_id
+                  if not object.location_dest_id: object.location_dest_id = location_default.external_id
                promise = self.env['ir.sequence'].browse(sequence['stock.picking' if object.type == 'picking' else 'stock.picking.putting']).then(
                def (sequence_id): return sequence_id.get_next()
                ).then(
@@ -279,7 +279,7 @@ menu.add({'id': 'putting', 'parent': 'stock', 'string': 'Receiving', 'model': 's
 #menu.add({'id': 'putting_historical', 'parent': 'historical', 'string': 'Putting', 'model': 'stock.picking', 'sequence': 2, 'view_id': 'stock.picking.historical_putting', 'context': {'default_operation_type': 'putting'}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch': """
-<tree domain="(context.no_validated ? ['state', '!=', 'validated'] : []), ['type', '=', context.default_operation_type]">
+<tree domain="['type', '=', context.default_operation_type]">
     <field name="name"/>
     <field name="date"/>
 </tree>
@@ -290,7 +290,7 @@ view.add({'model': 'stock.picking', 'mode': 'tree_picking', 'string': 'Operation
 """, 'context': {'default_operation_type': 'picking', 'no_validated': True}})
 
 view.add({'model': 'stock.picking', 'mode': 'tree_putting', 'string': 'Operation', 'arch': """
-<tree-page title="Putting"/>
+<tree-page title="Receiving"/>
 """, 'context': {'default_operation_type': 'putting', 'no_validated': True}})
 
 view.add({'model': 'stock.picking', 'mode': 'historical_picking', 'string': 'Operation', 'arch': """
@@ -298,7 +298,7 @@ view.add({'model': 'stock.picking', 'mode': 'historical_picking', 'string': 'Ope
 """, 'context': {'default_operation_type': 'picking', 'no_validated': False}})
 
 view.add({'model': 'stock.picking', 'mode': 'historical_putting', 'string': 'Operation', 'arch': """
-<tree-page title="Putting"/>
+<tree-page title="Receiving"/>
 """, 'context': {'default_operation_type': 'putting', 'no_validated': False}})
 
 view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch': """
@@ -317,6 +317,12 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="date"/>
             <field name="type"/>
         </group>
+        <group>
+            <field name="location_src_id"/>
+        </group>
+        <group>
+            <field name="location_dest_id"/>
+        </group>
         <group width="100%">
             <!--<button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>-->
             <scanner-button invisible="active_id.type != 'picking'"/>
@@ -325,8 +331,8 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="pack_ids">
                 <tree create="active_id.type == 'putting'" choose="active_id.type == 'picking'" domain="['disposed', '!=', True]">
                     <field name="name"/>
-                    <field name="order_id"/>
-                    <field name="bucket" string="Rack"/>
+                    <!--<field name="order_id"/>-->
+                    <field name="bucket" string="Daisha"/>
                     <field name="adidas_product_id" domain="(active_id.article ? ['article', '=', active_id.article] : ['id', 'not in', []]), (active_id.allowed_sizes ? ['size', 'in', active_id.allowed_sizes] : ['id', 'not in', []])"/>
                     <field name="adidas_product_qty"/>
                 </tree>

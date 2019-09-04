@@ -43,22 +43,32 @@ view.add({'model': 'stock.location', 'mode': 'form', 'string': False, 'arch': ""
 def create_locations():
     internal = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'INT'])
     external = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'EXT'])
-    return Promise.all([internal, external]).then(
+    scr = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'SCR'])
+    assy = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'ASSY'])
+    return Promise.all([internal, external, scr, assy]).then(
     def (result):
         promises = []
-        internal_id, external_id = result
+        internal_id, external_id, scr_id, assy_id = result
         if internal_id.length:
            defaults.internal_id = internal_id.ids[0]
         else:
-           promises.push(models.env['stock.location'].create({'name': 'Internal', 'type': 'internal', 'code': 'INT'}))
+           promises.push(models.env['stock.location'].create({'name': 'LC', 'type': 'internal', 'code': 'INT'}))
         if external_id.length:
            defaults.external_id = external_id.ids[0]
         else:
-           promises.push(models.env['stock.location'].create({'name': 'External', 'type': 'internal', 'code': 'EXT'}))
+           promises.push(models.env['stock.location'].create({'name': 'External', 'type': 'vendor', 'code': 'EXT'}))
+        if scr_id.length:
+           defaults.scr_id = scr_id.ids[0]
+        else:
+           promises.push(models.env['stock.location'].create({'name': 'SCR', 'type': 'internal', 'code': 'SCR'}))
+        if assy_id.length:
+           defaults.assy_id = assy_id.ids[0]
+        else:
+           promises.push(models.env['stock.location'].create({'name': 'ASSY', 'type': 'internal', 'code': 'ASSY'}))
         if promises.length:
            return Promise.all(promises).then(
            def (result):
-               defaults.internal_id, defaults.external_id = [record.id for record in result]
+               defaults.internal_id, defaults.external_id, defaults.scr_id, defaults.assy_id = [record.id for record in result]
            )
     )
 
