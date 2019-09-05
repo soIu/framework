@@ -12,6 +12,7 @@ if (process.execPath.indexOf('.exe') !== -1) {
 }
 var fs = require('fs');
 var target = process.argv.indexOf('--client') !== -1 ? 'client.pyj' : 'server.pyj';
+if (target === 'client.pyj') async_await_polyfill = '    function await_all' + '(promises) {\n  if (Array.isArray(promises)) return Promise.all(promises)\n  return promises\n}\n' + '    function async(sync_function) {return sync_function}\n'; //+ '    var ρσ_module_doc__;\n'
 var conf = "" +
 "master_password = yourpassword\n" +
 "admin_password = r4pyd\n" +
