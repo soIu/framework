@@ -97,9 +97,11 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--clien
     var code = async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function').replace(/async: true}\)\]\)\(function/g, 'async: true})])(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result);
     if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--client') !== -1) {
        if (process.argv.indexOf('--client') !== -1) code = code.replace("{'home_view':window.localStorage.rapyd_home_view||'res.message.chat'}", JSON.stringify(conf));
-       var half = Math.floor(code.length / 2);
-       process.stdout.write(code.slice(0, half));
-       process.stdout.write(code.slice(half));
+       var quarter = Math.ceil(code.length / 4);
+       process.stdout.write(code.slice(0, quarter));
+       process.stdout.write(code.slice(quarter * 1, quarter * 2));
+       process.stdout.write(code.slice(quarter * 2, quarter * 3));
+       process.stdout.write(code.slice(quarter * 3, quarter * 4));
        process.exit();
     }
     eval(code);
