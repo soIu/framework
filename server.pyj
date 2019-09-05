@@ -10,7 +10,7 @@ configuration = merge(configuration, JSON.parse(require('process').env.rapyd_con
 
 admin_password = configuration.admin_password
 
-client_js = require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'). ['server.js', '--client'], {'env': require('process').env, maxBuffer: 5000 * 1024}).stdout.toString()
+client_js = require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, maxBuffer: 5000 * 1024}).stdout.toString()
 client_js_time = Date().toISOString()
 
 crypto = require('crypto')
