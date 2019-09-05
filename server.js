@@ -12,7 +12,7 @@ if (process.execPath.indexOf('.exe') !== -1) {
 }
 var fs = require('fs');
 var target = process.argv.indexOf('--client') !== -1 ? 'client.pyj' : 'server.pyj';
-if (target === 'client.pyj') async_await_polyfill = '    function await_all' + '(promises) {\n  if (Array.isArray(promises)) return Promise.all(promises)\n  return promises\n}\n' + '    function async(sync_function) {return sync_function}\n'; //+ '    var ρσ_module_doc__;\n'
+if (target === 'client.pyj') async_await_polyfill = 'function await_all' + '(promises) {\n  if (Array.isArray(promises)) return Promise.all(promises)\n  return promises\n}\n' + 'function async(sync_function) {return sync_function}\n'; //+ '    var ρσ_module_doc__;\n'
 var conf = "" +
 "master_password = yourpassword\n" +
 "admin_password = r4pyd\n" +
@@ -97,7 +97,9 @@ if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--clien
     var code = async_await_polyfill + 'var ρσ_module_doc__;\n' + (parseFloat(require('process').version.slice(1)) >= 7.6 ? require('minify-fast').default({code: result.replace(/await\(/g, 'await_all(').replace(/async\(function/g, 'async(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true})]))(async function').replace(/async: true}\)\]\)\(function/g, 'async: true})])(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await await_all(') : result);
     if (process.argv.indexOf('--print-file') !== -1 || process.argv.indexOf('--client') !== -1) {
        if (process.argv.indexOf('--client') !== -1) code = code.replace("{'home_view':window.localStorage.rapyd_home_view||'res.message.chat'}", JSON.stringify(conf));
-       process.stdout.write(code);
+       var half = Math.floor(code.length / 2);
+       process.stdout.write(code.slice(0, half));
+       process.stdout.write(code.slice(half));
        process.exit();
     }
     eval(code);
