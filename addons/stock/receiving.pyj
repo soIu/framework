@@ -1,0 +1,25 @@
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+import orm.api as api
+from ir.ui import view, menu
+
+class StockReceivingWizard(models.Model):
+    _name = 'stock.receiving.wizard'
+
+    #name = fields.Char(string="")
+
+StockReceivingWizard()
+
+menu.add(id='scanner', string="Scanner", sequence=5)
+menu.add(id='scanner_receiving', string="Receiving", parent='scanner', model='stock.receiving.wizard', view_id='stock.receiving.wizard.scan', sequence=1)
+
+view.add(model='stock.receiving.wizard', mode='scan', arch="""
+<form>
+    <sheet>
+        <group width="100%">
+            <scanner-camera/>
+        </group>
+    </sheet>
+</form>
+""")
