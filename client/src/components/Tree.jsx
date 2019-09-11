@@ -2,6 +2,7 @@ import React from 'react';
 import Page from './Page';
 import Grid from './Grid';
 import GridEditor from './GridEditor';
+import GridCheckbox from './GridCheckbox';
 import {Button, Popup} from 'framework7-react';
 import csv from 'csv.js';
 import FileSaver from 'file-saver';
@@ -125,7 +126,7 @@ export default class Tree extends React.Component {
     }
     this.handleOutside = handleOutside.bind(this);
     const children = props.children.constructor === Array ? props.children : [props.children];
-    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true, newRowsAction: 'keep'}, editable: isEditable.bind(child), invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell'} : {})}));
+    const fields = children.map((child, index) => ({headerName: (() => child.attributes.string || window.models.env[model]._fields[child.attributes.name].string)(), field: child.attributes.name, suppressMovable: true, filterParams: {applyButton: true, clearButton: true, newRowsAction: 'keep'}, editable: window.models.env[model]._fields[child.attributes.name].type !== 'boolean' && isEditable.bind(child), invisible: child.props.invisible, onCellValueChanged: this.onChange, ...(child.props.sort ? (this.default_sort = child.props.name + ' ' + child.props.sort) && {sort: child.props.sort} : {}), ...((['date', 'datetime', 'selection', 'boolean'].indexOf(window.models.env[model]._fields[child.attributes.name].type) !== -1 || window.models.env[model]._fields[child.attributes.name].relation) ? {cellEditorFramework: window.models.env[model]._fields[child.attributes.name].type !== 'boolean' && GridEditor, cellEditorParams: {...child.props, model, tree: this}, cellRendererParams: {...child.props, model, tree: this}, cellClass: 'editable-special-cell', cellRendererFramework: window.models.env[model]._fields[child.attributes.name].type === 'boolean' && GridCheckbox} : {})}));
     fields[0].checkboxSelection = true;
     fields[0].headerCheckboxSelection = true;
     //fields[0].suppressSizeToFit = true;
