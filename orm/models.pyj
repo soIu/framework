@@ -32,11 +32,11 @@ def queryInverse(field_type, records, fields, _fields):
     def (): return records
     )
 
-def queryFind(db, type, args, inverse=False):
+def queryFind(db, type, args, limit, inverse=False):
     def processInverse(records):
         return queryInverse(type, records, env[type]._one2many_fields, env[type]._fields)
     if inverse: return db.rel.find(type, args).then(processInverse)
-    result = query(db, type, args)
+    result = query(db, type, args, limit)
     if result == 'orm_only': return db.rel.find(type).then(processInverse)
     return result.then(
     def (ids):
@@ -470,7 +470,7 @@ class Model():
               def (resolve, reject):
                   resolve(result)
               )
-           return queryFind(db, result._name, args).then(
+           return queryFind(db, result._name, args, options.limit or None if not exist(options.order) else None).then(
            def (records):
                #records = queryInverse(result._name, records, result._one2many_fields, result._fields)
                if exist(options.order):
@@ -485,7 +485,7 @@ class Model():
                return result
            )
         else:
-           return queryFind(db, result._name, args).then(
+           return queryFind(db, result._name, args, options.limit or None if not exist(options.order) else None).then(
            def (records):
                v'var result = new self.constructor(true, false)'
                #records = queryInverse(result._name, records, result._one2many_fields, result._fields)

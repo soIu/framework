@@ -378,7 +378,7 @@ configuration.ajax_load = ajax_load
 configuration.ajax_resolve = ajax_resolve
 configuration.ajax_reject = ajax_reject
 
-def query(db, type, args):
+def query(db, type, args, limit):
     makeDocID = db.rel.makeDocID;
     default_selector = {'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}
     selectors = [] #{'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}];
@@ -519,6 +519,8 @@ def query(db, type, args):
         #ids = ids.map(
         #def (id): return db.rel.parseDocID(id).id
         #)
+        if limit:
+           ids = ids[0:limit]
         return ids
     )
 
