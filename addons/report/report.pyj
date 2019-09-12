@@ -1,0 +1,80 @@
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+from ir.ui import menu, view
+
+iframe_window = None
+
+class Report(models.Model):
+    _name = 'report.report'
+
+    name = fields.Char(string="Report Name")
+    reference = fields.Char(string="Reference")
+    report_object = fields.Data(string="Report Object")
+
+    def create(self, values=False, is_client=tools.configuration.client):
+        values = values if tools.exist(values) else self.values
+        if iframe_window:
+           values.report_object = iframe_window.$('#reportbro').reportBro('getReport')
+           nonlocal iframe_window
+           iframe_window = None
+        result = self.__super__('create')(values=values, is_client=is_client)
+        return result
+
+    def write(self, values=False, is_client=tools.configuration.client):
+        values = values if tools.exist(values) else self.values
+        if iframe_window:
+           values.report_object = iframe_window.$('#reportbro').reportBro('getReport')
+           nonlocal iframe_window
+           iframe_window = None
+        return self.__super__('write')(values=values, is_client=is_client)
+
+Report()
+
+menu.add(id='reports', parent='settings', string='Reports', model='report.report', sequence=10)
+
+view.add(mode='tree', model='report.report', arch="""
+<tree>
+    <field name="name"/>
+    <field name="reference"/>
+</tree>
+""")
+
+def init_report():
+    form = this
+    button = form.refs.fullscreen
+    element = form.refs.frame
+    nonlocal iframe_window
+    iframe_window = element.contentWindow
+    def onclick():
+        requestFullscreen = element.requestFullScreen or element.webkitRequestFullScreen or element.mozRequestFullScreen or element.msRequestFullscreen
+        if not requestFullscreen: return
+        requestFullscreen.call(element)
+    button.base.onclick = onclick
+    tools.wait_exist(
+    def (): return models.env.context.active_id and document.getElementById('reportbro_designer_iframe') and document.getElementById('reportbro_designer_iframe').contentWindow.$ and document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro').reportBro('getReport')
+    ).then(
+    def ():
+        if tools.exist(models.env.context.active_id.report_object):
+           reportbro = document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro')
+           if models.env.context.active_id.report_object.docElements != reportbro.reportBro('getReport').docElements: console.log('dor') or reportbro.reportBro('load', models.env.context.active_id.report_object)
+    )
+
+view.add(mode='form', model='report.report', init=init_report, arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="reference"/>
+        </group>
+        <group>
+            <f7-button fill="true" style="display: inline-block" ref="fullscreen">Edit Fullscreen</f7-button>
+        </group>
+        <group width="100%">
+            <iframe ref="frame" id="reportbro_designer_iframe" frameborder="0" width="100%" height="500px" style="border-radius: 5px" src="reportbro/index.html"/>
+        </group>
+    </sheet>
+</form>
+""")

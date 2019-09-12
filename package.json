@@ -8,6 +8,7 @@
     "node-xlsx": "^0.15.0",
     "minify-fast": "^0.11.1",
     "pouchdb-adapter-http": "^7.0.0",
+    "pouchdb-adapter-leveldb": "^7.0.0",
     "pouchdb-adapter-memory": "^7.0.0",
     "pouchdb-core": "^7.0.0",
     "pouchdb-find": "^7.0.0",

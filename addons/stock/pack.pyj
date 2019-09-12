@@ -73,6 +73,7 @@ class StockPack(models.Model):
 
     @async
     def _get_box_number(self):
+        number_server = self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None)
         if not self.env.context.allowed_buckets:
            if window.localStorage.quicktron_allowed_buckets: self.env.context.allowed_buckets = JSON.parse(window.localStorage.quicktron_allowed_buckets)
            bucket_selection = WcsJob.prototype.bucket.selection
@@ -97,7 +98,7 @@ class StockPack(models.Model):
            await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
            self.env.context.allowed_buckets = buckets
            window.localStorage.quicktron_allowed_buckets = JSON.stringify(buckets)
-        result = await (self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None))
+        result = await (number_server)
         pack.last_box = result
         return result
 
@@ -111,10 +112,10 @@ class StockPack(models.Model):
     def _get_buckets(self):
         buckets = []
         for bucket in WcsJob.prototype.bucket.selection:
-            if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + models.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
-            else:
+            #if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + models.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
+            #else:
                bucket = tools.copy(bucket)
-               bucket[1] += ' FULL'
+            #   bucket[1] += ' FULL'
                buckets.push(bucket)
         return buckets
 
@@ -200,10 +201,11 @@ class StockPack(models.Model):
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
-           self.read(format=True).then(
-           def (values):
-               for record in values: printBarcode(record.name)
-           )
+           for record in self: printBarcode(record.name)
+           #self.read(format=True).then(
+           #def (values):
+           #    for record in values: printBarcode(record.name)
+           #)
 
     #@api.onchange('order_id')
     def onchange_po(self):
@@ -305,7 +307,7 @@ def pack_list_init():
         ).then(pack_list_init.bind(page))
     )
 
-view.add({'model': 'stock.pack', 'mode': 'tree', 'init': pack_list_init, 'string': False, 'arch': """
+view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="(context.date_from_historical ? [] : ['disposed', '!=', True])">
     <field name="name"/>
     <!--<field name="order_id"/>-->

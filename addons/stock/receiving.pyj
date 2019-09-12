@@ -23,3 +23,24 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
     </sheet>
 </form>
 """)
+
+class StockPickingWizard(models.Model):
+    _name = 'stock.picking.wizard'
+
+    #name = fields.Char(string="")
+
+StockPickingWizard()
+
+menu.add(id='scanner', string="Scanner", sequence=5)
+menu.add(id='scanner_picking', string="Picking", parent='scanner', model='stock.picking.wizard', view_id='stock.picking.wizard.scan', sequence=2)
+
+view.add(model='stock.picking.wizard', mode='scan', arch="""
+<form>
+    <sheet>
+        <group width="100%">
+            <scanner-camera/>
+        </group>
+    </sheet>
+</form>
+""")
+
