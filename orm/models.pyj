@@ -40,7 +40,11 @@ def queryFind(db, type, args, limit, inverse=False):
     if result == 'orm_only': return db.rel.find(type, {'limit': limit} if limit else undefined).then(processInverse)
     return result.then(
     def (ids):
-      return db.rel.find(type, ids).then(processInverse)
+      return db.rel.find(type, ids).then(processInverse).then(
+      def (records):
+          records._search_count = ids._search_count
+          return records
+      )
     )
 
 class Model():
@@ -409,7 +413,7 @@ class Model():
                   #record = queryInverse(result._name, record, result._one2many_fields, result._fields)
                   #result.ids = ids
                   result.values = record[result._name]
-                  result._search_count = record[result._name].length
+                  result._search_count = record._searh_count.length
                   return result
               )
            else:
@@ -424,7 +428,7 @@ class Model():
                #record.data.id = db.rel.parseDocID(record._id).id
                #record.data.rev = record._rev
                result.values = record[result._name][0]#.data
-               result._search_count = record[result._name].length
+               result._search_count = record._searh_count.length
                return result
            )
         return result
@@ -489,10 +493,10 @@ class Model():
            def (records):
                v'var result = new self.constructor(true, false)'
                #records = queryInverse(result._name, records, result._one2many_fields, result._fields)
-               result._search_count = records[result._name].length
+               result._search_count = records._search_count.length
                if records[result._name].length > 1:
                   values = records[result._name].filter(query)
-                  result._search_count = values.length
+                  #result._search_count = values.length
                   if exist(options.limit) and type(options.limit) == Number:
                      start = 0
                      if exist(options.index) and type(options.index) == Number:

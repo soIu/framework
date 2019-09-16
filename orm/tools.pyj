@@ -520,7 +520,9 @@ def query(db, type, args, limit):
         #def (id): return db.rel.parseDocID(id).id
         #)
         if limit:
+           original_ids = ids
            ids = ids[0:limit]
+           ids._search_count = original_ids.length
         return ids
     )
 
