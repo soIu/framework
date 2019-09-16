@@ -428,7 +428,7 @@ class Model():
                #record.data.id = db.rel.parseDocID(record._id).id
                #record.data.rev = record._rev
                result.values = record[result._name][0]#.data
-               result._search_count = record._search_count.length
+               result._search_count = record._search_count
                return result
            )
         return result
@@ -493,7 +493,7 @@ class Model():
            def (records):
                v'var result = new self.constructor(true, false)'
                #records = queryInverse(result._name, records, result._one2many_fields, result._fields)
-               result._search_count = records._search_count.length
+               result._search_count = records._search_count
                if records[result._name].length > 1:
                   values = records[result._name].filter(query)
                   #result._search_count = values.length
