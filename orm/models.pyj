@@ -413,7 +413,7 @@ class Model():
                   #record = queryInverse(result._name, record, result._one2many_fields, result._fields)
                   #result.ids = ids
                   result.values = record[result._name]
-                  result._search_count = record._searh_count.length
+                  result._search_count = record._search_count
                   return result
               )
            else:
@@ -428,7 +428,7 @@ class Model():
                #record.data.id = db.rel.parseDocID(record._id).id
                #record.data.rev = record._rev
                result.values = record[result._name][0]#.data
-               result._search_count = record._searh_count.length
+               result._search_count = record._search_count.length
                return result
            )
         return result
