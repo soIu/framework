@@ -37,7 +37,7 @@ def queryFind(db, type, args, limit, inverse=False):
         return queryInverse(type, records, env[type]._one2many_fields, env[type]._fields)
     if inverse: return db.rel.find(type, args).then(processInverse)
     result = query(db, type, args, limit)
-    if result == 'orm_only': return db.rel.find(type, {'limit': limit} if limit else undefined).then(processInverse)
+    #if result == 'orm_only': return db.rel.find(type, {'limit': limit} if limit else undefined).then(processInverse)
     return result.then(
     def (ids):
       return db.rel.find(type, ids).then(processInverse).then(
