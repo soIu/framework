@@ -43,7 +43,7 @@ export default class extends React.Component {
       props.width = '97%';
     }
     return (
-      <div ref="group" className="component-group" style={{float: 'left', width: props.width || '46.5%', padding: '10px', marginTop: '20px', height: 'auto', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
+      <div ref="group" className="component-group" style={{float: 'left', width: props.width, padding: '10px', marginTop: '20px', height: 'auto', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {position: 'absolute', left: '-9999px', top: '-9999px'} : {})}}>
         {(props.title || this.state.previousTitle) && (
           <BlockTitle className="component-group-title" style={{'fontSize': '25px', 'lineHeight': 'unset', ...(this.state.previousTitle ? {'height': '37px'} : {})}}>{props.title || ''}</BlockTitle>
         )}

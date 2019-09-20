@@ -17,12 +17,19 @@ function autoSizeAll(gridOptions, listener) {
     //let columns = gridOptions.api.gridPanel.columnController.getAllDisplayedColumns();
     //let usedWidth = gridOptions.api.gridPanel.columnController.getWidthOfColsInList(columns);
   }
-  if (document.getElementById('rapyd-maximum-tree-width')) /*(clone = document.getElementById('rapyd-maximum-tree-width').cloneNode()) && */document.getElementById('rapyd-maximum-tree-width').remove();
+  //if (document.getElementById('rapyd-maximum-tree-width')) /*(clone = document.getElementById('rapyd-maximum-tree-width').cloneNode()) && */document.getElementById('rapyd-maximum-tree-width').remove();
   const div = gridOptions.api.gridCore.eGridDiv;
   const overflown = Array.prototype.slice.call(div.querySelectorAll('span.ag-header-cell-text')).find((element) => element.offsetWidth < element.scrollWidth);
   //let availableWidth = gridOptions.api.gridPanel.getWidthForSizeColsToFit();
   if (!overflown) {
     gridOptions.api.sizeColumnsToFit();
+    Array.prototype.slice.call(document.querySelectorAll('div.ag-paging-panel')).map((element) => element.style.width = parseFloat(element.parentElement.querySelector('.ag-header-viewport .ag-header-row').style.width.replace('px', '')) - 48 + 'px');
+    if (document.getElementById('rapyd-maximum-tree-width')) {
+       if (document.querySelector('.panel-visible-by-breakpoint')) document.getElementById('rapyd-maximum-tree-width').innerHTML = document.getElementById('rapyd-maximum-tree-width').innerHTML.replace('.component-group, .component-sheet {width: 46.5vw}', '');
+       else if (document.getElementById('rapyd-maximum-tree-width').innerHTML.indexOf('.component-group, .component-sheet {width: 46.5vw}') === -1) document.getElementById('rapyd-maximum-tree-width').innerHTML += '.component-group, .component-sheet {width: 46.5vw}';
+    }
+    //const rowWidth = div.querySelector('div.ag-header-row').style.width;
+    //div.querySelector('div.ag-paging-panel').style.width = rowWidth;
     //if (clone) document.querySelector('head').append(clone);
     return;
   }
@@ -35,11 +42,19 @@ function autoSizeAll(gridOptions, listener) {
         allColumnIds.push(column.colId);
       });
       gridOptions.columnApi.autoSizeColumns(allColumnIds);
-      const maxWidth = Math.max(...Array.prototype.slice.call(document.querySelectorAll('div.ag-header-row')).filter((element) => element.offsetParent).map((element) => parseFloat(element.style.width.replace('px', ''))));
+      const popups = Array.prototype.slice.call(document.querySelectorAll('div.popup'));
+      const maxWidth = Math.max(...Array.prototype.slice.call(document.querySelectorAll('div.ag-header-row')).filter((element) => element.offsetParent && !popups.find((popup) => popup.contains(element))).map((element) => parseFloat(element.style.width.replace('px', ''))));
+      let popupWidth = 0;
+      if (popups.length) popupWidth = Math.max(...Array.prototype.slice.call(document.querySelectorAll('div.ag-header-row')).filter((element) => element.offsetParent && popups.find((popup) => popup.contains(element))).map((element) => parseFloat(element.style.width.replace('px', ''))));
       const style = document.getElementById('rapyd-maximum-tree-width') || document.createElement('style');
       style.id = 'rapyd-maximum-tree-width';
-      style.innerHTML = '.rapyd-card-sheet {min-width: ' + (maxWidth) + 'px}';
+      style.innerHTML = '.rapyd-card-sheet {min-width: ' + (maxWidth + 30) + 'px}';
+      if (!document.querySelector('.panel-visible-by-breakpoint')) style.innerHTML += '\n.component-group, .component-sheet {width: 46.5vw}';
+      if (popupWidth && popupWidth !== -Infinity) style.innerHTML += '\n .popup .rapyd-card-sheet {min-width: ' + (popupWidth + 30) + 'px}';
       document.querySelector('head').append(style);
+      Array.prototype.slice.call(document.querySelectorAll('div.ag-paging-panel')).map((element) => element.style.width = parseFloat(element.parentElement.querySelector('.ag-header-viewport .ag-header-row').style.width.replace('px', '')) - 48 + 'px');
+      //const rowWidth = div.querySelector('div.ag-header-row').style.width;
+      //div.querySelector('div.ag-paging-panel').style.width = rowWidth;
     })();
   }
 }
@@ -155,7 +170,11 @@ export default class Tree extends React.Component {
         input.value = this.state.limit;
       }
     }
-    if (this.props.isTreeView && this.refs.grid && this.refs.grid.base && this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel')) this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel').onclick = prompt_limit;
+    if (this.refs.grid && this.refs.grid.base) {
+      if (this.props.isTreeView && this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel')) this.refs.grid.base.querySelector('span.ag-paging-row-summary-panel').onclick = prompt_limit;
+      //const width = this.refs.grid.base.querySelector('div.ag-header-row').style.width;
+      //this.refs.grid.base.querySelector('div.ag-paging-panel').style.width = width;
+    }
     document.addEventListener('mousedown', this.handleOutside);
     //return autoSizeAll.bind(this)(this.gridOptions);
   }
@@ -164,7 +183,7 @@ export default class Tree extends React.Component {
     document.removeEventListener('mousedown', this.handleOutside);
     window.removeEventListener('resize', this.resizeListener);
     //delete window.models.env.context.maxTreeWidth;
-    if (document.getElementById('rapyd-maximum-tree-width')) document.getElementById('rapyd-maximum-tree-width').remove();
+    if (!this.props.isPopup && document.getElementById('rapyd-maximum-tree-width')) document.getElementById('rapyd-maximum-tree-width').remove();
   }
 
   paginate(rows, index=0) {
@@ -313,7 +332,10 @@ export default class Tree extends React.Component {
       models.env.context.active_index = index;
       if (!models.env.context.active_sort && this.default_sort) (models.env.context.active_sort = this.default_sort) && delete this.default_sort;
       this.pagingStarted = true;
-      let records = await models.env[this.state.model].search(...args, ...((this.props.domain instanceof Function ? this.props.domain({}) : this.props.domain) || []));
+      const current_args = [...args, ...((this.props.domain instanceof Function ? this.props.domain({}) : this.props.domain) || [])];
+      if (models.env.context.editing && this.last_args && this.last_args === JSON.stringify(current_args)) return;
+      this.last_args = JSON.stringify(current_args);
+      let records = await models.env[this.state.model].search(...current_args);
       if (!this.props.isTreeView) {
         if (!models.env.context.active_lines) models.env.context.active_lines = {};
         if (!models.env.context.active_lines[this.state.model]) models.env.context.active_lines[this.state.model] = {};
@@ -479,7 +501,7 @@ export default class Tree extends React.Component {
         }
       </div>
     );
-    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled ? (this.pagingCalled = true) && this.paging(0, {newData: false, forceUpdate: true}) : api.wait(1000).then(() => this.pagingCalled = false));
+    if (!props.isTreeView) api.wait(0).then(() => !this.pagingCalled && (this.pagingCalled = true) && this.paging(0, {newData: false, forceUpdate: true})/* : */.then(() => api.wait(1000)).then(() => this.pagingCalled = false));
     if (!props.isTreeView || props.isPopup) {
       if (window.models.env.context.editing) delete grid.props.children[0].props.onRowClicked;
       return grid;
