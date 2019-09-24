@@ -391,6 +391,7 @@ class PickingList(models.Model):
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     called = fields.Boolean(string="AGV Called")
+    ip_address = fields.Char(string="IP Address")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -434,7 +435,8 @@ class PickingList(models.Model):
     @async
     def call_agv(self):
         await (self.write({'called': True}))
-        response = await (fetch('http://' + window.location.host + ':8000/?route=' + self.route))
+        host = self.ip_address or window.location.host
+        response = await (fetch('http://' + host + ':8000/?route=' + self.route))
         text = await (response.text())
         tools.dialog.alert(text)
 
