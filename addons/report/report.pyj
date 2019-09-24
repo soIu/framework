@@ -88,8 +88,8 @@ class TestAgv(models.Model):
     def call_agv(self):
         if not self.route:
            return tools.dialog.alert('Route tidak boleh kosong')
-        host = localStorage.infiniti_agv_ip or 'localhost'
-        response = await (fetch('http://localhost:8000/?route=' + self.route))
+        #host = localStorage.infiniti_agv_ip or 'localhost'
+        response = await (fetch('http://' + window.location.host + ':8000/?route=' + self.route))
         text = await (response.text())
         tools.dialog.alert(text)
 

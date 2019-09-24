@@ -434,7 +434,7 @@ class PickingList(models.Model):
     @async
     def call_agv(self):
         await (self.write({'called': True}))
-        response = await (fetch('http://localhost:8000/?route=' + 1))
+        response = await (fetch('http://' + window.location.host + ':8000/?route=' + self.route))
         text = await (response.text())
         tools.dialog.alert(text)
 
