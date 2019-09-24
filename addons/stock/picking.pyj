@@ -436,9 +436,12 @@ class PickingList(models.Model):
     def call_agv(self):
         await (self.write({'called': True}))
         host = self.ip_address or window.location.host
-        response = await (fetch('http://' + host + ':8000/?route=' + 1))
-        text = await (response.text())
-        tools.dialog.alert(text)
+        try:
+            response = await (fetch('http://' + host + ':8000/?route=' + 1))
+            text = await (response.text())
+            tools.dialog.alert(text)
+        except Exception as error:
+            window.alert(error.stack)
 
 PickingList()
 
