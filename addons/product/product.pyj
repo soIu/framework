@@ -73,6 +73,7 @@ class ProductProduct(models.Model):
     category_id = fields.Many2one('product.category', string="Category", index=True)
     article = fields.Char(string="Article Number", index=True)
     size = fields.Selection(StockPack.size.selection, string="Size", index=True)
+    route = fields.Integer(string="Route AGV")
     #total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
     #remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
     #incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
@@ -104,6 +105,7 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         </group>
         <group>
             <field name="description"/>
+            <field name="route"/>
         </group>
         <!--<group>
             <field name="total_qty"/>
@@ -143,6 +145,8 @@ def create_products():
     if v'typeof window' != 'undefined': return create_default
     @async
     def after_create():
+        product_id = await (models.env['product.product'].search(['code', '=', '2003G-5YE-0000-18']))
+        if product_id.length: return
         product_id = await (models.env['product.product'].create({'name': 'BRIO CVT MISSION ASSY 2J5YEC0000', 'code': '2003G-5YE-0000-18'}))
         bom_id = await (models.env['mrp.bom'].create({'name': 'BRIO CVT MISSION ASSY 2J5YEC0000 2003G-5YE-0000-18', 'product_id': product_id.id}))
         for product in Object.values(defaults):

@@ -2,7 +2,7 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
-from orm.tools import each
+from orm.tools import each, exist
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_default
@@ -383,3 +383,134 @@ view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, '
     </list>
 </page>
 """})
+
+class PickingList(models.Model):
+    _name = 'stock.picking.list'
+
+    name = fields.Char(string="Picking List", readonly=True)
+    model_id = fields.Many2one('mrp.bom', string="Model", required=True)
+    line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
+    called = fields.Boolean(string="AGV Called")
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        values = values if exist(values) else self.values
+        for value in each(values):
+            sequence = await (self.env['ir.sequence'].get_next('stock.picking.list'))
+            value.name = 'Picking List ' + str.zfill(sequence.toString(), 3)
+        result = await (self.__super__('create')(values=values, is_client=is_client))
+        #if v'typeof window' != 'undefined': return result
+        @async
+        def after_create(record):
+            product_id = await (self.env['product.product'].browse(record.product_id))
+            return self.env['stock.picking.list.line'].create({'picking_list_id': [value.id for value in each(values)][0], 'route': product_id.route, 'part_no': product_id.code, 'product_id': product_id.id, 'box': 1, 'qty_box': record.product_qty, 'product_qty': record.product_qty})
+        bom_line_ids = await (self.env['mrp.bom.line'].search(['bom_id', 'in', [value.model_id for value in each(values)]]))
+        await (bom_line_ids.map(after_create))
+        return result
+
+    @async
+    def print_list(self):
+        report = self.env['report.report'].with_context(limit=1).search(['reference', '=', 'Picking-List'])
+        read = self.read(format=True, fields=Object.keys(self._fields))
+        line = self.env['stock.picking.list.line'].browse(self.line_ids)
+        await (tools.exist(
+        def (): return document.getElementById('reportbro_designer_iframe') and document.getElementById('reportbro_designer_iframe').contentWindow.$ and document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro').reportBro
+        ))
+        data = await (read)
+        data = data[0]
+        line_ids = await (line)
+        data.line_ids = await (line_ids.read(format=True, fields=Object.keys(line_ids._fields)))
+        console.log(JSON.stringify(data))
+        report_id = await (report)
+        document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro').reportBro('load', report_id.report_object)
+        document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro').reportBro('previewWithData', data)
+        await (tools.exist(
+        def (): return document.getElementById('reportbro_designer_iframe').contentWindow.document.getElementById('rbro_document_pdf_preview')
+        ))
+        #document.getElementById('reportbro_designer_iframe').style.display = ''
+        document.getElementById('reportbro_designer_iframe').contentWindow.document.getElementById('rbro_document_pdf_preview').requestFullscreen()
+
+    @async
+    def call_agv(self):
+        await (self.write({'called': True}))
+        response = await (fetch('http://localhost:8000/?route=' + 1))
+        text = await (response.text())
+        tools.dialog.alert(text)
+
+PickingList()
+
+menu.add(id='picking_list', parent='stock', model='stock.picking.list', string="Picking List", sequence=5)
+
+view.add(model='stock.picking.list', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="model_id"/>
+</tree>
+""")
+
+view.add(model='stock.picking.list', mode='form', arch="""
+<form>
+    <header>
+        <button name="print_list" string="Print"/>
+        <button name="call_agv" string="Call" invisible="active_id.called == True"/>
+    </header>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="model_id"/>
+        </group>
+        <group width="100%">
+            <field name="line_ids">
+                <tree>
+                    <field name="route"/>
+                    <field name="part_no"/>
+                    <field name="product_id"/>
+                    <field name="qty_box"/>
+                    <field name="box"/>
+                    <field name="product_qty"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </group>
+        <group widht="100%">
+            <scanner-camera/>
+        </group>
+        <iframe ref="frame" id="reportbro_designer_iframe" frameborder="0" width="100%" height="500px" style="position: absolute; top: -9999px; left: -9999px; border-radius: 5px" src="reportbro/index.html"/>
+    </sheet>
+</form>
+""")
+
+add_sequence('stock.picking.list')
+
+class PickingListLine(models.Model):
+    _name = 'stock.picking.list.line'
+
+    picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
+    route = fields.Integer(string="Route")
+    part_no = fields.Char(string="Part No.")
+    product_id = fields.Many2one('product.product', string="Part")
+    qty_box = fields.Float(string="Qty/Box")
+    box = fields.Float(string="Box")
+    product_qty = fields.Float(string="Total Qty")
+    description = fields.Char(string="Description")
+
+    def print_barcode(self):
+        for record in self:
+            window.printBarcode(record.part_no)
+
+PickingListLine()
+
+view.add(model='stock.picking.list.line', mode='tree', arch="""
+                <tree>
+                    <field name="route"/>
+                    <field name="part_no"/>
+                    <field name="product_id"/>
+                    <field name="qty_box"/>
+                    <field name="box"/>
+                    <field name="product_qty"/>
+                    <field name="description"/>
+                </tree>
+""", action={'print_barcode': 'Print'})

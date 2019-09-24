@@ -34,11 +34,21 @@ StockPickingWizard()
 menu.add(id='scanner', string="Scanner", sequence=5)
 menu.add(id='scanner_picking', string="Picking", parent='scanner', model='stock.picking.wizard', view_id='stock.picking.wizard.scan', sequence=2)
 
-view.add(model='stock.picking.wizard', mode='scan', arch="""
+def init_picking():
+    form = this
+    if not form.refs.camera: return
+    @async
+    def onDetect(data):
+        picking_list_id = await (models.env['stock.picking.list'].search(['name', '=', data.codeResult.code]))
+        if not picking_list_id: return
+        tools.navigate('/form/?id=' + picking_list_id.id)
+    form.refs.camera.onDetect = onDetect
+
+view.add(model='stock.picking.wizard', mode='scan', init=init_picking, arch="""
 <form>
     <sheet>
         <group width="100%">
-            <scanner-camera/>
+            <scanner-camera ref="camera"/>
         </group>
     </sheet>
 </form>
