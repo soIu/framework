@@ -405,7 +405,7 @@ class PickingList(models.Model):
         @async
         def after_create(record):
             product_id = await (self.env['product.product'].browse(record.product_id))
-            return self.env['stock.picking.list.line'].create({'picking_list_id': [value.id for value in each(values)][0], 'route': product_id.route, 'part_no': product_id.code, 'product_id': product_id.id, 'box': 1, 'qty_box': record.product_qty, 'product_qty': record.product_qty})
+            await (self.env['stock.picking.list.line'].create({'picking_list_id': [value.id for value in each(values)][0], 'route': product_id.route, 'part_no': product_id.code, 'product_id': product_id.id, 'box': 1, 'qty_box': record.product_qty, 'product_qty': record.product_qty}))
         bom_line_ids = await (self.env['mrp.bom.line'].search(['bom_id', 'in', [value.model_id for value in each(values)]]))
         await (bom_line_ids.map(after_create))
         return result

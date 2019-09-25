@@ -9,6 +9,52 @@ from stock.location import defaults as location_default
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 
+add_sequence('agv.checkpoint')
+
+class AgvCheckpoint(models.Model):
+    _name = 'agv.checkpoint'
+
+    name = fields.Char(string="Name")
+    daisha = fields.Char(string="Daisha")
+    location = fields.Char(string="Location")
+    date = fields.Datetime(string="Date", defaults=tools.date.now)
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        values = values if exist(values) else self.values
+        for value in each(values):
+            sequence = await (self.env['ir.sequence'].get_next('agv.checkpoint'))
+            value.name = 'Checkpoint ' + str.zfill(sequence.toString(), 3)
+        return self.__super__('create')(values=values, is_client=is_client)
+
+AgvCheckpoint()
+
+menu.add(id='agv_chasun', string="AGV", sequence=7)
+menu.add(id='checkpoint', parent='agv_chasun', model='agv.checkpoint', string="Checkpoint", sequence=1)
+
+view.add(model='agv.checkpoint', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="daisha"/>
+    <field name="location"/>
+</tree>
+""")
+
+view.add(model='agv.checkpoint', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="daisha"/>
+            <field name="date"/>
+        </group>
+        <group>
+            <field name="location"/>
+        </group>
+    </sheet>
+</form>
+""")
+
 pack = {}
 sequence = {}
 add_sequence('stock.pack', sequence)
