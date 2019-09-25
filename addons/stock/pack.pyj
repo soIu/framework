@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 import stock.move
+from orm.tools import each, exist
 from stock.wcs import WcsJob
 from product.category import categories, defaults as category_default
 from stock.location import defaults as location_default
