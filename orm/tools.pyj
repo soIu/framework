@@ -388,6 +388,7 @@ def query(db, type, args, limit):
     excepts = []
     except_ids = {}
     index = 0;
+    need_orm_operation = False
     for arg in args:
         need_orm = None
         if not arg or not arg[0] or not arg[0].length: continue
@@ -487,16 +488,17 @@ def query(db, type, args, limit):
            )
         elif arg[1] == 'like':
            #selectors[index]
-           like_selector[arg[0]]['$regex'] =  arg[2];
+           #like_selector[arg[0]]['$regex'] =  arg[2];
            #selectors[index][arg[0]]['$gte'] = arg[2];
            #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
-           #need_orm = True;
+           need_orm = True;
         elif arg[1] == 'ilike':
            #selectors[index]
-           like_selector[arg[0]]['$regex'] =  RegExp(arg[2], 'i') if db.adapter not in ['http', 'https'] else '(?i)' + arg[2];
+           #like_selector[arg[0]]['$regex'] =  RegExp(arg[2], 'i') if db.adapter not in ['http', 'https'] else '(?i)' + arg[2];
            #selectors[index][arg[0]]['$gte'] = arg[2];
            #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
-           #need_orm = True;
+           need_orm = True;
+        if need_orm: need_orm_operation = True
         if not Object.keys(selectors[index][arg[0]]).length:
            del selectors[index][arg[0]];
            selectors.pop(index);
@@ -537,7 +539,7 @@ def query(db, type, args, limit):
         #def (id): return db.rel.parseDocID(id).id
         #)
         length = ids.length
-        if limit:
+        if limit and not need_orm_operation:
            ids = ids[0:limit]
         ids._search_count = length
         return ids

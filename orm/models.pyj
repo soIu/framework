@@ -496,7 +496,7 @@ class Model():
                result._search_count = records._search_count
                if records[result._name].length > 1:
                   values = records[result._name].filter(query)
-                  #result._search_count = values.length
+                  if args.length: result._search_count = values.length
                   if exist(options.limit) and type(options.limit) == Number:
                      start = 0
                      if exist(options.index) and type(options.index) == Number:
