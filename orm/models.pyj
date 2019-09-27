@@ -251,7 +251,7 @@ class Model():
         ,
         'set': def (id):
                    if self._values.length == 1 and not self._values[0].id:
-                      id = id.toString()
+                      if id and type(id) == Number: id = id.toExponential()
                       self._values[0].id = id
                       self._values[id] = self._values[0]
         })
@@ -290,7 +290,7 @@ class Model():
                           for key in self._fields:
                               if key in value and key not in self._unstored_fields:
                                  value[key] = self.adapt(key, value[key], value)
-                          if value.id: 
+                          if value.id:
                              new_array[value.id] = value
                           new_array.push(value)
                       self._values = new_array
