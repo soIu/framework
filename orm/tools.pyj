@@ -40,11 +40,10 @@ def merge(*args, **kwargs):
     #return target
 
 def copy(object):
-    if exist(object):
-       if is_array(object):
-          return [copy(value) for value in object]
-       elif is_json(object):
-          return {key: copy(object[key]) for key in object}
+    if is_array(object):
+       return [copy(value) for value in object]
+    elif is_json(object):
+       return {key: copy(object[key]) for key in object}
     return object
 
 def dict(entries):
