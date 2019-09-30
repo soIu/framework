@@ -230,13 +230,13 @@ class Model():
                    if not is_array(self.values):
                       if self._values[0].id:
                          if not self._values[self._values[0].id]: self._values[self._values[0].id] = self._values[0]
-                         return [self._values[0].id.toString()]
+                         return [self._values[0].id]
                       return []
                    else:
                       ids = []
                       for object in self._values:
                           if object.id:
-                             ids.push(object.id.toString())
+                             ids.push(object.id)
                              if not self._values[object.id]: self._values[object.id] = object
                       return ids
         ,
@@ -279,6 +279,7 @@ class Model():
                           if key in new_value and key not in self._unstored_fields:
                              self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
                       if new_value.id:
+                         if type(new_value.id) == Number: new_value.id = new_value.id.toExponential()
                          self._values[new_value.id] = self._values[0]
                          self._values[0].id = new_value.id
                    else:
@@ -291,6 +292,7 @@ class Model():
                               if key in value and key not in self._unstored_fields:
                                  value[key] = self.adapt(key, value[key], value)
                           if value.id:
+                             if type(value.id) == Number: value.id = value.id.toExponential()
                              new_array[value.id] = value
                           new_array.push(value)
                       self._values = new_array
