@@ -288,12 +288,12 @@ class Model():
                       self._is_singleton = False
                       new_array = []
                       for value in new_value:
-                          for key in self._fields:
-                              if key in value and key not in self._unstored_fields:
-                                 value[key] = self.adapt(key, value[key], value)
                           if value.id:
                              if type(value.id) == Number: value.id = value.id.toExponential()
                              new_array[value.id] = value
+                          for key in self._fields:
+                              if key in value and key not in self._unstored_fields:
+                                 value[key] = self.adapt(key, value[key], value)
                           new_array.push(value)
                       self._values = new_array
                       #self.ids = [object.id for object in new_value]
