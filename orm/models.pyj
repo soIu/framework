@@ -274,12 +274,12 @@ class Model():
                    self._is_env = False
                    if not is_array(new_value):
                       self._is_singleton = True
-                      self._values = [new_value]
+                      self._values = [new_value	]
+                      if new_value.id and type(new_value.id) == Number: new_value.id = new_value.id.toExponential()
                       for key in self._fields:
                           if key in new_value and key not in self._unstored_fields:
                              self._values[0][key] = self.adapt(key, new_value[key], self._values[0])
                       if new_value.id:
-                         if type(new_value.id) == Number: new_value.id = new_value.id.toExponential()
                          self._values[new_value.id] = self._values[0]
                          self._values[0].id = new_value.id
                    else:
