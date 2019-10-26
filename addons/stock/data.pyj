@@ -1,4 +1,4 @@
-import orm.models as models
+wimport orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
@@ -21,10 +21,12 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True)
     imported = fields.Boolean(string="Imported")
+    type = fields.Selection(['bom', 'BoM'], ['sequence', 'Sequence'], string="Type", required=True)
 
     @api.server
     def import_data(self):
-        return self.import_bom()
+        if self.type == 'bom': return self.import_bom()
+        if self.type == 'sequence': return self.import_sequence()
 
     @api.server(async=True)
     def import_bom(self):
@@ -32,7 +34,7 @@ class HPPMData(models.Model):
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
         row = -1
-        articles = []
+        model_codes = {}
         models = {}
         parts = {}
         #sizes = StockPack.size.selection.apply(None)
@@ -49,9 +51,11 @@ class HPPMData(models.Model):
             value = {'name': data[1], 'code': data[3]}
             for cell in data:
                 if not cell or cell == '-': continue
-                model = [sheet.data[index] for index in range(5, 10)].join(' ')
+                model = [sheet.data[index][6] for index in range(5, 9)].join(' ')
+                code = sheet.data[9][6]
                 if not models[model]: models[model] = {}
                 models[model][value.code] = cell
+                models_code[model] = code
             promise = check_part(value)
             promises.push(promise)
         await (promises)
@@ -66,10 +70,11 @@ class HPPMData(models.Model):
             if bom_line_id.product_qty != qty: return bom_line_id.write({'product_qty': qty})
         @async
         def create_model(model, parts):
+            code = models_code[model]
             promises = []
-            product_id = await (self.env['product.product'].search(['name', '=', model]))
+            product_id = await (self.env['product.product'].search(['code', '=', code]))
             if not product_id.length:
-               product_id = await (self.env['product.product'].create({'name': model}))
+               product_id = await (self.env['product.product'].create({'name': model, 'code': code}))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length:
                bom_id = await (self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id}))
@@ -78,6 +83,49 @@ class HPPMData(models.Model):
             return Promise.all(promises)
         for model in models:
             promises.push(create_model(model, models[model]))
+        await (promises)
+        return self.write({'imported': True})
+
+    @api.server
+    def import_sequence(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        @async
+        def create_picking_list(code, quantity):
+            product_id = await (self.env['product.product'].search(['code', '=', code]))
+            bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
+            bom_line_ids, list_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['stock.picking.list'].create({'model_id': bom_id.id})])
+            promises = []
+            routes = {index: 0 for index in range(1, 6)}
+            for bom_line_id in bom_line_ids:
+                selected_route = None
+                for route in range(1, 6):
+                    if routes[route] < parseInt(bom_line_ids.length / 5):
+                       selected_route = route
+                       routes[route] += 1
+                       break
+                if not selected_route:
+                   route = any(routes[route] <= parseInt(bom_line_ids.length / 5) and route for route in range(1, 6))
+                   if route: selected_route = route
+                   else: selected_route = 1
+                line_qty = bom_line_id.product_qty * quantity
+                promise = self.env['stock.picking.list.line'].create({'route': route, 'product_id': bom_line_id.product_id, 'product_qty': line_qty, 'qty_box': line_qty, 'box': 1, 'picking_list_id': picking_list_id.id})
+                promises.push(promise)
+            return await (promises)
+        for data in sheet.data:
+            row += 1
+            if row < 6: continue
+            #if not data[0]: continue
+            value = {'name': data[1], 'code': data[3]}
+            for cell in data:
+                if not cell or cell == '-': continue
+                model = [sheet.data[index] for index in range(5, 10)].join(' ')
+                if not models[model]: models[model] = {}
+                models[model][value.code] = cell
+            promise = create_picking_list(code, quantity)
+            promises.push(promise)
         await (promises)
         return self.write({'imported': True})
 

@@ -153,4 +153,4 @@ def create_products():
             models.env['mrp.bom.line'].create({'bom_id': bom_id.id, 'product_id': product, 'product_qty': 1})
     return create_default.then(after_create)
 
-data.append(create_products)
+#data.append(create_products)
