@@ -49,6 +49,7 @@ class HPPMData(models.Model):
             if row < 11: continue
             #if not data[0]: continue
             value = {'name': data[1], 'code': data[3]}
+            if not value.name: continue
             for cell in data:
                 if not cell or cell == '-': continue
                 model = [sheet.data[index][6] for index in range(5, 9)].join(' ')
