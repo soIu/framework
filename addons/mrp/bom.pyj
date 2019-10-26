@@ -8,7 +8,7 @@ class MrpBom(models.Model):
     _name = 'mrp.bom'
 
     name = fields.Char(string="Model")
-    product_id = fields.Many2one('product.product', string="Finish Good")
+    product_id = fields.Many2one('product.product', string="Finish Good", index=True)
     reference = fields.Char(string="Reference")
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
 
@@ -17,8 +17,8 @@ MrpBom()
 class MrpBomLine(models.Model):
     _name = 'mrp.bom.line'
 
-    bom_id = fields.Many2one('mrp.bom', string="BoM")
-    product_id = fields.Many2one('product.product', string="Part", required=True)
+    bom_id = fields.Many2one('mrp.bom', string="BoM", index=True)
+    product_id = fields.Many2one('product.product', string="Part", required=True, index=True)
     product_qty = fields.Float(string="Quantity")
 
 MrpBomLine()
