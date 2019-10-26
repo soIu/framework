@@ -1,4 +1,4 @@
-wimport orm.models as models
+import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
