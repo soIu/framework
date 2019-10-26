@@ -2,20 +2,30 @@ class ValidationError(Exception):
 
     def __init__(self, message):
         self.name = 'ValidationError'
+        self.type = self.name
         self.message = message
 
 class AccesError(Exception):
 
     def __init__(self, message):
         self.name = 'AccessError'
+        self.type = self.name
         self.message = message
 
 class RequiredError(Exception):
 
     def __init__(self, fields, recordset):
         self.name = 'RequiredError'
+        self.type = self.name
         self.fields = fields
         field_strings = []
         for field in fields:
             if recordset._fields[field].string not in field_strings: field_strings.push(recordset._fields[field].string)
-        self.message = "Some fields (" + field_strings.join(', ') + ") are required to continue"
+        self.message = "Some fields (" + field_strings.join(', ') + ") in model " + recordset._name + " are required to continue"
+
+class ServerError(Exception):
+
+    def __init__(self, error_message, error_type):
+        self.name = 'ServerError'
+        self.message = error_message
+        self.type = error_type or self.name

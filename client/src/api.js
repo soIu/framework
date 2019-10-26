@@ -215,8 +215,13 @@ async function ORM(session) {
       resolve(true);
       throw error;
     });*/
-    globals.app.dialog.alert('There are some error');
     globals.exceptionCount += 1;
+    if (error && Object.keys(window.tools.exceptions).find((exception) => exception === error.type || window.tools.exceptions[exception] === error.constructor)) {
+      if (error.type !== 'ServerError') globals.app.dialog.alert(error.message);
+      else globals.app.dialog.alert('There are some error');
+      throw new Error(error.message);
+    }
+    else globals.app.dialog.alert('Network Error');
     throw error;
   }
   globals.warningCount = 0;
@@ -226,11 +231,15 @@ async function ORM(session) {
       resolve(true);
       console.warn(error);
     });
-    console.log(globals);
     if (offline) globals.app.toast.create({text: 'You are offline, using local data', closeButton: true, closeTimeout: 1000}).open();
     globals.warningCount += 1;
     console.warn(error);
   }
+}
+
+function handleClientError(error) {
+  if (error && Object.values(window.tools.exceptions).find((exception) => exception === error.constructor)) window.tools.configuration.exception(error);
+  else throw error;
 }
 
 function ajax(type, dataType, url, data) {
@@ -391,4 +400,4 @@ function hasValue(object, value) {
 
 window.qe = query;*/
 
-export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, ajax, readAsDataURL, parseURI, hasValue, hasKey};
+export default {globals, preload, get_session, update_session, wait, wait_exist, login, logout, ORM, handleClientError, ajax, readAsDataURL, parseURI, hasValue, hasKey};

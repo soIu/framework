@@ -20,6 +20,7 @@ async function button(props) {
     catch(error) {
       //console.log(error);
       await window.models.env.context.refresh();
+      api.handleClientError(error);
       throw error;
       //await api.globals.app.views.main.router.refreshPage();
     }

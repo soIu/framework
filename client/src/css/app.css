@@ -122,9 +122,9 @@
   background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE2IDBIMmEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMlYyYTIgMiAwIDAgMC0yLTJ6TTcgMTRMMiA5bDEuNDEtMS40MUw3IDExLjE3bDcuNTktNy41OUwxNiA1bC05IDl6IiBmaWxsPSIjMzMzIi8+PC9zdmc+);
 }
 
-/*.ag-theme-material .ag-header-row {
-  width: 100% !important;
-}*/
+.card > .card-body > .ag-theme-material .ag-header-row {
+  min-width: 100%; /*!important*/;
+}
 
 /*.ag-body-container {
   width: 100% !important;
@@ -323,4 +323,8 @@ div:focus {
   margin-top: 12px;
   margin-left: 0px;
   margin-right: 0px;
+}
+
+.component-group, .component-separator {
+  width: 46.5%;
 }

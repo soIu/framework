@@ -6,15 +6,12 @@ from orm.tools import exist, configuration, merge
 
 setSchema()
 
-configuration = merge(configuration, {key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
+configuration = merge(configuration, JSON.parse(require('process').env.rapyd_config_json)) #{key: True if value in ['True', 'true'] else False if value in ['False', 'false'] else value for key, value in Object.entries(require('process').env)})
 
 admin_password = configuration.admin_password
 
-client_js = require('child_process').execSync((require('process').execPath if '.exe' not in require('process').execPath else 'node') + ' node_modules/rapydscript-ng/bin/rapydscript -p modules/ client.pyj', {'env': require('process').env}).toString()
-if (client_js.match('ρσ_regenerator' + '.regeneratorRuntime = Object.prototype;')) client_js = client_js.replace('ρσ_regenerator' + '.regeneratorRuntime = Object.prototype;', '(function(global) {\n      "use strict";\n    \n      var Op = Object.prototype;').replace('    })(\n    \n      (function() { return this })() ' + '|| Function("return this")()\n    );', '');
-client_js = require('minify-fast').default({'code': client_js.replace(/await\(/g, 'await_all' + '(').replace(/async\(function/g, 'async' + '(async function').replace(/async: true}\)\]\)\)\(function/g, 'async: true' + '})]))(async function')}).replace(/async\(function\(\){var ρσ_anonfunc=function/g, 'async' + '(function(){var ρσ_anonfunc=async function').replace(/await_all\(/g, 'await' + ' await_all' + '(').replace("'use strict';", "'use strict';\n" + '    function await_all' + '(promises) {\n  if (Array.isArray(promises)) return Promise.all(promises)\n  return promises\n}\n' + '    function async(sync_function) {return sync_function}\n' + '    var ρσ_module_doc__\n')
-client_js = client_js.replace("{'home_view':window.localStorage.rapyd_home_view||'res.message.chat'}", JSON.stringify(configuration))
-client_js_time = Date().toISOString()
+client_js = require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
+client_js_time = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
 
 crypto = require('crypto')
 
@@ -72,8 +69,8 @@ def (request, response, next):
            next()
        ).catch(
        def (error):
-           console.log(error.stack)
-           response.result = {'status': 'error', 'error': error.stack}
+           console.log(error.stack or error.message)
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:
@@ -132,7 +129,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error.stack}
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:
@@ -156,7 +153,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error.stack}
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:
@@ -183,7 +180,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error.stack}
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:
@@ -210,7 +207,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error.stack}
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:
@@ -240,7 +237,7 @@ def (request, response, next):
        ).catch(
        def (error):
            console.log(error)
-           response.result = {'status': 'error', 'error': error.stack}
+           response.result = {'status': 'error', 'error': error.stack or error.message, 'error_type': error.name}
            next()
        )
     else:

@@ -20,9 +20,10 @@ tools.configuration = Object.assign(tools.configuration, configuration)
 def restrict_menus():
     return models.env['res.users.menu'].search(['user_id', '=', models.env.user.id]).then(
     def (menu_ids):
-        for menu_id in menu_ids:
-            for menu in tools.menu:
-                if menu != menu_id.menu: del tools.menu[menu]
+        menus = [menu_id.menu for menu_id in menu_ids]
+        if not menus.length: return
+        for menu in tools.menu:
+            if menu not in menus: del tools.menu[menu]
     )
 data.push(restrict_menus)
 tools.create_data = create_data
