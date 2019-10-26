@@ -4,4 +4,4 @@ import stock.pack
 import stock.picking
 import stock.receiving
 #import stock.wcs
-#import stock.data
+import stock.data

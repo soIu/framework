@@ -8,6 +8,15 @@ class StockReceivingWizard(models.Model):
     _name = 'stock.receiving.wizard'
 
     #name = fields.Char(string="")
+    scan = fields.Char(string="Laser Scan")
+
+    @api.onchange('scan', async=True)
+    def onchange_scan(self):
+        if not self.scan: return
+        picking_list_id = await (self.env['stock.picking.list'].search(['name', '=', self.scan]))
+        self.scan = ''
+        if not picking_list_id.length: return
+        tools.navigate('/form/stock.picking.list?id=' + picking_list_id.id)
 
 StockReceivingWizard()
 
@@ -17,6 +26,9 @@ menu.add(id='scanner_receiving', string="Receiving", parent='scanner', model='st
 view.add(model='stock.receiving.wizard', mode='scan', arch="""
 <form>
     <sheet>
+        <group>
+            <field name="scan"/>
+        </group>
         <group width="100%">
             <scanner-camera/>
         </group>
@@ -28,6 +40,15 @@ class StockPickingWizard(models.Model):
     _name = 'stock.picking.wizard'
 
     #name = fields.Char(string="")
+    scan = fields.Char(string="Laser Scan")
+
+    @api.onchange('scan', async=True)
+    def onchange_scan(self):
+        if not self.scan: return
+        picking_list_id = await (self.env['stock.picking.list'].search(['name', '=', self.scan]))
+        self.scan = ''
+        if not picking_list_id.length: return
+        tools.navigate('/form/stock.picking.list?id=' + picking_list_id.id)
 
 StockPickingWizard()
 
@@ -48,6 +69,9 @@ def init_picking():
 view.add(model='stock.picking.wizard', mode='scan', init=init_picking, arch="""
 <form>
     <sheet>
+        <group>
+            <field name="scan"/>
+        </group>
         <group width="100%">
             <scanner-camera ref="camera"/>
         </group>

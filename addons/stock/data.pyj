@@ -2,17 +2,14 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
-from stock.pack import StockPack
-from product.category import categories, defaults as category_default
-from stock.location import defaults as location_default
 from ir.ui import menu, view
 
-class AdidasData(models.Model):
-    _name = 'adidas.data'
+class HPPMData(models.Model):
+    _name = 'hppm.data'
 
     @api.server
     def _get_number(self):
-        return self.env['adidas.data'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
+        return self.env['hppm.data'].with_context(order='name desc', limit=1).search(['name', '!=', False]).then(
         def (data_id):
             if data_id.length > 0:
                name = 'Data ' + str.zfill((parseInt(data_id.name.split(' ')[1]) + 1).toString(), 3)
@@ -27,68 +24,76 @@ class AdidasData(models.Model):
 
     @api.server
     def import_data(self):
+        return self.import_bom()
+
+    @api.server(async=True)
+    def import_bom(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
         row = -1
         articles = []
+        models = {}
+        parts = {}
         #sizes = StockPack.size.selection.apply(None)
+        @async
+        def check_part(value):
+            product_id = await (self.env['product.product'].search(['code', '=', value.code]))
+            if not part_id.length:
+               product_id = await (self.env['product.product'].create(value))
+            parts[value.name] = product_id
         for data in sheet.data:
             row += 1
-            if row < 7: continue
-            if not data[0]: continue
-            value = {}
-            index = 5
-            for field in ['model', 'article', 'name', 'customer_order', 'color', 'customer_cd', 'customer_identifier', 'customer_name']:
-                value[field] = data[index]
-                if field == 'article':
-                   if value[field] not in articles: articles.push(value[field])
-                index += 1
-            value['total_qty'] = data[17]
-            size = data[21]
-            index = 23
-            fields = range(3, 15) if size in ['M', 'W'] else range(1, 10) if size == 'I' else list(range(10, 14)).concat(list(range(1, 8)))
-            skip_7T = Array.isArray(fields)
-            for field in fields:
-                value['size_' + field] = data[index] or 0.0
-                index += 1
-                if skip_7T and (field + 'T') == '7T': break
-                value['size_' + field + 'T'] = data[index] or 0.0
-                index += 1
-            promise = self.env['adidas.po'].create(value)
+            if row < 11: continue
+            #if not data[0]: continue
+            value = {'name': data[1], 'code': data[3]}
+            for cell in data:
+                if not cell or cell == '-': continue
+                model = [sheet.data[index] for index in range(5, 10)].join(' ')
+                if not models[model]: models[model] = {}
+                models[model][value.code] = cell
+            promise = check_part(value)
             promises.push(promise)
-        articles.forEach(
-        def (article):
-            promise = self.env['product.product'].with_context(limit=1).search(['article', '=', article]).then(
-            def (product_id):
-                if product_id.length: return
-                promises = []
-                for size in StockPack.size.selection.apply(None):
-                    for category in categories:
-                        category_id = category_default[category.toLowerCase() + '_id']
-                        promises.push(self.env['product.product'].create({'name': [category, article, size[0]].join('-'), 'category_id': category_id, 'article': article, 'size': size[0]}))
-                return Promise.all(promises)
-            )
-            promises.push(promise)
-        )
-        return Promise.all(promises).then(
-        def ():
-            return self.write({'imported': True})
-        )
+        await (promises)
+        promises = []
+        @async
+        def create_bom_line(bom_id, part, qty):
+            product_id = parts[part]
+            bom_line_id = await (self.env['mrp.bom.line'].search(['bom_id', '=', bom_id.id], ['product_id', '=', product_id.id]))
+            if not bom_line_id.length:
+               bom_line_id = await (self.env['mrp.bom.line'].create({'product_id': product_id.id, 'product_qty': qty, 'bom_id': bom_id.id}))
+               return
+            if bom_line_id.product_qty != qty: return bom_line_id.write({'product_qty': qty})
+        @async
+        def create_model(model, parts):
+            promises = []
+            product_id = await (self.env['product.product'].search(['name', '=', model]))
+            if not product_id.length:
+               product_id = await (self.env['product.product'].create({'name': model}))
+            bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
+            if not bom_id.length:
+               bom_id = await (self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id}))
+            for part in parts:
+                promises.push(create_bom_line(bom_id, part, parts[part]))
+            return Promise.all(promises)
+        for model in models:
+            promises.push(create_model(model, models[model]))
+        await (promises)
+        return self.write({'imported': True})
 
-AdidasData()
+HPPMData()
 
-menu.add({'id': 'adidas_data', 'string': 'Data', 'sequence': 25})
-menu.add({'id': 'import_data', 'parent': 'adidas_data', 'string': 'Import', 'model': 'adidas.data', 'sequence': 1})
+menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
+menu.add({'id': 'import_data', 'parent': 'hppm_data', 'string': 'Import', 'model': 'hppm.data', 'sequence': 1})
 
-view.add({'model': 'adidas.data', 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'hppm.data', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="date"/>
 </tree>
 """})
 
-view.add({'model': 'adidas.data', 'mode': 'form', 'string': False, 'arch': """
+view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
         <button name="import_data" string="Import" invisible="active_id.imported == True"/>
@@ -105,162 +110,3 @@ view.add({'model': 'adidas.data', 'mode': 'form', 'string': False, 'arch': """
     </sheet>
 </form>
 """})
-
-class AdidasPO(models.Model):
-    _name = 'adidas.po'
-
-    @api.server
-    def _get_remaining_qty(self):
-        if not self.id: return 0.0
-        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
-        def (pack_ids):
-            qty = self.total_qty
-            if not pack_ids.length: return qty
-            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_default.external_id]).then(
-            def (move_ids):
-                nonlocal qty
-                if not move_ids.length: return qty
-                for move_id in move_ids:
-                    qty -= move_id.product_qty / 4
-                return qty
-            )
-        )
-
-    @api.server
-    def _get_incoming_qty(self):
-        if not self.id: return 0.0
-        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
-        def (pack_ids):
-            qty = 0.0
-            if not pack_ids.length: return qty
-            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_default.internal_id]).then(
-            def (move_ids):
-                nonlocal qty
-                if not move_ids.length: return qty
-                for move_id in move_ids:
-                    qty += move_id.product_qty / 4
-                return qty
-            )
-        )
-
-    @api.server
-    def _get_incoming_qty_size(self, size, category_id):
-        if not self.id: return 0.0
-        return self.env['stock.pack'].search(['order_id', '=', self.id], ['size', '=', size], ['category_id', '=', category_id]).then(
-        def (pack_ids):
-            qty = 0.0
-            if not pack_ids.length: return qty
-            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids], ['location_dest_id', '=', location_default.internal_id]).then(
-            def (move_ids):
-                nonlocal qty
-                if not move_ids.length: return qty
-                for move_id in move_ids:
-                    qty += move_id.product_qty
-                return qty
-            )
-        )
-
-    @api.server
-    def _get_actual_qty(self):
-        if not self.id: return 0.0
-        return self.env['stock.pack'].search(['order_id', '=', self.id]).then(
-        def (pack_ids):
-            qty = 0.0
-            if not pack_ids.length: return qty
-            return self.env['stock.move'].search(['pack_id', 'in', pack_ids.ids]).then(
-            def (move_ids):
-                nonlocal qty
-                if not move_ids.length: return qty
-                for move_id in move_ids:
-                    qty += (move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty) / 4
-                return qty
-            )
-        )
-
-    name = fields.Char(string="PO Number", required=True, index=True)
-    model = fields.Char(string="Model")
-    article = fields.Char(string="Article", index=True)
-    color = fields.Char(string="Color")
-    total_qty = fields.Float(string="Total Qty")
-    remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
-    incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
-    actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
-    customer_name = fields.Char(string="Customer Name")
-    customer_order = fields.Char(string="Customer Order")
-    customer_cd = fields.Char(string="Customer CD")
-    customer_identifier = fields.Char(string="Customer Identifier")
-
-for size in StockPack.size.selection.apply(None):
-    AdidasPO.prototype['size_' + size[0]] = fields.Float(string=size[0])
-
-AdidasPO()
-
-menu.add({'id': 'adidas_po', 'parent': 'adidas_data', 'string': 'Purchase Orders', 'model': 'adidas.po', 'sequence': 2})
-
-view.add({'model': 'adidas.po', 'mode': 'tree', 'string': False, 'arch': """
-<tree>
-    <field name="name"/>
-    <field name="customer_order"/>
-    <field name="article"/>
-</tree>
-"""})
-
-sizes = [str.format('<field name="size_{}"/>', str(index)) for index in range(1, 15)].join('\n')
-sizes_t = [str.format('<field name="size_{}"/>', str(index) + 'T') for index in range(1, 15)].join('\n')
-
-view.add({'model': 'adidas.po', 'mode': 'form', 'string': False, 'arch': """
-<form>
-    <sheet>
-        <group>
-            <field name="name"/>
-            <field name="article"/>
-            <field name="total_qty"/>
-            <field name="remaining_qty"/>
-        </group>
-        <group>
-            <field name="model"/>
-            <field name="color"/>
-            <field name="incoming_qty"/>
-            <field name="actual_qty"/>
-        </group>
-        <group title="Customer">
-            <field name="customer_name"/>
-            <field name="customer_cd"/>
-        </group>
-        <group>
-            <field name="customer_order"/>
-            <field name="customer_identifier"/>
-        </group>
-        <group title="Sizes">
-            """ + sizes + """
-        </group>
-        <group>
-            """ + sizes_t + """
-        </group>
-    </sheet>
-</form>
-"""})
-
-class AdidasGraph(models.Model):
-    _name = 'adidas.graph'
-
-    name = fields.Char(string="Name")
-
-AdidasGraph()
-
-menu.add(id='graph', string="Graph", sequence=20)
-menu.add(id='graph_category', parent='graph', model='adidas.graph', view_id='adidas.graph.category', string="By Category", sequence=1)
-
-view.add(model='adidas.graph', mode='category', string=False, arch="""
-<page>
-    <graphic-chart model="product.product" field="category_id"/>
-</page>
-""")
-
-menu.add(id='graph_size', parent='graph', model='adidas.graph', view_id='adidas.graph.size', string="By Size", sequence=2)
-
-view.add(model='adidas.graph', mode='size', string=False, arch="""
-<page>
-    <graphic-chart model="product.product" field="size"/>
-</page>
-""")
