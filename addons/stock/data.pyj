@@ -86,7 +86,7 @@ class HPPMData(models.Model):
         await (promises)
         return self.write({'imported': True})
 
-    @api.server
+    @api.server(async=True)
     def import_sequence(self):
         promises = []
         xlsx = require('node-xlsx')
