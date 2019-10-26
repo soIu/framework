@@ -153,6 +153,7 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
         </group>
         <group>
             <field name="date"/>
+            <field name="type"/>
             <field name="imported" readonly="True"/>
         </group>
     </sheet>
