@@ -115,7 +115,7 @@ class HPPMData(models.Model):
                    if route: selected_route = route
                    else: selected_route = 1
                 line_qty = bom_line_id.product_qty * quantity
-                promise = self.env['stock.picking.list.line'].create({'route': route, 'product_id': bom_line_id.product_id, 'product_qty': line_qty, 'qty_box': line_qty, 'box': 1, 'picking_list_id': picking_list_id.id})
+                promise = self.env['stock.picking.list.line'].create({'route': route, 'product_id': bom_line_id.product_id, 'product_qty': line_qty, 'qty_box': line_qty, 'box': 1, 'picking_list_id': list_id.id})
                 promises.push(promise)
             return await (promises)
         for data in sheet.data:
