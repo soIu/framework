@@ -121,14 +121,8 @@ class HPPMData(models.Model):
         for data in sheet.data:
             row += 1
             if row < 6: continue
-            #if not data[0]: continue
-            value = {'name': data[1], 'code': data[3]}
-            for cell in data:
-                if not cell or cell == '-': continue
-                model = [sheet.data[index] for index in range(5, 10)].join(' ')
-                if not models[model]: models[model] = {}
-                models[model][value.code] = cell
-            promise = create_picking_list(code, quantity)
+            if not data[0]: continue
+            promise = create_picking_list(data[3], data[2])
             promises.push(promise)
         await (promises)
         return self.write({'imported': True})
