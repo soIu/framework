@@ -43,7 +43,7 @@ class HPPMData(models.Model):
             product_id = await (self.env['product.product'].search(['code', '=', value.code]))
             if not product_id.length:
                product_id = await (self.env['product.product'].create(value))
-            parts[value.name] = product_id
+            parts[value.code] = product_id
         for data in sheet.data:
             row += 1
             if row < 11: continue
