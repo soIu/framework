@@ -47,7 +47,7 @@ view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
     <field name="product_id"/>
     <field name="product_qty"/>
 </tree>
-"""})
+""", 'action': {'print_barcode': 'Print'}})
 
 view.add({'model': 'hppm.po', 'mode': 'form', 'string': False, 'arch': """
 <form>
