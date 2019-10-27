@@ -13,10 +13,10 @@ class StockReceivingWizard(models.Model):
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
-        picking_list_id = await (self.env['stock.picking.list'].search(['name', '=', self.scan]))
+        order_id = await (self.env['hppm.po'].search(['name', '=', self.scan]))
         self.scan = ''
-        if not picking_list_id.length: return
-        tools.navigate('/form/stock.picking.list?id=' + picking_list_id.id)
+        if not order_id.length: return
+        tools.navigate('/form/hppm.po?id=' + order_id.id)
 
 StockReceivingWizard()
 

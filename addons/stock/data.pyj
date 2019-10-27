@@ -3,6 +3,71 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from ir.ui import menu, view
+from ir.sequence import add_sequence
+from stock.location import defaults as location_defaults
+
+class HPPMPo(models.Model):
+    _name = 'hppm.po'
+
+    name = fields.Char(string="PO Number")
+    product_id = fields.Many2one('product.product', string="Part")
+    product_qty = fields.Float(string="Quantity")
+    vendor = fields.Char(string="Vendor")
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        values = values if exist(values) else self.values
+        for value in each(values):
+            sequence = await (self.env['ir.sequence'].get_next('hppm.po'))
+            value.name = 'PO ' + str.zfill(sequence.toString(), 3)
+        result = await (self.__super__('create')(values=values, is_client=is_client))
+        return result
+
+    def print_barcode(self):
+        window.printBarcode(self.name)
+
+    @async
+    def receive(self):
+        pack_id = await (self.env['stock.pack'].create({'adidas_product_id': self.product_id, 'adidas_product_qty': self.product_qty, 'bucket': '1'}))
+        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_id.ids}))
+        tools.navigate('/form/stock.picking?id=' + picking_id.id)
+
+HPPMPo()
+
+add_sequence('hppm.po')
+
+menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
+
+menu.add({'id': 'hppm_po', 'parent': 'hppm_data', 'string': 'PO', 'model': 'hppm.po', 'sequence': 2})
+
+view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="product_id"/>
+    <field name="product_qty"/>
+    <field name="vendor"/>
+</tree>
+"""})
+
+view.add({'model': 'hppm.po', 'mode': 'form', 'string': False, 'arch': """
+<form>
+    <header>
+        <button name="print_barcode" string="Print/>
+        <button name="receive" string="Receive"/>
+    </header>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="product_id"/>
+        </group>
+        <group>
+            <field name="vendor"/>
+            <field name="product_qty"/>
+        </group>
+    </sheet>
+</form>
+"""})
 
 class HPPMData(models.Model):
     _name = 'hppm.data'
@@ -21,7 +86,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True)
     imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'BoM'], ['sequence', 'Sequence'], string="Type", required=True)
+    type = fields.Selection(['bom', 'BoM'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
 
     @api.server
     def import_data(self):
@@ -37,7 +102,6 @@ class HPPMData(models.Model):
         models_code = {}
         models = {}
         parts = {}
-        #sizes = StockPack.size.selection.apply(None)
         @async
         def check_part(value):
             product_id = await (self.env['product.product'].search(['code', '=', value.code]))
@@ -127,9 +191,27 @@ class HPPMData(models.Model):
         await (promises)
         return self.write({'imported': True})
 
+    @api.server
+    def import_po(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        @async
+        def create_po(value):
+            product_id = await (self.env['product.product'].search(['code', '=', value.part]))
+            if not product_id.length: return
+            return self.env['hppm.po'].create({'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
+        for data in sheet.data:
+            row += 1
+            if row < 1: continue
+            #if not data[0]: continue
+            value = {'part': data[0], 'quantity': data[1], 'vendor': data[2]}
+            promises.push(create_po(value))
+        return Promise.all(promises)
+
 HPPMData()
 
-menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 menu.add({'id': 'import_data', 'parent': 'hppm_data', 'string': 'Import', 'model': 'hppm.data', 'sequence': 1})
 
 view.add({'model': 'hppm.data', 'mode': 'tree', 'string': False, 'arch': """
