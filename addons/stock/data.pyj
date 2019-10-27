@@ -25,7 +25,8 @@ class HPPMPo(models.Model):
         return result
 
     def print_barcode(self):
-        window.printBarcode(self.name)
+        if v'typeof window' != 'undefined' and window.printBarcode:
+           for record in self: printBarcode(record.name)
 
     @async
     def receive(self):
