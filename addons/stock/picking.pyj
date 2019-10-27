@@ -414,7 +414,7 @@ class PickingList(models.Model):
     def print_list(self):
         report = self.env['report.report'].with_context(limit=1).search(['reference', '=', 'Picking-List'])
         read = self.read(format=True, fields=Object.keys(self._fields))
-        line = self.env['stock.picking.list.line'].browse(self.line_ids)
+        line = self.env['stock.picking.list.line'].browse(self.line_ids[0:50])
         await (tools.exist(
         def (): return document.getElementById('reportbro_designer_iframe') and document.getElementById('reportbro_designer_iframe').contentWindow.$ and document.getElementById('reportbro_designer_iframe').contentWindow.$('#reportbro').reportBro
         ))
