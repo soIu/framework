@@ -20,7 +20,7 @@ class HPPMPo(models.Model):
         values = values if tools.exist(values) else self.values
         for value in tools.each(values):
             sequence = await (self.env['ir.sequence'].get_next('hppm.po'))
-            value.name = 'PO ' + str.zfill(sequence.toString(), 3)
+            value.name = 'PO ' + (value.vendor + ' ' if value.vendor else '') + str.zfill(sequence.toString(), 3)
         result = await (self.__super__('create')(values=values, is_client=is_client))
         return result
 
@@ -46,7 +46,6 @@ view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
     <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
-    <field name="vendor"/>
 </tree>
 """})
 
