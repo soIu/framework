@@ -90,6 +90,7 @@ class HPPMData(models.Model):
 
     @api.server
     def import_data(self):
+        if self.type == 'po': return self.import_po()
         if self.type == 'bom': return self.import_bom()
         if self.type == 'sequence': return self.import_sequence()
 
