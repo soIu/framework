@@ -821,6 +821,9 @@ class Model():
                del values._rev
                del values.rev
                values.rev = record._rev
+               for field in self._fields:
+                   #TODO, only send writed values from client and fill the remaining with fields on DB
+                   if self._fields[field].protected and record.data[field]: values[field] = record.data[field]
                return db.rel.save(self._name, values).then(
                def (result):
                    self.update(values, no_onchange=True)

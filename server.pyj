@@ -10,7 +10,8 @@ configuration = merge(configuration, JSON.parse(require('process').env.rapyd_con
 
 admin_password = configuration.admin_password
 
-client_js = require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
+client_js = require(require('path').join(require('process').cwd(), 'client.js')) #require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
+#console.log(Object.keys(client_js))
 client_js_time = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
 
 crypto = require('crypto')
@@ -89,8 +90,9 @@ def (request, response, next):
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).browse(params.ids).then(
        def (records):
-           if params.context and params.context.no_preload:
-              non_offline_fields = [field for field in records._fields if records._fields[field].no_offline]
+           non_offline_fields = [field for field in records._fields if records._fields[field].protected]
+           if non_offline_fields.length or (params.context and params.context.no_preload):
+              if params.context and params.context.no_preload: non_offline_fields = non_offline_fields.concat([field for field in records._fields if records._fields[field].no_offline])
               if non_offline_fields:
                  for record in records:
                      for field in non_offline_fields:
@@ -119,8 +121,8 @@ def (request, response, next):
        options = params.options or {}
        request.env[params.model].sudo(response.result.id).with_context(**options).search(*params.args).then(
        def (records):
-           non_offline_fields = [field for field in records._fields if records._fields[field].no_offline]
-           if non_offline_fields:
+           non_offline_fields = [field for field in records._fields if records._fields[field].no_offline or records._fields[field].protected]
+           if non_offline_fields.length:
               for record in records:
                   for field in non_offline_fields:
                       record.values[field] = None
@@ -148,6 +150,11 @@ def (request, response, next):
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).create(params.values).then(
        def (record):
+           non_offline_fields = [field for field in records._fields if records._fields[field].protected]
+           if non_offline_fields.length:
+              for record in records:
+                  for field in non_offline_fields:
+                      record.values[field] = None
            response.result = {'status': 'success', 'values': record.values}
            next()
        ).catch(
@@ -172,6 +179,11 @@ def (request, response, next):
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).browse(params.ids).then(
        def (record):
+           non_offline_fields = [field for field in records._fields if records._fields[field].protected]
+           if non_offline_fields.length:
+              for record in records:
+                  for field in non_offline_fields:
+                      record.values[field] = None
            record.write(params.values).then(
            def (record):
                response.result = {'status': 'success', 'values': record.values}

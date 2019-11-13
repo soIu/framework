@@ -1,7 +1,7 @@
 #TODO fields.Date and fields.Datetime
 from orm.tools import merge
 
-attributes = ['required', 'readonly', 'defaults', 'compute', 'related', 'no_offline', 'index']
+attributes = ['required', 'readonly', 'defaults', 'compute', 'related', 'no_offline', 'protected', 'index']
 
 def Char(string, **args):
     return merge({'type': 'char', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
@@ -29,10 +29,10 @@ def Many2one(relation, string, **args):
     return merge({'type': 'many2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2many(relation, inverse, string, **args):
-    return merge({'type': 'one2many', 'relation': relation, 'ondelete': 'cascade', 'defaults': [], 'inverse': inverse, 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'one2many', 'relation': relation, 'ondelete': 'cascade', 'defaults': args.defaults or [], 'inverse': inverse, 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def Many2many(relation, string, **args):
-    return merge({'type': 'many2many', 'relation': relation, 'ondelete': 'cascade', 'defaults': [], 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
+    return merge({'type': 'many2many', 'relation': relation, 'ondelete': 'cascade', 'defaults': args.defaults or [], 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
 
 def One2one(relation, string, **args):
     return merge({'type': 'one2one', 'relation': relation, 'ondelete': 'cascade', 'string': string, 'store': args.store if 'store' in args else True}, {attribute: args[attribute] or None for attribute in attributes}, reverse=True)
