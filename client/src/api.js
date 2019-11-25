@@ -105,14 +105,16 @@ async function update_session(new_session) {
 
 async function login(args) {
   args.encrypted = args.encrypted ? true: false;
+  /*if (!document.documentMode && !/Edge/.test(navigator.userAgent)) */args.compress = true;
   const session = await ajax('post', 'json', window.localStorage.rapyd_server_url + '/api/login', args);
-  console.log(session);
   if (session.status === 'denied') {
     return false;
   }
   else if (session.status === 'error') {
     throw Error("There are an error on the server");
   }
+  if (args.compress && checkBase64(session.client_js)) session.client_js = require('lzma/src/lzma-d').LZMA.decompress(decodeBuffer(session.client_js));
+  console.log(session);
   try {
     const session_object = await window.session_db.get('session');
     session._rev = session_object._rev;
@@ -312,6 +314,25 @@ function hasValue(object, value) {
     object = object.toString();
   }
   return object.indexOf(value) > -1;
+}
+
+
+function checkBase64(string) {
+  try {
+   return window.btoa(window.atob(string)) === string;
+  }
+  catch(error) {
+   return false;
+  }
+}
+
+function decodeBuffer(string) {
+  string = window.atob(string);
+  let array = new Uint8Array(string.length);
+  for (let i = 0; i < string.length; i++) {
+    array[i] = string.charCodeAt(i);
+  }
+  return array //new Int8Array(array.buffer);
 }
 
 /*function query(db, type, args) {

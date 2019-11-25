@@ -328,3 +328,7 @@ div:focus {
 .component-group, .component-separator {
   width: 46.5%;
 }
+
+#login-page-database select:invalid {
+  color: #a9a6a6;
+}
