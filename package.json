@@ -4,6 +4,7 @@
     "postinstall": "sed -i 's/interface await null/interface null/g' node_modules/rapydscript-ng/release/compiler.js"
   },
   "dependencies": {
+    "lz-string": "^1.4.4",
     "minify-fast": "^0.11.1",
     "pouchdb-adapter-http": "^7.0.0",
     "pouchdb-adapter-memory": "^7.0.0",
