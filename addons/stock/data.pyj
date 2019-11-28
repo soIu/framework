@@ -125,10 +125,10 @@ class HPPMData(models.Model):
                 if not models[model]: models[model] = {}
                 models[model][value.code] = cell
                 models_code[model] = code
-            promise = check_part(value)
-            promises.push(promise)
-        await (promises)
-        promises = []
+            await (check_part(value))
+            #promises.push(promise)
+        #await (promises)
+        #promises = []
         @async
         def create_bom_line(bom_id, part, qty):
             product_id = parts[part]
@@ -151,8 +151,9 @@ class HPPMData(models.Model):
                 promises.push(create_bom_line(bom_id, part, parts[part]))
             return Promise.all(promises)
         for model in models:
-            promises.push(create_model(model, models[model]))
-        await (promises)
+            await(create_model(model, models[model]))
+            #promises.push(create_model(model, models[model]))
+        #await (promises)
         return self.write({'imported': True})
 
     @api.server(async=True)
