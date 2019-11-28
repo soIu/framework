@@ -30,7 +30,7 @@ class ResUsers(models.Model):
 
     name = fields.Char(string="Name", required=True)
     login = fields.Char(string="Username/Email", required=True, index=True)
-    password = fields.Char(string="Password", index=True)
+    password = fields.Char(string="Password", index=True, protect=True)
     is_superuser = fields.Boolean(string="Is Superuser", index=True)
     menu_ids = fields.One2many('res.users.menu', 'user_id', string="Available Menus")
 
@@ -97,6 +97,7 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
         </group>
         <group>
             <field name="login"/>
+            <field name="password"/>
         </group>
         <group width="100%" title="Available Menus">
             <field name="menu_ids">

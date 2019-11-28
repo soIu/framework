@@ -19,10 +19,13 @@ export default class extends React.Component {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     for (let input of document.querySelectorAll('input[type=text], input[type=password]')) {
       input.addEventListener('keyup', this.clickEvent.bind(this));
     }
+    const load = api.preload();
+    if (window.rapyd_config.choose_database) this.setState({databases: await api.ajax('get', 'json', window.localStorage.rapyd_server_url + '/api/databases')});
+    load.done();
   }
 
   render() {
@@ -30,6 +33,22 @@ export default class extends React.Component {
       <Page noToolbar noNavbar noSwipeback loginScreen>
         <LoginScreenTitle>Welcome</LoginScreenTitle>
         <List form>
+          {this.state.databases &&
+          <ListInput
+            required
+            id="login-page-database"
+            label="Database"
+            type="select"
+            onInput={(e) => {
+              this.setState({ database: e.target.value});
+            }}
+          >
+            <option disabled selected value=''>Choose</option>
+            {this.state.databases && this.state.databases.map((database) =>
+            <option style={{color: '#212121'}} value={database}>{database}</option>
+            )}
+          </ListInput>
+          }
           <ListInput
             label="Username"
             type="text"
@@ -75,7 +94,7 @@ export default class extends React.Component {
     const app = self.$f7;
     //const router = self.$f7.router;
     try {
-      const success = await api.login({login: self.state.username, password: self.state.password, encrypted: false});
+      const success = await api.login({login: self.state.username, password: self.state.password, encrypted: false, ...(this.state.database ? {database: this.state.database} : {})});
       load.done();
       if (!success) {
         return app.dialog.alert('Username/Password wrong, relogin');
