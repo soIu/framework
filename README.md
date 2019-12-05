@@ -59,6 +59,14 @@ def get_current_qty(self):
     move_ids = await (self.env['stock.move'].search(['product_id', '=', somevariable]))
 ```
 
+Or
+
+```python
+@async
+def get_current_qty(self):
+    move_ids = await [self.env['stock.move'].search(['product_id', '=', somevariable])]
+```
+
 On Node.js version below 7.6.0 the async decorator will be translated to [asyncawait's](https://github.com/yortus/asyncawait) async call and make the function returns a Promise (just like native [async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)) and the function-like await to the library's await call. But on newer Node.js versions and modern browsers the decorator will only turn the function to an [async function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function).
 
 # What's still undecided
