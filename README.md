@@ -34,15 +34,6 @@ Modify app.conf to change port or other variables (Documentation is upcoming)
 
 The Webclient is on client/build folder, put it on nginx or something else or simply open index.html on a browser, it should work. Or if you're lazy enough you can change local_app variable in app.conf to True. Then, open the server url (don't forget the port).
 
-# How to test (Advanced)
-To test the ORM read the test.pyj file, if you know Odoo you should feel familiar with the code.
-
-To execute it `node ./node_modules/.bin/rapydscript -x test.pyj`, or if you encounter bugs remove the cache too `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -x test.pyj`
-
-To test the Framework read the server.pyj file, it is the file that contains the main controller (the Class is also similar to Odoo's http.Controller)
-
-To execute it `rm -f */*.pyj-cached && node ./node_modules/.bin/rapydscript -p modules -x server.pyj`
-
 # Async/Await support
 We added async/await support out of the box for modern [browsers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function#Browser_compatibility) and **older versions of node.js** (using yortus's [asyncawait](https://github.com/yortus/asyncawait)) to minimize Promise chaining and add readability for asynchronous operations. But, because we support old node.js versions (some platform like RHEL 6 on Power Architecture only have Node.js 6 compiled for the platform) the syntax is different with Python's Async/Await. For example instead of async and await being a keyword:
 
