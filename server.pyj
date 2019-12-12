@@ -151,13 +151,13 @@ def (request, response, next):
     params = request.params
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).create(params.values).then(
-       def (record):
+       def (records):
            non_offline_fields = [field for field in records._fields if records._fields[field].protect]
            if non_offline_fields.length:
               for record in records:
                   for field in non_offline_fields:
                       record.values[field] = None
-           response.result = {'status': 'success', 'values': record.values}
+           response.result = {'status': 'success', 'values': records.values}
            next()
        ).catch(
        def (error):
@@ -180,13 +180,13 @@ def (request, response, next):
     params = request.params
     if exist(request.params):
        request.env[params.model].sudo(response.result.id).browse(params.ids).then(
-       def (record):
+       def (records):
            non_offline_fields = [field for field in records._fields if records._fields[field].protect]
            if non_offline_fields.length:
               for record in records:
                   for field in non_offline_fields:
                       record.values[field] = None
-           record.write(params.values).then(
+           records.write(params.values).then(
            def (record):
                response.result = {'status': 'success', 'values': record.values}
                next()
