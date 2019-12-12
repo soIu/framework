@@ -19,6 +19,8 @@ class StockMove(models.Model):
     location_dest_id = fields.Many2one('stock.location', string="Destination Location", index=True)
     picking_id = fields.Many2one('stock.picking', string="Operation", defaults=_get_picking_context)
     pack_id = fields.Many2one('stock.pack', string="Pack/Box", index=True)
+    trolley_id = fields.Many2one('stock.trolley', string="Trolley")
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
 
     def create(self, values=False, is_client=tools.configuration.client):
         promises = []
