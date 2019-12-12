@@ -11,73 +11,12 @@ defaults = {}
 class ProductProduct(models.Model):
     _name = 'product.product'
 
-    @api.server
-    def _get_total_qty(self):
-         if not self.article or not self.size: return 0.0
-         return self.env['adidas.po'].search(['article', '=', self.article]).then(
-         def (order_ids):
-             qty = 0.0
-             for order_id in order_ids:
-                 qty += order_id['size_' + self.size]
-             return qty
-         )
-
-    @api.server
-    def _get_remaining_qty(self):
-        if not self.article or not self.size or not self.id: return 0.0
-        return self.total_qty.then(
-        def (total_qty):
-            return self.env['stock.move'].search(['product_id', '=', self.id], ['location_dest_id', '=', location_default.external_id]).then(
-            def (move_ids):
-                nonlocal total_qty
-                if not move_ids.length: return total_qty
-                for move_id in move_ids:
-                    total_qty -= move_id.product_qty
-                return total_qty
-            )
-        )
-
-    @api.server
-    def _get_incoming_qty(self):
-        if not self.article or not self.size or not self.id: return 0.0
-        return self.total_qty.then(
-        def (total_qty):
-            return self.env['stock.move'].search(['product_id', '=', self.id], ['location_dest_id', '=', location_default.internal_id]).then(
-            def (move_ids):
-                nonlocal total_qty
-                if not move_ids.length: return total_qty
-                for move_id in move_ids:
-                    total_qty += move_id.product_qty
-                return total_qty
-            )
-        )
-
-    @api.server
-    def _get_actual_qty(self):
-        if not self.article or not self.size or not self.id: return 0.0
-        return self.total_qty.then(
-        def (total_qty):
-            return self.env['stock.move'].search(['product_id', '=', self.id]).then(
-            def (move_ids):
-                nonlocal total_qty
-                if not move_ids.length: return total_qty
-                for move_id in move_ids:
-                    total_qty += (move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty)
-                return total_qty
-            )
-        )
-
     name = fields.Char(string="Product Name", required=True, index=True)
     code = fields.Char(string="Product Code", index=True)
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", index=True)
-    article = fields.Char(string="Article Number", index=True)
-    size = fields.Selection(StockPack.size.selection, string="Size", index=True)
     route = fields.Integer(string="Route AGV")
-    #total_qty = fields.Float(string="Total Qty", compute=_get_total_qty, store=False)
-    #remaining_qty = fields.Float(string="Remaining Qty", compute=_get_remaining_qty, store=False)
-    #incoming_qty = fields.Float(string="Incoming Qty", compute=_get_incoming_qty, store=False)
-    #actual_qty = fields.Float(string="Actual Qty", compute=_get_actual_qty, store=False)
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (Daisha)")
 
 ProductProduct()
 

@@ -1,0 +1,21 @@
+import orm.models as models
+import orm.fields as fields
+import orm.api as api
+
+class StockTrolley(models.Model):
+    _name = 'stock.trolley'
+
+    name = fields.Char(string="Trolley Number")
+    pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
+    move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
+
+StockTrolley()
+
+class StockTrolleyType(models.Model):
+    _name = 'stock.trolley.type'
+
+    name = fields.Char(string="Trolley Type")
+    reference = fields.Char(string="Reference")
+    product_ids = fields.One2many('product.product', 'trolley_type_id', string="Products")
+
+StockTrolleyType()

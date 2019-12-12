@@ -60,41 +60,11 @@ pack = {}
 sequence = {}
 add_sequence('stock.pack', sequence)
 
-class StockPackDisposed(models.Model):
-    _name = 'stock.pack.disposed'
-
-    name = fields.Char(string="Pack Number", readonly=True)
-    data = fields.Data(string="Raw Data", readonly=True, index_fields=['bucket', 'disposed'])
-    date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
-
-StockPackDisposed()
-
-menu.add(id='pack_disposed', parent='historical', string='Disposed Packs', model='stock.pack.disposed', sequence=4)
-
-view.add(model='stock.pack.disposed', mode='tree', arch="""
-<tree>
-    <field name="name"/>
-</tree>
-""")
-
-view.add(model='stock.pack.disposed', mode='form', arch="""
-<form>
-    <sheet>
-        <group>
-            <field name="name"/>
-        </group>
-        <group>
-            <field name="data"/>
-        </group>
-    </sheet>
-</form>
-""")
-
 class StockPack(models.Model):
     _name = 'stock.pack'
 
     @api.server
-    def _get_box_number_server(self, last_box):
+    def _get_pack_number_server(self, last_pack):
         def update_sequence(pack_id):
             sequence_id = this
             if pack_id:
@@ -103,79 +73,27 @@ class StockPack(models.Model):
                   def (): pack.updated = True
                   )
                name = pack_id.name if pack_id.length and pack_id.name else 'Pack 000'
-               if last_box and type(last_box) == String:
-                  name = tools.max(name, last_box) or last_box or 'Pack 000'
+               if last_pack and type(last_pack) == String:
+                  name = tools.max(name, last_pack) or last_pack or 'Pack 000'
                name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
                return name
         return self.env['ir.sequence'].browse(sequence['stock.pack']).then(
         def (sequence_id):
             name = 'Pack ' + str.zfill(str(sequence_id.sequence or 0), 3)
-            #if sequence_id.length and not last_box:
+            #if sequence_id.length and not last_pack:
             #   return self.env['stock.pack'].with_context(order='name desc', limit=1).search().then(update_sequence.bind(sequence_id))
-            if last_box and type(last_box) == String:
-               name = tools.max(name, last_box) or last_box or 'Pack 000'
+            if last_pack and type(last_pack) == String:
+               name = tools.max(name, last_pack) or last_pack or 'Pack 000'
             name = 'Pack ' + str.zfill((parseInt(name.split(' ')[1]) + 1).toString(), 3)
             return name
         )
 
     @async
-    def _get_box_number(self):
-        number_server = self._get_box_number_server(pack.last_box if tools.exist(pack.last_box) else None)
-        if not self.env.context.allowed_buckets:
-           if window.localStorage.quicktron_allowed_buckets: self.env.context.allowed_buckets = JSON.parse(window.localStorage.quicktron_allowed_buckets)
-           bucket_selection = WcsJob.prototype.bucket.selection
-           buckets = self.env.context.allowed_buckets or {}
-           @async
-           def search_bucket(bucket):
-               now = new Date().toISOString()
-               pack_disposed = None
-               if window.localStorage.last_bucket_compute: pack_disposed = self.env['stock.pack.disposed'].with_context(limit=900000).search(['date', '>', window.localStorage.last_bucket_compute], ['data.bucket', '=', bucket])
-               pack_ids = await (self.env['stock.pack'].with_context(limit=900000).search(*([('date', '>', window.localStorage.last_bucket_compute)] if window.localStorage.last_bucket_compute else [('disposed', '!=', True)]).concat([('bucket', '=', bucket)])))
-               if pack_disposed:
-                  pack_ids = pack_ids.filter(
-                  def (pack_id): return pack_id.disposed != True
-                  )
-               if not buckets[bucket]: buckets[bucket] = 0
-               if pack_ids.length: buckets[bucket] += pack_ids.length
-               if pack_disposed:
-                  pack_ids = await (pack_disposed)
-                  if pack_ids.length: buckets[bucket] -= pack_ids.length
-               window.localStorage.last_bucket_compute = now
-               #   buckets.push(bucket)
-           await ([bucket[0] for bucket in bucket_selection].map(search_bucket))
-           self.env.context.allowed_buckets = buckets
-           window.localStorage.quicktron_allowed_buckets = JSON.stringify(buckets)
+    def _get_pack_number(self):
+        number_server = self._get_pack_number_server(pack.last_pack if tools.exist(pack.last_pack) else None)
         result = await (number_server)
-        pack.last_box = result
+        pack.last_pack = result
         return result
-
-    def _get_sizes(self):
-        sizes = []
-        for index in range(1, 15):
-            if (self and (not self.allowed_sizes or str(index) in self.allowed_sizes)) or not self: sizes.push([str(index), str(index)])
-            if (self and (not self.allowed_sizes or str(index) + 'T' in self.allowed_sizes)) or not self: sizes.push([str(index) + 'T', str(index) + 'T'])
-        return sizes
-
-    def _get_buckets(self):
-        buckets = []
-        for bucket in WcsJob.prototype.bucket.selection:
-            #if (models.env.context.allowed_buckets and (models.env.context.active_lines['stock.pack']['many2many_pack_ids'].length + models.env.context.allowed_buckets[bucket[0]] <= 36)) or not models.env.context.allowed_buckets: buckets.push(bucket)
-            #else:
-               bucket = tools.copy(bucket)
-            #   bucket[1] += ' FULL'
-               buckets.push(bucket)
-        return buckets
-
-    def _get_available_qty(self):
-        if not self.order_id or not self.size or not self.category_id: return 0
-        return self.env['adidas.po'].browse(self.order_id).then(
-        def (order_id):
-            self._set_allowed_sizes(order_id)
-            return order_id._get_incoming_qty_size(self.size, self.category_id).then(
-            def (incoming_qty):
-                return order_id['size_' + self.size] - (incoming_qty or 0)
-            )
-        )
 
     #@api.server
     def _get_current_qty(self):
@@ -189,43 +107,29 @@ class StockPack(models.Model):
         #   return self.env['stock.move'].search(['date', '<=', self.env.context.date_to_historical]).then(compute_qty)
         return self.env['stock.move'].browse(self.move_ids).then(compute_qty)
 
-    def _set_allowed_sizes(self, order_id):
-        allowed_sizes = []
-        self.allowed_sizes = allowed_sizes
-        for index in range(1, 15):
-            if order_id['size_' + str(index)]: allowed_sizes.push(str(index))
-            if order_id['size_' + str(index) + 'T']: allowed_sizes.push(str(index) + 'T')
-
-    name = fields.Char(string="Pack Number", defaults=_get_box_number, required=True, index=True)
+    name = fields.Char(string="Pack Number", defaults=_get_pack_number, required=True, index=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now, index=True)
     location_id = fields.Many2one('stock.location', string="Current Location")
-    #order_id = fields.Many2one('adidas.po', string="PO Number")
-    article = fields.Char(string="Article")
-    #picking_ids = fields.Many2many('stock.picking', string="Operations")
-    bucket = fields.Selection(_get_buckets, string="Current Daisha")
+    trolley_id = fields.Many2one('stock.trolley', string="Trolley")
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
-    level = fields.Selection(['1', 'Layer 1'], ['2', 'Layer 2'], ['3', 'Layer 3'], string="Layer")
-    size = fields.Selection(_get_sizes, string="Size", index=True)
-    adidas_product_id = fields.Many2one('product.product', string="Product")
-    adidas_product_qty = fields.Float(string="Quantity")
-    available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
-    current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
-    allowed_buckets = fields.Data(string="Allowed Daisha that are empty at that time")
-    allowed_sizes = fields.Data(string="Allowed Size from PO")
-    disposed = fields.Boolean(string="Disposed", index=True)
+    product_id = fields.Many2one('product.product', string="Product")
+    product_qty = fields.Float(string="Quantity")
+    #available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
+    #current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
 
     """def create(self, values=False, is_client=tools.configuration.client):
         if v"typeof window !== 'undefined'":
            for record in self:
-               if record.adidas_product_qty and record.adidas_product_qty > record.values.available_qty:
+               if record.product_qty and record.product_qty > record.values.available_qty:
                   if tools.dialog: tools.dialog.alert('Quantity Insufficient')
                   raise Error('Quantity is Insufficient')
         return self.__super__('create')(values=values, is_client=is_client).then(
         def ():
             promises = []
             for record in self:
-                promise = self.env['stock.move'].create({'picking_id': record.picking_id.id, 'pack_id': record.id, 'product_id': record.adidas_product_id, 'product_qty': record.adidas_product_qty})
+                promise = self.env['stock.move'].create({'picking_id': record.picking_id.id, 'pack_id': record.id, 'product_id': record.product_id, 'product_qty': record.product_qty})
                 promises.push(promise)
             return Promise.all(promises).then(
             def (records): return self
@@ -254,60 +158,12 @@ class StockPack(models.Model):
            #    for record in values: printBarcode(record.name)
            #)
 
-    #@api.onchange('order_id')
-    def onchange_po(self):
-        if not self.order_id: return
-        return self.env['adidas.po'].browse(self.order_id).then(
-        def (order_id):
-            self.article = order_id.article
-            self._set_allowed_sizes(order_id)
-            if not self.size or not self.category_id or not order_id['size_' + self.size]: return
-            return order_id._get_incoming_qty_size(self.size, self.category_id).then(
-            def (incoming_qty):
-                self.available_qty = order_id['size_' + self.size] - (incoming_qty or 0)
-            )
-        )
-
-    @api.onchange('category_id')
-    def onchange_category(self):
-        if not self.category_id: return
-        #if self.size and self.category_id and self.order_id: self.order_id = self.order_id
-        return self.env['product.category'].browse(self.category_id).then(
-        def (category_id):
-            self.level = category_id.level
-        )
-
-    @api.onchange('article', 'category_id', 'size')
-    def onchange_for_product(self):
-        onchange_po = None
-        #if self.size and self.category_id and self.order_id and models.env.context.default_operation_type != 'putting': onchange_po = self.onchange_po()
-        if self.adidas_product_id: return onchange_po
-        if self.article and self.category_id and self.size:
-           return self.env['product.product'].with_context(limit=1).search(['article', '=', self.article], ['category_id', '=', self.category_id], ['size', '=', self.size]).then(
-           def (product_id):
-               if product_id.length and not self.adidas_product_id:
-                  self.adidas_product_id = product_id.id
-               return onchange_po
-           )
-
-    @api.onchange('adidas_product_id', async=True)
+    @api.onchange('product_id', async=True)
     def onchange_product(self):
-        if not self.adidas_product_id: return
-        if self.size and self.article and self.category_id: return
-        product_id = await (self.env['product.product'].browse(self.adidas_product_id))
-        if not self.size: self.size = product_id.size
-        if not self.article: self.article = product_id.article
+        if not self.product_id: return
+        if self.category_id: return
+        product_id = await (self.env['product.product'].browse(self.product_id))
         if not self.category_id: self.category_id = product_id.category_id
-
-    def dispose(self):
-        promises = self.map(
-        def (record):
-            return self.env['stock.pack.disposed'].create({'name': record.name, 'data': record.values})
-            #unlink = record.unlink()
-            #return Promise.all([disposed, unlink])
-        )
-        promises.push(self.write({'disposed': True}))
-        return Promise.all(promises)
 
 StockPack()
 
@@ -316,53 +172,12 @@ menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing P
 
 last_args = None
 
-def pack_list_init():
-    page = this
-    #if page.refs and (not page.refs.tree_component or page.refs.tree_component.props.isPopup): return
-    #Promise.all(['upper', 'insole', 'outsole', 'strobel'].map(
-    #def (value):
-    return models.env['stock.pack'].with_context(limit=10000).search(['disposed', '!=', True], *(models.env.context.active_args or [])).then(
-        def (pack_ids):
-            promises = ['upper_id', 'insole_id', 'outsole_id', 'strobel_id'].map(
-            def (category):
-                pack_filtered_ids = pack_ids.filter(
-                def (pack_id): return pack_id.category_id == category_default[category]
-                )
-                return models.env['stock.move'].with_context(limit=10000).search(['pack_id', 'in', pack_filtered_ids.ids], *(['date', '<=', models.env.context.date_to_historical] if models.env.context.date_from_historical and models.env.context.date_to_historical else [])).then(
-                def (move_ids): return [category[0].toUpperCase() + category[1:], move_ids]
-                )
-            )
-            return Promise.all(promises)
-    ).then(
-    def (results):
-        #locations = {category_default[key]: key for key in category_default}
-        #quantities = {key: 0 for key in Object.keys(category_default)}
-        #for move_id in move_ids:
-        #    quantities[locations[move_id.category_id]] += move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty
-        results_element = document.getElementById('pack_categories_count')
-        if not results_element:
-           results_element = document.createElement('div')
-           results_element.id = 'pack_categories_count'
-           card_header = document.querySelector('div.card-header')
-           if card_header: card_header.appendChild(results_element);
-        results_element.innerHTML = [category[0].split('_id')[0] + ': ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in category[1]) for category in results].join(' ')
-        #'Upper: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in upper_ids).toString() + ' Insole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in insole_ids).toString() + ' Outsole: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in outsole_ids) + ' Strobel: ' + sum(move_id.product_qty if move_id.location_dest_id == location_default.internal_id else -move_id.product_qty for move_id in strobel_ids)
-        nonlocal last_args
-        last_args = models.env.context.active_args
-        tools.wait_exist(
-        def (): return last_args != models.env.context.active_args
-        ).then(pack_list_init.bind(page))
-    )
-
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="(context.date_from_historical ? [] : ['disposed', '!=', True])">
     <field name="name"/>
     <!--<field name="order_id"/>-->
-    <field name="bucket"/>
     <field name="category_id"/>
-    <field name="article"/>
-    <field name="size"/>
-    <field name="current_qty"/>
+    <field name="product_qty"/>
     <field name="date" sort="asc"/>
 </tree>
 """, 'action': {'print_barcode': 'Print', 'dispose': 'Dispose'}})
@@ -375,21 +190,15 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <!--<field name="order_id"/>-->
-            <field name="article"/>
-            <field name="size"/>
         </group>
         <group>
-            <field name="bucket" string="Daisha"/>
             <field name="category_id"/>
-            <field name="level"/>
-            <field name="available_qty"/>
         </group>
         <group title="Product" invisible="active_id.env.context.is_add_pack != true">
-            <field name="adidas_product_id"/>
+            <field name="product_id"/>
         </group>
         <group invisible="active_id.env.context.is_add_pack != true">
-            <field name="adidas_product_qty"/>
+            <field name="product_qty"/>
         </group>
         <group title="Movements" width="100%" invisible="active_id.env.context.is_add_pack == true">
             <field name="move_ids">

@@ -30,7 +30,7 @@ class HPPMPo(models.Model):
 
     @async
     def receive(self):
-        pack_id = await (self.env['stock.pack'].create({'name': 'Pack ' + self.name.replace('PO ', ''), 'adidas_product_id': self.product_id, 'adidas_product_qty': self.product_qty, 'bucket': '1'}))
+        pack_id = await (self.env['stock.pack'].create({'name': 'Pack ' + self.name.replace('PO ', ''), 'product_id': self.product_id, 'product_qty': self.product_qty}))
         picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_id.ids}))
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
 

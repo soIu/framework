@@ -1,0 +1,5 @@
+2019/12/12-21:45:24.795187 7fa6da7fc700 Recovering log #3
+2019/12/12-21:45:24.795222 7fa6da7fc700 Level-0 table #5: started
+2019/12/12-21:45:24.797316 7fa6da7fc700 Level-0 table #5: 340 bytes OK
+2019/12/12-21:45:24.804019 7fa6da7fc700 Delete type=0 #3
+2019/12/12-21:45:24.804073 7fa6da7fc700 Delete type=3 #2

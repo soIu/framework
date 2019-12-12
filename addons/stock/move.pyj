@@ -71,7 +71,7 @@ class StockMove(models.Model):
         if not self.pack_id: return
         return self.env['stock.pack'].browse(self.pack_id).then(
         def (pack_id):
-            if pack_id.adidas_product_id: self.product_id = pack_id.adidas_product_id
+            if pack_id.product_id: self.product_id = pack_id.product_id
         )
 
 StockMove()
