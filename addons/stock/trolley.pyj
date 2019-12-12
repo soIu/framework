@@ -1,6 +1,7 @@
 import orm.models as models
 import orm.fields as fields
 import orm.api as api
+from ir.ui import menu, view
 
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
@@ -11,6 +12,44 @@ class StockTrolley(models.Model):
 
 StockTrolley()
 
+menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Trolley", sequence=1)
+
+view.add(model='stock.trolley', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+</tree>
+""")
+
+view.add(model='stock.trolley', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group width="100%" title="Packs">
+            <field name="pack_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                    <field name="trolley_type_id"/>
+                </tree>
+            </field>
+        </group>
+        <group width="100%" title="Movements">
+            <field name="move_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                    <field name="trolley_type_id"/>
+                    <field name="location_src_id"/>
+                    <field name="location_dest_id"/>
+                </tree>
+            </field>
+        </group>
+    </sheet>
+</form>
+""")
+
 class StockTrolleyType(models.Model):
     _name = 'stock.trolley.type'
 
@@ -19,3 +58,33 @@ class StockTrolleyType(models.Model):
     product_ids = fields.One2many('product.product', 'trolley_type_id', string="Products")
 
 StockTrolleyType()
+
+menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', string="Trolley Type", sequence=3)
+
+view.add(model='stock.trolley.type', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="reference"/>
+</tree>
+""")
+
+view.add(model='stock.trolley.type', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="reference"/>
+        </group>
+        <group width="100%">
+            <field name="product_ids>
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                </tree>
+            </field>
+        </group>
+    </sheet>
+</form>
+""")
