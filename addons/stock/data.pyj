@@ -86,13 +86,52 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True)
     imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'BoM'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
+    type = fields.Selection(['bom', 'BoM'], ['daisha', 'Daisha'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
 
     @api.server
     def import_data(self):
         if self.type == 'po': return self.import_po()
         if self.type == 'bom': return self.import_bom()
+        if self.type == 'daisha': return self.import_daisha()
         if self.type == 'sequence': return self.import_sequence()
+
+    @api.server(async=True)
+    def import_daisha(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[2]
+        row = -1
+        trolleys = {}
+        trolley_map = {}
+        trolley_type = None
+        for data in sheet.data:
+            row += 1
+            if row < 4: continue
+            #if not data[5] or data[5] == '-': continue
+            part_code = data[5]
+            if data[21] and data[21] != trolley_type:
+               if not trolley_type: trolley_type = data[21]
+               else:
+                   trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type})
+                   product_ids = await (self.env['product.product'].search(['code', 'in', trolleys[trolley_type]]))
+                   trolley_id = await (trolley_id)
+                   await (product_ids.write({'trolley_type_id': trolley_id.id}))
+                   #trolley_map[trolley_type] = product_ids.ids
+                   del trolleys[trolley_type]
+                   trolley_type = data[21]
+                   if not trolleys[trolley_type]: trolleys[trolley_type] = []
+                   if not data[5] or data[5] == '-': continue
+                   trolleys[trolley_type].push(part_code)
+            elif trolley_type:
+               if not trolleys[trolley_type]: trolleys[trolley_type] = []
+               if not data[5] or data[5] == '-': continue
+               trolleys[trolley_type].push(part_code)
+        for trolley in trolleys:
+            trolley_id = self.env['stock.trolley.type'].create({'name': trolley})
+            product_ids = await (self.env['product.product'].search(['code', 'in', trolleys[trolley]]))
+            trolley_id = await (trolley_id)
+            await (product_ids.write({'trolley_type_id': trolley_id.id}))
+            #trolley_map[trolley] = product_ids.ids
 
     @api.server(async=True)
     def import_bom(self):
@@ -111,7 +150,7 @@ class HPPMData(models.Model):
             parts[value.code] = product_id
         for data in sheet.data:
             row += 1
-            if row < 11: continue
+            if row < 8: continue
             #if not data[0]: continue
             value = {'name': data[3], 'code': data[1]}
             if not value.name or not value.code: continue
@@ -120,8 +159,8 @@ class HPPMData(models.Model):
                 cell_index += 1
                 if cell_index < 6: continue
                 if not cell or cell == '-': continue
-                model = [sheet.data[index][cell_index] for index in range(5, 9)].join(' ')
-                code = sheet.data[9][cell_index]
+                model = [sheet.data[index][cell_index] for index in range(2, 6)].join(' ')
+                code = sheet.data[6][cell_index]
                 if not models[model]: models[model] = {}
                 models[model][value.code] = cell
                 models_code[model] = code
@@ -163,23 +202,19 @@ class HPPMData(models.Model):
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         @async
-        def create_picking_list(code, quantity):
+        def create_picking_list(code, quantity, lot_no):
             product_id = await (self.env['product.product'].search(['code', '=', code]))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
-            bom_line_ids, list_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['stock.picking.list'].create({'model_id': bom_id.id})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
+            trolley_group = {}
             for bom_line_id in bom_line_ids:
-                selected_route = None
-                for route in range(1, 6):
-                    if routes[route] < parseInt(bom_line_ids.length / 5):
-                       selected_route = route
-                       routes[route] += 1
-                       break
-                if not selected_route:
-                   route = any(routes[route] <= parseInt(bom_line_ids.length / 5) and route for route in range(1, 6))
-                   if route: selected_route = route
-                   else: selected_route = 1
+                product_id = await (self.env['product.product'].browse(bom_line_id.product_id))
+                if not trolley_group[product_id.trolley_type_id]:
+                   if not product_id.trolley_type_id: continue
+                   trolley_group[product_id.trolley_type_id] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id.trolley_type_id}))
+                list_id = trolley_group[product_id.trolley_type_id]
                 line_qty = bom_line_id.product_qty * quantity
                 promise = self.env['stock.picking.list.line'].create({'route': route, 'product_id': bom_line_id.product_id, 'product_qty': line_qty, 'qty_box': line_qty, 'box': 1, 'picking_list_id': list_id.id})
                 promises.push(promise)
@@ -188,7 +223,8 @@ class HPPMData(models.Model):
             row += 1
             if row < 6: continue
             if not data[0]: continue
-            promise = create_picking_list(data[3], data[2])
+            lot_no = data.slice(9, 14).join('-')
+            promise = create_picking_list(data[3], data[2], lot_no)
             promises.push(promise)
         await (promises)
         return self.write({'imported': True})

@@ -78,7 +78,7 @@ view.add(model='stock.trolley.type', mode='form', arch="""
             <field name="reference"/>
         </group>
         <group width="100%">
-            <field name="product_ids>
+            <field name="product_ids">
                 <tree>
                     <field name="name"/>
                     <field name="code"/>

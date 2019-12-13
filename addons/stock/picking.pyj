@@ -269,7 +269,9 @@ class PickingList(models.Model):
     _name = 'stock.picking.list'
 
     name = fields.Char(string="Picking List", readonly=True)
+    sequence = fields.Integer(string="Sequence")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     called = fields.Boolean(string="AGV Called")
     ip_address = fields.Char(string="IP Address")
@@ -335,6 +337,7 @@ view.add(model='stock.picking.list', mode='tree', arch="""
 <tree>
     <field name="name"/>
     <field name="model_id"/>
+    <field name="sequence" sort="asc"/>
 </tree>
 """)
 
@@ -347,6 +350,8 @@ view.add(model='stock.picking.list', mode='form', arch="""
     <sheet>
         <group>
             <field name="name"/>
+            <field name="sequence"/>
+            <field name="trolley_type_id"/>
         </group>
         <group>
             <field name="model_id"/>

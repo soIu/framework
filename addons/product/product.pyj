@@ -27,6 +27,7 @@ view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': "
 <tree>
     <field name="name"/>
     <field name="code"/>
+    <field name="trolley_type_id"/>
     <!--<field name="total_qty"/>
     <field name="incoming_qty"/>
     <field name="actual_qty"/>
