@@ -35,6 +35,9 @@ view.add(model='mrp.sequence', mode='form', arch="""
         <group>
             <field name="name"/>
         </group>
+        <group>
+            <field name="sequence"/>
+        </group>
         <group width="100%">
             <field name="picking_list_ids">
                 <tree>
