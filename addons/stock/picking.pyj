@@ -84,7 +84,7 @@ class StockPicking(models.Model):
             def each_picking():
                 promises = []
                 record = None
-                for record in self:
+                for record in result:
                     promises.push(create_move(record))
                 await (promises)
                 return result
