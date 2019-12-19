@@ -87,7 +87,7 @@ class StockPicking(models.Model):
                 for record in self:
                     promises.push(create_move(record))
                 await (promises)
-                return self
+                return result
             if self._name == models.env.context.active_model: models.env.context.active_task.push(each_picking)
             else: return each_picking()
             return result
