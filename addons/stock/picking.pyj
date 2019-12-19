@@ -86,7 +86,8 @@ class StockPicking(models.Model):
                 for record in self:
                     promises.push(create_move(record))
                 if record and record.type == 'picking': return Promise.all(promises)
-            models.env.context.active_task.push(each_picking)
+            if self._name == models.env.context.active_model: models.env.context.active_task.push(each_picking)
+            else: return each_picking()
             return result
         if promises.length: return Promise.all(promises).then(
         def (): return self.__super__('create')(values=values, is_client=is_client).then(after_create)
