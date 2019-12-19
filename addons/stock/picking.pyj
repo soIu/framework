@@ -80,12 +80,14 @@ class StockPicking(models.Model):
                     )
                     return Promise.all([] if record.type != 'picking' else promises)
                 )
+            @async
             def each_picking():
                 promises = []
                 record = None
                 for record in self:
                     promises.push(create_move(record))
-                if record and record.type == 'picking': return Promise.all(promises)
+                await (promises)
+                return self
             if self._name == models.env.context.active_model: models.env.context.active_task.push(each_picking)
             else: return each_picking()
             return result
