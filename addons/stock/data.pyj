@@ -105,7 +105,7 @@ class HPPMData(models.Model):
     def import_daisha(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[2]
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         trolleys = {}
         trolley_map = {}
