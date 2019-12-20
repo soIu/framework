@@ -307,6 +307,10 @@ class PickingList(models.Model):
         self.pack_ids.push(pack_id.id)
         return pack_id.write({'picking_list_id': self.id})
 
+    def print_barcode(self):
+        if v'typeof window' != 'undefined' and window.printBarcode:
+           for record in self: printBarcode(record.name)
+
     @async
     def print_list(self):
         report = self.env['report.report'].with_context(limit=1).search(['reference', '=', 'Picking-List'])
@@ -364,7 +368,7 @@ view.add(model='stock.picking.list', mode='tree', arch="""
 view.add(model='stock.picking.list', mode='form', arch="""
 <form>
     <header>
-        <button name="print_list" string="Print"/>
+        <button name="print_barcode" string="Print"/>
         <button name="call_agv" string="Call" invisible="active_id.called == True"/>
     </header>
     <sheet>

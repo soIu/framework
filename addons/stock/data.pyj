@@ -90,7 +90,7 @@ class HPPMData(models.Model):
 
     name = fields.Char(string="Data Number", defaults=_get_number, required=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now)
-    excel = fields.Binary(string="Excel Data", required=True)
+    excel = fields.Binary(string="Excel Data", required=True, protec=True)
     imported = fields.Boolean(string="Imported")
     type = fields.Selection(['bom', 'BoM'], ['daisha', 'Daisha'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
 
@@ -251,7 +251,7 @@ class HPPMData(models.Model):
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'part': data[0], 'quantity': data[1], 'vendor': data[2]}
+            value = {'part': data[4], 'quantity': data[8]} #, 'vendor': data[2]}
             promises.push(create_po(value))
         return Promise.all(promises)
 
