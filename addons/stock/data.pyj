@@ -35,7 +35,7 @@ class HPPMPo(models.Model):
         for record in self:
             if record.received: return tools.alert('One of the PO is already received')
         for record in self:
-            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', ''), 'product_id': self.product_id, 'product_qty': self.product_qty}), record.write({'received': True})])
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', ''), 'product_id': record.product_id, 'product_qty': record.product_qty}), record.write({'received': True})])
             pack_ids.push(pack_id.id)
         picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids}))
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
