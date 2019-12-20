@@ -90,7 +90,7 @@ class HPPMData(models.Model):
 
     name = fields.Char(string="Data Number", defaults=_get_number, required=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now)
-    excel = fields.Binary(string="Excel Data", required=True, protec=True)
+    excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Imported")
     type = fields.Selection(['bom', 'BoM'], ['daisha', 'Daisha'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
 
