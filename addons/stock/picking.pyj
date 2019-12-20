@@ -301,7 +301,7 @@ class PickingList(models.Model):
     @api.onchange('laser_scan', async=True)
     def onchange_laser(self):
         if not self.laser_scan: return
-        pack_id = await (self.env['stock.pack'].search(['name', '=', self.laser_scan]))
+        pack_id = await (self.env['stock.pack'].search(['name', '=', self.laser_scan.replace('PO ', 'Pack ')]))
         if pack_id.picking_list_id: return
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
