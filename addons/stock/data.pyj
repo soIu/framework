@@ -13,6 +13,7 @@ class HPPMPo(models.Model):
     product_id = fields.Many2one('product.product', string="Part")
     product_qty = fields.Float(string="Quantity")
     vendor = fields.Char(string="Vendor")
+    received = fields.Boolean(string="Received")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -30,8 +31,13 @@ class HPPMPo(models.Model):
 
     @async
     def receive(self):
-        pack_id = await (self.env['stock.pack'].create({'name': 'Pack ' + self.name.replace('PO ', ''), 'product_id': self.product_id, 'product_qty': self.product_qty}))
-        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_id.ids}))
+        pack_ids = []
+        for record in self:
+            if record.received: return tools.alert('One of the PO is already received')
+        for record in self:
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', ''), 'product_id': self.product_id, 'product_qty': self.product_qty}), record.write({'received': True})])
+            pack_ids.push(pack_id.id)
+        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids}))
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
 
 HPPMPo()
@@ -54,7 +60,7 @@ view.add({'model': 'hppm.po', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
         <button name="print_barcode" string="Print"/>
-        <button name="receive" string="Receive"/>
+        <button name="receive" string="Receive" invisible="active_id.received == True"/>
     </header>
     <sheet>
         <group>

@@ -276,6 +276,8 @@ class PickingList(models.Model):
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
+    pack_ids = fields.One2many('stock.pack', 'picking_list_id', string="Packs")
+    laser_scan = fields.Char(string="Laser Scan")
     called = fields.Boolean(string="AGV Called")
     ip_address = fields.Char(string="IP Address")
 
@@ -295,6 +297,15 @@ class PickingList(models.Model):
         #bom_line_ids = await (self.env['mrp.bom.line'].search(['bom_id', 'in', [value.model_id for value in each(values)]]))
         #await (bom_line_ids.map(after_create))
         return result
+
+    @api.onchange('laser_scan', async=True)
+    def onchange_laser(self):
+        if not self.laser_scan: return
+        pack_id = await (self.env['stock.pack'].search(['name', '=', self.laser_scan]))
+        if pack_id.picking_list_id: return
+        self.laser_scan = ''
+        self.pack_ids.push(pack_id.id)
+        return pack_id.write({'picking_list_id': self.id})
 
     @async
     def print_list(self):
@@ -319,9 +330,15 @@ class PickingList(models.Model):
         document.getElementById('reportbro_designer_iframe').contentWindow.document.getElementById('rbro_document_pdf_preview').requestFullscreen()
 
     @async
+    def create_picking(self):
+        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'internal', 'pack_ids': self.pack_ids}))
+        return picking_id.validate()
+        #tools.navigate('/form/stock.picking?id=' + picking_id.id)
+
+    @async
     def call_agv(self):
-        await (self.write({'called': True}))
-        host = self.ip_address or window.location.hostname
+        await ([self.write({'called': True}), self.create_picking()])
+        """host = self.ip_address or window.location.hostname
         @async
         def call_route(route):
             response = await (fetch('http://' + host + ':8000/?route=' + route))
@@ -330,7 +347,7 @@ class PickingList(models.Model):
         try:
             await ([call_route(route) for route in range(1, 6)])
         except Exception as error:
-            window.alert(error.stack)
+            window.alert(error.stack)"""
 
 PickingList()
 
@@ -386,9 +403,15 @@ add_sequence('stock.picking.list')
 class PickingListLine(models.Model):
     _name = 'stock.picking.list.line'
 
+    @async
+    def _get_part_no(self):
+        if not self.product_id: return
+        product_id = await (self.env['product.product'].browse(self.product_id))
+        return product_id.code
+
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     route = fields.Integer(string="Route")
-    part_no = fields.Char(string="Part No.")
+    part_no = fields.Char(string="Part No.", compute=_get_part_no, store=True)
     product_id = fields.Many2one('product.product', string="Part")
     qty_box = fields.Float(string="Qty/Box")
     box = fields.Float(string="Box")

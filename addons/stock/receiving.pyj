@@ -9,6 +9,8 @@ class StockReceivingWizard(models.Model):
 
     #name = fields.Char(string="")
     scan = fields.Char(string="Laser Scan")
+    order_ids = fields.Many2many('hppm.po', string="Purchase Orders")
+    received = fields.Boolean(string="Received")
 
     @api.onchange('scan', async=True)
     def onchange_scan(self):
@@ -16,7 +18,13 @@ class StockReceivingWizard(models.Model):
         order_id = await (self.env['hppm.po'].search(['name', '=', self.scan]))
         self.scan = ''
         if not order_id.length: return
-        tools.navigate('/form/hppm.po?id=' + order_id.id)
+        self.order_ids.push(order_id.id)
+        #tools.navigate('/form/hppm.po?id=' + order_id.id)
+
+    @async
+    def receive(self):
+        order_ids = await (self.env['hppm.po'].browse(self.order_ids))
+        await ([order_ids.receive(), self.write({'received': True})])
 
 StockReceivingWizard()
 
@@ -30,7 +38,17 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
             <field name="scan"/>
         </group>
         <group width="100%">
-            <scanner-camera/>
+            <field name="order_ids">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                    <field name="vendor"/>
+                </tree>
+            </field>
+        </group>
+        <group>
+            <button name="receive" string="Receive" invisible="active_id.received == True"/>
         </group>
     </sheet>
 </form>
