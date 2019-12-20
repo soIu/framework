@@ -394,8 +394,17 @@ view.add(model='stock.picking.list', mode='form', arch="""
                 </tree>
             </field>
         </group>
-        <group widht="100%">
-            <scanner-camera/>
+        <group>
+            <field name="laser_scan"/>
+        </group>
+        <group width="100%">
+            <field name="pack_ids">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                </tree>
+            </field>
         </group>
         <iframe ref="frame" id="reportbro_designer_iframe" frameborder="0" width="100%" height="500px" style="position: absolute; top: -9999px; left: -9999px; border-radius: 5px" src="reportbro/index.html"/>
     </sheet>
