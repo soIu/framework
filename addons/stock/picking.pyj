@@ -273,6 +273,7 @@ class PickingList(models.Model):
 
     name = fields.Char(string="Picking List", readonly=True)
     sequence = fields.Integer(string="Sequence")
+    sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
@@ -313,6 +314,16 @@ class PickingList(models.Model):
 
     @async
     def print_list(self):
+        values = await [self.read(format=True)]
+        request = await [fetch('https://jasper.odooabc.com/jasperserver/rest_v2/reportExecutions', {'credentials': 'include', 'method': 'POST', 'headers': {'Authorization': 'Basic ' + btoa('c0b4d1b4c4:c0b4d1r4b4'), 'Content-Type': 'application/json'}, 'body': JSON.stringify({'reportUnitUri': '/Solu/HPPM/Picking_List', 'outputFormat': 'pdf', 'parameters': {'reportParameter': [{'name': 'data', 'value': [JSON.stringify(values[0])]}]}})})]
+        text = await [request.text()]
+        xml = new DOMParser().parseFromString(text, 'text/xml')
+        request_id, export_id = xml.querySelector('requestId').innerHTML, xml.querySelector('export').querySelector('id').innerHTML
+        url = 'https://jasper.odooabc.com/jasperserver/rest_v2/reportExecutions/' + request_id + '/exports/' + export_id + '/outputResource'
+        window.open(url)
+
+    @async
+    def print_list_old(self):
         report = self.env['report.report'].with_context(limit=1).search(['reference', '=', 'Picking-List'])
         read = self.read(format=True, fields=Object.keys(self._fields))
         line = self.env['stock.picking.list.line'].browse(self.line_ids[0:50])
