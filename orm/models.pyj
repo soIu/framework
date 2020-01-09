@@ -578,10 +578,10 @@ class Model():
                               if relational_fields and is_array(relational_fields) and key in relational_fields:
                                  return records.read(format=format, without_null=without_null, branched=True).then(
                                  def (values):
-                                     value[key] = values
                                      if format and field.type in ['many2one', 'one2one']:
-                                        if value[key].length: value[key] = value[key][0]
+                                        if values.length: value[key] = values[0]
                                         else: value[key] = {key: "" if without_null else None for key in Object.keys(records._fields)}
+                                     else: value[key] = values
                                      return records
                                  )
                               original_value = value[key]
