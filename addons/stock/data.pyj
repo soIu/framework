@@ -34,7 +34,7 @@ class HPPMPo(models.Model):
     def print_po(self):
      try:
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id'])]
-        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', JSON.stringify(values))]
+        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         window.open(url)
      except Exception as error:
         alert(error.stack or error.message)
