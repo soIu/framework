@@ -530,7 +530,7 @@ class Model():
            )
         return result
 
-    def read(self, format, fields, without_null):
+    def read(self, format, fields, relational_fields, without_null, branched):
         if not fields or not fields.length:
            fields = Object.keys(self._fields)
         if format:
@@ -575,9 +575,16 @@ class Model():
                              read_cache[field.relation][JSON.stringify(value[key])] = promise
                           promise.then(
                           def (records):
+                              if relational_fields and is_array(relational_fields) and key in relational_fields:
+                                 return records.read(format=format, without_null=without_null, branched=True).then(
+                                 def (values):
+                                     value[key] = values
+                                     return records
+                                 )
                               original_value = value[key]
                               names = []
                               for record in records:
+                                  if not record._fields.name: break
                                   names.push(record[record._rec_name or 'name'])
                               value[key] = names.join(', ')
                               return records
@@ -596,8 +603,9 @@ class Model():
            )
            return Promise.all(promises).then(
            def ():
-               nonlocal read_cache
-               read_cache = {}
+               if not branched:
+                  nonlocal read_cache
+                  read_cache = {}
                return new_values
            )
         if self._is_env:
