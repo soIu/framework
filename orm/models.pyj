@@ -575,10 +575,12 @@ class Model():
                              read_cache[field.relation][JSON.stringify(value[key])] = promise
                           promise.then(
                           def (records):
+                              if relational_fields: [alert(key), alert(JSON.stringify(relational_fields))]
                               if relational_fields and is_array(relational_fields) and key in relational_fields:
                                  return records.read(format=format, without_null=without_null, branched=True).then(
                                  def (values):
                                      value[key] = values
+                                     alert(JSON.stringify(value))
                                      return records
                                  )
                               original_value = value[key]
