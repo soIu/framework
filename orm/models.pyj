@@ -531,6 +531,8 @@ class Model():
         return result
 
     def read(self, format, fields, without_null):
+        if not fields or not fields.length:
+           fields = Object.keys(self._fields)
         if format:
            promises = []
            new_values = []
