@@ -315,7 +315,7 @@ class PickingList(models.Model):
     @async
     def print_list(self):
         values, line_ids = await ([self.read(format=True, without_null=True), self.env['stock.picking.list.line'].browse(self.line_ids)])
-        values.line_ids = await line_ids.read(format=True, without_null=True)
+        values.line_ids = await [line_ids.read(format=True, without_null=True)
         request = await [fetch('https://jasper.odooabc.com/jasperserver/rest_v2/reportExecutions', {'credentials': 'include', 'method': 'POST', 'headers': {'Authorization': 'Basic ' + btoa('c0b4d1b4c4:c0b4d1r4b4'), 'Content-Type': 'application/json'}, 'body': JSON.stringify({'reportUnitUri': '/Solu/HPPM/Picking_List', 'outputFormat': 'pdf', 'parameters': {'reportParameter': [{'name': 'data', 'value': [JSON.stringify(values[0])]}]}})})]
         text = await [request.text()]
         xml = new DOMParser().parseFromString(text, 'text/xml')
