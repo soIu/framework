@@ -580,7 +580,7 @@ class Model():
                                  def (values):
                                      if format and field.type in ['many2one', 'one2one']:
                                         if values.length: value[key] = values[0]
-                                        else: value[key] = {key: "" if without_null else None for key in Object.keys(records._fields)}
+                                        else: value[key] = {field_name: "" if without_null else None for field_name in Object.keys(records._fields)}
                                      else: value[key] = values
                                      return records
                                  )
