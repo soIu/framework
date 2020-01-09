@@ -550,7 +550,7 @@ class Model():
                    field = self._fields[key]
                    def after_promise(result):
                        if result != undefined: value[key] = result
-                       if not field or (value[key] == None and field.type != 'float'):
+                       if not field or (value[key] in [None, undefined] and field.type != 'float'):
                           if without_null: value[key] = ''
                           return next()
                        if field.type == 'date':
@@ -579,6 +579,9 @@ class Model():
                                  return records.read(format=format, without_null=without_null, branched=True).then(
                                  def (values):
                                      value[key] = values
+                                     if format and field.type in ['many2one', 'one2one']:
+                                        if value[key].length: value[key] = value[key][0]
+                                        else: value[key] = {key: "" if without_null else null for key in Object.keys(records._fields)}
                                      return records
                                  )
                               original_value = value[key]
