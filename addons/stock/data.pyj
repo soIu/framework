@@ -5,6 +5,7 @@ import orm.api as api
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
+from jasper.report import get_jasper_report
 
 class HPPMPo(models.Model):
     _name = 'hppm.po'
@@ -28,6 +29,12 @@ class HPPMPo(models.Model):
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
            for record in self: printBarcode(record.name)
+
+    @async
+    def print_po(self):
+        values = await [self.read(format=True, without_null=True, relational_fields=['product_id'])]
+        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', JSON.stringify(values))]
+        window.open(url)
 
     @async
     def receive(self):
@@ -54,12 +61,12 @@ view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
     <field name="product_id"/>
     <field name="product_qty"/>
 </tree>
-""", 'action': {'print_barcode': 'Print'}})
+""", 'action': {'print_po': 'Print'}})
 
 view.add({'model': 'hppm.po', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
-        <button name="print_barcode" string="Print"/>
+        <button name="print_po" string="Print"/>
         <button name="receive" string="Receive" invisible="active_id.received == True"/>
     </header>
     <sheet>
