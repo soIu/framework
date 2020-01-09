@@ -2,7 +2,7 @@
 def get_jasper_report(report, parameters, format='pdf', server='https://jasper.odooabc.com/jasperserver', username='c0b4d1b4c4', password='c0b4d1r4b4'):
     jasper_parameters = []
     for key in parameters:
-        jasper_parameters.push({'name': key, 'value': parameters[key]})
+        jasper_parameters.push({'name': key, 'value': [parameters[key]]})
     request = await [fetch(server + '/rest_v2/reportExecutions', {'credentials': 'include', 'method': 'POST', 'headers': {'Authorization': 'Basic ' + btoa(username + ':' + password), 'Content-Type': 'application/json'}, 'body': JSON.stringify({'reportUnitUri': report, 'outputFormat': format, 'parameters': {'reportParameter': jasper_parameters}})})]
     text = await [request.text()]
     xml = new DOMParser().parseFromString(text, 'text/xml')
