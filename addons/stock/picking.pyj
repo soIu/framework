@@ -379,7 +379,7 @@ view.add(model='stock.picking.list', mode='tree', arch="""
 view.add(model='stock.picking.list', mode='form', arch="""
 <form>
     <header>
-        <button name="print_barcode" string="Print"/>
+        <button name="print_list" string="Print"/>
         <button name="call_agv" string="Call" invisible="active_id.called == True"/>
     </header>
     <sheet>
