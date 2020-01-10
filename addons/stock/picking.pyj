@@ -442,7 +442,7 @@ class PickingListLine(models.Model):
     def _get_part_qty_box(self):
         if not self.product_id: return
         product_id = await (self.env['product.product'].browse(self.product_id))
-        return product_id.qty_box
+        return Math.max(product_id.qty_box, self.product_qty)
 
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     route = fields.Integer(string="Route")
