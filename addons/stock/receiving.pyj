@@ -9,21 +9,21 @@ class StockReceivingWizard(models.Model):
 
     #name = fields.Char(string="")
     scan = fields.Char(string="Laser Scan")
-    order_ids = fields.Many2many('hppm.po', string="Purchase Orders")
+    order_ids = fields.Many2many('purchase.order', string="Purchase Orders")
     received = fields.Boolean(string="Received")
 
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
-        order_id = await (self.env['hppm.po'].search(['name', '=', self.scan]))
+        order_id = await (self.env['purchase.order'].search(['name', '=', self.scan]))
         self.scan = ''
         if not order_id.length: return
         self.order_ids.push(order_id.id)
-        #tools.navigate('/form/hppm.po?id=' + order_id.id)
+        #tools.navigate('/form/purchase.order?id=' + order_id.id)
 
     @async
     def receive(self):
-        order_ids = await (self.env['hppm.po'].browse(self.order_ids))
+        order_ids = await (self.env['purchase.order'].browse(self.order_ids))
         await ([order_ids.receive(), self.write({'received': True})])
 
 StockReceivingWizard()

@@ -8,7 +8,7 @@ from stock.location import defaults as location_defaults
 from jasper.report import get_jasper_report
 
 class HPPMPo(models.Model):
-    _name = 'hppm.po'
+    _name = 'purchase.order'
 
     name = fields.Char(string="PO Number")
     product_id = fields.Many2one('product.product', string="Part")
@@ -21,7 +21,7 @@ class HPPMPo(models.Model):
         if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
         values = values if tools.exist(values) else self.values
         for value in tools.each(values):
-            sequence = await (self.env['ir.sequence'].get_next('hppm.po'))
+            sequence = await (self.env['ir.sequence'].get_next('purchase.order'))
             value.name = 'PO ' + (value.vendor + ' ' if value.vendor else '') + str.zfill(sequence.toString(), 3)
         result = await (self.__super__('create')(values=values, is_client=is_client))
         return result
@@ -49,13 +49,13 @@ class HPPMPo(models.Model):
 
 HPPMPo()
 
-add_sequence('hppm.po')
+add_sequence('purchase.order')
 
 menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 
-menu.add({'id': 'hppm_po', 'parent': 'hppm_data', 'string': 'PO', 'model': 'hppm.po', 'sequence': 2})
+menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 3})
 
-view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'purchase.order', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="product_id"/>
@@ -63,7 +63,7 @@ view.add({'model': 'hppm.po', 'mode': 'tree', 'string': False, 'arch': """
 </tree>
 """, 'action': {'print_po': 'Print'}})
 
-view.add({'model': 'hppm.po', 'mode': 'form', 'string': False, 'arch': """
+view.add({'model': 'purchase.order', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
         <button name="print_po" string="Print"/>
@@ -253,7 +253,7 @@ class HPPMData(models.Model):
         def create_po(value):
             product_id = await (self.env['product.product'].search(['code', '=', value.part]))
             if not product_id.length: return
-            return self.env['hppm.po'].create({'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
+            return self.env['purchase.order'].create({'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
         for data in sheet.data:
             row += 1
             if row < 1: continue

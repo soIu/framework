@@ -370,7 +370,8 @@ class PickingList(models.Model):
 
 PickingList()
 
-menu.add(id='picking_list', parent='stock', model='stock.picking.list', string="Picking List", sequence=5)
+menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
+menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', string="Queue & Print", sequence=1)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
 <tree>
