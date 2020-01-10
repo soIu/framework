@@ -248,7 +248,7 @@ class HPPMData(models.Model):
             if not data[0]: continue
             lot_no = data.slice(9, 14).join('-')
             promise = create_picking_list(data[3], data[2], lot_no, data[1])
-            await [promise]
+            await (promise)
             #promises.push(promise)
         #await (promises)
         return self.write({'imported': True})
