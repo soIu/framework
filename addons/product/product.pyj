@@ -17,6 +17,7 @@ class ProductProduct(models.Model):
     category_id = fields.Many2one('product.category', string="Category", index=True)
     route = fields.Integer(string="Route AGV")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (Daisha)")
+    qty_box = fields.Float(string="Qty/Box")
 
 ProductProduct()
 
