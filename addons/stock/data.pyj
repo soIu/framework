@@ -164,6 +164,10 @@ view.add({'model': 'purchase.order', 'mode': 'tree', 'string': False, 'arch': ""
     <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
+    <field name="ps_month"/>
+    <field name="ps_code"/>
+    <field name="pl_from"/>
+    <field name="pl_to"/>
 </tree>
 """, 'action': {'print_label': 'Print'}})
 
