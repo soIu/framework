@@ -10,12 +10,13 @@ class MrpSequence(models.Model):
     name = fields.Char(string="Lot No.")
     sequence = fields.Integer(string="Sequence")
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
 
     @api.onchange('sequence', async=True)
     def onchange_sequence(self):
         if not self.sequence: return
-        picking_list_ids = await (self.env['stock.picking.list'].browse(self.picking_list_ids))
-        return picking_list_ids.write({'sequence': self.sequence})
+        picking_list_ids, line_list_ids = await ([self.env['stock.picking.list'].browse(self.picking_list_ids), self.env['stock.picking.list.line'].search(['picking_list_id', 'in', self.picking_list_ids])])
+        return await ([picking_list_ids.write({'sequence': self.sequence}), line_list_ids.write({'sequence': self.sequence})])
 
 MrpSequence()
 

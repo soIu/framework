@@ -55,11 +55,13 @@ class StockTrolleyType(models.Model):
 
     name = fields.Char(string="Trolley Type")
     reference = fields.Char(string="Reference")
-    product_ids = fields.One2many('product.product', 'trolley_type_id', string="Products")
+    mcvt_part_ids = fields.One2many('product.product', 'mcvt_trolley_type_id', string="MCVT Parts")
+    fwd_part_ids = fields.One2many('product.product', 'fwd_trolley_type_id', string="4WD Parts")
+    atm_part_ids = fields.One2many('product.product', 'atm_trolley_type_id', string="AT-M Parts")
 
 StockTrolleyType()
 
-menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', string="Trolley Type", sequence=3)
+menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', string="Trolley Type (Fitting)", sequence=3)
 
 view.add(model='stock.trolley.type', mode='tree', arch="""
 <tree>
@@ -77,8 +79,24 @@ view.add(model='stock.trolley.type', mode='form', arch="""
         <group>
             <field name="reference"/>
         </group>
-        <group width="100%">
-            <field name="product_ids">
+        <group width="100%" title="MCVT">
+            <field name="mcvt_part_ids">
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                </tree>
+            </field>
+        </group>
+        <group width="100%" title="4WD">
+            <field name="fwd_part_ids">
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                </tree>
+            </field>
+        </group>
+        <group width="100%" title="AT-M">
+            <field name="atm_part_ids">
                 <tree>
                     <field name="name"/>
                     <field name="code"/>

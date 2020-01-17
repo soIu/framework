@@ -13,10 +13,14 @@ class ProductProduct(models.Model):
 
     name = fields.Char(string="Product Name", required=True, index=True)
     code = fields.Char(string="Product Code", index=True)
+    code_trimmed = fields.Char(string="Product Code (Trimmed)", index=True)
+    type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], ['sozai', 'Sozai'], ['fg', 'Finish Good'], string="Type")
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", index=True)
     route = fields.Integer(string="Route AGV")
-    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (Daisha)")
+    mcvt_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (MCVT)")
+    fwd_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (4WD)")
+    atm_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (atm)")
     qty_box = fields.Float(string="Qty/Box")
 
 ProductProduct()

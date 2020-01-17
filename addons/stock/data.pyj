@@ -7,14 +7,19 @@ from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
 from jasper.report import get_jasper_report
 
-class HPPMPo(models.Model):
+class PurchaseOrder(models.Model):
     _name = 'purchase.order'
 
     name = fields.Char(string="PO Number")
+    part_no = fields.Char(string="Part No.")
     product_id = fields.Many2one('product.product', string="Part")
     product_qty = fields.Float(string="Quantity")
-    vendor = fields.Char(string="Vendor")
-    received = fields.Boolean(string="Received")
+    printed = fields.Boolean(string="Printed")
+    ps_month = fields.Char(string="P/S Month")
+    ps_code = fields.Char(string="P/S Code")
+    pl_from = fields.Char(string="P/L From")
+    pl_to = fields.Char(string="P/L To")
+    pack_ids = fields.One2many('purchase.order.pack', 'order_id', string="Packs")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -22,7 +27,7 @@ class HPPMPo(models.Model):
         values = values if tools.exist(values) else self.values
         for value in tools.each(values):
             sequence = await (self.env['ir.sequence'].get_next('purchase.order'))
-            value.name = 'PO ' + (value.vendor + ' ' if value.vendor else '') + str.zfill(sequence.toString(), 3)
+            value.name = 'PO ' + str.zfill(sequence.toString(), 3)
         result = await (self.__super__('create')(values=values, is_client=is_client))
         return result
 
@@ -31,10 +36,96 @@ class HPPMPo(models.Model):
            for record in self: printBarcode(record.name)
 
     @async
-    def print_po(self):
+    def print_label(self):
+     try:
+        values = []
+        for record in self:
+            value = record.read()
+            pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
+            pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
+            for pack_value in pack_values:
+                for key in value:
+                    if key not in pack_value: pack_value[key] = value[key]
+            values.push(*pack_values)
+        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
+        self.write({'printed': True})
+        window.open(url)
+     except Exception as error:
+        alert(error.stack or error.message)
+
+    def get_box_quantities(self, quantity, product_id):
+        boxes = quantity / product_id.qty_box
+        rounded_boxes = parseInt(boxes)
+        box_quantities = [product_id.qty_box for index in range(rounded_boxes)]
+        residual = boxes - rounded_boxes
+        if residual != 0: box_quantities.push(quantity - (rounded_boxes * product_id.qty_box))
+        return box_quantities
+
+    @api.server(async=True)
+    def compute_pack(self, quantity):
+        product_id = await [self.env['product.product'].browse(self.product_id)]
+        if not product_id.qty_box: return
+        if not quantity: quantity = self.product_qty
+        promises = []
+        for box_quantity in self.get_box_quantities(quantity, product_id):
+            promise = self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'product_id': self.product_id, 'product_qty': box_quantity})
+        return await (promises)
+
+
+    @api.server(async=True)
+    def recompute_pack(self, quantity):
+        if not self.printed:
+           write = self.write({'product_qty': quantity})
+           pack_ids = await [self.env['purchase.order.pack'].browse(self.pack_ids)]
+           await (write)
+           return await ([pack_ids.unlink(), self.compute_pack()])
+        if quantity > self.product_qty:
+           self.write({'product_qty': quantity})
+           return self.compute_pack(quantity - self.product_qty)
+        if quantity == self.product_qty: return
+        product_id = await [self.env['product.product'].browse(self.product_id)]
+        original_quantities = self.get_box_quantities(self.product_qty, product_id)
+        new_quantities = self.get_box_quantities(self.product_qty - quantity, product_id)
+        promises = [self.write({'product_qty': quantity})]
+        for new_quantity in new_quantities:
+            if new_quantity not in original_quantities: promises.push(self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'product_id': self.product_id, 'product_qty': new_quantity}))
+        return await (promises)
+
+PurchaseOrder()
+
+class PurchaseOrderPack(models.Model):
+    _name = 'purchase.order.pack'
+
+    name = fields.Char(string="PO Number")
+    part_no = fields.Char(string="Part No.")
+    product_id = fields.Many2one('product.product', string="Part")
+    product_qty = fields.Float(string="Quantity")
+    order_id = fields.Many2one('purchase.order', string="Purchase Order")
+    barcode = fields.Text(string="Barcode")
+    received = fields.Boolean(string="Received")
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' == 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        result = await [self.__super__('create')(values=values, is_client=is_client)]
+        for record in result:
+            await [record.write({'barcode': JSON.stringify(self.read())})]
+        return result
+
+    @async
+    def print_label(self):
      try:
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id'])]
+        order_id = None
+        po_value = None
+        for value in values:
+            if not po_value:
+               order_id = await [self.env['purchase.order'].browse(self._values[0].order_id)]
+               po_value = order_id.read()
+            for key in po_value:
+                if key not in value: value[key] = po_value[key]
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
+        if order_id: order_id.write({'printed': True})
         window.open(url)
      except Exception as error:
         alert(error.stack or error.message)
@@ -44,13 +135,15 @@ class HPPMPo(models.Model):
         pack_ids = []
         for record in self:
             if record.received: return tools.alert('One of the PO is already received')
+        sequence = 1
         for record in self:
-            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', ''), 'product_id': record.product_id, 'product_qty': record.product_qty}), record.write({'received': True})])
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (sequence + (new Date()).getMilliseconds()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id}), record.write({'received': True})])
             pack_ids.push(pack_id.id)
-        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids}))
+            sequence += 1
+        picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
 
-HPPMPo()
+PurchaseOrderPack()
 
 add_sequence('purchase.order')
 
@@ -58,28 +151,53 @@ menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 
 menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 3})
 
+view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
+<tree>
+    <field name="name"/>
+    <field name="product_id"/>
+    <field name="product_qty"/>
+</tree>
+""", 'action': {'print_label': 'Print'}})
+
 view.add({'model': 'purchase.order', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
 </tree>
-""", 'action': {'print_po': 'Print'}})
+""", 'action': {'print_label': 'Print'}})
 
 view.add({'model': 'purchase.order', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
-        <button name="print_po" string="Print"/>
+        <button name="print_label" string="Print"/>
         <button name="receive" string="Receive" invisible="active_id.received == True"/>
     </header>
     <sheet>
         <group>
             <field name="name"/>
+            <field name="part_no"/>
+        </group>
+        <group>
+            <field name="product_qty"/>
             <field name="product_id"/>
         </group>
         <group>
-            <field name="vendor"/>
-            <field name="product_qty"/>
+            <field name="ps_month"/>
+            <field name="pl_from"/>
+        </group>
+        <group>
+            <field name="ps_code"/>
+            <field name="pl_to"/>
+        </group>
+        <group width="100%">
+            <field name="pack_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                    <field name="received"/>
+                </tree>
+            </field>
         </group>
     </sheet>
 </form>
@@ -102,17 +220,21 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'BoM'], ['daisha', 'Daisha'], ['sequence', 'Sequence'], ['po', 'PO'], string="Type", required=True)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_atm', 'Fitting AT-M'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
 
     @api.server
     def import_data(self):
         if self.type == 'po': return self.import_po()
         if self.type == 'bom': return self.import_bom()
-        if self.type == 'daisha': return self.import_daisha()
-        if self.type == 'sequence': return self.import_sequence()
+        if self.type == 'daisha_mcvt': return self.import_daisha('mcvt')
+        if self.type == 'daisha_fwd': return self.import_daisha('fwd')
+        if self.type == 'daisha_atm': return self.import_daisha('atm')
+        if self.type == 'sequence_mcvt': return self.import_sequence('mcvt')
+        if self.type == 'sequence_fwd': return self.import_sequence('fwd')
+        if self.type == 'sequence_flexi': return self.import_sequence('flexi')
 
     @api.server(async=True)
-    def import_daisha(self):
+    def import_daisha(self, type):
         promises = []
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
@@ -120,6 +242,12 @@ class HPPMData(models.Model):
         trolleys = {}
         trolley_map = {}
         trolley_type = None
+        @async
+        def get_trolley(trolley_type):
+            trolley_id = await [self.env['stock.trolley.type'].search(['name', '=', trolley_type])]
+            if not trolley_id.length:
+               trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type})
+            return trolley_id
         for data in sheet.data:
             row += 1
             if row < 4: continue
@@ -129,11 +257,11 @@ class HPPMData(models.Model):
             if data[21] and data[21] != trolley_type:
                if not trolley_type: trolley_type = data[21]
                else:
-                   trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type})
-                   product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])]))
+                   trolley_id = get_trolley(trolley_type)
+                   product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
                    trolley_id = await (trolley_id)
                    for product_id in product_ids:
-                       product_id.trolley_type_id = trolley_id.id
+                       product_id[type + '_trolley_type_id'] = trolley_id.id
                        product_id.qty_box = trolleys[trolley_type][product_id.code] or 0
                    await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                    #trolley_map[trolley_type] = product_ids.ids
@@ -147,12 +275,12 @@ class HPPMData(models.Model):
                if not data[5] or data[5] == '-': continue
                trolleys[trolley_type][part_code] = part_qty
         for trolley in trolleys:
-            trolley_id = self.env['stock.trolley.type'].create({'name': trolley})
+            trolley_id = get_trolley(trolley)
             product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
             trolley_id = await (trolley_id)
-            await (product_ids.write({'trolley_type_id': trolley_id.id}))
+            await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
-                product_id.trolley_type_id = trolley_id.id
+                product_id[type + '_trolley_type_id'] = trolley_id.id
                 product_id.qty_box = trolleys[trolley][product_id.code] or 0
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
@@ -160,94 +288,109 @@ class HPPMData(models.Model):
     def import_bom(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
+        sheets = xlsx.parse(tools.atob(self.excel, buffer=True))
         row = -1
         models_code = {}
         models = {}
         parts = {}
         @async
         def check_part(value):
-            product_id = await (self.env['product.product'].search(['code', '=', value.code]))
+            product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', value.type]))
             if not product_id.length:
                product_id = await (self.env['product.product'].create(value))
-            parts[value.code] = product_id
-        for data in sheet.data:
-            row += 1
-            if row < 8: continue
-            #if not data[0]: continue
-            value = {'name': data[3], 'code': data[1]}
-            if not value.name or not value.code: continue
-            cell_index = -1
-            for cell in data:
-                cell_index += 1
-                if cell_index < 6: continue
-                if not cell or cell == '-': continue
-                model = [sheet.data[index][cell_index] for index in range(2, 6)].join(' ')
-                code = sheet.data[6][cell_index]
-                if not models[model]: models[model] = {}
-                models[model][value.code] = cell
-                models_code[model] = code
-            await (check_part(value))
-            #promises.push(promise)
-        #await (promises)
+            if not parts[value.type]: parts[value.type] = {}
+            parts[value.type][value.code] = product_id
+        for type, sheet in Object.entries({'ckd': sheets[0], 'local': sheets[1], 'inhouse': sheets[2]}):
+            for data in sheet.data:
+                row += 1
+                if row < 8: continue
+                #if not data[0]: continue
+                value = {'name': data[3], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
+                if not value.name or not value.code: continue
+                promise = check_part(value)
+                cell_index = -1
+                for cell in data:
+                    cell_index += 1
+                    if cell_index < 6: continue
+                    if not cell or cell == '-': continue
+                    model = [sheet.data[index][cell_index] for index in range(2, 6)].join(' ')
+                    code = sheet.data[6][cell_index]
+                    if not models[model]: models[model] = {}
+                    if not models[model][type]: models[model][type] = {}
+                    models[model][type][value.code] = cell
+                    models_code[model] = code
+                await (promise)
+                #promises.push(promise)
+            #await (promises)
         #promises = []
         @async
-        def create_bom_line(bom_id, part, qty):
-            product_id = parts[part]
+        def create_bom_line(bom_id, part, qty, type):
+            product_id = parts[type][part]
             bom_line_id = await (self.env['mrp.bom.line'].search(['bom_id', '=', bom_id.id], ['product_id', '=', product_id.id]))
             if not bom_line_id.length:
                bom_line_id = await (self.env['mrp.bom.line'].create({'product_id': product_id.id, 'product_qty': qty, 'bom_id': bom_id.id}))
                return
             if bom_line_id.product_qty != qty: return bom_line_id.write({'product_qty': qty})
         @async
-        def create_model(model, parts):
+        def create_model(model, type, parts):
             code = models_code[model]
             promises = []
-            product_id = await (self.env['product.product'].search(['code', '=', code]))
+            product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             if not product_id.length:
-               product_id = await (self.env['product.product'].create({'name': model, 'code': code}))
+               product_id = await (self.env['product.product'].create({'name': model, 'code': code, 'type': 'fg'}))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length:
                bom_id = await (self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id}))
             for part in parts:
-                promises.push(create_bom_line(bom_id, part, parts[part]))
+                promises.push(create_bom_line(bom_id, part, parts[part], type))
             return Promise.all(promises)
+        promises = []
         for model in models:
-            await(create_model(model, models[model]))
-            #promises.push(create_model(model, models[model]))
-        #await (promises)
+            for type in models[model]:
+                #await (create_model(model, type, models[model][type]))
+                promises.push(create_model(model, type, models[model][type]))
+            await (promises)
         return self.write({'imported': True})
 
     @api.server(async=True)
-    def import_sequence(self):
+    def import_sequence(self, type):
         promises = []
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
+        products = {}
         @async
-        def create_picking_list(code, quantity, lot_no, sequence):
-            product_id = await (self.env['product.product'].search(['code', '=', code]))
+        def create_picking_list(code, quantity, lot_no, sequence, date, type):
+            product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
             for bom_line_id in bom_line_ids:
-                product_id = await (self.env['product.product'].browse(bom_line_id.product_id))
-                if not trolley_group[product_id.trolley_type_id]:
-                   if not product_id.trolley_type_id: continue
-                   trolley_group[product_id.trolley_type_id] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id.trolley_type_id, 'sequence': sequence}))
-                list_id = trolley_group[product_id.trolley_type_id]
+                product_id = products[bom_line_id.product_id]
+                if not product_id:
+                   product_id = await [self.env['product.product'].browse(bom_line_id.product_id)]
+                   products[product_id.id] = product_id
+                if not trolley_group[product_id[type + '_trolley_type_id']]:
+                   if not product_id[type + '_trolley_type_id']: continue
+                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': type}))
+                list_id = trolley_group[product_id[type + '_trolley_type_id']]
                 line_qty = bom_line_id.product_qty * quantity
-                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'product_qty': line_qty, 'qty_box': line_qty, 'box': 1, 'picking_list_id': list_id.id})
+                box = Math.ceil(line_qty / product_id.qty_box)
+                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
                 promises.push(promise)
             return await (promises)
         for data in sheet.data:
             row += 1
             if row < 6: continue
             if not data[0]: continue
-            lot_no = data.slice(9, 14).join('-')
-            promise = create_picking_list(data[3], data[2], lot_no, data[1])
+            head = 0
+            if type == 'flexi':
+               head = 1
+               type = data[1].toLowerCase()
+            lot_no = data.slice(head + 9, head + 14).join('-')
+            promise = create_picking_list(data[head + 3], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type)
             await (promise)
             #promises.push(promise)
         #await (promises)
@@ -261,14 +404,38 @@ class HPPMData(models.Model):
         row = -1
         @async
         def create_po(value):
-            product_id = await (self.env['product.product'].search(['code', '=', value.part]))
+            order_id = await [self.env['purchase.order'].search(['part_no', '=', value.part_no], ['date_string', '=', value.date_string], ['ps_month', '=', value.ps_month], ['ps_code', '=', value.ps_code], ['pl_from', '=', value.pl_from], ['pl_to', '=', value.pl_to])]
+            if order_id.length:
+               return order_id.recompute_pack(value.product_qty)
+            product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
+            if not product_id.length: return
+            value.product_id = product_id.id
+            order_id = await [self.env['purchase.order'].create(value)] #{'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
+            order_id.compute_pack()
+        for data in sheet.data:
+            row += 1
+            if row < 1: continue
+            #if not data[0]: continue
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7]}
+            await [create_po(value)]
+        #return Promise.all(promises)
+
+    @api.server(async=True)
+    def import_po_old(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        @async
+        def create_po(value):
+            product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no]))
             if not product_id.length: return
             return self.env['purchase.order'].create({'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
         for data in sheet.data:
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'part': data[0], 'quantity': data[1], 'vendor': data[2]}
+            value = {'part_no': data[0].split(' ').join(''), 'quantity': data[1], 'vendor': data[2]}
             await [create_po(value)]
         #return Promise.all(promises)
 

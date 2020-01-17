@@ -67,18 +67,11 @@ class StockPicking(models.Model):
                     def (pack_id, next):
                         def create_move(qty):
                             return self.env['stock.move'].with_context(no_preload=True).create({'picking_id': record.id, 'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': qty})
-                        if record.type != 'picking':
-                           promise = create_move(pack_id.product_qty)
-                           promises.push(promise)
-                           return next()
-                        promise = pack_id.current_qty.then(
-                        def (qty):
-                            return create_move(qty)
-                        )
+                        promise = create_move(pack_id.product_qty)
                         promises.push(promise)
                         next()
                     )
-                    return Promise.all([] if record.type != 'picking' else promises)
+                    return Promise.all(promises)
                 )
             @async
             def each_picking():
@@ -272,6 +265,7 @@ class PickingList(models.Model):
     _name = 'stock.picking.list'
 
     name = fields.Char(string="Picking List", readonly=True)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
     sequence = fields.Integer(string="Sequence")
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
@@ -281,6 +275,7 @@ class PickingList(models.Model):
     laser_scan = fields.Char(string="Laser Scan")
     called = fields.Boolean(string="AGV Called")
     ip_address = fields.Char(string="IP Address")
+    date = fields.Datetime(string="Date")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -302,7 +297,12 @@ class PickingList(models.Model):
     @api.onchange('laser_scan', async=True)
     def onchange_laser(self):
         if not self.laser_scan: return
-        pack_id = await (self.env['stock.pack'].search(['name', '=', self.laser_scan.replace('PO ', 'Pack ')]))
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
+        if picking_list_id.length:
+           self.laser_scan = ''
+           return tools.dialog.alert("Can't pick if there's still a running sequence")
+        value = JSON.parse(self.laser_scan)
+        pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         if pack_id.picking_list_id: return
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
@@ -356,7 +356,40 @@ class PickingList(models.Model):
 
     @async
     def call_agv(self):
-        await ([self.write({'called': True}), self.create_picking()])
+        line_ids, pack_ids = await ([self.env['stock.picking.list.line'].browse(self.line_ids), self.env['stock.pack'].browse(self.pack_ids)])
+        lines = {}
+        line_map = {}
+        packs = {}
+        pack_map = {}
+        for line_id in line_ids:
+            #if not lines[line_id.product_id]:
+            lines[line_id.product_id] = 0
+            line_map[line_id.product_id] = line_id
+            packs[line_id.product_id] = 0
+            pack_map[line_id.product_id] = []
+            lines[line_id.product_id] += await [line_id.product_qty]
+        for pack_id in pack_ids:
+            if packs[pack_id.product_id]:
+               packs[pack_id.product_id] += pack_id.product_qty
+               pack_map[pack_id.product_id].push(pack_id)
+        for line in lines:
+            if packs[line] < lines[line]: return tools.dialog.alert('Quantity for product ' + (await [self.env['product.product'].browse(line)]).name + ' is not sufficient')
+            line_id = line_map[line]
+            actual_qty = line_id.actual_qty
+            for pack_id in pack_map[line]:
+                if pack_id.product_qty >= lines[line]:
+                   pack_id.available_qty = pack_id.product_qty - actual_qty
+                   break
+                pack_id.available_qty = pack_id.product_qty - actual_qty
+                if pack_id.available_qty >= 0: break
+                actual_qty += pack_id.available_qty
+                pack_id.available_qty = 0
+            if line_id.consumed_pack_id:
+               pack_id = await [self.env['stock.pack'].browse(line_id.consumed_pack_id)]
+               pack_id.available_qty -= line_id.actual_qty
+               pack_ids = pack_id
+               line_id.consumed = True
+        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking()])
         """host = self.ip_address or window.location.hostname
         @async
         def call_route(route):
@@ -405,7 +438,7 @@ view.add(model='stock.picking.list', mode='form', arch="""
                     <field name="product_id"/>
                     <field name="qty_box"/>
                     <field name="box"/>
-                    <!--<field name="product_qty"/>-->
+                    <field name="product_qty"/>
                     <field name="description"/>
                 </tree>
             </field>
@@ -444,14 +477,68 @@ class PickingListLine(models.Model):
         product_id = await (self.env['product.product'].browse(self.product_id))
         return Math.max(product_id.qty_box, self.product_qty)
 
+    @async
+    def _get_part_qty(self):
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<=', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
+        if picking_list_id.length: return 0
+        if self.consumed: return self.cached_product_qty
+        quantity = 0
+        pack_id = await [self.env['stock.pack'].with_context(limit=1).search(['product_id', '=', self.product_id.id], ['location_id', 'in', (location_default.scr_id, location_default.assy_id)], ['available_qty', '>=', self.actual_qty])]
+        if pack_id.length: quantity = pack_id.available_qty - self.actual_qty
+        else:
+           pack_id = await [self.env['stock.pack'].with_context(limit=1).search(['product_id', '=', self.product_id.id], ['location_id', 'in', (location_default.scr_id, location_default.assy_id)], ['available_qty', '>', 0])]
+           if pack_id.length: quantity = pack_id.available_qty - self.actual_qty
+        self.consumed_pack_id = pack_id
+        """picking_line_ids = await [self.env['stock.picking.list.line'].search(['product_id', '=', self.product_id], ['date', '<=', self.date], ['consumed', '!=', True])]
+        picking_line_ids = picking_line_ids.order_by('date')
+        dates = []
+        for picking_line_id in picking_line_ids:
+            if picking_line_id.date in dates: continue
+            else: dates.push(picking_line_id.date)
+        records_by_dates = {}
+        for date in dates:
+            records_by_dates[date] = picking_line_ids.filter(
+            def (record):
+                return record.date == date
+            ).order_by('sequence')
+        quantity = 0
+        #group_line_ids = None
+        for date in dates:
+            for picking_line_id in records_by_dates[date]:
+                if date == self.date and picking_line_id.sequence == self.sequence: break
+                if quantity <= 0:
+                   quantity = picking_line_id.qty_box * picking_line_id.actual_box
+                   #group_line_ids = picking_line_ids.browse()
+                quantity -= picking_line_id.actual_qty
+                #group_line_ids.add(picking_line_id)
+        #self.group_line_ids = group_line_ids"""
+        if quantity > 0: quantity = 0
+        else: quantity = (self.qty_box * self.actual_box) + quantity
+        self.cached_product_qty = quantity
+        return quantity
+
+    @async
+    def _get_box(self):
+        quantity = await [self.product_qty]
+        if not quantity: return 0
+        else: return self.actual_box
+
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
+    #group_line_ids = fields.Many2many('stock.picking.list.line', string="Part List Group")
     route = fields.Integer(string="Route")
-    part_no = fields.Char(string="Part No.", compute=_get_part_no, store=True)
+    part_no = fields.Char(string="Part No.") #, compute=_get_part_no, store=True)
     product_id = fields.Many2one('product.product', string="Part")
-    qty_box = fields.Float(string="Qty/Box", compute=_get_part_qty_box, store=True)
-    box = fields.Float(string="Box")
-    product_qty = fields.Float(string="Total Qty")
+    qty_box = fields.Float(string="Qty/Box") #, compute=_get_part_qty_box, store=True)
+    box = fields.Float(string="Box", compute=_get_box, store=True)
+    actual_box = fields.Float(string="Actual Box")
+    cached_product_qty = fields.Float(string="Total Qty")
+    product_qty = fields.Float(string="Total Qty", compute=_get_part_qty, store=True)
+    actual_qty = fields.Float(string="Actual Qty")
     description = fields.Char(string="Description")
+    date = fields.Datetime(string="Date")
+    sequence = fields.Integer(string="Sequence")
+    consumed = fields.Boolean(string="Consumed")
+    consumed_pack_id = fields.Many2one('stock.pack', string="Pack to Consume")
 
     def print_barcode(self):
         for record in self:
@@ -466,7 +553,7 @@ view.add(model='stock.picking.list.line', mode='tree', arch="""
                     <field name="product_id"/>
                     <field name="qty_box"/>
                     <field name="box"/>
-                    <!--<field name="product_qty"/>-->
+                    <field name="product_qty"/>
                     <field name="description"/>
                 </tree>
 """, action={'print_barcode': 'Print'})
