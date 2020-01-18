@@ -1,12 +1,13 @@
 import orm.fields as fields
 import orm.exceptions as exceptions
-from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, query, each
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, get_depends, query, each
 from orm.pouchdb import db
 
 env = {}
 schemas = {}
 raw_models = {}
 onchange_models = {}
+depends_models = {}
 pending_sync = {}
 indexed_fields = {}
 read_cache = {}
@@ -46,6 +47,14 @@ def queryFind(db, type, args, limit, inverse=False):
           return records
       )
     )
+
+def trigger_depends_function(self, fields, values):
+    if not depends_models[self._name]: return Promise.all([])
+    promises = []
+    for field in fields:
+        for method in depends_models[self._name][field]:
+            promises.push(self[method].apply(self, [values[field]]))
+    return Promise.all(promises)
 
 class Model():
     _name = undefined
@@ -311,6 +320,8 @@ class Model():
         })
         if not onchange_models[self._name]:
            onchange_models[self._name] = get_onchanges(self)
+        if not depends_models[self._name]:
+           depends_models[self._name] = get_depends(self)
         #Disabling seal and freeze altogether because they cause bugs
         #v'Object.seal(self)'
         #v'Object.freeze(self._fields)'
@@ -791,6 +802,8 @@ class Model():
                    records.add(record)
                return records
            )
+        record = self.env[self._name]
+        record.values = values
         return db.rel.save(self._name, values).then(process_result)
 
     def write(self, values=False, is_client=configuration.client):
@@ -837,10 +850,13 @@ class Model():
                for field in self._fields:
                    #TODO, only send writed values from client and fill the remaining with fields on DB
                    if self._fields[field].protect and record.data[field]: values[field] = record.data[field]
-               return db.rel.save(self._name, values).then(
-               def (result):
-                   self.update(values, no_onchange=True)
-                   return self
+               return trigger_depends_function(self, [key for key in values if key in self._fields and record.data[key] != values[key]], values).then(
+               def ():
+                   return db.rel.save(self._name, values).then(
+                   def (result):
+                       self.update(values, no_onchange=True)
+                       return self
+                   )
                )
            )
         if is_array(values) and self.length != values.length:
@@ -960,6 +976,8 @@ class Model():
            def (object):
                return v'object === id'
            )
+        elif type(id) == Number:
+           value = self._values[id]
         else:
            return self.env[self._name]
         record = self.env[self._name]
