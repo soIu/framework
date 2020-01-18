@@ -802,8 +802,6 @@ class Model():
                    records.add(record)
                return records
            )
-        record = self.env[self._name]
-        record.values = values
         return db.rel.save(self._name, values).then(process_result)
 
     def write(self, values=False, is_client=configuration.client):
