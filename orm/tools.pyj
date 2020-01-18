@@ -258,6 +258,17 @@ def get_onchanges(self):
                onchanges[field].push(self[key].name)
     return onchanges
 
+def get_depends(self):
+    depends = {}
+    for key in Object.keys(self.constructor.prototype):
+        if key in self._fields: continue
+        if self[key] and v'typeof self[key]' == 'function' and self[key]._depends_function:
+           for field in self[key]._depends_fields:
+               if not exist(depends[field]):
+                  depends[field] = []
+               depends[field].push(self[key].name)
+    return depends
+
 def each(arraylike):
     if is_array(arraylike) or v'typeof arraylike.length !== "undefined"': return arraylike
     return [arraylike]
