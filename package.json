@@ -1,7 +1,7 @@
 {
   "main": "server.js",
   "scripts": {
-    "postinstall": "sed -i 's/interface await null/interface null/g' node_modules/rapydscript-ng/release/compiler.js"
+    "postinstall": "echo \"$(awk '{gsub(\"interface await null\", \"interface null\");print}' node_modules/rapydscript-ng/release/compiler.js)\" > node_modules/rapydscript-ng/release/compiler.js"
   },
   "dependencies": {
     "lzma": "^2.3.2",
