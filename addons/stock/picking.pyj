@@ -405,9 +405,9 @@ PickingList()
 
 menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
 menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', string="Queue & Print", sequence=1)
-menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_mcvt', string="MCVT", sequence=2)
-menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_fwd', string="4WD", sequence=3)
-menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_atm', string="AT-M", sequence=4)
+menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_mcvt', string="MCVT", sequence=2)
+menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_fwd', string="4WD", sequence=3)
+menu.add(id='picking_list_atm', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_atm', string="AT-M", sequence=4)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
 <tree domain="context.type ? ['type', '=', context.type] : []">
