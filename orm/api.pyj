@@ -175,8 +175,14 @@ def onchange(*fields, **args):
         method._onchange_function = True
         method._onchange_fields = fields
         #if parseFloat(require('process').version.slice(1)) < 7.6 and args.async: return async (method)
-        return async (method)
+        if args.async: return async (method)
+        return method
     return wrap
 
-#I plan to make depends to listen at adapt or write, not really sure.
-#depends = onchange
+def depends(*fields, **args):
+    def wrap(method):
+        method._depends_function = True
+        method._depends_fields = fields
+        if args.async: return async (method)
+        return method
+    return wrap
