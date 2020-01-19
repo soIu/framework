@@ -228,14 +228,16 @@ class HPPMData(models.Model):
 
     @api.server
     def import_data(self):
-        if self.type == 'po': return self.import_po()
-        if self.type == 'bom': return self.import_bom()
-        if self.type == 'daisha_mcvt': return self.import_daisha('mcvt')
-        if self.type == 'daisha_fwd': return self.import_daisha('fwd')
-        if self.type == 'daisha_atm': return self.import_daisha('atm')
-        if self.type == 'sequence_mcvt': return self.import_sequence('mcvt')
-        if self.type == 'sequence_fwd': return self.import_sequence('fwd')
-        if self.type == 'sequence_flexi': return self.import_sequence('flexi')
+        def after_finish():
+            return self.write({'imported': True})
+        if self.type == 'po': return self.import_po().then(after_finish)
+        if self.type == 'bom': return self.import_bom().then(after_finish)
+        if self.type == 'daisha_mcvt': return self.import_daisha('mcvt').then(after_finish)
+        if self.type == 'daisha_fwd': return self.import_daisha('fwd').then(after_finish)
+        if self.type == 'daisha_atm': return self.import_daisha('atm').then(after_finish)
+        if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
+        if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
+        if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
 
     @api.server(async=True)
     def import_daisha(self, type):
@@ -288,12 +290,13 @@ class HPPMData(models.Model):
                 product_id.qty_box = trolleys[trolley][product_id.code] or 0
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
+
     @api.server(async=True)
     def import_bom(self):
         promises = []
         xlsx = require('node-xlsx')
         sheets = xlsx.parse(tools.atob(self.excel, buffer=True))
-        row = -1
+        #row = -1
         models_code = {}
         models = {}
         parts = {}
@@ -305,20 +308,21 @@ class HPPMData(models.Model):
             if not parts[value.type]: parts[value.type] = {}
             parts[value.type][value.code] = product_id
         for type, sheet in Object.entries({'ckd': sheets[0], 'local': sheets[1], 'inhouse': sheets[2]}):
+            row = 0
             for data in sheet.data:
                 row += 1
-                if row < 8: continue
-                #if not data[0]: continue
-                value = {'name': data[3], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
+                if row < 11: continue
+                if not data[1]: continue
+                value = {'name': data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
                 if not value.name or not value.code: continue
                 promise = check_part(value)
                 cell_index = -1
                 for cell in data:
                     cell_index += 1
-                    if cell_index < 6: continue
-                    if not cell or cell == '-': continue
-                    model = [sheet.data[index][cell_index] for index in range(2, 6)].join(' ')
-                    code = sheet.data[6][cell_index]
+                    if cell_index < 5: continue
+                    if not cell or cell == '-' or cell == '0': continue
+                    model = [sheet.data[index][cell_index] for index in range(5, 10)].join(' ')
+                    code = sheet.data[9][cell_index] + '-' + sheet.data[10][cell_index]
                     if not models[model]: models[model] = {}
                     if not models[model][type]: models[model][type] = {}
                     models[model][type][value.code] = cell
@@ -354,7 +358,7 @@ class HPPMData(models.Model):
                 #await (create_model(model, type, models[model][type]))
                 promises.push(create_model(model, type, models[model][type]))
             await (promises)
-        return self.write({'imported': True})
+        #return self.write({'imported': True})
 
     @api.server(async=True)
     def import_sequence(self, type):
@@ -367,7 +371,7 @@ class HPPMData(models.Model):
         def create_picking_list(code, quantity, lot_no, sequence, date, type):
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
@@ -394,11 +398,11 @@ class HPPMData(models.Model):
                head = 1
                type = data[1].toLowerCase()
             lot_no = data.slice(head + 9, head + 14).join('-')
-            promise = create_picking_list(data[head + 3], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type)
+            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type)
             await (promise)
             #promises.push(promise)
         #await (promises)
-        return self.write({'imported': True})
+        #return self.write({'imported': True})
 
     @api.server(async=True)
     def import_po(self):
