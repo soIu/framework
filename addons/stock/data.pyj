@@ -149,7 +149,7 @@ add_sequence('purchase.order')
 
 menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 
-menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 3})
+menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 10})
 
 view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree>

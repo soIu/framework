@@ -12,11 +12,11 @@ class MrpSequence(models.Model):
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
 
-    @api.onchange('sequence', async=True)
-    def onchange_sequence(self):
-        if not self.sequence: return
+    @api.depends('sequence', async=True)
+    def onchange_sequence(self, sequence):
+        if not sequence: return
         picking_list_ids, line_list_ids = await ([self.env['stock.picking.list'].browse(self.picking_list_ids), self.env['stock.picking.list.line'].search(['picking_list_id', 'in', self.picking_list_ids])])
-        return await ([picking_list_ids.write({'sequence': self.sequence}), line_list_ids.write({'sequence': self.sequence})])
+        return await ([picking_list_ids.write({'sequence': sequence}), line_list_ids.write({'sequence': sequence})])
 
 MrpSequence()
 
@@ -47,6 +47,98 @@ view.add(model='mrp.sequence', mode='form', arch="""
                     <field name="model_id"/>
                 </tree>
             </field>
+        </group>
+    </sheet>
+</form>
+""")
+
+class MrpSequenceReorder(models.Model):
+    _name = 'mrp.sequence.reorder'
+
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type", required=True)
+    date = fields.Date(string="Date", required=True)
+    sequence_from = fields.Integer(string="Sequence")
+    sequence_from_id = fields.Many2one('mrp.sequence', string="Work Number", required=True)
+    sequence_to = fields.Integer(string="Sequence")
+    sequence_to_id = fields.Many2one('mrp.sequence', string="Work Number")
+
+    @api.onchange('sequence_from', async=True)
+    def onchange_sequence_from(self):
+        if self.sequence_from_changing or not self.sequence_from or not self.type or not self.date: return
+        self.sequence_from_changing = True
+        date = new Date(self.date)
+        date.setHours(0, 0, 0, 0)
+        sequence_id = await [self.env['mrp.sequence'].search(['date', '=', date.toISOString()], ['type', '=', self.type], ['sequence', '=', self.sequence_from])]
+        if not sequence_id.length: return
+        self.sequence_from_id = sequence_id
+        self.sequence_from_changing = False
+
+    @api.onchange('sequence_from_id', async=True)
+    def onchange_sequence_from_id(self):
+        if self.sequence_from_changing or not self.sequence_from_id: return
+        self.sequence_from_changing = True
+        sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_from_id)]
+        if not sequence_id.length: return
+        self.type = sequence_id.type
+        self.sequence_from = sequence_id.sequence
+        self.sequence_from_changing = False
+
+    @api.onchange('sequence_to', async=True)
+    def onchange_sequence_to(self):
+        if self.sequence_to_changing or not self.sequence_to or not self.type or not self.date: return
+        self.sequence_to_changing = True
+        date = new Date(self.date)
+        date.setHours(0, 0, 0, 0)
+        sequence_id = await [self.env['mrp.sequence'].search(['date', '=', date.toISOString()], ['type', '=', self.type], ['sequence', '=', self.sequence_to])]
+        if not sequence_id.length: return
+        self.sequence_to_id = sequence_id
+        self.sequence_to_changing = False
+
+    @api.onchange('sequence_to_id', async=True)
+    def onchange_sequence_to_id(self):
+        if self.sequence_to_changing or not self.sequence_to_id: return
+        self.sequence_to_changing = True
+        sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_to_id)]
+        if not sequence_id.length: return
+        self.type = sequence_id.type
+        self.sequence_to = sequence_id.sequence
+        self.sequence_to_changing = False
+
+    @async
+    def reorder_sequence(self):
+        if not self.sequence_to: return tools.dialog.alert("Fill sequence to switch to")
+        return self.reorder_sequence_server()
+
+    @api.server(async=True)
+    def reorder_sequence_server(self):
+        promises = [self.env['mrp.sequence'].browse(self.sequence_from_id)]
+        if self.sequence_to_id: promises.push(self.env['mrp.sequence'].browse(self.sequence_to_id))
+        sequence_from_id, sequence_to_id = await (promises)
+        return await ([sequence_from_id.write({'sequence': self.sequence_to}), sequence_to_id and sequence_to_id.write({'sequence': self.sequence_from})])
+
+MrpSequenceReorder()
+
+menu.add(id='mrp_sequence_reorder', string="Reorder Sequence", parent='mrp_planning', model='mrp.sequence.reorder', view_id='mrp.sequence.reorder.wizard', sequence=7)
+
+view.add(model='mrp.sequence.reorder', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="type"/>
+        </group>
+        <group>
+            <field name="date"/>
+        </group>
+        <group title="From">
+            <field name="sequence_from"/>
+            <field name="sequence_from_id"/>
+        </group>
+        <group title="Switch To">
+            <field name="sequence_to"/>
+            <field name="sequence_to_id"/>
+        </group>
+        <group>
+            <button name="reorder_sequence" string="Reorder"/>
         </group>
     </sheet>
 </form>

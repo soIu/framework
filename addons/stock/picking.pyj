@@ -405,14 +405,29 @@ PickingList()
 
 menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
 menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', string="Queue & Print", sequence=1)
+menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_mcvt', string="MCVT", sequence=2)
+menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_fwd', string="4WD", sequence=3)
+menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_atm', string="AT-M", sequence=4)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
-<tree>
+<tree domain="context.type ? ['type', '=', context.type] : []">
     <field name="name"/>
     <field name="model_id"/>
     <field name="sequence" sort="asc"/>
 </tree>
 """)
+
+view.add(model='stock.picking.list', mode='tree_mcvt', arch="""
+<tree-page title="Picking List MCVT"/>
+""", context={'type': 'mcvt'})
+
+view.add(model='stock.picking.list', mode='tree_fwd', arch="""
+<tree-page title="Picking List 4WD"/>
+""", context={'type': 'fwd'})
+
+view.add(model='stock.picking.list', mode='tree_atm', arch="""
+<tree-page title="Piking List AT-M"/>
+""", context={'type': 'atm'})
 
 view.add(model='stock.picking.list', mode='form', arch="""
 <form>
