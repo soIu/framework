@@ -20,6 +20,8 @@ class PurchaseOrder(models.Model):
     pl_from = fields.Char(string="P/L From")
     pl_to = fields.Char(string="P/L To")
     pack_ids = fields.One2many('purchase.order.pack', 'order_id', string="Packs")
+    date = fields.Datetime(string="Date")
+    date_string = fields.Char(string="Date (String)")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -207,6 +209,37 @@ view.add({'model': 'purchase.order', 'mode': 'form', 'string': False, 'arch': ""
 </form>
 """})
 
+class PurchaseOrderPrint(models.Model):
+    _name = 'purchase.order.print'
+
+    date_from = fields.Datetime(string="Date From")
+    date_to = fields.Datetime(string="Date To")
+
+    @async
+    def print_label(self):
+        order_ids = await [self.env['purchase.order'].search(['date', '>=', self.date_from], ['date', '<=', self.date_to])]
+        return order_ids.print_label()
+
+PurchaseOrderPrint()
+
+menu.add({'id': 'purchase_order_print', 'parent': 'mrp_planning', 'string': 'Purchase Order Print', 'model': 'purchase.order.print', 'view_id': 'purchase.order.print.wizard', 'sequence': 11})
+
+view.add(model='purchase.order.print', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="date_from"/>
+        </group>
+        <group>
+            <field name="date_to"/>
+        </group>
+        <group>
+            <button name="print_label" string="Print"/>
+        </group>
+    </sheet>
+</form>
+""")
+
 class HPPMData(models.Model):
     _name = 'hppm.data'
 
@@ -224,7 +257,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_atm', 'Fitting AT-M'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_atm', 'Fitting AT-M'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
 
     @api.server
     def import_data(self):
@@ -238,6 +271,7 @@ class HPPMData(models.Model):
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
         if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
+        if self.type == 'sozai': return self.import_sozai().then(after_finish)
 
     @api.server(async=True)
     def import_daisha(self, type):
@@ -424,8 +458,27 @@ class HPPMData(models.Model):
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7]}
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7], 'date': new Date(data[7])}
             await [create_po(value)]
+        #return Promise.all(promises)
+
+    @api.server(async=True)
+    def import_sozai(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        @async
+        def create_part(value):
+            product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', 'sozai']))
+            if product_id.length: return
+            return self.env['product.product'].create(value)
+        for data in sheet.data:
+            row += 1
+            if row < 1: continue
+            #if not data[0]: continue
+            value = {'code': data[1], 'name': data[2], 'qty_box': data[9], 'vendor': data[4], 'type': 'sozai'}
+            await [create_part(value)]
         #return Promise.all(promises)
 
     @api.server(async=True)
