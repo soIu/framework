@@ -2,6 +2,7 @@ import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
+import orm.exceptions as exceptions
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
@@ -11,17 +12,17 @@ class PurchaseOrder(models.Model):
     _name = 'purchase.order'
 
     name = fields.Char(string="PO Number")
-    part_no = fields.Char(string="Part No.")
-    product_id = fields.Many2one('product.product', string="Part")
+    part_no = fields.Char(string="Part No.", index=True)
+    product_id = fields.Many2one('product.product', string="Part", index=True)
     product_qty = fields.Float(string="Quantity")
-    printed = fields.Boolean(string="Printed")
-    ps_month = fields.Char(string="P/S Month")
-    ps_code = fields.Char(string="P/S Code")
-    pl_from = fields.Char(string="P/L From")
-    pl_to = fields.Char(string="P/L To")
+    printed = fields.Boolean(string="Printed", index=True)
+    ps_month = fields.Char(string="P/S Month", index=True)
+    ps_code = fields.Char(string="P/S Code", index=True)
+    pl_from = fields.Char(string="P/L From", index=True)
+    pl_to = fields.Char(string="P/L To", index=True)
     pack_ids = fields.One2many('purchase.order.pack', 'order_id', string="Packs")
-    date = fields.Datetime(string="Date")
-    date_string = fields.Char(string="Date (String)")
+    date = fields.Datetime(string="Date", index=True)
+    date_string = fields.Char(string="Date (String)", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -95,6 +96,8 @@ class PurchaseOrder(models.Model):
 
 PurchaseOrder()
 
+pack_sequence = 0
+
 class PurchaseOrderPack(models.Model):
     _name = 'purchase.order.pack'
 
@@ -105,6 +108,7 @@ class PurchaseOrderPack(models.Model):
     order_id = fields.Many2one('purchase.order', string="Purchase Order")
     barcode = fields.Text(string="Barcode")
     received = fields.Boolean(string="Received")
+    inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -125,7 +129,7 @@ class PurchaseOrderPack(models.Model):
                order_id = await [self.env['purchase.order'].browse(self._values[0].order_id)]
                po_value = order_id.read()
             for key in po_value:
-                if key not in value: value[key] = po_value[key]
+                if key not in value: value[key] = po_value[key] or ''
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         if order_id: order_id.write({'printed': True})
         window.open(url)
@@ -133,16 +137,19 @@ class PurchaseOrderPack(models.Model):
         alert(error.stack or error.message)
 
     @async
-    def receive(self):
+    def receive(self, immediate):
         pack_ids = []
         for record in self:
             if record.received: return tools.alert('One of the PO is already received')
-        sequence = 1
         for record in self:
-            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (sequence + (new Date()).getMilliseconds()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id}), record.write({'received': True})])
+            nonlocal pack_sequence
+            pack_sequence += 1
+            if pack_sequence >= 10: pack_sequence = 1
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id}), record.write({'received': True})])
             pack_ids.push(pack_id.id)
-            sequence += 1
         picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
+        if immediate:
+           return picking_id.validate()
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
 
 PurchaseOrderPack()
@@ -153,8 +160,10 @@ menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 
 menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 10})
 
+menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
+
 view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
-<tree>
+<tree domain="['inhouse_ckd', '=', True]">
     <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
@@ -529,3 +538,50 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
     </sheet>
 </form>
 """})
+
+class ChangePassword(models.Model):
+    _name = 'change.password'
+
+    @async
+    def change_password(self):
+        new_password = document.getElementById('hppm_new_password').value
+        confirm_password = document.getElementById('hppm_confirm_password').value
+        if new_password != confirm_password: return tools.dialog.alert('Must be the same')
+        return self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').value), btoa(new_password), btoa(confirm_password))
+
+    @api.server(async=True)
+    def change_password_server(self, uid, current, new_password, confirm):
+        current, new_password, confirm = tools.atob(current), tools.atob(new_password), tools.atob(confirm)
+        if new_password != confirm: raise exceptions.ValidationError('Must be the same')
+        user_id = await [self.env['res.users'].browse(uid)]
+        if user_id.password != current: raise exceptions.ValidationError('Wrong password')
+        doc = await [models.db.get(models.db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
+        doc.password = new_password
+        return models.db.put(doc)
+
+ChangePassword()
+
+menu.add(id='settings_password', parent='settings', model='change.password', view_id='change.password.wizard', string="Change Password", sequence=2)
+
+view.add(model='change.password', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <list>
+                <list-input label="Current Password" type="password" id="hppm_current_password"/>
+            </list>
+        </group>
+        <group>
+            <list>
+                <list-input label="New Password" type="password" id="hppm_new_password"/>
+            </list>
+            <list>
+                <list-input label="Confirm Password" type="password" id="hppm_confirm_password"/>
+            </list>
+        </group>
+        <group>
+            <button name="change_password" string="Change Password"/>
+        </group>
+    </sheet>
+</form>
+""")

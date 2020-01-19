@@ -6,7 +6,7 @@ from ir.ui import menu, view
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
 
-    name = fields.Char(string="Trolley Number")
+    name = fields.Char(string="Trolley Number", index=True)
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
 
@@ -53,7 +53,7 @@ view.add(model='stock.trolley', mode='form', arch="""
 class StockTrolleyType(models.Model):
     _name = 'stock.trolley.type'
 
-    name = fields.Char(string="Trolley Type")
+    name = fields.Char(string="Trolley Type", index=True)
     reference = fields.Char(string="Reference")
     mcvt_part_ids = fields.One2many('product.product', 'mcvt_trolley_type_id', string="MCVT Parts")
     fwd_part_ids = fields.One2many('product.product', 'fwd_trolley_type_id', string="4WD Parts")

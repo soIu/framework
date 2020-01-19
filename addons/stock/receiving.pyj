@@ -98,3 +98,39 @@ view.add(model='stock.picking.wizard', mode='scan', init=init_picking, arch="""
 </form>
 """)
 
+
+
+class ReceiveInhouse(models.Model):
+    _name = 'stock.receive.inhouse'
+
+    product_id = fields.Many2one('product.product', string="Inhouse Part")
+    product_qty = fields.Float(string="Quantity")
+
+    @async
+    def receive(self):
+        product_id = await [self.env['product.product'].browse(self.product_id)]
+        order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': self.product_qty, 'part_no': product_id.code, 'inhouse_ckd': True})]
+        await [order_pack_id.receive(immediate=True)]
+        return order_pack_id.print_label()
+
+ReceiveInhouse()
+
+menu.add(id='receiving', string="Receiving", sequence=20)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=1)
+#menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
+
+view.add(model='stock.receive.inhouse', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="product_id" domain="['type', '=', 'inhouse']"/>
+        </group>
+        <group>
+            <field name="product_qty"/>
+        </group>
+        <group>
+            <button name="receive" string="Receive"/>
+        </group>
+    </sheet>
+</form>
+""")

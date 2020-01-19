@@ -264,18 +264,18 @@ view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, '
 class PickingList(models.Model):
     _name = 'stock.picking.list'
 
-    name = fields.Char(string="Picking List", readonly=True)
+    name = fields.Char(string="Picking List", readonly=True, index=True)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
-    sequence = fields.Integer(string="Sequence")
+    sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_list_id', string="Packs")
     laser_scan = fields.Char(string="Laser Scan")
-    called = fields.Boolean(string="AGV Called")
+    called = fields.Boolean(string="AGV Called", index=True)
     ip_address = fields.Char(string="IP Address")
-    date = fields.Datetime(string="Date")
+    date = fields.Datetime(string="Date", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
