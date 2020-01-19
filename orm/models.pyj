@@ -52,7 +52,7 @@ def trigger_depends_function(self, fields, values):
     if not depends_models[self._name]: return Promise.all([])
     promises = []
     for field in fields:
-        for method in depends_models[self._name][field]:
+        for method in depends_models[self._name][field] or []:
             promises.push(self[method].apply(self, [values[field]]))
     return Promise.all(promises)
 
