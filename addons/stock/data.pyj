@@ -340,8 +340,9 @@ class HPPMData(models.Model):
         xlsx = require('node-xlsx')
         sheets = xlsx.parse(tools.atob(self.excel, buffer=True))
         #row = -1
-        models_code = {}
         models = {}
+        models_code = {}
+        models_promise = {}
         parts = {}
         @async
         def check_part(value):
@@ -383,20 +384,27 @@ class HPPMData(models.Model):
                return
             if bom_line_id.product_qty != qty: return bom_line_id.write({'product_qty': qty})
         @async
+        def create_product(model, code):
+            product_id = await [self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg'])]
+            if not product_id.length:
+               product_id = await [self.env['product.product'].create({'name': model, 'code': code, 'type': 'fg'})]
+            return product_id
+        @async
         def create_model(model, type, parts):
             code = models_code[model]
             promises = []
-            product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
-            if not product_id.length:
-               product_id = await (self.env['product.product'].create({'name': model, 'code': code, 'type': 'fg'}))
-            bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
+            if not models_promise[code]:
+               models_promise[code] = create_product(model, code)
+            product_id = await (models_promise[code])
+            bom_id = await [self.env['mrp.bom'].search(['product_id', '=', product_id.id])]
             if not bom_id.length:
-               bom_id = await (self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id}))
+               bom_id = await [self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id})]
             for part in parts:
                 promises.push(create_bom_line(bom_id, part, parts[part], type))
             return Promise.all(promises)
-        promises = []
+        #promises = []
         for model in models:
+            promises = []
             for type in models[model]:
                 #await (create_model(model, type, models[model][type]))
                 promises.push(create_model(model, type, models[model][type]))
