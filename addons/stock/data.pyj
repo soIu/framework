@@ -343,6 +343,7 @@ class HPPMData(models.Model):
         models = {}
         models_code = {}
         models_promise = {}
+        bom_promise = {}
         parts = {}
         @async
         def check_part(value):
@@ -390,18 +391,24 @@ class HPPMData(models.Model):
                product_id = await [self.env['product.product'].create({'name': model, 'code': code, 'type': 'fg'})]
             return product_id
         @async
+        def create_bom(model, product_id):
+            bom_id = await [self.env['mrp.bom'].search(['product_id', '=', product_id.id])]
+            if not bom_id.length:
+               bom_id = await [self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id})]
+            return bom_id
+        @async
         def create_model(model, type, parts):
             code = models_code[model]
             promises = []
             if not models_promise[code]:
                models_promise[code] = create_product(model, code)
             product_id = await (models_promise[code])
-            bom_id = await [self.env['mrp.bom'].search(['product_id', '=', product_id.id])]
-            if not bom_id.length:
-               bom_id = await [self.env['mrp.bom'].create({'name': model, 'product_id': product_id.id})]
+            if not bom_promise[product_id.id]:
+               bom_promise[product_id.id] = create_bom(model, product_id)
+            bom_id = await (bom_promise[product_id.id])
             for part in parts:
-                promises.push(create_bom_line(bom_id, part, parts[part], type))
-            return Promise.all(promises)
+                await (create_bom_line(bom_id, part, parts[part], type))
+            #return Promise.all(promises)
         #promises = []
         for model in models:
             promises = []
