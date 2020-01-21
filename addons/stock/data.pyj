@@ -233,7 +233,7 @@ PurchaseOrderPrint()
 
 menu.add({'id': 'purchase_order_print', 'parent': 'mrp_planning', 'string': 'Purchase Order Print', 'model': 'purchase.order.print', 'view_id': 'purchase.order.print.wizard', 'sequence': 11})
 
-view.add(model='purchase.order.print', mode='form', arch="""
+view.add(model='purchase.order.print', mode='wizard', arch="""
 <form>
     <sheet>
         <group>
