@@ -304,21 +304,25 @@ class HPPMData(models.Model):
             part_code = data[4]
             part_qty = data[7]
             if data[21] and data[21] != trolley_type:
-               if not trolley_type: trolley_type = data[21]
+               if not trolley_type:
+                  trolley_type = data[21]
+                  if not trolleys[trolley_type]: trolleys[trolley_type] = {}
+                  if not data[5] or data[5] == '-': continue
+                  trolleys[trolley_type][part_code] = part_qty
                else:
-                   trolley_id = get_trolley(trolley_type)
-                   product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
-                   trolley_id = await (trolley_id)
-                   for product_id in product_ids:
-                       product_id[type + '_trolley_type_id'] = trolley_id.id
-                       product_id.qty_box = trolleys[trolley_type][product_id.code] or 0
-                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
-                   #trolley_map[trolley_type] = product_ids.ids
-                   del trolleys[trolley_type]
-                   trolley_type = data[21]
-                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
-                   if not data[5] or data[5] == '-': continue
-                   trolleys[trolley_type][part_code] = part_qty
+                  trolley_id = get_trolley(trolley_type)
+                  product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
+                  trolley_id = await (trolley_id)
+                  for product_id in product_ids:
+                      product_id[type + '_trolley_type_id'] = trolley_id.id
+                      product_id.qty_box = trolleys[trolley_type][product_id.code] or 0
+                  await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
+                  #trolley_map[trolley_type] = product_ids.ids
+                  del trolleys[trolley_type]
+                  trolley_type = data[21]
+                  if not trolleys[trolley_type]: trolleys[trolley_type] = {}
+                  if not data[5] or data[5] == '-': continue
+                  trolleys[trolley_type][part_code] = part_qty
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
