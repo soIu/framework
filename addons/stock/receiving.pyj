@@ -207,7 +207,7 @@ view.add(model='stock.receive.ckd', mode='form', arch="""
             <field name="reference"/>
         </group>
         <group width="100%">
-            <field name="order_pack_ids>
+            <field name="order_pack_ids">
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
