@@ -174,8 +174,8 @@ class StockReceiveCKD(models.Model):
         if sheet.data[0][5]: self.write({'name': sheet.data[0][5]})
         for data in sheet.data:
             row += 1
-            row += 1
-            if data[1] != ' CONTAINER NUMBER': continue
+            if data[1] != ' CONTAINER NUMBER':
+               if not start: continue
             elif not start:
                start = True
                start_row = row + 2
