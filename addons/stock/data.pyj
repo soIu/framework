@@ -272,7 +272,7 @@ class HPPMData(models.Model):
     @async
     def download_excel(self):
         excel = await [self.get_excel()]
-        return window.open('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel)
+        return window.location.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel
 
     @api.server
     def get_excel(self):
