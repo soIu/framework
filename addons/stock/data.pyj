@@ -499,7 +499,8 @@ class HPPMData(models.Model):
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7], 'date': new Date(data[7])}
+            date = data[7].slit('/')
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7], 'date': new Date(date[1] + '/' + date[0] + '/' + date[2])}
             await [create_po(value)]
         #return Promise.all(promises)
 
