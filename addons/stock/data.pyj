@@ -269,6 +269,15 @@ class HPPMData(models.Model):
     imported = fields.Boolean(string="Imported")
     type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
 
+    @async
+    def download_excel(self):
+        excel = await [self.get_excel()]
+        return window.open('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel)
+
+    @api.server
+    def get_excel(self):
+        return self.excel
+
     @api.server
     def import_data(self):
         def after_finish():
@@ -555,6 +564,9 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
             <field name="date"/>
             <field name="type"/>
             <field name="imported" readonly="True"/>
+        </group>
+        <group invisible="active_id.id == null">
+            <button name="download_excel" string="Download"/>
         </group>
     </sheet>
 </form>
