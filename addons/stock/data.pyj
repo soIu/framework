@@ -304,9 +304,9 @@ class HPPMData(models.Model):
             #if not data[5] or data[5] == '-': continue
             part_code = data[4]
             part_qty = data[7]
-            if data[21] and data[21] != trolley_type:
+            if data[22] and data[22] != trolley_type:
                if not trolley_type:
-                  trolley_type = data[21]
+                  trolley_type = data[22]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
                   trolleys[trolley_type][part_code] = part_qty
@@ -320,7 +320,7 @@ class HPPMData(models.Model):
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
                   del trolleys[trolley_type]
-                  trolley_type = data[21]
+                  trolley_type = data[22]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
                   trolleys[trolley_type][part_code] = part_qty
