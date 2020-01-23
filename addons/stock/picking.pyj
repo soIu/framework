@@ -265,7 +265,7 @@ class PickingList(models.Model):
     _name = 'stock.picking.list'
 
     name = fields.Char(string="Picking List", readonly=True, index=True)
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
@@ -276,6 +276,7 @@ class PickingList(models.Model):
     called = fields.Boolean(string="AGV Called", index=True)
     ip_address = fields.Char(string="IP Address")
     date = fields.Datetime(string="Date", index=True)
+    manual = fields.Boolean(string="Manual")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -407,7 +408,7 @@ menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
 menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', string="Queue & Print", sequence=1)
 menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_mcvt', string="MCVT", sequence=2)
 menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_fwd', string="4WD", sequence=3)
-menu.add(id='picking_list_atm', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_atm', string="AT-M", sequence=4)
+menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_flexi', string="Flexi", sequence=4)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
 <tree domain="context.type ? ['type', '=', context.type] : []">
@@ -425,9 +426,9 @@ view.add(model='stock.picking.list', mode='tree_fwd', arch="""
 <tree-page title="Picking List 4WD"/>
 """, context={'type': 'fwd'})
 
-view.add(model='stock.picking.list', mode='tree_atm', arch="""
-<tree-page title="Piking List AT-M"/>
-""", context={'type': 'atm'})
+view.add(model='stock.picking.list', mode='tree_flexi', arch="""
+<tree-page title="Piking List Flexi"/>
+""", context={'type': 'flexi'})
 
 view.add(model='stock.picking.list', mode='form', arch="""
 <form>
@@ -494,6 +495,7 @@ class PickingListLine(models.Model):
 
     @async
     def _get_part_qty(self):
+        if self.manual: return self.actual_qty
         picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<=', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length: return 0
         if self.consumed: return self.cached_product_qty
@@ -554,6 +556,7 @@ class PickingListLine(models.Model):
     sequence = fields.Integer(string="Sequence")
     consumed = fields.Boolean(string="Consumed")
     consumed_pack_id = fields.Many2one('stock.pack', string="Pack to Consume")
+    manual = fields.Boolean(string="Manual")
 
     def print_barcode(self):
         for record in self:
@@ -562,13 +565,105 @@ class PickingListLine(models.Model):
 PickingListLine()
 
 view.add(model='stock.picking.list.line', mode='tree', arch="""
-                <tree>
-                    <field name="route"/>
-                    <field name="part_no"/>
-                    <field name="product_id"/>
-                    <field name="qty_box"/>
-                    <field name="box"/>
-                    <field name="product_qty"/>
-                    <field name="description"/>
-                </tree>
+<tree>
+    <field name="route"/>
+    <field name="part_no"/>
+    <field name="product_id"/>
+    <field name="qty_box"/>
+    <field name="box"/>
+    <field name="product_qty"/>
+    <field name="description"/>
+</tree>
 """, action={'print_barcode': 'Print'})
+
+class PickingManual(models.Model):
+    _name = 'stock.picking.manual'
+
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type", required=True)
+    date = fields.Date(string="Date", required=True)
+    sequence = fields.Integer(string="Sequence")
+    sequence_id = fields.Many2one('mrp.sequence', string="Lot No.", required=True)
+    line_ids = fields.Many2many('stock.picking.manual.line', string="Lines")
+
+    @api.onchange('sequence', async=True)
+    def onchange_sequence(self):
+        if self.sequence_changing or not self.sequence or not self.type or not self.date: return
+        self.sequence_changing = True
+        date = new Date(self.date)
+        date.setHours(0, 0, 0, 0)
+        sequence_id = await [self.env['mrp.sequence'].search(['date', '=', date.toISOString()], ['type', '=', self.type], ['sequence', '=', self.sequence])]
+        if not sequence_id.length: return
+        self.sequence_id = sequence_id
+        self.sequence_changing = False
+
+    @api.onchange('sequence_id', async=True)
+    def onchange_sequence_id(self):
+        if self.sequence_changing or not self.sequence_id: return
+        self.sequence_changing = True
+        sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
+        if not sequence_id.length: return
+        self.type = sequence_id.type
+        self.sequence = sequence_id.sequence
+        self.sequence_changing = False
+
+    @async
+    def create_manual_list(self):
+        list_id = await [self.create_manual_list_server()]
+        return tools.navigate('/form/stock.picking.list?id=' + list_id)
+
+    @api.server(async=True)
+    def create_manual_list_server(self):
+        sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
+        #bom_id = await [self.env['mrp.bom'].browse(sequence_id.bom_id)]
+        #bom_line_ids = await [self.env['mrp.bom.line'].browse(bom_id.line_ids)]
+        promises = []
+        routes = {index: 0 for index in range(1, 6)}
+        trolley_group = {}
+        date = new Date()
+        list_id, line_ids = await ([self.env['stock.picking.list'].create({'model_id': sequence_id.bom_id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[sequence_id.type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': sequence_id.type})], [self.env['stock.picking.manual.line'].browse(self.line_ids)])
+        for line_id in line_ids:
+            product_id = await [self.env['product.product'].browse(line_id.product_id)]
+            promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': line_id.product_id, 'actual_qty': line_id.product_qty, 'qty_box': product_id.qty_box, 'part_no': product_id.code, 'actual_box': line_id.product_qty / product_id.qty_box, 'picking_list_id': list_id.id, 'sequence': sequence_id.sequence, 'date': date})
+            promises.push(promise)
+        await (promises)
+        return list_id.id
+
+PickingManual()
+
+class PickingManualLine(models.Model):
+    _name = 'stock.picking.manual.line'
+
+    product_id = fields.Many2one('product.product', string="Product", required=True)
+    product_qty = fields.Float(string="Quantity")
+
+PickingManualLine()
+
+menu.add(id='picking_list_manual', parent='picking_list', model='stock.picking.manual', view_id='stock.picking.manual.create', string="Manual Picking List", sequence=10)
+
+view.add(model='stock.picking.manual', mode='create', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="type"/>
+        </group>
+        <group>
+            <field name="date"/>
+        </group>
+        <group title="Sequence">
+            <field name="sequence"/>
+            <field name="sequence_id"/>
+        </group>
+        <group width="100%">
+            <field name="line_ids">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                </tree>
+            </field>
+        </group>
+        <group>
+            <button name="create_manual_list" string="Create"/>
+        </group>
+    </sheet>
+</form>
+""")

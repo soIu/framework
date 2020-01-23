@@ -55,9 +55,10 @@ class StockTrolleyType(models.Model):
 
     name = fields.Char(string="Trolley Type", index=True)
     reference = fields.Char(string="Reference")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Line Type")
     mcvt_part_ids = fields.One2many('product.product', 'mcvt_trolley_type_id', string="MCVT Parts")
     fwd_part_ids = fields.One2many('product.product', 'fwd_trolley_type_id', string="4WD Parts")
-    atm_part_ids = fields.One2many('product.product', 'atm_trolley_type_id', string="AT-M Parts")
+    flexi_part_ids = fields.One2many('product.product', 'flexi_trolley_type_id', string="Flexi Parts")
 
 StockTrolleyType()
 
@@ -66,7 +67,7 @@ menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', str
 view.add(model='stock.trolley.type', mode='tree', arch="""
 <tree>
     <field name="name"/>
-    <field name="reference"/>
+    <field name="type"/>
 </tree>
 """)
 
@@ -79,7 +80,7 @@ view.add(model='stock.trolley.type', mode='form', arch="""
         <group>
             <field name="reference"/>
         </group>
-        <group width="100%" title="MCVT">
+        <group width="100%" title="Parts" invisible="active_id.type != 'mcvt'">
             <field name="mcvt_part_ids">
                 <tree>
                     <field name="name"/>
@@ -87,7 +88,7 @@ view.add(model='stock.trolley.type', mode='form', arch="""
                 </tree>
             </field>
         </group>
-        <group width="100%" title="4WD">
+        <group width="100%" title="Parts" invisible="active_id.type != 'fwd'">
             <field name="fwd_part_ids">
                 <tree>
                     <field name="name"/>
@@ -95,8 +96,8 @@ view.add(model='stock.trolley.type', mode='form', arch="""
                 </tree>
             </field>
         </group>
-        <group width="100%" title="AT-M">
-            <field name="atm_part_ids">
+        <group width="100%" title="Parts" invisible="active_id.type != 'flexi'">
+            <field name="flexi_part_ids">
                 <tree>
                     <field name="name"/>
                     <field name="code"/>

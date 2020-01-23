@@ -109,6 +109,7 @@ class PurchaseOrderPack(models.Model):
     barcode = fields.Text(string="Barcode")
     received = fields.Boolean(string="Received")
     inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
+    ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -160,7 +161,7 @@ menu.add({'id': 'hppm_data', 'string': 'Data', 'sequence': 25})
 
 menu.add({'id': 'hppm_po', 'parent': 'mrp_planning', 'string': 'Purchase Order', 'model': 'purchase.order', 'sequence': 10})
 
-menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
+menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=5)
 
 view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="['inhouse_ckd', '=', True]">
@@ -266,7 +267,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_atm', 'Fitting AT-M'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
 
     @api.server
     def import_data(self):
@@ -276,7 +277,7 @@ class HPPMData(models.Model):
         if self.type == 'bom': return self.import_bom().then(after_finish)
         if self.type == 'daisha_mcvt': return self.import_daisha('mcvt').then(after_finish)
         if self.type == 'daisha_fwd': return self.import_daisha('fwd').then(after_finish)
-        if self.type == 'daisha_atm': return self.import_daisha('atm').then(after_finish)
+        if self.type == 'daisha_flexi': return self.import_daisha('flexi').then(after_finish)
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
         if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
@@ -292,10 +293,10 @@ class HPPMData(models.Model):
         trolley_map = {}
         trolley_type = None
         @async
-        def get_trolley(trolley_type):
-            trolley_id = await [self.env['stock.trolley.type'].search(['name', '=', trolley_type])]
+        def get_trolley(trolley_type, type):
+            trolley_id = await [self.env['stock.trolley.type'].search(['name', '=', trolley_type], ['type', '=', type])]
             if not trolley_id.length:
-               trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type})
+               trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type, 'type': type})
             return trolley_id
         for data in sheet.data:
             row += 1
@@ -310,7 +311,7 @@ class HPPMData(models.Model):
                   if not data[5] or data[5] == '-': continue
                   trolleys[trolley_type][part_code] = part_qty
                else:
-                  trolley_id = get_trolley(trolley_type)
+                  trolley_id = get_trolley(trolley_type, type)
                   product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
                   trolley_id = await (trolley_id)
                   for product_id in product_ids:
@@ -328,7 +329,7 @@ class HPPMData(models.Model):
                if not data[5] or data[5] == '-': continue
                trolleys[trolley_type][part_code] = part_qty
         for trolley in trolleys:
-            trolley_id = get_trolley(trolley)
+            trolley_id = get_trolley(trolley, type)
             product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
             trolley_id = await (trolley_id)
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
@@ -456,11 +457,12 @@ class HPPMData(models.Model):
             if row < 6: continue
             if not data[0]: continue
             head = 0
+            """original_type = type
             if type == 'flexi':
                head = 1
-               type = data[1].toLowerCase()
+               type = data[1].toLowerCase()"""
             lot_no = data.slice(head + 9, head + 14).join('-')
-            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type)
+            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type) #, original_type)
             await (promise)
             #promises.push(promise)
         #await (promises)
@@ -494,7 +496,7 @@ class HPPMData(models.Model):
     def import_sozai(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[4]
         row = -1
         @async
         def create_part(value):
@@ -503,7 +505,7 @@ class HPPMData(models.Model):
             return self.env['product.product'].create(value)
         for data in sheet.data:
             row += 1
-            if row < 1: continue
+            if row < 3: continue
             #if not data[0]: continue
             value = {'code': data[1], 'name': data[2], 'qty_box': data[9], 'vendor': data[4], 'type': 'sozai'}
             await [create_part(value)]
@@ -547,7 +549,7 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <field name="excel"/>
+            <field name="excel" invisible="active_id.name != ''"/>
         </group>
         <group>
             <field name="date"/>

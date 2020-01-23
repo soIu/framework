@@ -16,6 +16,7 @@ class StockReceivingWizard(models.Model):
     def onchange_scan(self):
         if not self.scan: return
         value = JSON.parse(self.scan)
+        if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse/CKD Part")
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
         self.scan = ''
         if not order_id.length: return
@@ -44,7 +45,6 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
                     <field name="name"/>
                     <field name="product_id"/>
                     <field name="product_qty"/>
-                    <field name="vendor"/>
                 </tree>
             </field>
         </group>
@@ -71,7 +71,7 @@ class StockPickingWizard(models.Model):
 
 StockPickingWizard()
 
-menu.add(id='scanner', string="Scanner", sequence=5)
+#menu.add(id='scanner', string="Scanner", sequence=5)
 menu.add(id='scanner_picking', string="Picking", parent='scanner', model='stock.picking.wizard', view_id='stock.picking.wizard.scan', sequence=2)
 
 def init_picking():
@@ -130,6 +130,140 @@ view.add(model='stock.receive.inhouse', mode='wizard', arch="""
         </group>
         <group>
             <button name="receive" string="Receive"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+class StockReceiveCKD(models.Model):
+    _name = 'stock.receive.ckd'
+
+    name = fields.Char(string="CKD Number", readonly=True)
+    reference = fields.Char(string="Reference")
+    file = fields.Binary(string="File Manifest", required=True, protect=True)
+    order_pack_ids = fields.One2many('purchase.order.pack', 'ckd_id', string="Packs")
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        result = await [self.__super__('create')(values=values, is_client=is_client)]
+        for record in result:
+            await [record.import_file()]
+        return result
+
+    @api.server(async=True)
+    def import_file(self):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
+        row = -1
+        @async
+        def create_pack(value, separate):
+            product_id = await (self.env['product.product'].search(['code', '=', value.part_no]))
+            if not product_id.length or not product_id.qty_box: return
+            if separate: return self.env['purchase.order.pack'].create({'name': value.name, 'product_id': product_id.id, 'product_qty': value.quantity, 'inhouse_ckd': True, 'ckd_id': self.id})
+            boxes = value.quantity / product_id.qty_box
+            promises = []
+            for index in range(boxes):
+                promise = self.env['purchase.order.pack'].create({'name': value.name, 'product_id': product_id.id, 'product_qty': value.quantity / boxes, 'inhouse_ckd': True, 'ckd_id': self.id})
+                promises.push(promise)
+            return Promise.all(promises)
+        start = False
+        start_row = None
+        sequence = 1
+        for data in sheet.data:
+            row += 1
+            row += 1
+            if data[1] != ' CONTAINER NUMBER': continue
+            elif not start:
+               start = True
+               start_row = row + 2
+            if row != start_row: continue
+            #if not data[0]: continue
+            value = {'name': 'Pack-CKD-' + data[4] + '-' + sequence, 'part_no': data[16].split(' ').join(''), 'quantity': data[19]}
+            sequence += 1
+            await [create_pack(value, data[14] == '002')]
+        #return Promise.all(promises)
+
+StockReceiveCKD()
+
+menu.add(id='receiving_ckd', parent='receiving', model='stock.receive.ckd', string="CKD", sequence=2)
+
+view.add(model='stock.receive.ckd', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="reference"/>
+</tree>
+""")
+
+view.add(model='stock.receive.ckd', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="file" invisible="active_id.name != ''"/>
+        </group>
+        <group>
+            <field name="reference"/>
+        </group>
+        <group width="100%">
+            <field name="order_pack_ids>
+                <tree>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                </tree>
+            </field>
+        </group>
+    </sheet>
+</form>
+""")
+
+class StockReceivingCKD(models.Model):
+    _name = 'stock.receiving.ckd'
+
+    scan = fields.Char(string="Laser Scan")
+    order_ids = fields.Many2many('purchase.order.pack', string="Purchase Orders")
+    received = fields.Boolean(string="Received")
+
+    @api.onchange('scan', async=True)
+    def onchange_scan(self):
+        if not self.scan: return
+        value = JSON.parse(self.scan)
+        if not value.ckd_id:
+           if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse Part")
+           else: return tools.dialog.alert("Can't receive Local Part")
+        order_id = await [self.env['purchase.order.pack'].browse(value.id)]
+        self.scan = ''
+        if not order_id.length: return
+        self.order_ids.push(order_id.id)
+        #tools.navigate('/form/purchase.order?id=' + order_id.id)
+
+    @async
+    def receive(self):
+        order_ids = await (self.env['purchase.order.pack'].browse(self.order_ids))
+        await ([order_ids.receive(immediate=True), self.write({'received': True})])
+
+StockReceivingCKD()
+
+menu.add(id='receiving_scan_ckd', string="Scan CKD", parent='receiving', model='stock.receiving.ckd', view_id='stock.receiving.ckd.scan', sequence=3)
+
+view.add(model='stock.receiving.ckd', mode='scan', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="scan"/>
+        </group>
+        <group width="100%">
+            <field name="order_ids">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="product_qty"/>
+                </tree>
+            </field>
+        </group>
+        <group>
+            <button name="receive" string="Receive" invisible="active_id.received == True"/>
         </group>
     </sheet>
 </form>

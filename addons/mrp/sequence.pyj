@@ -10,7 +10,8 @@ class MrpSequence(models.Model):
     name = fields.Char(string="Lot No.")
     sequence = fields.Integer(string="Sequence")
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
+    bom_id = fields.Many2one('mrp.bom', string="Model")
 
     @api.depends('sequence', async=True)
     def onchange_sequence(self, sequence):
@@ -55,12 +56,12 @@ view.add(model='mrp.sequence', mode='form', arch="""
 class MrpSequenceReorder(models.Model):
     _name = 'mrp.sequence.reorder'
 
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['atm', 'AT-M'], string="Type", required=True)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type", required=True)
     date = fields.Date(string="Date", required=True)
     sequence_from = fields.Integer(string="Sequence")
-    sequence_from_id = fields.Many2one('mrp.sequence', string="Work Number", required=True)
+    sequence_from_id = fields.Many2one('mrp.sequence', string="Lot No.", required=True)
     sequence_to = fields.Integer(string="Sequence")
-    sequence_to_id = fields.Many2one('mrp.sequence', string="Work Number")
+    sequence_to_id = fields.Many2one('mrp.sequence', string="Lot No.")
 
     @api.onchange('sequence_from', async=True)
     def onchange_sequence_from(self):
