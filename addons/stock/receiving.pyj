@@ -159,6 +159,7 @@ class StockReceiveCKD(models.Model):
         row = -1
         @async
         def create_pack(value, separate):
+            console.log(value.part_no)
             product_id = await (self.env['product.product'].search(['code', '=', value.part_no]))
             if not product_id.length or not product_id.qty_box: return
             if separate: return self.env['purchase.order.pack'].create({'name': value.name, 'product_id': product_id.id, 'product_qty': value.quantity, 'inhouse_ckd': True, 'ckd_id': self.id})
