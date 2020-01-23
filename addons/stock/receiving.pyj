@@ -201,7 +201,7 @@ view.add(model='stock.receive.ckd', mode='form', arch="""
     <sheet>
         <group>
             <field name="name"/>
-            <field name="file" invisible="active_id.name != ''"/>
+            <field name="file" invisible="active_id.id != null"/>
         </group>
         <group>
             <field name="reference"/>

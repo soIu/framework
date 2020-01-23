@@ -549,7 +549,7 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
     <sheet>
         <group>
             <field name="name"/>
-            <field name="excel" invisible="active_id.name != ''"/>
+            <field name="excel" invisible="active_id.id != null"/>
         </group>
         <group>
             <field name="date"/>
