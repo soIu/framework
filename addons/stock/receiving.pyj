@@ -180,7 +180,7 @@ class StockReceiveCKD(models.Model):
             elif not start:
                start = True
                start_row = row + 2
-            if row != start_row: continue
+            if row < start_row: continue
             #if not data[0]: continue
             value = {'name': 'Pack-CKD-' + data[4] + '-' + sequence, 'part_no': data[16].split(' ').join(''), 'quantity': data[19]}
             sequence += 1
