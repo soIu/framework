@@ -1,12 +1,6 @@
-import orm.models as models
-import orm.fields as fields
-import orm.tools as tools
-import orm.api as api
-import orm.exceptions as exceptions
-from ir.ui import menu, view
-from ir.sequence import add_sequence
-from stock.location import defaults as location_defaults
-from jasper.report import get_jasper_report
+import orm.models as models import orm.fields as fields import orm.tools as tools import orm.api as api import 
+orm.exceptions as exceptions from ir.ui import menu, view from ir.sequence import add_sequence from stock.location import 
+defaults as location_defaults from jasper.report import get_jasper_report
 
 class PurchaseOrder(models.Model):
     _name = 'purchase.order'
@@ -272,7 +266,9 @@ class HPPMData(models.Model):
     @async
     def download_excel(self):
         excel = await [self.get_excel()]
-        return window.location.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel
+        request = window.fetch('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel)
+        blob = await [request.blob()]
+        window.open(URL.createObjectURL(blob))
 
     @api.server
     def get_excel(self):
