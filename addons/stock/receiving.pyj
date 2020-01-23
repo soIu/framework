@@ -155,7 +155,7 @@ class StockReceiveCKD(models.Model):
     def import_file(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        sheet = xlsx.parse(tools.atob(self.file, buffer=True))[0]
         row = -1
         @async
         def create_pack(value, separate):
