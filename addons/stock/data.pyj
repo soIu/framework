@@ -445,7 +445,7 @@ class HPPMData(models.Model):
         def create_picking_list(code, quantity, lot_no, sequence, date, type):
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
