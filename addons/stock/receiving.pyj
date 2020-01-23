@@ -155,7 +155,7 @@ class StockReceiveCKD(models.Model):
     def import_file(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[1]
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         @async
         def create_pack(value, separate):
@@ -171,6 +171,7 @@ class StockReceiveCKD(models.Model):
         start = False
         start_row = None
         sequence = 1
+        if sheet.data[0][5]: self.write({'name': sheet.data[0][5]})
         for data in sheet.data:
             row += 1
             row += 1
