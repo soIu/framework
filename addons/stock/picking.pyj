@@ -620,7 +620,7 @@ class PickingManual(models.Model):
         routes = {index: 0 for index in range(1, 6)}
         trolley_group = {}
         date = new Date()
-        list_id, line_ids = await ([self.env['stock.picking.list'].create({'model_id': sequence_id.bom_id, 'sequence_id': sequence_id.id, 'trolley_type_id': sequence_id.trolley_type_id, 'sequence': sequence, 'date': date, 'type': sequence_id.type})], [self.env['stock.picking.manual.line'].browse(self.line_ids)])
+        list_id, line_ids = await ([self.env['stock.picking.list'].create({'model_id': sequence_id.bom_id, 'sequence_id': sequence_id.id, 'trolley_type_id': sequence_id.trolley_type_id, 'sequence': sequence_id.sequence, 'date': date, 'type': sequence_id.type})], [self.env['stock.picking.manual.line'].browse(self.line_ids)])
         for line_id in line_ids:
             product_id = await [self.env['product.product'].browse(line_id.product_id)]
             promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': line_id.product_id, 'actual_qty': line_id.product_qty, 'qty_box': product_id.qty_box, 'part_no': product_id.code, 'actual_box': line_id.product_qty / product_id.qty_box, 'picking_list_id': list_id.id, 'sequence': sequence_id.sequence, 'date': date})
