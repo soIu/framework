@@ -7,6 +7,7 @@ configuration.local_app = False
 
 restify = require('restify')
 server = restify.createServer()
+server.server.setTimeout(0)
 
 cors = require('restify-cors-middleware')({'origins': ['*']})
 
