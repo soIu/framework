@@ -2,6 +2,7 @@ import orm.models as models
 import orm.fields as fields
 import orm.api as api
 from ir.ui import menu, view
+from scripts import create_upload_button
 
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
@@ -64,7 +65,7 @@ StockTrolleyType()
 
 menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', string="Trolley Type (Fitting)", sequence=3)
 
-view.add(model='stock.trolley.type', mode='tree', arch="""
+view.add(model='stock.trolley.type', init=create_upload_button, mode='tree', arch="""
 <tree>
     <field name="name"/>
     <field name="type"/>

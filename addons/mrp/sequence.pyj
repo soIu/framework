@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from ir.ui import view, menu
+from scripts import create_upload_button
 
 class MrpSequence(models.Model):
     _name = 'mrp.sequence'
@@ -12,6 +13,9 @@ class MrpSequence(models.Model):
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
     bom_id = fields.Many2one('mrp.bom', string="Model")
+    date = fields.Datetime(string="Date", index=True)
+    destination = fields.Char(string="Destination")
+    quantity = fields.Float(string="Quantity")
 
     @api.depends('sequence', async=True)
     def onchange_sequence(self, sequence):
@@ -24,9 +28,12 @@ MrpSequence()
 menu.add(id='mrp_planning', string="Planning", sequence=3)
 menu.add(id='mrp_sequence', string="Production Sequence", parent='mrp_planning', model='mrp.sequence', sequence=2)
 
-view.add(model='mrp.sequence', mode='tree', arch="""
+view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
 <tree>
     <field name="name"/>
+    <field name="bom_id"/>
+    <field name="quantity"/>
+    <field name="destination"/>
     <field name="sequence" sort="asc"/>
 </tree>
 """)

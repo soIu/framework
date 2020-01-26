@@ -11,9 +11,10 @@ defaults = {}
 class ProductProduct(models.Model):
     _name = 'product.product'
 
-    name = fields.Char(string="Product Name", required=True, index=True)
+    name = fields.Char(string="Product", required=True, index=True)
     code = fields.Char(string="Product Code", index=True)
     code_trimmed = fields.Char(string="Product Code (Trimmed)", index=True)
+    base_name = fields.Char(string="Product Name", index=True)
     type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], ['sozai', 'Sozai'], ['fg', 'Finish Good'], string="Type", index=True)
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", index=True)
@@ -30,7 +31,7 @@ menu.add({'id': 'product', 'parent': 'stock', 'string': 'Products', 'model': 'pr
 
 view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
-    <field name="name"/>
+    <field name="base_name"/>
     <field name="code"/>
     <!--<field name="trolley_type_id"/>
     <field name="total_qty"/>
@@ -44,7 +45,7 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
 <form>
     <sheet>
         <group>
-            <field name="name"/>
+            <field name="base_name"/>
             <field name="code"/>
             <field name="type"/>
         </group>

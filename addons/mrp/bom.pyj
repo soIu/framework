@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from ir.ui import view, menu
+from scripts import create_upload_button
 
 class MrpBom(models.Model):
     _name = 'mrp.bom'
@@ -26,7 +27,7 @@ MrpBomLine()
 menu.add(id='mrp_planning', string="Planning", sequence=3)
 menu.add(id='mrp_bom', string="Bill of Materials", parent='mrp_planning', model='mrp.bom', sequence=1)
 
-view.add(model='mrp.bom', mode='tree', arch="""
+view.add(init=create_upload_button, model='mrp.bom', mode='tree', arch="""
 <tree>
     <field name="name"/>
     <field name="reference"/>

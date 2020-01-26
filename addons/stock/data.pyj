@@ -7,6 +7,7 @@ from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
 from jasper.report import get_jasper_report
+from scripts import create_upload_button
 
 class PurchaseOrder(models.Model):
     _name = 'purchase.order'
@@ -171,7 +172,7 @@ view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch
 </tree>
 """, 'action': {'print_label': 'Print'}})
 
-view.add({'model': 'purchase.order', 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'purchase.order', 'init': create_upload_button, 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="name"/>
     <field name="product_id"/>
@@ -263,11 +264,15 @@ class HPPMData(models.Model):
             return 'Data 001'
         )
 
+    def _get_type(self):
+         if v'typeof window' != 'undefined':
+            return window.models.env.context.default_import_type or None
+
     name = fields.Char(string="Data Number", defaults=_get_number, required=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
-    imported = fields.Boolean(string="Imported")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True)
+    imported = fields.Boolean(string="Uploaded")
+    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -279,6 +284,11 @@ class HPPMData(models.Model):
     @api.server
     def get_excel(self):
         return self.excel
+
+    @async
+    def import_data_client(self):
+        await [self.import_data()]
+        return tools.dialog.alert('Upload Successful')
 
     @api.server
     def import_data(self):
@@ -374,7 +384,7 @@ class HPPMData(models.Model):
                 row += 1
                 if row < 11: continue
                 if not data[1]: continue
-                value = {'name': data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
+                value = {'base_name': data[1], 'name': data[1] + ' - ' + data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
                 if not value.name or not value.code: continue
                 promise = check_part(value)
                 cell_index = -1
@@ -445,7 +455,7 @@ class HPPMData(models.Model):
         def create_picking_list(code, quantity, lot_no, sequence, date, type):
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1]})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
@@ -544,7 +554,7 @@ class HPPMData(models.Model):
 
 HPPMData()
 
-menu.add({'id': 'import_data', 'parent': 'hppm_data', 'string': 'Import', 'model': 'hppm.data', 'sequence': 1})
+menu.add({'id': 'import_data', 'parent': 'hppm_data', 'string': 'Upload', 'model': 'hppm.data', 'sequence': 1})
 
 view.add({'model': 'hppm.data', 'mode': 'tree', 'string': False, 'arch': """
 <tree>
@@ -556,7 +566,7 @@ view.add({'model': 'hppm.data', 'mode': 'tree', 'string': False, 'arch': """
 view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
 <form>
     <header>
-        <button name="import_data" string="Import" invisible="active_id.imported == True"/>
+        <button name="import_data_client" string="Upload" invisible="active_id.imported == True"/>
     </header>
     <sheet>
         <group>
@@ -582,13 +592,17 @@ class ChangePassword(models.Model):
     def change_password(self):
         new_password = document.getElementById('hppm_new_password').value
         confirm_password = document.getElementById('hppm_confirm_password').value
-        if new_password != confirm_password: return tools.dialog.alert('Must be the same')
-        return self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').value), btoa(new_password), btoa(confirm_password))
+        if new_password != confirm_password: return tools.dialog.alert("New password doesn't match")
+        result = await [self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').value), btoa(new_password), btoa(confirm_password))]
+        def reload():
+            href = window.location.origin + window.location.pathname
+            window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'
+        return tools.dialog.alert('Password changed', reload)
 
     @api.server(async=True)
     def change_password_server(self, uid, current, new_password, confirm):
         current, new_password, confirm = tools.atob(current), tools.atob(new_password), tools.atob(confirm)
-        if new_password != confirm: raise exceptions.ValidationError('Must be the same')
+        if new_password != confirm: raise exceptions.ValidationError("New password doesn't match")
         user_id = await [self.env['res.users'].browse(uid)]
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
         doc = await [models.db.get(models.db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]

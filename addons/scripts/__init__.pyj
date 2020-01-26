@@ -1,0 +1,26 @@
+def wait(ms):
+    return new Promise(
+    def (resolve, reject):
+        setTimeout(
+        def timeout():
+            resolve()
+        , ms)
+    )
+
+@async
+def create_upload_button():
+    await [wait(500)]
+    if document.getElementById('upload_shortcut'):
+       document.getElementById('upload_shortcut').remove()
+    create_element = document.querySelector('.data-table-title .button.button-fill')
+    if not create_element: return
+    defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt'}
+    upload_button = '<a id="upload_shortcut" class="button" href="#" style="display: inline-block;background-color: rgb(255, 255, 255);">Upload</a>'
+    create_element.insertAdjacentHTML('afterend', upload_button)
+    def onclick():
+        model = models.env.context.active_model
+        if defaults[model]: models.env.context.default_import_type = defaults[model]
+        tools.navigate('/form/hppm.data')
+    document.getElementById('upload_shortcut').onclick = onclick
+
+#if v'typeof window' != 'undefined': window.create_upload_button = create_upload_button
