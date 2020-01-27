@@ -82,6 +82,7 @@ class MrpSequenceReorder(models.Model):
     date = fields.Date(string="Date", required=True)
     sequence_from = fields.Integer(string="Sequence")
     sequence_from_id = fields.Many2one('mrp.sequence', string="Lot No.", required=True)
+    date_to = fields.Date(string="Date (Optional)")
     sequence_to = fields.Integer(string="Sequence")
     sequence_to_id = fields.Many2one('mrp.sequence', string="Lot No.")
 
@@ -108,9 +109,10 @@ class MrpSequenceReorder(models.Model):
 
     @api.onchange('sequence_to', async=True)
     def onchange_sequence_to(self):
-        if self.sequence_to_changing or not self.sequence_to or not self.type or not self.date: return
+        date = self.date or self.date_to
+        if self.sequence_to_changing or not self.sequence_to or not self.type or not date: return
         self.sequence_to_changing = True
-        date = new Date(self.date)
+        date = new Date(date)
         date.setHours(0, 0, 0, 0)
         sequence_id = await [self.env['mrp.sequence'].search(['date', '=', date.toISOString()], ['type', '=', self.type], ['sequence', '=', self.sequence_to])]
         if not sequence_id.length: return
@@ -149,14 +151,14 @@ view.add(model='mrp.sequence.reorder', mode='wizard', arch="""
         <group>
             <field name="type"/>
         </group>
-        <group>
-            <field name="date"/>
-        </group>
+        <group/>
         <group title="From">
+            <field name="date"/>
             <field name="sequence_from"/>
             <field name="sequence_from_id"/>
         </group>
         <group title="Switch To">
+            <field name="date_to"/>
             <field name="sequence_to"/>
             <field name="sequence_to_id"/>
         </group>

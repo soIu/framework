@@ -223,12 +223,19 @@ view.add({'model': 'purchase.order', 'mode': 'form', 'string': False, 'arch': ""
 class PurchaseOrderPrint(models.Model):
     _name = 'purchase.order.print'
 
+    supplier_id = fields.Many2one('purchase.order.supplier', string="Supplier")
     date_from = fields.Datetime(string="Date From")
     date_to = fields.Datetime(string="Date To")
 
     @async
     def print_label(self):
-        order_ids = await [self.env['purchase.order'].search(['date', '>=', self.date_from], ['date', '<=', self.date_to])]
+        args = []
+        args.push(['date', '>=', self.date_from])
+        args.push(['date', '<=', self.date_to])
+        if self.supplier_id:
+           supplier_id = await [self.env['purchase.order.supplier'].browse(self.supplier_id)]
+           args.push(['pl_from', '=', supplier_id.name])
+        order_ids = await [self.env['purchase.order'].search(*args)]
         return order_ids.print_label()
 
 PurchaseOrderPrint()
@@ -250,6 +257,13 @@ view.add(model='purchase.order.print', mode='wizard', arch="""
     </sheet>
 </form>
 """)
+
+class PurchaseOrderSupplier(models.Model):
+    _name = 'purchase.order.supplier'
+
+    name = fields.Char(string="Supplier Code", required=True, index=True)
+
+PurchaseOrderSupplier()
 
 class HPPMData(models.Model):
     _name = 'hppm.data'
@@ -495,8 +509,22 @@ class HPPMData(models.Model):
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
+        suppliers = {}
+        suppliers_loaded = False
+        @async
+        def create_suppliers(supplier):
+            if not suppliers_loaded:
+               supplier_ids = await [self.env['purchase.order.supplier'].search()]
+               for supplier_id in supplier_ids:
+                   suppliers[supplier_id.name] = True
+               nonlocal suppliers_loaded
+               suppliers_loaded = True
+            if supplier not in suppliers:
+               self.env['purchase.order.supplier'].create({'name': supplier})
+               suppliers[supplier] = True
         @async
         def create_po(value):
+            create_suppliers(value.pl_from)
             order_id = await [self.env['purchase.order'].search(['part_no', '=', value.part_no], ['date_string', '=', value.date_string], ['ps_month', '=', value.ps_month], ['ps_code', '=', value.ps_code], ['pl_from', '=', value.pl_from], ['pl_to', '=', value.pl_to])]
             if order_id.length:
                return order_id.recompute_pack(value.product_qty)
