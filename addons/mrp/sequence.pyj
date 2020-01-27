@@ -26,10 +26,13 @@ class MrpSequence(models.Model):
 MrpSequence()
 
 menu.add(id='mrp_planning', string="Planning", sequence=3)
-menu.add(id='mrp_sequence', string="Production Sequence", parent='mrp_planning', model='mrp.sequence', sequence=2)
+menu.add(id='mrp_sequence', string="Sequence Plan", parent='mrp_planning', model='mrp.sequence', sequence=2)
+menu.add(id='mrp_sequence', string="Sequence MCVT", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_mcvt', sequence=3)
+menu.add(id='mrp_sequence', string="Sequence 4WD", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_fwd', sequence=4)
+menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_flexi', sequence=5)
 
 view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
-<tree>
+<tree domain="context.type ? ['type', '=', context.type] : []">
     <field name="name"/>
     <field name="bom_id"/>
     <field name="quantity"/>
@@ -37,6 +40,18 @@ view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
     <field name="sequence" sort="asc"/>
 </tree>
 """)
+
+view.add(model='stock.picking.list', mode='tree_mcvt', arch="""
+<tree-page title="Sequence MCVT"/>
+""", context={'type': 'mcvt'})
+
+view.add(model='stock.picking.list', mode='tree_fwd', arch="""
+<tree-page title="Sequence 4WD"/>
+""", context={'type': 'fwd'})
+
+view.add(model='stock.picking.list', mode='tree_flexi', arch="""
+<tree-page title="Sequence Flexi"/>
+""", context={'type': 'flexi'})
 
 view.add(model='mrp.sequence', mode='form', arch="""
 <form>

@@ -27,7 +27,7 @@ class ProductProduct(models.Model):
 ProductProduct()
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
-menu.add({'id': 'product', 'parent': 'stock', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
+menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
 
 view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
 <tree>

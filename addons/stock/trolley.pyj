@@ -63,7 +63,7 @@ class StockTrolleyType(models.Model):
 
 StockTrolleyType()
 
-menu.add(id='trolley_type', parent='agv_chasun', model='stock.trolley.type', string="Trolley Type (Fitting)", sequence=3)
+menu.add(id='trolley_type', parent='master_data', model='stock.trolley.type', string="Fitting Daisha", sequence=2)
 
 view.add(model='stock.trolley.type', init=create_upload_button, mode='tree', arch="""
 <tree>
