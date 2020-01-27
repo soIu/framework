@@ -1,7 +1,7 @@
 {
   "main": "server.js",
   "scripts": {
-    "postinstall": "sed -i 's/interface await null/interface null/g' node_modules/rapydscript-ng/release/compiler.js"
+    "postinstall": "printf \"echo \\\"\\44(sed 's/interface await null/interface null/' node_modules/rapydscript-ng/release/compiler.js)\\\" > node_modules/rapydscript-ng/release/compiler.js\" | sh -"
   },
   "dependencies": {
     "module-alias": "^2.2.0",
