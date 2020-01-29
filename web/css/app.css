@@ -1,0 +1,334 @@
+/* Your app styles here */
+.panel-left.panel-visible-by-breakpoint:before {
+  position: absolute;
+  right: 0;
+  top: 64px;
+  height: calc(100% - 64px);
+  width: 1px;
+  background: rgba(0,0,0,0.1);
+  content: '';
+  z-index: 6000;
+}
+
+.page-current.page-previous {
+  pointer-events: unset;
+}
+
+/* Hide navbar link which opens left panel when it is visible by breakpoint */
+.panel-left.panel-visible-by-breakpoint ~ .view .navbar .panel-open[data-panel="left"] {
+  display: none;
+}
+
+.md .color-theme-gray .statusbar {
+  background-color: #009688;
+}
+
+/*
+  Extra borders for main view and left panel for iOS theme when it behaves as panel (before breakpoint size)
+*/
+.ios .panel-left:not(.panel-visible-by-breakpoint).panel-active ~ .view-main:before,
+.ios .panel-left:not(.panel-visible-by-breakpoint).panel-closing ~ .view-main:before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  background: rgba(0,0,0,0.1);
+  content: '';
+  z-index: 6000;
+}
+
+.preloader-modal {
+  border-radius: 25px !important;
+}
+
+.panel {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+#menu .item-inner:after {
+  display: none;
+}
+
+#menu .item-title {
+  font-size: 16px;
+}
+
+.md .list .accordion-item-opened>.item-link .item-inner {
+  background-image: url("data:image/svg+xml;charset=utf-8,<svg%20width%3D'13px'%20height%3D'8px'%20viewBox%3D'0%200%208%2013'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'><polygon%20fill%3D'%23c7c7cc'%20transform%3D'translate(6.5%2C%206.5)%20rotate(-315)%20translate(-10%2C%20-6.5)'%20points%3D'11%2011%2011%202%209%202%209%209%202%209%202%2011%2010%2011'><%2Fpolygon><%2Fsvg>");
+  background-size: 13px 13px;
+}
+
+.popup, .popup:not(.popup-tablet-fullscreen) {
+    position: fixed;
+    display: inherit !important;
+    right: 0;
+    left: 0;
+    top: 8vh;
+    margin-top: 30px;
+    margin-left: 2.5vw;
+    margin-right: 2.5vw;
+    width: 95%;
+    height: 85vh;
+    box-shadow: 0px 20px 44px rgba(0,0,0,0.5);
+}
+
+.popup:not(.modal-in) {
+    top: 20vh;
+}
+
+/*@media screen and (min-width: 630px) {
+  .popup, .popup:not(.popup-tablet-fullscreen) {
+    margin-left: -34vw;
+  }
+}*/
+
+.ag-theme-material {
+  clear: both;
+}
+
+.ag-theme-material .ag-ltr .ag-cell-focus {
+  border: none;
+}
+
+.ag-overlay-no-rows-center {
+  display: none;
+}
+
+.ag-root.ag-layout-normal, .ag-root.ag-layout-auto-height {
+  overflow: unset;
+}
+
+.ag-body-viewport-wrapper {
+  overflow: unset;
+}
+
+.ag-body-viewport.ag-layout-normal {
+  overflow: unset;
+}
+
+.card-header {
+  min-height: 120px !important;
+}
+.data-table tbody tr:hover {
+  cursor: pointer;
+}
+.card-header .data-table-title .button {
+  margin-top: 16px;
+}
+
+.ag-theme-material .ag-icon-checkbox-checked:empty {
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTE2IDBIMmEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMlYyYTIgMiAwIDAgMC0yLTJ6TTcgMTRMMiA5bDEuNDEtMS40MUw3IDExLjE3bDcuNTktNy41OUwxNiA1bC05IDl6IiBmaWxsPSIjMzMzIi8+PC9zdmc+);
+}
+
+.card > .card-body > .ag-theme-material .ag-header-row {
+  min-width: 100%; /*!important*/;
+}
+
+/*.ag-body-container {
+  width: 100% !important;
+}*/
+
+.ag-theme-material .ag-cell {
+  outline: none;
+}
+
+.ag-filter {
+  width: 207px;
+}
+
+#clearButton, #applyButton {
+  font-weight: 500;
+  outline: none;
+}
+
+.ag-filter-select {
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+.ag-filter-apply-panel {
+  padding-top: 2px !important;
+}
+
+.form-sheet:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.card-content .item-label {
+  font-size: 15px !important;
+}
+
+.card-content .item-input-wrap {
+  width: 250px !important;
+}
+
+.ag-header-cell-menu-button {
+  opacity: 1 !important;
+  transition: opacity 0.2s ease 0s, border 0.2s ease 0s !important;
+}
+
+/*.ag-header-cell-resize {
+  padding-left: 15px;
+}*/
+
+/*.ag-row, .ag-header-row {
+  width: 150% !important;
+}*/
+
+.left.user-link {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0!important
+}
+
+.left.user-link .list {
+    margin: 0
+}
+
+.left.user-link .list ul {
+    background: 0 0
+}
+
+.left.user-link .list ul:before {
+    display: none!important
+}
+
+.left.user-link .list ul:after {
+    display: none!important
+}
+
+.left.user-link .item-inner {
+    padding-top: 4px;
+    padding-bottom: 4px
+}
+
+.left.user-link .item-media {
+    padding: 0;
+    -webkit-align-self: center;
+    -ms-flex-item-align: center;
+    align-self: center
+}
+
+.left.user-link .list,.left.user-link li,.left.user-link ul {
+    height: 100%;
+    width: 100%
+}
+
+.left.user-link .item-content,.left.user-link .item-link {
+    height: 100%
+}
+
+.ios .user-link .item-link.active-state {
+    background-color: rgba(0,0,0,.1)
+}
+
+.ios .user-link .item-title {
+    font-size: 16px
+}
+
+.ios .user-link .item-content {
+    padding-left: 10px
+}
+
+.ios .user-link .item-media+.item-inner {
+    margin-left: 10px
+}
+
+div:focus {
+    outline: none;
+}
+
+.selectivity-caret {
+    top: 0.6em;
+}
+
+.selectivity-remove {
+    color: #212121;
+    margin-right: 13px;
+}
+
+.selectivity-multi-remove {
+    color: #fff;
+    position: relative;
+    margin-right: 0px;
+    top: 5px;
+}
+
+.selectivity-single-select {
+    background-color: unset;
+}
+.selectivity-multiple-input-container {
+    background-color: unset;
+}
+
+.selectivity-results-container {
+    max-height: 150px;
+}
+
+.selectivity-dropdown {
+    position: absolute;
+    top: 0 !important;
+    left: 0 !important;
+}
+
+.ag-theme-material .ag-cell-inline-editing.editable-special-cell .selectivity-dropdown {
+    position: inherit;
+}
+
+.ag-theme-material .ag-cell-inline-editing {
+    max-width: 400px;
+    height: auto;
+}
+.ag-theme-material .ag-cell-inline-editing.editable-special-cell {
+    padding-top: 5px;
+    padding-right: 5px;
+    padding-left: 3px;
+    padding-bottom: 5px;
+    overflow: unset;
+}
+
+.ag-theme-material .ag-paging-panel {
+    border-top: none;
+}
+
+.ag-react-container .selectivity-single-select {
+    display: none;
+}
+
+.ag-react-container .selectivity-multiple-input-container {
+    display: none;
+}
+
+.rapyd-statusbars {
+  display: block;
+  float: right;
+  width: auto;
+  margin: 10px;
+  color: #fff !important;
+}
+
+.rapyd-statusbars.button-raised {
+  background-color: #696969;
+}
+
+.rapyd-statusbar-arrow {
+  font-size: 20px;
+  margin-top: 12px;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.component-group, .component-separator {
+  width: 46.5%;
+}
+
+#login-page-database select:invalid {
+  color: #a9a6a6;
+}
