@@ -1,3 +1,4 @@
+
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
@@ -39,6 +40,7 @@ class StockPicking(models.Model):
     move_ids = fields.One2many('stock.move', 'picking_id', string="Move")
     pack_ids = fields.Many2many('stock.pack', string="Packs")
     #job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
+    receive_zone_id = fields.Many2one('stock.receive.zone', string="LC Zone")
 
     def create(self, values=False, is_client=tools.configuration.client):
         promises = []
@@ -54,7 +56,7 @@ class StockPicking(models.Model):
                def (sequence_id): return sequence_id.get_next()
                ).then(
                def (sequence):
-                   object['name'] = ('Picking ' if object.type == 'picking' else 'Putting ') + str.zfill(sequence.toString(), 3)
+                   object['name'] = ('Picking ' if object.type == 'picking' else 'Pallet ') + str.zfill(sequence.toString(), 3)
                )
                promises.push(promise)
         def after_create(result):
@@ -144,8 +146,11 @@ class StockPicking(models.Model):
     def confirm(self):
         return self.write({'state': 'confirmed'})
 
-    @api.server
-    def validate(self):
+    #@api.server
+    def validate(self, immediate):
+        for record in self:
+            if immediate: break
+            if record.type == 'putting' and not record.receive_zone_id: return tools.dialog.alert('Scan the zone first')
         return self.write({'state': 'validated'})
 
 StockPicking()
@@ -194,6 +199,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         <group>
             <field name="date"/>
             <field name="type"/>
+            <field name="receive_zone_id" invisible="active_id.type != 'putting'"/>
         </group>
         <group>
             <field name="location_src_id"/>
@@ -203,11 +209,11 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         </group>
         <group width="100%">
             <!--<button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>-->
-            <scanner-button invisible="active_id.type != 'picking'"/>
+            <!--<scanner-button invisible="active_id.type != 'picking'"/>-->
         </group>
         <group width="100%">
             <field name="pack_ids">
-                <tree create="active_id.type == 'putting'" choose="active_id.type == 'picking'">
+                <tree create="false" choose="false">
                     <field name="name"/>
                     <!--<field name="order_id"/>-->
                     <field name="product_id"/>
@@ -215,7 +221,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                 </tree>
             </field>
         </group>
-        <group width="100%" invisible="active_id.type != 'picking'">
+        <!--<group width="100%" invisible="active_id.type != 'picking'">
             <button name="add_move" string="Add Items"/>
         </group>
         <group width="100%" invisible="active_id.type != 'picking'">
@@ -226,7 +232,7 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
                     <field name="pack_id" domain="['id', 'in', parent.pack_ids || []]"/>
                 </tree>
             </field>
-        </group>
+        </group>-->
     </sheet>
 </form>
 """})
@@ -277,6 +283,8 @@ class PickingList(models.Model):
     ip_address = fields.Char(string="IP Address")
     date = fields.Datetime(string="Date", index=True)
     manual = fields.Boolean(string="Manual")
+    pickup_zone_id = fields.Many2one('stock.pickup.zone', string="Pickup Zone")
+    trolley_id = fields.Many2one('stock.trolley', string="Trolley")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -295,19 +303,36 @@ class PickingList(models.Model):
         #await (bom_line_ids.map(after_create))
         return result
 
-    @api.onchange('laser_scan', async=True)
-    def onchange_laser(self):
-        if not self.laser_scan: return
+    @async
+    def listen_scan(self, barcode):
+        if not barcode: return
+        window.alert(barcode)
         picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
-        value = JSON.parse(self.laser_scan)
+        if barcode.match(/^(.*?)-PICK-[0-1][0-1]$/):
+           pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
+           self.laser_scan = ''
+           if not pickup_zone_id.length: return
+           self.pickup_zone_id = pickup_zone_id.id
+           return
+        elif barcode.slice(0, 6) == 'Daisha':
+           trolley_id = await [self.env['stock.trolley'].search(['name', '=', barcode])]
+           self.laser_scan = ''
+           if not trolley_id.length: return
+           self.trolley_id = trolley_id.id
+           return
+        value = JSON.parse(barcode)
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         if pack_id.picking_list_id: return
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
         return pack_id.write({'picking_list_id': self.id})
+
+    @api.onchange('laser_scan')
+    def onchange_laser(self):
+        return self.listen_scan(self.laser_scan)
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
@@ -445,6 +470,8 @@ view.add(model='stock.picking.list', mode='form', arch="""
         <group>
             <field name="model_id"/>
             <field name="ip_address"/>
+            <field name="trolley_id" readonly="True"/>
+            <field name="pickup_zone_id" readonly="True"/>
         </group>
         <group width="100%">
             <field name="line_ids">
@@ -460,7 +487,8 @@ view.add(model='stock.picking.list', mode='form', arch="""
             </field>
         </group>
         <group>
-            <field name="laser_scan"/>
+            <scanner-field name="laser_scan"/>
+            <!--<field name="laser_scan" invisible="True"/>-->
         </group>
         <group width="100%">
             <field name="pack_ids">

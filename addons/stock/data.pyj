@@ -7,7 +7,7 @@ from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
 from jasper.report import get_jasper_report
-from scripts import create_upload_button
+from utils import create_upload_button
 
 class PurchaseOrder(models.Model):
     _name = 'purchase.order'
@@ -151,7 +151,7 @@ class PurchaseOrderPack(models.Model):
             pack_ids.push(pack_id.id)
         picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
         if immediate:
-           return picking_id.validate()
+           return picking_id.validate(immediate=True)
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
 
 PurchaseOrderPack()
@@ -626,6 +626,7 @@ class ChangePassword(models.Model):
         def reload():
             href = window.location.origin + window.location.pathname
             window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'
+        window.localStorage.session_start_date = tools.date.now().toISOString()
         return tools.dialog.alert('Password changed', reload)
 
     @api.server(async=True)

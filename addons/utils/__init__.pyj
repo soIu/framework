@@ -24,3 +24,10 @@ def create_upload_button():
     document.getElementById('upload_shortcut').onclick = onclick
 
 #if v'typeof window' != 'undefined': window.create_upload_button = create_upload_button
+
+def show_qrcode(id, field):
+    def show():
+        if not models.env.context.active_id or not models.env.context.active_id[field]: return
+        QRCode = window.QRCode
+        new QRCode(document.getElementById(id), models.env.context.active_id[field])
+    return show

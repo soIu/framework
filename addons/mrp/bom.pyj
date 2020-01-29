@@ -3,7 +3,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 from ir.ui import view, menu
-from scripts import create_upload_button
+from utils import create_upload_button
 
 class MrpBom(models.Model):
     _name = 'mrp.bom'

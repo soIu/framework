@@ -2,18 +2,18 @@ import orm.models as models
 import orm.fields as fields
 import orm.api as api
 from ir.ui import menu, view
-from scripts import create_upload_button
+from utils import create_upload_button, show_qrcode
 
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
 
-    name = fields.Char(string="Trolley Number", index=True)
+    name = fields.Char(string="Trolley Number", required=True, index=True)
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
 
 StockTrolley()
 
-menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Trolley", sequence=1)
+menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Trolley (Daisha)", sequence=1)
 
 view.add(model='stock.trolley', mode='tree', arch="""
 <tree>
@@ -21,11 +21,14 @@ view.add(model='stock.trolley', mode='tree', arch="""
 </tree>
 """)
 
-view.add(model='stock.trolley', mode='form', arch="""
+view.add(init=show_qrcode('trolley_qrcode', 'name'), model='stock.trolley', mode='form', arch="""
 <form>
     <sheet>
         <group>
             <field name="name"/>
+        </group>
+        <group>
+            <div id="trolley_qrcode"/>
         </group>
         <group width="100%" title="Packs">
             <field name="pack_ids">
@@ -104,6 +107,62 @@ view.add(model='stock.trolley.type', mode='form', arch="""
                     <field name="code"/>
                 </tree>
             </field>
+        </group>
+    </sheet>
+</form>
+""")
+
+class StockPickupZone(models.Model):
+    _name = 'stock.pickup.zone'
+
+    name = fields.Char(string="Name", required=True, index=True)
+
+StockPickupZone()
+
+menu.add(id='pickup_zone', parent='agv_chasun', model='stock.pickup.zone', string="Pickup Zone", sequence=5)
+
+view.add(model='stock.pickup.zone', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+</tree>
+""")
+
+view.add(init=show_qrcode('pickup_qrcode', 'name'), model='stock.pickup.zone', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+           <field name="name"/>
+        </group>
+        <group>
+           <div id="pickup_qrcode"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+class StockReceiveZone(models.Model):
+    _name = 'stock.receive.zone'
+
+    name = fields.Char(string="Name", required=True, index=True)
+
+StockReceiveZone()
+
+menu.add(id='receive_zone', parent='receiving', model='stock.receive.zone', string="LC Zone", sequence=1)
+
+view.add(model='stock.receive.zone', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+</tree>
+""")
+
+view.add(init=show_qrcode('lc_qrcode', 'name'), model='stock.receive.zone', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+           <field name="name"/>
+        </group>
+        <group>
+           <div id="lc_qrcode"/>
         </group>
     </sheet>
 </form>

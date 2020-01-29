@@ -26,10 +26,22 @@ class ProductProduct(models.Model):
 
 ProductProduct()
 
+def check_session():
+    if v'typeof window' == 'undefined': return
+    if not window.localStorage.session_start_date:
+       window.localStorage.session_start_date = tools.date.now().toISOString()
+       return
+    date = new Date(window.localStorage.session_start_date)
+    date.setDate(date.getDate() + 90)
+    if date.toISOString() <= tools.date.now().toISOString():
+       def navigate():
+           tools.navigate('/view/change.password.wizard')
+       tools.dialog.alert('After 90 Days, you have to change your password', navigate)
+
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
 
-view.add({'model': 'product.product', 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'product.product', 'init': check_session, 'mode': 'tree', 'string': False, 'arch': """
 <tree>
     <field name="base_name"/>
     <field name="code"/>
@@ -100,3 +112,5 @@ def create_products():
     return create_default.then(after_create)
 
 #data.append(create_products)
+
+#data.append(check_session)
