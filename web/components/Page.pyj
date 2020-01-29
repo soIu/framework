@@ -1,0 +1,30 @@
+import React from 'react';
+import {
+    Page,
+    Navbar,
+    NavLeft,
+    NavTitle,
+    NavRight,
+    Link,
+} from 'framework7-react';
+
+export default (props) => (
+  Page(
+    Navbar (backLink=window.models.env.context.active_url === '/' or props.popup) ? false : 'Back',
+      window.models.env.context.active_url === '/' &&
+      NavLeft(
+        Link (iconMd="material:menu", panelOpen="left")
+      ),
+      NavTitle(props.title),
+      !props.popup ?
+      NavRight(
+        Link (iconMd="material:person", panelOpen="right")
+      ),
+      NavRight(
+        Link (iconMd="material:close", popupClose),
+      ),
+    Navbar(
+      props.children
+    ),
+  )
+);
