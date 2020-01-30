@@ -247,7 +247,7 @@ view.add(model='purchase.order.print', mode='wizard', arch="""
     <sheet>
         <group>
             <field name="date_from"/>
-            <field name="suppleir_id"/>
+            <field name="supplier_id"/>
         </group>
         <group>
             <field name="date_to"/>
