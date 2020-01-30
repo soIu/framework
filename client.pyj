@@ -38,6 +38,12 @@ for key in tools.menu:
           )
        del tools.menu[key]
 
-window.models = models
-window.tools = tools
-window.local_db = db
+try:
+    export_object.models = models
+    export_object.tools = tools
+    export_object.local_db = db
+except Exception as error:
+    console.error(error)
+    window.models = models
+    window.tools = tools
+    window.local_db = db
