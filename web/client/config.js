@@ -1,0 +1,1 @@
+window.rapyd_config = {};

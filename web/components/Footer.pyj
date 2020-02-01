@@ -1,14 +1,23 @@
-import React from 'react';
+import orm.models as models
+import web.react as react
 
-export default class extends React.Component {
+div = react.get_framework_components('div')
 
-  render(props) {
-    return (
-      div (className="card", style={margin: 0, boxShadow: 'none', padding: '20px', minHeight: '30%', marginTop: '30px', ...((props.invisible instanceof Function ? props.invisible(window.models.env.context.active_id) : props.invisible) ? {display: 'none'} : {})},
-        div (className="card-header",
-          props.children,
+class Footer(React.Component):
+
+  def render(self, props):
+      invisible = props.invisible
+      if v'props.invisible instanceof Function':
+         invisible = props.invisible(models.env.context.active_id)
+      style = {'margin': 0, 'boxShadow': 'none', 'padding': '20px', 'minHeight': '30%', 'marginTop': '30px'}
+      if invisible:
+         style.display = 'none'
+      return (
+        div (className="card", style=style,
+          div (className="card-header",
+            props.children,
+          )
         )
       )
-    )
-  }
-}
+
+react.register_component(Footer)

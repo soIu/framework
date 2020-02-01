@@ -1,0 +1,71 @@
+import orm.tools as tools
+import web.react as react
+
+input = react.get_framework_components('input')
+
+flatpickr = client.flatpickr
+
+flatpickr_count = 0
+
+class Flatpickr(React.Component):
+
+    def __init__(self, props):
+        nonlocal flatpickr_count
+        flatpickr_count += 1
+        self.count = flatpickr_count
+
+    def componentWillUnmount(self):
+        if self.props.inline: return document.getElementById('flatpickr-inline-clone-' + self.count) && document.getElementById('flatpickr-inline-clone-' + self.count).remove()
+        if self.flatpickr: self.flatpickr.destroy()
+        if self.props.customInput: del self.props.customInput._flatpickr
+
+    def componentDidMount(self):
+        clone = self.props.customInput if self.props.customComponent else (self.refs.flatpickr if not self.props.inline else document.getElementById('flatpickr-inline-clone-' + self.count) or self.refs.flatpickr.cloneNode(False))
+        if not clone return
+        if self.props.inline:
+           clone.id = 'flatpickr-inline-clone-' + self.count
+           self.refs.flatpickr.insertAdjacentElement('afterend', clone)
+        onChange = self.props.onChange;
+        if self.props.readOnly:
+           @async
+           def onChangeReadonly(value):
+               defaultDate = await (self.props.defaultDate)
+               if value != defaultDate:
+                  if defaultDate: self.flatpickr.setDate(defaultDate)
+                  else: self.flatpickr.clear()
+           onChange = onChangeReadonly
+        @async
+        def onChangeValue(value):
+            await [onChange(value)]
+            self.flatpickr.open()
+        self.flatpickr = clone._flatpickr or flatpickr(clone, tools.merge({}, self.props, {'allowKeyboard': False, 'onChange': onChangeValue})
+
+    @async
+    def componentDidUpdate(self):
+        if self.props.customInput: self.componentDidMount()
+        if not self.flatpickr: return
+        onChange = self.props.onChange
+        if self.props.readOnly:
+           @async
+           def onChangeReadonly(value):
+               defaultDate = await (self.props.defaultDate)
+               if value != defaultDate:
+                  if defaultDate: self.flatpickr.setDate(defaultDate)
+                  else: self.flatpickr.clear()
+        @async
+        def onChangeValue(value):
+            await [onChange(value)]
+            self.flatpickr.open()
+        self.flatpickr.set('onChange', onChangeValue)
+        date = await (self.props.defaultDate)
+        if not self.flatpickr: return
+        if date: self.flatpickr.setDate(date)
+        else:
+          self.flatpickr.selectedDateObj = None
+          self.flatpickr.input.value = ''
+
+    def render(self, props):
+        return props.customComponent or
+          input(ref="flatpickr", style=props.inline and {'display': 'none'})
+
+react.register_component(Flatpickr)

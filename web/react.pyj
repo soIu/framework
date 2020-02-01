@@ -1,0 +1,28 @@
+def register_component(class_object):
+    client.components[class_object.name] = class_object
+    #def create_component(*children, **props):
+    #    return window.React.createElement(class_object, tools.copy(props), children.as_array())
+    #return create_component
+
+def get_components(*components):
+    def wrap_component(component):
+        def create_component(*children, **props):
+            return window.React.createElement(component, tools.copy(props), children.as_array())
+        return create_component
+    new_components = []
+    for component in components:
+        new_components.push(client.Framework7Components[component] or client.components[component] or component)
+    if new_components.length < 2: return new_components[0]
+    return new_components
+
+def get_framework_components(*components):
+    def wrap_component(component):
+        def create_component(*children, **props):
+            return window.React.createElement(component, tools.copy(props), children.as_array())
+        return create_component
+    new_components = []
+    for component in components:
+        new_components.push(client.Framework7Components[component] or component)
+    if new_components.length < 2: return new_components[0]
+    return new_components
+

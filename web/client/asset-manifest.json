@@ -1,0 +1,19 @@
+{
+  "main.css": "/static/css/main.bcc1cf46.chunk.css",
+  "main.js": "/static/js/main.8fb85a44.chunk.js",
+  "main.js.map": "/static/js/main.8fb85a44.chunk.js.map",
+  "static/css/1.56295189.chunk.css": "/static/css/1.56295189.chunk.css",
+  "static/js/1.86cbd631.chunk.js": "/static/js/1.86cbd631.chunk.js",
+  "static/js/1.86cbd631.chunk.js.map": "/static/js/1.86cbd631.chunk.js.map",
+  "runtime~main.js": "/static/js/runtime~main.54148531.js",
+  "runtime~main.js.map": "/static/js/runtime~main.54148531.js.map",
+  "static/media/icons.css": "/static/media/Framework7Icons-Regular.2e9a0313.woff",
+  "static/css/main.bcc1cf46.chunk.css.map": "/static/css/main.bcc1cf46.chunk.css.map",
+  "static/css/1.56295189.chunk.css.map": "/static/css/1.56295189.chunk.css.map",
+  "index.html": "/index.html",
+  "precache-manifest.f685871245c4a26f7b30711e5c54af83.js": "/precache-manifest.f685871245c4a26f7b30711e5c54af83.js",
+  "service-worker.js": "/service-worker.js",
+  "sw.js": "/sw.js",
+  "appcache/manifest.appcache": "/appcache/manifest.appcache",
+  "appcache/manifest.html": "/appcache/manifest.html"
+}

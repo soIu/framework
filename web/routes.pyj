@@ -1,0 +1,33 @@
+from web.components import HomePage, TreePage, FormPage, CustomPage, NotFound, PanelLeft, PanelRight
+import web.react as react
+
+routes = [
+  {
+    'path': '/',
+    'component': HomePage,
+  },
+  {
+    'path': '/panel-left/',
+    'component': PanelLeft,
+  },
+  {
+    'path': '/panel-right/',
+    'component': PanelRight,
+  },
+  {
+    'path': '/tree/:model',
+    'component': TreePage,
+  },
+  {
+    'path': '/form/:model',
+    'component': FormPage,
+  },
+  {
+    'path': '/view/:view_id',
+    'component': CustomPage,
+  },
+  {
+    'path': '(.*)',
+    'component': NotFound,
+  },
+]

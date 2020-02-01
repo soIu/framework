@@ -1,16 +1,20 @@
-import React from 'react';
+import orm.models as models
+import orm.tools as tools
+import web.react as react
 
-function changeValue(props) {
-  const value = !props.value;
-  const colDef = window.tools.copy(props.column.colDef);
-  delete colDef.cellEditorFramework;
-  const field = window.models.env[props.model]._fields[props.name];
-  const records = field.relation && window.models.env[field.relation];
-  return props.tree.onChange({colDef, data: props.tree.state.records[props.rowIndex], specialValue: value, oldValue: props.value, newValue: value});
-}
+def changeValue(props):
+  value = not props.value
+  colDef = tools.copy(props.column.colDef)
+  del colDef.cellEditorFramework
+  field = models.env[props.model]._fields[props.name]
+  records = field.relation and models.env[field.relation]
+  return props.tree.onChange({'colDef': colDef, 'data': props.tree.state.records[props.rowIndex], 'specialValue': value, 'oldValue': props.value, 'newValue': value})
 
-export default (props) => (
-  span (className="ag-selection-checkbox",
-    span (className='ag-icon ' + (props.value ? 'ag-icon-checkbox-checked' : 'ag-icon-checkbox-unchecked')
-  )
-)
+def GridCheckbox(props):
+    return (
+      span (className="ag-selection-checkbox",
+        span (className='ag-icon ' + ('ag-icon-checkbox-checked' if props.value else 'ag-icon-checkbox-unchecked'))
+      )
+    )
+
+react.register_component(GridCheckbox)
