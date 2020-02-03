@@ -270,11 +270,17 @@ view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, '
 class PickingList(models.Model):
     _name = 'stock.picking.list'
 
+    @async
+    def _get_model_code(self):
+        model_id = await [self.env['mrp.bom'].browse(self.model_id)]
+        return model_id.code
+
     name = fields.Char(string="Picking List", readonly=True, index=True)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
+    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_list_id', string="Packs")
@@ -437,9 +443,11 @@ menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.li
 
 view.add(model='stock.picking.list', mode='tree', arch="""
 <tree domain="context.type ? ['type', '=', context.type] : []">
-    <field name="name"/>
-    <field name="model_id"/>
     <field name="sequence" sort="asc"/>
+    <field name="model_id"/>
+    <field name="model_code"/>
+    <field name="trolley_type_id"/>
+    <field name="called"/>
 </tree>
 """)
 

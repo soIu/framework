@@ -8,7 +8,13 @@ from utils import create_upload_button
 class MrpBom(models.Model):
     _name = 'mrp.bom'
 
+    @async
+    def _get_code(self):
+        product_id = await [self.env['product.product'].browse(self.product_id)]
+        return product_id.code
+
     name = fields.Char(string="Model")
+    code = fields.Char(string="Code", compute=_get_code, store=False)
     product_id = fields.Many2one('product.product', string="Finish Good", index=True)
     reference = fields.Char(string="Reference")
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
@@ -31,6 +37,7 @@ menu.add(id='mrp_bom', string="Bill of Materials", parent='master_data', model='
 view.add(init=create_upload_button, model='mrp.bom', mode='tree', arch="""
 <tree>
     <field name="name"/>
+    <field name="code"/>
     <field name="reference"/>
 </tree>
 """)

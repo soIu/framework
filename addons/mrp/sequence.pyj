@@ -8,6 +8,12 @@ from utils import create_upload_button
 class MrpSequence(models.Model):
     _name = 'mrp.sequence'
 
+    @async
+    def _get_model_code(self):
+        model_id = await [self.env['mrp.bom'].browse(self.bom_id)]
+        return model_id.code
+
+    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)
     name = fields.Char(string="Lot No.")
     sequence = fields.Integer(string="Sequence")
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
@@ -33,11 +39,13 @@ menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', mode
 
 view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
 <tree domain="context.type ? ['type', '=', context.type] : []">
-    <field name="name"/>
-    <field name="bom_id"/>
-    <field name="quantity"/>
-    <field name="destination"/>
+    <field name="date"/>
     <field name="sequence" sort="asc"/>
+    <field name="quantity" string="Plan Qty"/>
+    <field name="bom_id"/>
+    <field name="model_code"/>
+    <field name="name"/>
+    <field name="destination"/>
 </tree>
 """)
 
