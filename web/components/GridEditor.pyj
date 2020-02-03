@@ -1,0 +1,55 @@
+import orm.models as models
+import orm.tools as tools
+import web.react as react
+import web.components.Field
+
+Field = react.get_components('Field')
+api = client.api
+
+class GridEditor(React.Component):
+
+    @async
+    def afterGuiAttached(self):
+        def wait(): return self.refs.loaded
+        await [api.wait_exist(wait)]
+        if self.refs.selectivity and self.refs.selectivity.selectivity: self.refs.selectivity.selectivity.open()
+
+    def getValue(self):
+        if self.refs.selectivity and self.refs.selectivity.selectivity:
+           value = self.refs.selectivity.selectivity.getData();
+           if not value: return self.props.tree.state.records[self.props.rowIndex][self.props.name]
+           colDef = tools.copy(self.props.column.colDef)
+           del colDef.cellEditorFramework
+           temp_ids = self.refs.selectivity.selectivity.getValue()
+           if not Array.isArray(temp_ids): temp_ids = [temp_ids]
+           field = models.env[self.props.model]._fields[self.props.name]
+           records = field.relation and models.env[field.relation]
+           for temp_id in temp_ids:
+               if not field.relation: break
+               if temp_id.slice(0, 5) == 'etemp':
+                  records.add(api.globals.temp_records[temp_id])
+               else:
+                  record = records.browse()
+                  record.update({'id': temp_id})
+                  records.add(record)
+           if not Array.isArray(value):
+              value = value.text
+           else:
+              value = [data.text for data in value].join(', ')
+        self.props.tree.onChange({'colDef': colDef, 'data': self.props.tree.state.records[self.props.rowIndex], 'specialValue': value, 'oldValue': None, 'newValue': records if field.relation else self.refs.selectivity.selectivity.getValue()})
+        return value
+
+    @async
+    def onSelect(self):
+        await [api.wait(10)]
+        self.props.api.stopEditing()
+
+    def render(self, props):
+        self.refs = {}
+        onSelect = self.onSelect.bind(self)
+        props.ref_object = self.refs
+        props.cellEdit
+        component = Field (tools.kwargs(props, ref_object=self.refs, cellEdit=True, onSelect=onSelect))
+        return component
+
+react.register_component(GridEditor)

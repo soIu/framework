@@ -46,6 +46,15 @@ def copy(object):
        return {key: copy(object[key]) for key in object}
     return object
 
+def kwargs(*objects, **args):
+    new_object = {}
+    for object in objects:
+        for key in object: new_object[key] = object[key]
+    for key in args:
+        new_object[key] = args[key]
+    new_object[ρσ_kwargs_symbol] = True
+    return new_object
+
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair
     object = {}

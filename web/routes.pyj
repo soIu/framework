@@ -1,4 +1,4 @@
-from web.components import HomePage, TreePage, FormPage, CustomPage, NotFound, PanelLeft, PanelRight
+from web.components.Pages import HomePage, TreePage, FormPage, CustomPage, NotFound, PanelLeft, PanelRight
 import web.react as react
 
 routes = [

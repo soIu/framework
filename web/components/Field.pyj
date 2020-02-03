@@ -80,7 +80,7 @@ class Field(React.Component):
            if not records.length: return
            if value.constructor == String:
               return self.setState({'value': {'id': records.id, 'text': records[records._rec_name or 'name']}})
-           elif isArray(value):
+           elif Array.isArray(value):
               return self.setState({'value': [{'id': record.id, text: record[record._rec_name or 'name']} for record in records]})
         elif type == 'selection':
            selections = field.selection.apply(null) if v'typeof field.selection' == 'function' else field.selection

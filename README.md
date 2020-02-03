@@ -4,16 +4,16 @@ An Object-Relational Mapping for PouchDB/CouchDB and Framework inspired by Odoo
 # What's New
 
 - New [Async/Await support](#asyncawait-support)
-- New Frontend with React/Preact and full ES6, allowing ORM operations to be declared with async-await. Making it more performant and easier to do Parallel and Scalable code.
+- New Frontend with React/Preact without JSX, using Python's args and kwargs syntax to mimic JSX and enable it to pass any kind of objects (not only primitive types) as props. Also, UI customization is more easier now as the React Components are transpiled directly from the server
 - Full external JS libraries compatibility, using CommonJS on Node and Webpack on browser.
 - Full React Components compatibility, making it easier to build Frontend UI even on React Native.
-- Upcoming Python/Odoo backend compatibility. For developers who prefer Python (Flask) or Odoo on server-side rather than Node.js https://github.com/rafi16jan/rapyd-odoo
+- Upcoming Python/Odoo backend compatibility. For developers who prefer Python or Odoo on server-side rather than Node.js https://github.com/rafi16jan/rapyd-odoo
 - Have many success PoCs and some giant automobile clients in Indonesia on Production. I'll post some details later on
 
 # Purpose of this project
 - Replacing or making an alternative to Odoo and Python's synchronous, I/O blocking design. Allowing us to develop asynchronous and performant ERP and IoT Apps.
 
-- Support some parallel programming paradigms consisting of Threads/Worker, Async-Await, Promises, [Promise.all](https://medium.freecodecamp.org/promise-all-in-javascript-with-example-6c8c5aea3e32), Coroutines (TODO), and MicroServices.
+- Support some parallel programming paradigms consisting of Threads/Worker, Async-Await, Promises, [Promise.all](https://medium.freecodecamp.org/promise-all-in-javascript-with-example-6c8c5aea3e32), Coroutines (TODO), and Micro Services.
 
 - Support hardware interfacing and IoT on the Client (Desktop Browser, Phone) and Server, using technologies like WebBluetooth, WebUSB, Cordova, Cordova/Node.js General Purpose I/0, WebAssembly and we planned to support Microcontrollers or SBCs too.
 
@@ -63,9 +63,8 @@ On Node.js version below 7.6.0 the async decorator will be translated to [asynca
 # What's still undecided
 - Wether to use original Rapydscript https://github.com/atsepkov/RapydScript rather than https://github.com/kovidgoyal/rapydscript-ng (for now I use rapydscript-ng)
 
-- (DECIDED) Server-side MVC (like Django, Odoo) or PWA with RESTFul Webservices (Custom REST API Controllers or CouchDB's REST API). PWA is already developed https://github.com/rafi16jan/rapyd-client
-
-- (DEVELOPER CHOICE) Use PouchDB Server (leveldb) or CouchDB (now CouchDB but I use in-memory db for testing). There are so many adapters for PouchDB ranging from MySQL, SQLite, to Facebook's RocksDB. The most common and decent is Google's LevelDB but you're free to choose an adapter and configure it on app.conf
+- **DECIDED** Server-side MVC (like Django, Odoo) or PWA with RESTFul Webservices (Custom REST API Controllers or CouchDB's REST API). PWA is already merged to the main repository https://github.com/rafi16jan/rapyd-framework/tree/master/web
+- **DEVELOPER CHOICE** Use PouchDB Server (leveldb) or CouchDB (now CouchDB but I use in-memory db for testing). There are so many adapters for PouchDB ranging from MySQL, SQLite, to Facebook's RocksDB. The most common and decent is Google's LevelDB but you're free to choose an adapter and configure it on app.conf
 
 - Custom authentication with token (CSRF if MVC) or CouchDB authentication (http://docs.couchdb.org/en/2.1.0/api/server/authn.html)
 

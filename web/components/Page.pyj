@@ -4,9 +4,9 @@ import web.react as react
 Page, Navbar, NavLeft, NavTitle, NavRight, Link = react.get_framework_components('Page', 'Navbar', 'NavLeft', 'NavTitle', 'NavRight', 'Link')
 
 def Page(props):
-    return
+    return (
       Page (
-        Navbar (backLink=False if window.models.env.context.active_url === '/' or props.popup else 'Back',
+        Navbar (backLink=False if window.models.env.context.active_url == '/' or props.popup else 'Back',
           models.env.context.active_url == '/' and
           NavLeft (
             Link (iconMd="material:menu", panelOpen="left")
@@ -18,9 +18,9 @@ def Page(props):
           NavRight (
             Link (iconMd="material:close", popupClose=True),
           ),
-        Navbar (
-          props.children
-        ),
+          props.children,
+        )
       )
+    )
 
 react.register_component(Page)
