@@ -55,6 +55,11 @@ def kwargs(*objects, **args):
     new_object[ρσ_kwargs_symbol] = True
     return new_object
 
+def list(*args):
+    array = []
+    for arg in args: array.push(*arg)
+    return array
+
 def dict(entries):
     #This is a function to imitate python's dict function that create a dict from a key-value pair
     object = {}

@@ -21,7 +21,7 @@ def button(props):
            client.api.handleClientError(error)
            raise error
 
-class Button(React.Component)
+class Button(React.Component):
 
     def onClick(self):
         return button(self.props)

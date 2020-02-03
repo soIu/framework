@@ -1,8 +1,11 @@
 import orm.models as models
 import orm.tools as tools
+import web.react as react
 from web.routes import routes
 
 api = client.api
+
+F7App, Statusbar, Panel, View, Popup, Page, Navbar, NavRight, Link, Block = react.get_framework_components('App', 'Statusbar', 'Panel', 'View', 'Popup', 'Page', 'Navbar', 'NavRight', 'Link', 'Block')
 
 def App(props):
     href = window.location.origin + window.location.pathname
@@ -26,6 +29,7 @@ def App(props):
     }]}
 
     manifestRegistered = False
+    @async
     def registerManifest():
         nonlocal manifestRegistered
         if manifestRegistered or not window.fetch: return
@@ -33,7 +37,7 @@ def App(props):
         try:
             request = await [fetch(document.getElementById('rapyd-app-manifest').href)]
             manifest_json = await [result.json()]
-           if manifest_json.start_url: validManifest = True
+            if manifest_json.start_url: validManifest = True
         except: #Exception as error:
            pass
         if validManifest: return
@@ -55,19 +59,19 @@ def App(props):
     }}
 
     return (
-      App(params=f7params, colorTheme=tools.configuration.color_theme or 'gray',
+      F7App(params=f7params, colorTheme=tools.configuration.color_theme or 'gray',
 
         Statusbar(),
 
         Panel(left=True, reveal=True,
           View(url="/panel-left/")
-        )
+        ),
 
         Panel(right=True, cover=True,
           View(url="/panel-right/")
-        )
+        ),
 
-        View(id="main-view", url="/", main=True, className="ios-edges", preloadPreviousPage=False, pushState=True)
+        View(id="main-view", url="/", main=True, className="ios-edges", preloadPreviousPage=False, pushState=True),
 
         Popup(id="popup",
           View(
@@ -76,7 +80,7 @@ def App(props):
                 NavRight(
                   Link(popupClose=True, 'Close')
                 )
-              )
+              ),
               Block('')
             )
           )

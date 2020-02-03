@@ -15,13 +15,13 @@ class Flatpickr(React.Component):
         self.count = flatpickr_count
 
     def componentWillUnmount(self):
-        if self.props.inline: return document.getElementById('flatpickr-inline-clone-' + self.count) && document.getElementById('flatpickr-inline-clone-' + self.count).remove()
+        if self.props.inline: return document.getElementById('flatpickr-inline-clone-' + self.count) and document.getElementById('flatpickr-inline-clone-' + self.count).remove()
         if self.flatpickr: self.flatpickr.destroy()
         if self.props.customInput: del self.props.customInput._flatpickr
 
     def componentDidMount(self):
         clone = self.props.customInput if self.props.customComponent else (self.refs.flatpickr if not self.props.inline else document.getElementById('flatpickr-inline-clone-' + self.count) or self.refs.flatpickr.cloneNode(False))
-        if not clone return
+        if not clone: return
         if self.props.inline:
            clone.id = 'flatpickr-inline-clone-' + self.count
            self.refs.flatpickr.insertAdjacentElement('afterend', clone)
@@ -38,7 +38,7 @@ class Flatpickr(React.Component):
         def onChangeValue(value):
             await [onChange(value)]
             self.flatpickr.open()
-        self.flatpickr = clone._flatpickr or flatpickr(clone, tools.merge({}, self.props, {'allowKeyboard': False, 'onChange': onChangeValue})
+        self.flatpickr = clone._flatpickr or flatpickr(clone, tools.merge({}, self.props, {'allowKeyboard': False, 'onChange': onChangeValue}))
 
     @async
     def componentDidUpdate(self):
@@ -65,7 +65,8 @@ class Flatpickr(React.Component):
           self.flatpickr.input.value = ''
 
     def render(self, props):
-        return props.customComponent or
+        return props.customComponent or (
           input(ref="flatpickr", style=props.inline and {'display': 'none'})
+        )
 
 react.register_component(Flatpickr)

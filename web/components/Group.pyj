@@ -23,7 +23,7 @@ class Group(React.Component):
     def componentWillUnmount(self):
         if (self.interval) clearInterval(self.interval)
 
-    def render(props) {
+    def render(props):
         invisible = props.invisible
         if v'props.invisible instanceof Function':
            invisible = props.invisible(models.env.context.active_id)
@@ -35,12 +35,13 @@ class Group(React.Component):
         title_style = {'fontSize': '25px', 'lineHeight': 'unset'}
         if self.state.previousTitle:
            title_style.height = '37px'
-        return
+        return (
           div (ref="group", className="component-group", style=style,
             (props.title or this.state.previousTitle) and (
               BlockTitle (className="component-group-title", style=title_style, props.title or '')
             ),
             props.children,
           )
+        )
 
 react.register_component(Group)

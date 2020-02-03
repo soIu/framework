@@ -75,15 +75,15 @@ class Form(React.Component):
         if record.length < 1:
            values = models.env.context.active_id.read()
            del values.id
-           record = await models.env.context.active_id.create(values);
-           await [models.env.context.active_id..unlink(false)]
+           record = await [models.env.context.active_id.create(values)]
+           await [models.env.context.active_id.unlink(False)]
            models.env.context.active_id = record
         else:
            record = await [models.env.context.active_id.write()]
            models.env.context.active_id = record
         if models.env.context.unsaved and models.env.context.unsaved[model] and models.env.context.unsaved[model][record.id]: del models.env.context.unsaved[model][record.id]
         await [api.update_session({'unsaved': models.env.context.unsaved})]
-        return this.setState(tools.merge({}, models.env.context, {'offline': false}))
+        return this.setState(tools.merge({}, models.env.context, {'offline': False}))
 
     def render(self, props):
         self.state = models.env.context
@@ -99,7 +99,7 @@ class Form(React.Component):
             return self.edit().catch(client.api.handleClientError)
         def onClickCancel():
             return client.app.views.main.router.back()
-        return
+        return (
           Page (title=window.tools.view[model].string,
             div (className="card", style={'margin': 0, 'boxShadow': 'none'},
               div (className="card-header", style={'borderRight': 'solid rgba(0,0,0,0.05) 0.5px'},
@@ -112,9 +112,10 @@ class Form(React.Component):
                     Button (onClick=self.upload.bind(self), style=tools.merge({}, buttonStyle, uploadStyle), fill=True, 'Upload'),
                   )
                 )
-              )
+              ),
               props.children,
             )
           )
+        )
 
 react.register_component(Form)

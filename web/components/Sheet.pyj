@@ -1,6 +1,6 @@
 import web.react as react
 
-div = react.get_framework_component('div')
+div = react.get_framework_components('div')
 
 class Sheet(React.Component):
 

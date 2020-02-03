@@ -11,12 +11,10 @@ import web.components.Group
 import web.components.Field
 import web.components.Footer
 
-Page, Navbar, NavTitle, Block, Button, Link, List, ListItem, Icon, Toolbar, Tabs, Tab, p, div, ul, li, a = react.get_framework_components('Page', 'Navbar', 'NavTitle', 'Block', 'Button', 'Link', 'List', 'ListItem', 'Icon', 'Toolbar', 'Tabs', 'Tab', 'p', 'div', 'ul', 'li', 'a')
+Page, Navbar, NavTitle, NavLeft, NavRight, Block, Button, Link, List, ListItem, Icon, Toolbar, Tabs, Tab, p, div, ul, li, a = react.get_framework_components('Page', 'Navbar', 'NavTitle', 'NavLeft', 'NavRight', 'Block', 'Button', 'Link', 'List', 'ListItem', 'Icon', 'Toolbar', 'Tabs', 'Tab', 'p', 'div', 'ul', 'li', 'a')
 
 def HomePage(props):
-    if models == undefined:
-       return LoginPage();
-    elif tools.configuration.home_view:
+    if tools.configuration.home_view:
        mode = tools.configuration.home_view.split('.').slice(-1)[0];
        model = tools.configuration.home_view.split('.').slice(0, -1).join('.');
        models.env.context.active_mode = mode;
@@ -27,14 +25,21 @@ def HomePage(props):
           return FormPage()
        elif mode != 'chat':
           return CustomPage()
-  return
-    Page(
-      Navbar(
-        NavTitle('Home')
-      ),
-      Block(strong=True,
-        p("Here is your blank Framework7 app. Let's see what we have here")
-      ),
+    return (
+      Page(
+        Navbar(
+          NavLeft(
+            Link(iconMd='material:menu', panelOpen='left')
+          ),
+          NavTitle('Home'),
+          NavRight(
+            Link(iconMd='material:person', panelOpen='right')
+          ),
+        ),
+        Block(strong=True,
+          p("Here is your blank Framework7 app. Let's see what we have here")
+        ),
+      )
     )
 
 react.register_component(HomePage)
@@ -55,27 +60,31 @@ def parseAttribute(props, element):
            if props[attribute] in ['true', 'True']: props[attribute] = True
            if props[attribute] in ['false', 'False']: props[attribute] = False
            if props[attribute].constructor == Boolean: continue
-           props[attribute] = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + props[attribute].replace(' == ', ' === ').replace(' != ', ' !== ')]))();
-    if props.domain: props.domain = new (Function.prototype.bind.apply(Function, [null, 'active_id', function_string + '[' + props.domain + ']']))();
+           props[attribute] = new (Function.prototype.bind.apply(Function, [None, 'active_id', function_string + props[attribute].replace(' == ', ' === ').replace(' != ', ' !== ')]))();
+    if props.domain: props.domain = new (Function.prototype.bind.apply(Function, [None, 'active_id', function_string + '[' + props.domain + ']']))();
 
-def parseTreeView(view, model, title) {
-    Tree = react.get_components('Tree')
+def parseTreeView(view, model, title):
+    Tree = client.components['Tree']
     customComponents = {'Tree': Tree, 'Field': None}
     view = new DOMParser().parseFromString(view, 'text/xml').children[0]
     console.log(view)
     if title: view.setAttribute('title', title)
     def recurse(elements, parent_props):
         components = []
-        for element in elements:
+        Array.prototype.slice.call(elements).forEach(
+        def (element):
+        #for element in elements:
+            console.log(element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1))
             component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {'model': model, 'view_model': model}
-            parseAttribute(element, props)
+            parseAttribute(props, element)
             props.isTreeView = True
-            children = recurse(element.children, props) or [def render(): element.innerHTML]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result())))
+            children = recurse(element.children, props) or [def render(): element.innerHTML;]
+            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
+        )
         if not components.length: return None
         return components
-    return recurse([view], true)[0]
+    return recurse([view], True)[0]
 
 cachedTreeViews = {}
 
@@ -91,7 +100,7 @@ class TreePage(React.Component):
         model = models.env.context.active_model;
         if props.f7route and props.f7route.url: models.env.context.active_url = props.f7route.url
         else: models.env.context.active_url = '/'
-        models.env.context.active_id = null
+        models.env.context.active_id = None
         if props.f7route and props.f7route.params and props.f7route.params.model:
            model = props.f7route.params.model
         mode = 'tree'
@@ -99,7 +108,7 @@ class TreePage(React.Component):
         self.mode = mode
         view = tools.view[model].tree
         models.env.context.active_model = mode
-        if not cachedTreeViews[view + ('-' + props.title if props.title else '')]):
+        if not cachedTreeViews[view + ('-' + props.title if props.title else '')]:
            cachedTreeViews[view + ('-' + props.title if props.title else '')] = parseTreeView(view, model, props.title)
         return cachedTreeViews[view + ('-' + props.title if props.title else '')]()
 
@@ -111,9 +120,9 @@ def parseFormView(view, model):
     def recurse(elements, parent_props):
         components = []
         for element in elements:
-            component = customComponents[element.tagName.split('-').map(def (word): return word[0].toUpperCase() + word.slice(1).toLowerCase()).join('')] if '-' in element.tagName else None or customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
+            component = customComponents[element.tagName.split('-').map(def (word): return word[0].toUpperCase() + word.slice(1).toLowerCase();).join('')] if '-' in element.tagName else None or customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {'model': model}
-            parseAttribute(element, props)
+            parseAttribute(props, element)
             if component == Tree:
                field = models.env[model]._fields[parent_props.name]
                props.view_model = model
@@ -125,8 +134,8 @@ def parseFormView(view, model):
                   props.tree_arch = element.outerHTML
                if parent_props.invisible: props.invisible = parent_props.invisible
                if parent_props.domain: props.domain = parent_props.domain
-            children = recurse(element.children, props) or [def render(): element.innerHTML]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result())))
+            children = recurse(element.children, props) or [def render(): element.innerHTML;]
+            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
         if not components.length: return None
         return components
     return recurse([view], True)[0]
@@ -183,9 +192,9 @@ def parseCustomView(view, model):
     def recurse(elements, parent_props):
         components = []
         for element in elements:
-            component = customComponents[element.tagName.split('-').map(def (word): return word[0].toUpperCase() + word.slice(1).toLowerCase()).join('')] if '-' in element.tagName else None or customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
+            component = customComponents[element.tagName.split('-').map(def (word): return word[0].toUpperCase() + word.slice(1).toLowerCase();).join('')] if '-' in element.tagName else None or customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {'model': model}
-            parseAttribute(element, props)
+            parseAttribute(props, element)
             if component == Tree:
                field = models.env[model]._fields[parent_props.name]
                props.view_model = model
@@ -198,8 +207,8 @@ def parseCustomView(view, model):
                if parent_props.invisible: props.invisible = parent_props.invisible
                if parent_props.domain: props.domain = parent_props.domain
             props.isCustomView = True
-            children = recurse(element.children, props) or [def render(): element.innerHTML]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result())))
+            children = recurse(element.children, props) or [def render(): element.innerHTML;]
+            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
         if not components.length: return None
         return components
     return recurse([view], True)[0]
@@ -241,7 +250,7 @@ class CustomPage(React.Component):
         view = tools.view[model][mode]
         if tools.view[model].contexts[mode]: Object.assign(models.env.context, tools.view[model].contexts[mode])
         models.env.context.active_model = model
-        id = props.f7route && props.f7route.query.id
+        id = props.f7route and props.f7route.query.id
         if id:
            models.env.context.active_ids = [id]
         else:
@@ -252,7 +261,7 @@ class CustomPage(React.Component):
 
 
 def NotFound(props):
-    return
+    return (
       Page(
         Navbar(title="Not found", backLink="Back"),
         Block(strong=True,
@@ -260,6 +269,7 @@ def NotFound(props):
           p('Requested content not found.'),
         ),
       )
+    )
 
 react.register_component(NotFound)
 
@@ -280,32 +290,35 @@ def PanelLeft(props):
     @async
     def installPrompt():
         client.api.globals.InstallPromp.prompt()
-        if (await api.globals.InstallPromp.userChoice == 'accepted'):
+        if (await (client.api.globals.InstallPromp.userChoice) == 'accepted'):
            document.getElementById('pwa_install_button').style.display = 'none'
-    return
+    return (
       Page (
         Navbar (title="Menu"),
         div (id="menu", className="list list-block media-list chevron-center inset", style={'fontWeight': 500}, panelClose=True,
           [ul (
             li (className="accordion-item",
-              a (className='item-link item-content', + (' panel-close external' if tools.menu[menu].childs.length < 1 else ''), onClick=tools.menu[menu].childs.length < 1 and onClick, href={tools.menu[menu].childs.length < 1 and '#!/' + ('view' if tools.menu[menu].view_id else 'tree') + '/' + (tools.menu[menu].view_id or tools.menu[menu].model)} data-view="#main-view",
+              a (className='item-link item-content' + (' panel-close external' if tools.menu[menu].childs.length < 1 else ''), onClick=tools.menu[menu].childs.length < 1 and onClick, href=tools.menu[menu].childs.length < 1 and '#!/' + ('view' if tools.menu[menu].view_id else 'tree') + '/' + (tools.menu[menu].view_id or tools.menu[menu].model), data_view="#main-view",
                 div (className="item-inner",
                   div (className="item-title", tools.menu[menu].string),
                 )
               ),
               [div (className="accordion-item-content",
-                a (className="item-content panel-close external", onClick=onClick, href='#!/' + ('view' if child_menu.view_id else 'tree') + '/' + (child_menu.view_id or child_menu.model), data-view="#main-view",
+                a (className="item-content panel-close external", onClick=onClick, href='#!/' + ('view' if child_menu.view_id else 'tree') + '/' + (child_menu.view_id or child_menu.model), data_view="#main-view",
                   div (className="item-inner",
                     div (className="item-title", child_menu.string),
                   )
                 )
-              for child_menu, index in enumerate(tools.menu[menu].childs))],
+              )
+              for index, child_menu in enumerate(tools.menu[menu].childs)],
             )
-          for menu, index in enumerate(tools.keys(tools.menu, 'sequence')))]
-        )
-        Button (fill=True, id="pwa_install_button", onClick=installPrompt, style={'display': 'inline-block' if api.globals.InstallPrompt else 'none', margin: '10px'}, "Install"),
-        Link (iconMd="material:more_horiz", iconSize="30", onClick=hidePanel, style={display: 'inline-block', margin: '10px'})
+          )
+          for index, menu in enumerate(tools.keys(tools.menu, 'sequence'))]
+        ),
+        Button (fill=True, id="pwa_install_button", onClick=installPrompt, style={'display': 'inline-block' if client.api.globals.InstallPrompt else 'none', 'margin': '10px'}, "Install"),
+        Link (iconMd="material:more_horiz", iconSize="30", onClick=hidePanel, style={'display': 'inline-block', 'margin': '10px'})
       )
+    )
 
 react.register_component(PanelLeft)
 
@@ -313,8 +326,8 @@ class PanelRight(React.Component):
 
     @async
     def componentDidMount(self, props):
-        api.globals.app = self.$f7
-        client.app = api.globals.app
+        client.api.globals.app = self.$f7
+        client.app = client.api.globals.app
         if client.app.device.ios:
            color = document.querySelector('meta[name=theme-color]').content
            style = document.createElement('style')
@@ -326,26 +339,29 @@ class PanelRight(React.Component):
         return self.setState({'name': user_id.name})
 
     def render(self, props):
-        Page(
-          Navbar(
-            NavLeft (className="user-link",
-              List(
-                ListItem (link="#", title=this.state.name or '',
-                  Icon (material="person")
+        return (
+          Page(
+            Navbar(
+              NavLeft (className="user-link",
+                List(
+                  ListItem (link="#", title=this.state.name or '',
+                    Icon (material="person")
+                  )
                 )
               )
-            )
-          )
-          Toolbar (tabbar=True,
-            Link (tabLink="#notification", tabLinkActive=True, "Notifications"),
-          )
-          Tabs(
-            Tab (id="notification", className="page-content", tabActive=True, style={'paddingTop': '0px'},
-              List (mediaList=True, style={'marginTop': '0px'},
-                ListItem (link="#", title="Notification Title", after="17:20", text="Notification Text",
+            ),
+            Toolbar (tabbar=True,
+              Link (tabLink="#notification", tabLinkActive=True, "Notifications"),
+            ),
+            Tabs(
+              Tab (id="notification", className="page-content", tabActive=True, style={'paddingTop': '0px'},
+                List (mediaList=True, style={'marginTop': '0px'},
+                  ListItem (link="#", title="Notification Title", after="17:20", text="Notification Text")
+                ),
+                Button (fill=True, onClick=client.api.logout, style={'display': 'inline-block', 'margin': '10px'}, "Logout"),
               )
-              Button fill (onClick=client.api.logout, style={'display': 'inline-block', margin: '10px'}, "Logout"),
             )
           )
+        )
 
 react.register_component(PanelRight)

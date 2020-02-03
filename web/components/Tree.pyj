@@ -77,7 +77,7 @@ class Tree(React.Component):
                 field = models.env[model]._fields[self.props.name]
                 active_id = context.active_lines[this_tree.state.model][('many2many_' if this_tree.props.parent_model else '') + this_tree.state.tree_field].find(this_tree.state.records[params.node.rowIndex].id or this_tree.state.records[params.node.rowIndex]._original_object_for_id)
                 readonly = field.readonly or self.props.readonly
-                return not (readonly instanceof Function ? readonly(active_id) if v'readonly instanceof Function' else readonly)
+                return not (readonly(active_id) if v'readonly instanceof Function' else readonly)
 
             return result or False
 
@@ -89,6 +89,7 @@ class Tree(React.Component):
         def taskJob():
             if self.pendingTask.tasked: return
             self.pendingTask.tasked = True
+            @async
             def task():
                 if self.pendingTask.create: await [self.state.new_records.create()]
                 if self.pendingTask.write: await [models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field].write()]
@@ -246,11 +247,11 @@ class Tree(React.Component):
             for condition in conditions:
                 values.push(condition.filter)
                 if models.env[self.state.model]._fields[field].relation:
-                relation = models.env[models.env[self.state.model]._fields[field].relation]
-                result_ids = await relation.search([relation._rec_name or 'name', types[condition.type], condition.filter])
-                args.push([field, 'in', result_ids.ids])
-                continue
-            args.push([field, types[condition.type], condition.filter])
+                   relation = models.env[models.env[self.state.model]._fields[field].relation]
+                   result_ids = await [relation.search([relation._rec_name or 'name', types[condition.type], condition.filter])]
+                   args.push([field, 'in', result_ids.ids])
+                   continue
+                args.push([field, types[condition.type], condition.filter])
 
         self.args = args
 
@@ -288,14 +289,14 @@ class Tree(React.Component):
             models.env.context.active_index = index
             if  not models.env.context.active_sort and self.default_sort: (models.env.context.active_sort = self.default_sort) and del self.default_sort
             self.pagingStarted = True
-            current_args = [*args, *((self.props.domain({}) if v'self.props.domain instanceof Function' else self.props.domain) or [])]
+            current_args = tools.list(*args, *((self.props.domain({}) if v'self.props.domain instanceof Function' else self.props.domain) or []))
             if models.env.context.editing and self.last_args and self.last_args == JSON.stringify(current_args): return
             self.last_args = JSON.stringify(current_args)
             records = await [models.env[self.state.model].search(*current_args)]
             if not self.props.isTreeView:
                 if not models.env.context.active_lines: models.env.context.active_lines = {}
                 if not models.env.context.active_lines[self.state.model]: models.env.context.active_lines[self.state.model] = {}
-                if not models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field]
+                if not models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field]:
                     models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field] = records
                 else:
                     records = models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field].add(records)
@@ -310,9 +311,9 @@ class Tree(React.Component):
                             if (Array.isArray(args)) args[0] = record[args[0]]
                         return tools.apply_domain(*domain)
                     records = records.filter(filter)
-                
-                await [self.setState({'records': self.paginate(await [records.sort_by(*([records._rec_name or 'name', False] if not models.env.context.active_sort else [False if value == 'asc' else value for value in models.env.context.active_sort.split(' ')]).read(True, [field.field for field in self.state.fields]), index)], 'limit': self.state.limit})]
-            else if records.length == 0: await [self.setState({'records': []})]
+                records = await [records.sort_by(*([records._rec_name or 'name', False] if not models.env.context.active_sort else [False if value == 'asc' else value for value in models.env.context.active_sort.split(' ')]).read(True, [field.field for field in self.state.fields]), index)]
+                await [self.setState({'records': self.paginate(records), 'limit': self.state.limit})]
+            elif records.length == 0: await [self.setState({'records': []})]
         except Exception as error:
           console.error(error)
 
@@ -327,7 +328,7 @@ class Tree(React.Component):
           if not self.pendingTask.tasked:
             self.pendingTask.create = True
             self.taskJob()
-        
+
         values = await [record.read(True, [field.field for field in self.state.fields])]
         self.state.new_records.add(record)
         self.state.records.push(values[0])
@@ -357,7 +358,7 @@ class Tree(React.Component):
           self.props.parent_tree.refs.popup_modal.getDOMNode().className = self.props.parent_tree.refs.popup_modal.getDOMNode().className.replace('modal-in', 'modal-out')
 
     @async
-    def removeItem(self) {
+    def removeItem(self):
         if self.props.isTreeView:
             records = await [models.env[self.state.model].browse(self.state.active_ids)]
             await [records.unlink()]
@@ -368,7 +369,7 @@ class Tree(React.Component):
         type = field.type
         for data in self.state.selected:
             index = self.state.records.length
-            while (index -= 1):
+            while (v'index--'):
                 if data == self.state.records[index]:
                     self.state.records.splice(index)
 
@@ -386,7 +387,7 @@ class Tree(React.Component):
                   if data._original_object_for_id == values if data._original_object_for_id else data.id == values.id: models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field] = models.env[self.state.model]
                   continue;
                 index = values.length
-                while (index-= 1):
+                while (v'index--'):
                   if data._original_object_for_id and data._original_object_for_id == values[index]: values.splice(index)
                   elif not data._original_object_for_id and data.id == values[index].id: values.splice(index) or del records._values[data.id]
                 continue
@@ -399,11 +400,11 @@ class Tree(React.Component):
             self.onChange(params)
 
         selected = self.state.selected
-        
+
         if type != 'many2one':
             models.env.context.active_id[self.state.tree_field] = models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field]
 
-        await self.paging.bind(this)(0, {'newData': False, 'deleting': True, 'forceUpdate': True})
+        await [self.paging.bind(this)(0, {'newData': False, 'deleting': True, 'forceUpdate': True})]
         return self.gridOptions.api.deselectAll()
 
     def exportItem(self):
@@ -417,7 +418,6 @@ class Tree(React.Component):
         def editableHeight():
             if self.isEditable(): return 30
             return 0
-        editableHeight = () => self.isEditable() ? (30) : 0
         choose = props.parent_model
         if props.choose != undefined:
            choose = props.choose(models.env.context.active_id) if v'props.choose instanceof Function' else props.choose
@@ -428,6 +428,7 @@ class Tree(React.Component):
                 return autoSizeAll(params, self.resizeListener)
             self.resizeListener = resizeListener
             window.addEventListener('resize', self.resizeListener)
+        @async
         def onRowClicked(params):
             record = await [models.env[self.state.model].browse(None)]
             del models.env.context.active_id
@@ -438,22 +439,23 @@ class Tree(React.Component):
             return self.sort(params.api.getSortModel(), params)
         def onFilterChanged(params):
             return self.filter(params.api.getFilterModel(), params)
+        @async
         def onClickButton():
             records = await [models.env[self.state.model].browse(self.state.active_ids)]
             await [records[function_name]()]
             self.gridOptions.api.deselectAll()
-        columnDefs = [field.field for field in self.state.fields not field.invisible({}, models.env.context.active_id) if not props.isTreeView and models.env.context.active_id and v'field.invisible instanceof Function' else not field.invisible]
+        columnDefs = [field.field for field in self.state.fields if not (not props.isTreeView and models.env.context.active_id and v'field.invisible instanceof Function' and field.invisible({}, models.env.context.active_id)) or field.invisible]
         grid = (
           div (className="card-body" + (' rapyd-tree-is-invisible' if invisible else ''), style=tools.merge({'height': Math.min(self.state.records.length, self.state.limit) * 48 + 112 + editableHeight() + 'px'}, {'position': 'absolute', 'left': '-9999px', 'top': '-9999px'} if invisible else {}),
             Grid (ref="grid",  onSelectionChanged=self.onSelectionChanged, paginationPageSize=self.state.limit, columnDefs=columnDefs, rowData=self.state.records, frameworkComponents=self.state.frameworkComponents),
             Button (onClick=self.addItem.bind(self), style={'display': self.isEditable() and 'inline-block' if (props.create(models.env.context.active_id) if v'props.create instanceof Function' else props.create) != False else 'none', 'top': '-45px', 'backgroundColor': '#fff'}, "Add"),
             Button (onClick=self.chooseItem.bind(self), style={'display':  'inline-block' if choose and self.isEditable() else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Choose"),
             Button (onClick=self.selectItem.bind(self), style={'display':  'inline-block' if props.isPopup and self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Select"),
-            Button (onClick=self.exportItem.bind(self), style={display: props.isTreeView and self.state.selected.length > 0 ? 'inline-block' : 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Export"),
+            Button (onClick=self.exportItem.bind(self), style={display: props.isTreeView and 'inline-block' if self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Export"),
             not props.isPopup and tools.view[self.state.model] and tools.view[self.state.model].actions.tree and [
               Button (onClick=onClickButton, style={'display': 'inline-block' if (props.isTreeView or not models.env.context.editing) and self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'}, string)
             for function_name, string in Object.entries(tools.view[self.state.model].actions.tree)],
-            Button (className="rapyd-tree-delete-button", onClick=self.removeItem.bind(self), style={'display': 'inline-block' if(props.isTreeView or self.isEditable()) and not props.isPopup and self.state.selected.length > 0 ? else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Delete"),
+            Button (className="rapyd-tree-delete-button", onClick=self.removeItem.bind(self), style={'display': 'inline-block' if (props.isTreeView or self.isEditable()) and not props.isPopup and self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Delete"),
             not props.isTreeView and (props.parent_model or choose) and
             Popup (ref="popup_modal", backdrop=False, animate=True,
               Page (popup=True, title=tools.view[this.state.model].string if tools.view[this.state.model] else 'Choose',
@@ -464,6 +466,7 @@ class Tree(React.Component):
                 )
               )
             )
+          )
         )
         if not props.isTreeView or props.isPopup:
           if models.env.context.editing:
@@ -481,8 +484,10 @@ class Tree(React.Component):
                   br(),
                   Button (onClick=onClickCreate, style={'display': 'inline-block'}, fill,"Create"),
                 )
-              )
+              ),
               grid,
             )
           )
         )
+
+react.register_component(Tree)

@@ -1,6 +1,6 @@
 import orm.models as models
 import orm.tools as tools
-import web.react import react
+import web.react as react
 import web.components.Flatpickr
 
 Button, List, ListInput, div, span, i = react.get_framework_components('Button', 'List', 'ListInput', 'div', 'span', 'i')
@@ -54,7 +54,7 @@ class Field(React.Component):
             if self.props.widget == 'statusbar': return self.setState({'value': value})
             await [self.setSelectivityValue(altvalue)]
         elif type in ['date', 'datetime']:
-            await [self.setState({'value': value, 'input': self.refs.date_input.base.querySelector('input')})
+            await [self.setState({'value': value, 'input': self.refs.date_input.base.querySelector('input')})]
         else:
            await [self.setState({'value': altvalue or value})]
         return models.env.context.refresh()
@@ -83,7 +83,7 @@ class Field(React.Component):
            elif Array.isArray(value):
               return self.setState({'value': [{'id': record.id, text: record[record._rec_name or 'name']} for record in records]})
         elif type == 'selection':
-           selections = field.selection.apply(null) if v'typeof field.selection' == 'function' else field.selection
+           selections = field.selection.apply(None) if v'typeof field.selection' == 'function' else field.selection
            return self.setState({'value': value and {'id': value, 'text': tools.dict(selections)[value]}})
 
     @async
@@ -139,11 +139,12 @@ class Field(React.Component):
         types = {'char': 'text', 'text': 'textarea', 'float': 'number', 'integer': 'number', 'data': 'textarea', 'boolean': 'checkbox', 'binary': 'file'};
         context = models.env.context
         refs = self.refs
-        active_id = context.active_lines[self.props.tree.state.model][(self.props.tree.props.parent_model ? 'many2many_' : '') + self.props.tree.state.tree_field].find(self.props.tree.state.records[self.props.rowIndex].id or self.props.tree.state.records[self.props.rowIndex]._original_object_for_id) if props.cellEdit else context.active_id
+        active_id = context.active_lines[self.props.tree.state.model][('many2many_' if self.props.tree.props.parent_model else '') + self.props.tree.state.tree_field].find(self.props.tree.state.records[self.props.rowIndex].id or self.props.tree.state.records[self.props.rowIndex]._original_object_for_id) if props.cellEdit else context.active_id
         invisible = props.invisible(active_id, models.env.context.active_id) if v'props.invisible instanceof Function' and active_id else props.invisible;
         props.readonly = field.readonly or props.readonly;
-        readonly = props.readonly instanceof Function ? props.readonly(active_id) : props.readonly;
-        value = props.cellEdit ? null : context.active_id and context.active_id[self.props.name];
+        readonly = props.readonly(active_id) if v'props.readonly instanceof Function' else props.readonly;
+        value = None if props.cellEdit else context.active_id and context.active_id[self.props.name];
+        @async
         def fetch(url, init, query):
             try:
                 limit = 10
@@ -155,8 +156,8 @@ class Field(React.Component):
                    for inverse_field in models.env.context.active_lines[field.relation]:
                        records.add(models.env.context.active_lines[field.relation][inverse_field].filter(
                        def (record):
-                            return record[record._rec_name or 'name'] and record[record._rec_name or 'name'].toLowerCase().indexOf(query.term.toLowerCase()) != -1))
-                       )
+                            return record[record._rec_name or 'name'] and record[record._rec_name or 'name'].toLowerCase().indexOf(query.term.toLowerCase()) != -1
+                       ))
                 results = []
                 if type == 'selection': return {'results': results, 'more': False}
                 for record in records:
@@ -176,7 +177,7 @@ class Field(React.Component):
            return props.children;
         component = None
         if type == 'selection' and props.widget == 'statusbar':
-           first = true;
+           first = True
            selections = field.selection.apply(context.active_id, [context.active_id]) if v'typeof field.selection' == 'function' else field.selection
            selections = tools.copy(selections).reverse()
            if props.visible:
@@ -185,15 +186,15 @@ class Field(React.Component):
                   return props.visible.split(',').indexOf(selection[0]) > -1 or (models.env.context.active_id and models.env.context.active_id[props.name] == selection[0])
               )
            component = (
-             div (style={'display': 'none'} if invisible else {}, overflow='overlay'}, [
-               Button (raised=models.env.context.active_id and models.env.context.active_id[props.name] == selection[0], className="rapyd-statusbars", (first = False) or selection[1]) if first else [span (className="rapyd-statusbars rapyd-statusbar-arrow", '>'), Button (raised=models.env.context.active_id and models.env.context.active_id[props.name] == selection[0], className="rapyd-statusbars", selection[1])
+             div (style={'display': 'none'} if invisible else {}, overflow='overlay', [
+               Button (raised=models.env.context.active_id and models.env.context.active_id[props.name] == selection[0], className="rapyd-statusbars", (first = False) or selection[1]) if first else [span (className="rapyd-statusbars rapyd-statusbar-arrow", '>'), Button (raised=models.env.context.active_id and models.env.context.active_id[props.name] == selection[0], className="rapyd-statusbars", selection[1])]
              for selection in selections])
            )
            return component
         if type in ['many2many', 'one2many', 'many2one', 'one2one', 'selection']:
            ajax = None
            items = None
-           if type in ['many2many', 'one2many', 'many2one', 'one2one'], type):
+           if type in ['many2many', 'one2many', 'many2one', 'one2one']:
               ajax = {'url': tools.configuration.url, 'minimumInputLength': 0, params: def (): return;, placeholder: '', fetch: fetch}
            elif type == 'selection':
               selections = field.selection.apply(context.active_id, [context.active_id]) if v'typeof field.selection' == 'selection' else field.selection
@@ -227,9 +228,9 @@ class Field(React.Component):
                await [api.wait(100)]
                models.env.context.active_task.push(after_create)
            component = [
-             ListInput (label=string, input=False, disabled=readonly or not context.editing, errorMessageForce=models.env.context.active_error.field_map[props.name] if models.env.context.active_error else False errorMessage="Field required" style=not props.cellEdit and type != 'selection' and icon_create and {'height': '65px'},
+             ListInput (label=string, input=False, disabled=readonly or not context.editing, errorMessageForce=models.env.context.active_error.field_map[props.name] if models.env.context.active_error else False, errorMessage="Field required", style=not props.cellEdit and type != 'selection' and icon_create and {'height': '65px'},
                Selectivity (ref="selectivity", slot="input", data=self.state.value if tools.exist(self.state.value) and self.state.value.constructor != Promise else None, ajax=ajax, items=items, placeholder=props.placeholder or '', readOnly=readonly or not context.editing, multiple=type in ['many2many', 'one2many'], allowClear=True, closeOnSelect=True, onChange=onChange, onDropdownOpen=onDropdownOpen, onDropdownClose=onDropdownClose)
-             )
+             ),
              not props.cellEdit and type != 'selection' and i (className="icon material-icons", onClick=onIconClick, style={'top': '-30px', 'left': '280px', 'display': 'none' if not icon_create else 'unset'}, 'open_in_new')
            ]
            if props.cellEdit: return component[0].children[0]
@@ -246,6 +247,7 @@ class Field(React.Component):
              ul (
                ListInput (ref="date_input", label=string, placeholder=props.placeholder or '', disabled=readonly or not context.editing, errorMessageForce=models.env.context.active_error.field_map[props.name] if models.env.context.active_error else False, errorMessage="Field required")
              )
+           )
            component = (
              Flatpickr (customComponent=input, customInput=self.state.input, enableTime=type == 'datetime', enableSeconds=type == 'datetime', defaultDate=self.state.value or value, onChange=self.setValue.bind(self))
            )
@@ -253,7 +255,7 @@ class Field(React.Component):
         else:
            self.input_type = types[type]
            def onChange(event):
-               return self.setValue(event.target.checked if type == 'checkbox' event.target.files[0] if type == 'file' else event.target.value)
+               return self.setValue(event.target.checked if type == 'checkbox' else event.target.files[0] if type == 'file' else event.target.value)
            component = (
              ListInput (ref="input", label=string, type=types[type], placeholder=props.placeholder or '', disabled=readonly or not context.editing, onChange=onChange, errorMessageForce=models.env.context.active_error.field_map[props.name] if models.env.context.active_error else False, errorMessage="Field required")
            )
@@ -263,9 +265,10 @@ class Field(React.Component):
                await [api.wait_exist(wait)]
                return self.setInputValue(await (value) or await (self.state.value) or None)
            forceSet()
-        return
+        return (
           List (style=tools.merge({}, {'display': 'none'} if invisible else {}, {'zIndex': '0'} if not self.state.selectivityOpened else {}),
             component
           )
+        )
 
 react.register_component(Field)
