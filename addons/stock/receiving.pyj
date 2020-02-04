@@ -15,7 +15,7 @@ class StockReceivingWizard(models.Model):
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
-        value = window.decompressJson(self.scan)
+        value = JSON.parse(self.scan)
         if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse/CKD Part")
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
         self.scan = ''
@@ -230,7 +230,7 @@ class StockReceivingCKD(models.Model):
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
-        value = window.decompressJson(self.scan)
+        value = JSON.parse(self.scan)
         if not value.ckd_id:
            if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse Part")
            else: return tools.dialog.alert("Can't receive Local Part")

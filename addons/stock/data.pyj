@@ -115,7 +115,7 @@ class PurchaseOrderPack(models.Model):
         del json._id
         for key in json:
             if not json[key]: del json[key]
-        return window.compressJson(json)
+        return window.PDF417(JSON.stringify(json), 1.5, 0.75).split('base64,')[1]
 
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.")

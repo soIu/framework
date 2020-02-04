@@ -329,7 +329,7 @@ class PickingList(models.Model):
            if not trolley_id.length: return
            self.trolley_id = trolley_id.id
            return
-        value = window.decompressJson(barcode)
+        value = JSON.parse(barcode)
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         if pack_id.picking_list_id: return
         self.laser_scan = ''
