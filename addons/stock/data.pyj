@@ -106,23 +106,34 @@ pack_sequence = 0
 class PurchaseOrderPack(models.Model):
     _name = 'purchase.order.pack'
 
+    def _get_barcode(self):
+        json = tools.copy(self.read())
+        del json.barcode
+        del json.ids
+        del json.rev
+        del json._rev
+        del json._id
+        for key in json:
+            if not json[key]: del json[key]
+        return window.compressJson(json)
+
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.")
     product_id = fields.Many2one('product.product', string="Part")
     product_qty = fields.Float(string="Quantity")
     order_id = fields.Many2one('purchase.order', string="Purchase Order")
-    barcode = fields.Text(string="Barcode")
+    barcode = fields.Text(string="Barcode", compute=_get_barcode, store=False)
     received = fields.Boolean(string="Received")
     inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
 
-    @async
+    """@async
     def create(self, values=False, is_client=tools.configuration.client):
         if v'typeof window' == 'undefined': return self.__super__('create')(values=values, is_client=is_client)
         result = await [self.__super__('create')(values=values, is_client=is_client)]
         for record in result:
             await [record.write({'barcode': JSON.stringify(self.read())})]
-        return result
+        return result"""
 
     @async
     def print_label(self):
@@ -403,7 +414,7 @@ class HPPMData(models.Model):
                 row += 1
                 if row < 11: continue
                 if not data[1]: continue
-                value = {'base_name': data[1], 'name': data[1] + ' - ' + data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
+                value = {'base_name': data[2], 'name': data[1] + ' - ' + data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
                 if not value.name or not value.code: continue
                 promise = check_part(value)
                 cell_index = -1
