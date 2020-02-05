@@ -291,6 +291,7 @@ class PickingList(models.Model):
     manual = fields.Boolean(string="Manual")
     pickup_zone_id = fields.Many2one('stock.pickup.zone', string="Pickup Zone")
     trolley_id = fields.Many2one('stock.trolley', string="Trolley")
+    part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Type", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -313,10 +314,11 @@ class PickingList(models.Model):
     def listen_scan(self, barcode):
         if not barcode: return
         window.alert(barcode)
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
+        self.env['log.data'].log('Scan', barcode, 'on Picking List')
         if barcode.match(/^(.*?)-PICK-[0-1][0-1]$/):
            pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
            self.laser_scan = ''
@@ -421,6 +423,7 @@ class PickingList(models.Model):
                pack_id.available_qty -= line_id.actual_qty
                pack_ids = pack_id
                line_id.consumed = True
+        self.env['log.data'].log('Calling AGV on', self.name, 'id:', self.id, 'model:', self._name)
         await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking()])
         """host = self.ip_address or window.location.hostname
         @async
@@ -447,6 +450,7 @@ view.add(model='stock.picking.list', mode='tree', arch="""
     <field name="model_id"/>
     <field name="model_code"/>
     <field name="trolley_type_id"/>
+    <field name="part_type"/>
     <field name="called"/>
 </tree>
 """)
@@ -532,7 +536,7 @@ class PickingListLine(models.Model):
     @async
     def _get_part_qty(self):
         if self.manual: return self.actual_qty
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['sequence', '<=', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<=', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length: return 0
         if self.consumed: return self.cached_product_qty
         quantity = 0
@@ -645,6 +649,7 @@ class PickingManual(models.Model):
     @async
     def create_manual_list(self):
         list_id = await [self.create_manual_list_server()]
+        self.env['log.data'].log('Create', list_id.name, 'id:', list_id.id, 'model:', list_id._name)
         return tools.navigate('/form/stock.picking.list?id=' + list_id)
 
     @api.server(async=True)

@@ -46,14 +46,17 @@ class PurchaseOrder(models.Model):
     @async
     def print_label(self):
      try:
+        self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         values = []
         for record in self:
             value = record.read()
+            value.date_string = value.date_string.split('/')[0:2].join('/')
             pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
             pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
             for pack_value in pack_values:
-                for key in value:
-                    if key not in pack_value: pack_value[key] = value[key]
+                pack_value.order_id = value
+                #for key in value:
+                #    if key not in pack_value: pack_value[key] = value[key]
             values.push(*pack_values)
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         self.write({'printed': True})
@@ -76,7 +79,7 @@ class PurchaseOrder(models.Model):
         if not quantity: quantity = self.product_qty
         promises = []
         for box_quantity in self.get_box_quantities(quantity, product_id):
-            promise = self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'product_id': self.product_id, 'product_qty': box_quantity})
+            promise = self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'part_name': product_id.name.split(' - ')[1], 'product_id': self.product_id, 'product_qty': box_quantity})
         return await (promises)
 
 
@@ -96,7 +99,7 @@ class PurchaseOrder(models.Model):
         new_quantities = self.get_box_quantities(self.product_qty - quantity, product_id)
         promises = [self.write({'product_qty': quantity})]
         for new_quantity in new_quantities:
-            if new_quantity not in original_quantities: promises.push(self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'product_id': self.product_id, 'product_qty': new_quantity}))
+            if new_quantity not in original_quantities: promises.push(self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'part_name': product_id.name.split(' - ')[1], 'product_id': self.product_id, 'product_qty': new_quantity}))
         return await (promises)
 
 PurchaseOrder()
@@ -119,6 +122,7 @@ class PurchaseOrderPack(models.Model):
 
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.")
+    part_name = fields.Char(string="Part Name")
     product_id = fields.Many2one('product.product', string="Part")
     product_qty = fields.Float(string="Quantity")
     order_id = fields.Many2one('purchase.order', string="Purchase Order")
@@ -138,15 +142,13 @@ class PurchaseOrderPack(models.Model):
     @async
     def print_label(self):
      try:
-        values = await [self.read(format=True, without_null=True, relational_fields=['product_id'])]
-        order_id = None
-        po_value = None
+        self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
+        values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
+        #order_id = None
         for value in values:
-            if not po_value:
-               order_id = await [self.env['purchase.order'].browse(self._values[0].order_id)]
-               po_value = order_id.read()
-            for key in po_value:
-                if key not in value: value[key] = po_value[key] or ''
+            if value.order_id and value.order_id.date_string: value.order_id.date_string = value.order_id.date_string.split('/')[0:2].join('/')
+            #for key in po_value:
+            #    if key not in value: value[key] = po_value[key] or ''
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         if order_id: order_id.write({'printed': True})
         window.open(url)
@@ -165,9 +167,11 @@ class PurchaseOrderPack(models.Model):
             pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id}), record.write({'received': True})])
             pack_ids.push(pack_id.id)
         picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
+        self.env['log.data'].log('Receive', self.name, 'id:', self.id, 'model:', self._name)
         if immediate:
            return picking_id.validate(immediate=True)
         tools.navigate('/form/stock.picking?id=' + picking_id.id)
+
 
 PurchaseOrderPack()
 
@@ -306,6 +310,7 @@ class HPPMData(models.Model):
 
     @async
     def download_excel(self):
+        self.env['log.data'].log('Downloading', self.name, 'id:', self.id, 'model:', self._name)
         excel = await [self.get_excel()]
         request = await [window.fetch('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + excel)]
         blob = await [request.blob()]
@@ -317,6 +322,7 @@ class HPPMData(models.Model):
 
     @async
     def import_data_client(self):
+        self.env['log.data'].log('Uploading', self.name, 'type:', self.type, 'id:', self.id, 'model:', self._name)
         await [self.import_data()]
         return tools.dialog.alert('Upload Successful')
 
@@ -496,8 +502,10 @@ class HPPMData(models.Model):
                    products[product_id.id] = product_id
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
                    if not product_id[type + '_trolley_type_id']: continue
-                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': type}))
+                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': type, 'part_type': product_id.type}))
                 list_id = trolley_group[product_id[type + '_trolley_type_id']]
+                if list_id.part_type != product_id.type and product_id.type == 'local':
+                   list_id.write({'part_type': product_id.type})
                 line_qty = bom_line_id.product_qty * quantity
                 box = Math.ceil(line_qty / product_id.qty_box)
                 promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
@@ -649,6 +657,7 @@ class ChangePassword(models.Model):
         current, new_password, confirm = tools.atob(current), tools.atob(new_password), tools.atob(confirm)
         if new_password != confirm: raise exceptions.ValidationError("New password doesn't match")
         user_id = await [self.env['res.users'].browse(uid)]
+        self.env['log.data'].create({'name': ['Changing Password', 'success:', user_id.password == current].join(' '), 'user_id': user_id.id})
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
         doc = await [models.db.get(models.db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
         doc.password = new_password
@@ -676,6 +685,54 @@ view.add(model='change.password', mode='wizard', arch="""
         </group>
         <group>
             <button name="change_password" string="Change Password"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+class LogData(models.Model):
+    _name = 'log.data'
+
+    def _get_user(self):
+        if v'typeof window' == 'undefined': return None
+        return models.env.user.id
+
+    def _get_platform(self):
+        if v'typeof window' == 'undefined': return ''
+        return window.navigator.platform
+
+    name = fields.Char(string="Log", required=True, readonly=True)
+    user_id = fields.Many2one('res.users', string="User", defaults=_get_user, readonly=True)
+    date = fields.Datetime(string="Date", defaults=tools.date.now, readonly=True)
+    platform = fields.Char(string="Platform", defaults=_get_platform, readonly=True)
+
+    def log(self):
+        log = Array.prototype.slice.call(arguments).join(' ')
+        return self.create({'name': log})
+
+LogData()
+
+menu.add(id='log_data', parent='hppm_data', model='log.data', string='Log', sequence=10)
+
+view.add(model='log.data', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="date"/>
+    <field name="user_id"/>
+    <field name="platform"/>
+</tree>
+""")
+
+view.add(model='log.data', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+            <field name="date"/>
+        </group>
+        <group>
+            <field name="user_id"/>
+            <field name="platform"/>
         </group>
     </sheet>
 </form>

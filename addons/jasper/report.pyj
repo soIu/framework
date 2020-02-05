@@ -1,5 +1,17 @@
 @async
-def get_jasper_report(report, parameters, format='pdf', server='https://jasper.odooabc.com/jasperserver', username='c0b4d1b4c4', password='c0b4d1r4b4'):
+def get_jasper_report(report, parameters, format='pdf', server=['https://jasper.odooabc.com/jasperserver'], username='c0b4d1b4c4', password='c0b4d1r4b4'):
+    if Array.isArray(server):
+       if server.length == 1:
+          for ip in ['172.16.2.21', '172.16.2.22']:
+              server.push('http://' + ip + '/jasperserver')
+       errors = []
+       for host in server:
+           try:
+               url = await [get_jasper_report(report=report, parameters=parameters, format=format, server=host, username=username, password=password)]
+               return url
+           except Exception as error:
+               errors.push(error)
+       raise errors[-1]
     jasper_parameters = []
     for key in parameters:
         jasper_parameters.push({'name': key, 'value': [parameters[key]]})

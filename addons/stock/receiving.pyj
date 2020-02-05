@@ -17,6 +17,7 @@ class StockReceivingWizard(models.Model):
         if not self.scan: return
         value = JSON.parse(self.scan)
         if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse/CKD Part")
+        self.env['log.data'].log('Scan', value.name, 'id:', value.id, 'model: purchase.order.pack')
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
         self.scan = ''
         if not order_id.length: return
@@ -64,6 +65,7 @@ class StockPickingWizard(models.Model):
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
+        self.env['log.data'].log('Scan Picking', self.scan)
         picking_list_id = await (self.env['stock.picking.list'].search(['name', '=', self.scan]))
         self.scan = ''
         if not picking_list_id.length: return
@@ -109,6 +111,7 @@ class ReceiveInhouse(models.Model):
     @async
     def receive(self):
         product_id = await [self.env['product.product'].browse(self.product_id)]
+        self.env['log.data'].log('Receive Inhouse part:', product_id.name)
         order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': self.product_qty, 'part_no': product_id.code, 'inhouse_ckd': True})]
         await [order_pack_id.receive(immediate=True)]
         return order_pack_id.print_label()
@@ -145,7 +148,9 @@ class StockReceiveCKD(models.Model):
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
-        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        if v'typeof window' != 'undefined':
+           self.env['log.data'].log('Uploading CKD', self.name, 'model:', self._name)
+           return self.__super__('create')(values=values, is_client=is_client)
         result = await [self.__super__('create')(values=values, is_client=is_client)]
         for record in result:
             await [record.import_file()]
@@ -182,6 +187,7 @@ class StockReceiveCKD(models.Model):
                start_row = row + 2
             if row < start_row: continue
             #if not data[0]: continue
+            if not data[16]: continue
             value = {'name': 'Pack-CKD-' + data[4] + '-' + sequence, 'part_no': data[16].split(' ').join(''), 'quantity': data[19]}
             sequence += 1
             await [create_pack(value, data[14] == '002')]
@@ -234,6 +240,7 @@ class StockReceivingCKD(models.Model):
         if not value.ckd_id:
            if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse Part")
            else: return tools.dialog.alert("Can't receive Local Part")
+        self.env['log.data'].log('Scan CKD', value.name, 'id:', value.id, 'model: purchase.order.pack')
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
         self.scan = ''
         if not order_id.length: return
