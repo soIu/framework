@@ -145,12 +145,19 @@ class PurchaseOrderPack(models.Model):
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
+        @async
+        def write_order_id(id):
+            order_id = await [self.env['purchase.order'].browse(id)]
+            return order_id.write({'printed': True})
+        ids = []
         for value in values:
-            if value.order_id and value.order_id.date_string: value.order_id.date_string = value.order_id.date_string.split('/')[0:2].join('/')
+            if value.order_id:
+               if value.order_id.date_string: value.order_id.date_string = value.order_id.date_string.split('/')[0:2].join('/')
+               if value.order_id.id: ids.push(value.order_id.id)
             #for key in po_value:
             #    if key not in value: value[key] = po_value[key] or ''
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
-        if order_id: order_id.write({'printed': True})
+        for id in ids: write_order_id(id)
         window.open(url)
      except Exception as error:
         alert(error.stack or error.message)
