@@ -562,7 +562,9 @@ class Model():
                    def after_promise(result):
                        if result != undefined: value[key] = result
                        if not field or (value[key] in [None, undefined] and field.type != 'float'):
-                          if without_null: value[key] = ''
+                          if field and field.type in ['many2one', 'one2one']:
+                             value[key] = {field_name: "" if without_null else None for field_name in Object.keys(self.env[field.relation]._fields)}
+                          elif without_null: value[key] = ''
                           return next()
                        if field.type == 'date':
                           value[key] = date.format(v'new Date(value[key])', 'Y-m-d')
