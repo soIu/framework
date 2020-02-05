@@ -306,7 +306,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -339,6 +339,20 @@ class HPPMData(models.Model):
         if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
         if self.type == 'sozai': return self.import_sozai().then(after_finish)
+        if self.type == 'route_agv': return self.import_route().then(after_finish)
+
+    @api.server #(async=True)
+    def import_route(self):
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        promises = []
+        for data in sheet.data:
+            row += 1
+            if row == 0: continue
+            promise = self.env['agv.route'].create({'name': data[3], 'picking_zone': data[2], 'fitting': data[1]})
+            promises.push(promise)
+        return Promise.all(promises)
 
     @api.server(async=True)
     def import_daisha(self, type):

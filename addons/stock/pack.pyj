@@ -16,6 +16,7 @@ class AgvCheckpoint(models.Model):
     _name = 'agv.checkpoint'
 
     name = fields.Char(string="Name")
+    agv = fields.Char(string="AGV")
     daisha = fields.Char(string="Daisha")
     location = fields.Char(string="Location")
     date = fields.Datetime(string="Date", defaults=tools.date.now)
@@ -28,6 +29,10 @@ class AgvCheckpoint(models.Model):
             sequence = await (self.env['ir.sequence'].get_next('agv.checkpoint'))
             value.name = 'Checkpoint ' + str.zfill(sequence.toString(), 3)
         return self.__super__('create')(values=values, is_client=is_client)
+
+    @api.server #(async=True)
+    def receive_rfid(self, ip, epc):
+        return self.create({'agv': ip, 'daisha': epc})
 
 AgvCheckpoint()
 
@@ -55,6 +60,26 @@ view.add(model='agv.checkpoint', mode='form', arch="""
     </sheet>
 </form>
 """)
+
+class AgvRoute(models.Model):
+    _name = 'agv.route'
+
+    name = fields.Char(string="Route", index=True)
+    fitting = fields.Char(string="Fitting Type", index=True)
+    picking_zone = fields.Char(string="Picking Zone", index=route)
+
+AgvRoute()
+
+menu.add(id='routes', parent='agv_chasun', model='agv.route', string="Routes", sequence=2)
+
+view.add(model='agv.route', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="fitting"/>
+    <field name="picking_zone"/>
+</tree>
+""")
+
 
 pack = {}
 sequence = {}

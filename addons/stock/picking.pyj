@@ -289,7 +289,8 @@ class PickingList(models.Model):
     ip_address = fields.Char(string="IP Address")
     date = fields.Datetime(string="Date", index=True)
     manual = fields.Boolean(string="Manual")
-    pickup_zone_id = fields.Many2one('stock.pickup.zone', string="Pickup Zone")
+    #pickup_zone_id = fields.Many2one('stock.pickup.zone', string="Pickup Zone")
+    pickup_zone = fields.Char(string="Pickup Zone")
     trolley_id = fields.Many2one('stock.trolley', string="Trolley")
     part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Type", index=True)
 
@@ -320,10 +321,11 @@ class PickingList(models.Model):
            return tools.dialog.alert("Can't pick if there's still a running sequence")
         self.env['log.data'].log('Scan', barcode, 'on Picking List')
         if barcode.match(/^(.*?)-PICK-[0-1][0-1]$/):
-           pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
+           self.pickup_zone = pickup_zone
+           #pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
            self.laser_scan = ''
-           if not pickup_zone_id.length: return
-           self.pickup_zone_id = pickup_zone_id.id
+           #if not pickup_zone_id.length: return
+           #self.pickup_zone_id = pickup_zone_id.id
            return
         elif barcode.slice(0, 6) == 'Daisha':
            trolley_id = await [self.env['stock.trolley'].search(['name', '=', barcode])]
@@ -424,17 +426,18 @@ class PickingList(models.Model):
                pack_ids = pack_id
                line_id.consumed = True
         self.env['log.data'].log('Calling AGV on', self.name, 'id:', self.id, 'model:', self._name)
-        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking()])
-        """host = self.ip_address or window.location.hostname
+        host = self.ip_address or window.location.hostname
         @async
-        def call_route(route):
-            response = await (fetch('http://' + host + ':8000/?route=' + route))
-            text = await (response.text())
-            tools.dialog.alert(text)
-        try:
-            await ([call_route(route) for route in range(1, 6)])
-        except Exception as error:
-            window.alert(error.stack)"""
+        def call_route():
+            try:
+                trolley_type_id = await [self.env['stock.trolley.type'].browse(self.trolley_type_id)]
+                route_id = await [self.env['agv.route'].with_context(limit=1).search(['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
+                response = await (fetch('http://' + host + ':8000/?route=' + route_id.name))
+                text = await (response.text())
+                tools.dialog.alert(text)
+            except Exception as error:
+                tools.dialog.alert(error.stack)
+        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking(), call_route()])
 
 PickingList()
 
@@ -483,7 +486,7 @@ view.add(model='stock.picking.list', mode='form', arch="""
             <field name="model_id"/>
             <field name="ip_address"/>
             <field name="trolley_id" readonly="True"/>
-            <field name="pickup_zone_id" readonly="True"/>
+            <field name="pickup_zone" readonly="True"/>
         </group>
         <group width="100%">
             <field name="line_ids">
