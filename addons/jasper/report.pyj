@@ -2,7 +2,7 @@
 def get_jasper_report(report, parameters, format='pdf', server=['https://jasper.odooabc.com/jasperserver'], username='c0b4d1b4c4', password='c0b4d1r4b4'):
     if Array.isArray(server):
        if server.length == 1:
-          for ip in ['172.16.2.21:8080', '172.16.2.22:8080']:
+          for ip in ['172.16.2.21', '172.16.2.22']:
               server.push('http://' + ip + '/jasperserver')
        errors = []
        for host in server:
