@@ -1,4 +1,3 @@
-
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
@@ -7,6 +6,7 @@ from orm.tools import each, exist
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_default
+from jasper.report import get_jasper_report
 
 sequence = {}
 add_sequence('stock.picking', sequence)
