@@ -41,6 +41,16 @@ class StockPicking(models.Model):
     pack_ids = fields.Many2many('stock.pack', string="Packs")
     #job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
     receive_zone_id = fields.Many2one('stock.receive.zone', string="LC Zone")
+    scan_zone = fields.Char(string="Scan Zone")
+
+    @api.onchange('scan_zone', async=True)
+    def scan_zone(self):
+        if not self.scan_zone: return
+        zone_id = await [self.env['stock.receive.zone'].search(['name', '=', self.scan_zone])]
+        self.scan = ''
+        if not zone_id.length: return
+        self.receive_zone_id = zone_id
+        self.write({'receive_zone_id': zone_id.id})
 
     def create(self, values=False, is_client=tools.configuration.client):
         promises = []
@@ -207,10 +217,9 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         <group>
             <field name="location_dest_id"/>
         </group>
-        <!--<group width="100%">
-            <button name="add_pack" string="Add Pack" invisible="active_id.type != 'putting'"/>
-            <scanner-button invisible="active_id.type != 'picking'"/>
-        </group>-->
+        <group width="100%">
+            <scanner-field name="scan_zone"/>
+        </group>
         <group width="100%">
             <field name="pack_ids">
                 <tree create="false" choose="false">
@@ -314,14 +323,14 @@ class PickingList(models.Model):
     @async
     def listen_scan(self, barcode):
         if not barcode: return
-        window.alert(barcode)
+        #window.alert(barcode)
         picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
         self.env['log.data'].log('Scan', barcode, 'on Picking List')
         if barcode.match(/^(.*?)-PICK-[0-1][0-1]$/):
-           self.pickup_zone = pickup_zone
+           self.pickup_zone = self.laser_scan
            #pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
            self.laser_scan = ''
            #if not pickup_zone_id.length: return
