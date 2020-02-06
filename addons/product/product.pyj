@@ -59,7 +59,7 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         <group>
             <field name="base_name"/>
             <field name="code"/>
-            <field name="type"/>
+            <field bawah_icon="hehe" name="type"/>
         </group>
         <group>
             <field name="description"/>

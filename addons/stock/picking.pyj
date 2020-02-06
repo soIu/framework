@@ -353,7 +353,7 @@ class PickingList(models.Model):
         values, line_ids = await ([self.read(format=True, without_null=True), self.env['stock.picking.list.line'].browse(self.line_ids)])
         line_ids = await [line_ids.read(format=True, without_null=True)]
         values[0].line_ids = line_ids
-        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values[0])})]
+        url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
         window.open(url)
 
     @async
