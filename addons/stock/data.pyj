@@ -595,8 +595,7 @@ class HPPMData(models.Model):
             if not data[0] or not data[1]: continue
             valid_sequence = False
             try:
-                parseInt(data[1])
-                valid_sequence = True
+                if not isNaN(parseInt(data[1])): valid_sequence = True
             except:
                 pass
             if not valid_sequence: continue
