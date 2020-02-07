@@ -578,8 +578,8 @@ class PickingListLine(models.Model):
         #box = await (self.box)
         if quantity > 0: quantity = 0
         else:
-           product_id = await [self.env['product.product'].browse(self.product_id)]
-           quantity = (self.qty_box * product_id.min_box) + quantity
+           #product_id = await [self.env['product.product'].browse(self.product_id)]
+           quantity = (self.qty_box * self.min_box) + quantity
         self.cached_product_qty = quantity
         return quantity
 
@@ -596,6 +596,7 @@ class PickingListLine(models.Model):
     part_no = fields.Char(string="Part No.") #, compute=_get_part_no, store=True)
     product_id = fields.Many2one('product.product', string="Part")
     qty_box = fields.Float(string="Qty/Box") #, compute=_get_part_qty_box, store=True)
+    min_box = fields.Float(string="Minimum Box")
     box = fields.Float(string="Box", compute=_get_box, store=True)
     actual_box = fields.Float(string="Actual Box")
     cached_product_qty = fields.Float(string="Total Qty")

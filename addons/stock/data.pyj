@@ -388,7 +388,7 @@ class HPPMData(models.Model):
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = part_qty
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty]
                else:
                   trolley_id = get_trolley(trolley_type, type)
                   product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
@@ -406,7 +406,7 @@ class HPPMData(models.Model):
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
-               trolleys[trolley_type][part_code] = part_qty
+               trolleys[trolley_type][part_code] = [part_qty, box_qty]
         for trolley in trolleys:
             trolley_id = get_trolley(trolley, type)
             product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
@@ -533,7 +533,7 @@ class HPPMData(models.Model):
                    list_id.write({'part_type': product_id.type})
                 line_qty = bom_line_id.product_qty * quantity
                 box = Math.ceil(line_qty / product_id.qty_box)
-                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
+                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'min_box': product_id.min_box, 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
                 promises.push(promise)
             return await (promises)
         for data in sheet.data:
