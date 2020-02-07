@@ -592,7 +592,14 @@ class HPPMData(models.Model):
         for data in sheet.data:
             row += 1
             if row < 6: continue
-            if not data[0]: continue
+            if not data[0] or not data[1]: continue
+            valid_sequence = False
+            try:
+                parseInt(data[1])
+                valid_sequence = True
+            except:
+                pass
+            if not valid_sequence: continue
             head = 0
             """original_type = type
             if type == 'flexi':
