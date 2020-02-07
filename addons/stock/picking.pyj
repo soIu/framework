@@ -575,8 +575,11 @@ class PickingListLine(models.Model):
                 quantity -= picking_line_id.actual_qty
                 #group_line_ids.add(picking_line_id)
         #self.group_line_ids = group_line_ids"""
+        #box = await (self.box)
         if quantity > 0: quantity = 0
-        else: quantity = (self.qty_box * self.actual_box) + quantity
+        else:
+           product_id = await [self.env['product.product'].browse(self.product_id)]
+           quantity = (self.qty_box * product_id.min_box) + quantity
         self.cached_product_qty = quantity
         return quantity
 
@@ -584,7 +587,8 @@ class PickingListLine(models.Model):
     def _get_box(self):
         quantity = await [self.product_qty]
         if not quantity: return 0
-        else: return self.actual_box
+        else:
+           return Math.ceil(quantity / self.qty_box)
 
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     #group_line_ids = fields.Many2many('stock.picking.list.line', string="Part List Group")

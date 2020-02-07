@@ -23,6 +23,7 @@ class ProductProduct(models.Model):
     fwd_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (4WD)", index=True)
     flexi_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (Flexi)", index=True)
     qty_box = fields.Float(string="Qty/Box")
+    min_box = fields.Float(string="Minimum Box")
 
 ProductProduct()
 

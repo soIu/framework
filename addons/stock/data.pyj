@@ -382,6 +382,7 @@ class HPPMData(models.Model):
             #if not data[5] or data[5] == '-': continue
             part_code = data[4]
             part_qty = data[7]
+            box_qty = data[25]
             if data[21] and data[21] != trolley_type:
                if not trolley_type:
                   trolley_type = data[21]
@@ -394,14 +395,14 @@ class HPPMData(models.Model):
                   trolley_id = await (trolley_id)
                   for product_id in product_ids:
                       product_id[type + '_trolley_type_id'] = trolley_id.id
-                      product_id.qty_box = trolleys[trolley_type][product_id.code] or 0
+                      product_id.qty_box,  product_id.min_box = trolleys[trolley_type][product_id.code] or [0, 0]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
                   del trolleys[trolley_type]
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = part_qty
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty]
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
@@ -413,7 +414,7 @@ class HPPMData(models.Model):
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
                 product_id[type + '_trolley_type_id'] = trolley_id.id
-                product_id.qty_box = trolleys[trolley][product_id.code] or 0
+                product_id.qty_box, product_id.min_box = trolleys[trolley][product_id.code] or [0, 0]
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
 
@@ -510,6 +511,9 @@ class HPPMData(models.Model):
         products = {}
         @async
         def create_picking_list(code, quantity, lot_no, sequence, date, type):
+            date_object = new Date('1899-12-30 00:00:00')
+            date_object.setDate(date_object.getDate() + parseInt(date))
+            date = date_object
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1]})])
@@ -542,7 +546,7 @@ class HPPMData(models.Model):
                head = 1
                type = data[1].toLowerCase()"""
             lot_no = data.slice(head + 9, head + 14).join('-')
-            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], new Date(data[0]), type) #, original_type)
+            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type) #, original_type)
             await (promise)
             #promises.push(promise)
         #await (promises)
@@ -583,7 +587,11 @@ class HPPMData(models.Model):
             if row < 1: continue
             #if not data[0]: continue
             date = data[7].split('/')
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': data[7], 'date': new Date(date[1] + '/' + date[0] + '/' + date[2])}
+            date_object = new Date('1899-12-30 00:00:00')
+            date_object.setDate(date_object.getDate() + parseInt(date))
+            date = date_object
+            date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date)}
             await [create_po(value)]
         #return Promise.all(promises)
 
