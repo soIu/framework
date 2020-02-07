@@ -69,7 +69,7 @@ class StockPickingWizard(models.Model):
         picking_list_id = await (self.env['stock.picking.list'].search(['name', '=', self.scan]))
         self.scan = ''
         if not picking_list_id.length: return
-        tools.navigate('/form/stock.picking.list?id=' + picking_list_id.id)
+        tools.navigate('/view/stock.picking.list.form?id=' + picking_list_id.id)
 
 StockPickingWizard()
 
