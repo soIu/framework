@@ -435,7 +435,7 @@ class HPPMData(models.Model):
             #if not data[5] or data[5] == '-': continue
             part_code = data[4]
             part_qty = data[7] or 0
-            box_qty = data[25] or 0
+            box_qty = data[24] or 0
             if data[21] and data[21] != trolley_type:
                if not trolley_type:
                   trolley_type = data[21]
