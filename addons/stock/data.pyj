@@ -188,6 +188,8 @@ class PurchaseOrderPack(models.Model):
     def print_label(self):
      try:
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
+        for record in self:
+            if record.ckd_id and not record.received: record.receive(immediate=True)
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
         @async
