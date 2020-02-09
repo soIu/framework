@@ -59,7 +59,7 @@ class PurchaseOrder(models.Model):
         promises = []
         for pack_id in pack_ids:
             promises.push(get_boxes(pack_id))
-        quantites = await (promises)
+        quantities = await (promises)
         return sum(quantities)
 
     name = fields.Char(string="PO Number")

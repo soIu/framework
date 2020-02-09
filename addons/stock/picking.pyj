@@ -44,7 +44,7 @@ class StockPicking(models.Model):
     scan_zone = fields.Char(string="Scan Zone")
 
     @api.onchange('scan_zone', async=True)
-    def scan_zone(self):
+    def onchange_scan_zone(self):
         if not self.scan_zone: return
         zone_id = await [self.env['stock.receive.zone'].search(['name', '=', self.scan_zone])]
         self.scan = ''
