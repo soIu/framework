@@ -16,9 +16,9 @@ class AgvCheckpoint(models.Model):
     _name = 'agv.checkpoint'
 
     name = fields.Char(string="Name")
-    agv = fields.Char(string="AGV")
+    agv = fields.Char(string="AGV IP Address")
     daisha = fields.Char(string="Daisha")
-    location = fields.Char(string="Location")
+    location_id = fields.Many2one('stock.location', string="Location")
     date = fields.Datetime(string="Date", defaults=tools.date.now)
 
     @async
@@ -30,9 +30,10 @@ class AgvCheckpoint(models.Model):
             value.name = 'Checkpoint ' + str.zfill(sequence.toString(), 3)
         return self.__super__('create')(values=values, is_client=is_client)
 
-    @api.server #(async=True)
+    @api.server(async=True)
     def receive_rfid(self, ip, epc):
-        return self.create({'agv': ip, 'daisha': epc})
+        rfid_id = await [self.env['agv.rfid'].search(['name', '=', ip])]
+        return self.create({'agv': ip, 'daisha': epc, 'location_id': rfid_id.location_id})
 
 AgvCheckpoint()
 
@@ -43,7 +44,7 @@ view.add(model='agv.checkpoint', mode='tree', arch="""
 <tree>
     <field name="name"/>
     <field name="daisha"/>
-    <field name="location"/>
+    <field name="location_id"/>
 </tree>
 """)
 
@@ -55,7 +56,7 @@ view.add(model='agv.checkpoint', mode='form', arch="""
             <field name="date"/>
         </group>
         <group>
-            <field name="location"/>
+            <field name="location_id"/>
         </group>
     </sheet>
 </form>
@@ -80,6 +81,22 @@ view.add(model='agv.route', mode='tree', arch="""
 </tree>
 """)
 
+class AgvRFID(models.Model):
+    _name = 'agv.rfid'
+
+    name = fields.Char(string="IP Address", required=True, index=True)
+    location_id = fields.Many2one('stock.location', string="Location")
+
+AgvRFID()
+
+menu.add(id='rfid', parent='agv_chasun', model='agv.rfid', string="RFID Location", sequence=3)
+
+view.add(model='agv.rfid', mode='tree', arch="""
+<tree>
+    <field name="name"/>
+    <field name="location_id"/>
+</tree>
+""")
 
 pack = {}
 sequence = {}
