@@ -657,7 +657,7 @@ class HPPMData(models.Model):
             date_object.setDate(date_object.getDate() + parseInt(date))
             date = date_object
             date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no':}
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
             await [create_po(value)]
         #return Promise.all(promises)
 
