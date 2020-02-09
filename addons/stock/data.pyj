@@ -21,21 +21,23 @@ class PurchaseOrder(models.Model):
         pack_ids = await [self.env['stock.pack'].search(['order_pack_id', 'in', self.pack_ids])]
         picking_ids = []
         moves = {}
-        quantity = 0
+        #quantity = 0
         @async
         def get_moves(pack_id):
-            nonlocal quantity
-            if pack_id.picking_id in picking_ids: return
+            #nonlocal quantity
+            quantity = 0
+            if pack_id.picking_id in picking_ids: return 0
             picking_ids.push(pack_id.picking_id)
             picking_id = await [self.env['stock.picking'].browse(pack_id.picking_id)]
             if picking_id.state == 'validated':
                move_ids = await [self.env['stock.move'].browse(picking_id.move_ids)]
                for move_id in move_ids: quantity += move_id.product_qty
+            return quantity
         promises = []
         for pack_id in pack_ids:
             promises.push(get_moves(pack_id))
-        await (promises)
-        return quantity
+        quantities = await (promises)
+        return sum(quantities)
 
     @async
     def _get_received_boxes(self):
@@ -43,20 +45,22 @@ class PurchaseOrder(models.Model):
         pack_ids = await [self.env['stock.pack'].search(['order_pack_id', 'in', self.pack_ids])]
         picking_ids = []
         moves = {}
-        quantity = 0
+        #quantity = 0
         @async
         def get_boxes(pack_id):
-            nonlocal quantity
-            if pack_id.picking_id in picking_ids: return
+            #nonlocal quantity
+            quantity = 0
+            if pack_id.picking_id in picking_ids: return 0
             picking_ids.push(pack_id.picking_id)
             picking_id = await [self.env['stock.picking'].browse(pack_id.picking_id)]
             if picking_id.state == 'validated':
                for pack_id in picking_id.pack_ids: quantity += 1
+            return quantity
         promises = []
         for pack_id in pack_ids:
             promises.push(get_boxes(pack_id))
-        await (promises)
-        return quantity
+        quantites = await (promises)
+        return sum(quantities)
 
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.", index=True)
@@ -68,6 +72,7 @@ class PurchaseOrder(models.Model):
     ps_code = fields.Char(string="P/S Code", index=True)
     pl_from = fields.Char(string="P/L From", index=True)
     pl_to = fields.Char(string="P/L To", index=True)
+    lot_no = fields.Char(string="Lot No.")
     pack_ids = fields.One2many('purchase.order.pack', 'order_id', string="Packs")
     date = fields.Datetime(string="Date", index=True)
     date_string = fields.Char(string="Date (String)", index=True)
@@ -224,7 +229,7 @@ class PurchaseOrderPack(models.Model):
         self.env['log.data'].log('Receive', self.name, 'id:', self.id, 'model:', self._name)
         if immediate:
            return picking_id.validate(immediate=True)
-        tools.navigate('/form/stock.picking?id=' + picking_id.id)
+        tools.navigate('/view/stock.picking.form?id=' + picking_id.id)
 
 
 PurchaseOrderPack()
@@ -652,7 +657,7 @@ class HPPMData(models.Model):
             date_object.setDate(date_object.getDate() + parseInt(date))
             date = date_object
             date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date}
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no':}
             await [create_po(value)]
         #return Promise.all(promises)
 

@@ -50,7 +50,7 @@ class StockPicking(models.Model):
         self.scan = ''
         if not zone_id.length: return
         self.receive_zone_id = zone_id
-        self.write({'receive_zone_id': zone_id.id})
+        return self.write({'receive_zone_id': zone_id.id})
 
     def create(self, values=False, is_client=tools.configuration.client):
         promises = []
@@ -211,12 +211,12 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
             <field name="type"/>
             <field name="receive_zone_id" invisible="active_id.type != 'putting'"/>
         </group>
-        <group>
+        <!--<group>
             <field name="location_src_id"/>
         </group>
         <group>
             <field name="location_dest_id"/>
-        </group>
+        </group>-->
         <group width="100%">
             <scanner-field name="scan_zone"/>
         </group>
@@ -335,15 +335,13 @@ class PickingList(models.Model):
            self.laser_scan = ''
            #if not pickup_zone_id.length: return
            #self.pickup_zone_id = pickup_zone_id.id
-           self.write({'pickup_zone': self.laser_scan})
-           return
+           return self.write({'pickup_zone': self.laser_scan})
         elif barcode.slice(0, 6) == 'Daisha':
            trolley_id = await [self.env['stock.trolley'].search(['name', '=', barcode])]
            self.laser_scan = ''
            if not trolley_id.length: return
            self.trolley_id = trolley_id.id
-           self.write({'trolley_id': trolley_id.id})
-           return
+           return self.write({'trolley_id': trolley_id.id})
         value = JSON.parse(barcode)
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         if pack_id.picking_list_id: return
