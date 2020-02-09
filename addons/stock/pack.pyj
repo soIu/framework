@@ -98,6 +98,20 @@ view.add(model='agv.rfid', mode='tree', arch="""
 </tree>
 """)
 
+view.add(model='agv.rfid', mode='form', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="name"/>
+        </group>
+        <group>
+            <field name="location_id"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+
 pack = {}
 sequence = {}
 add_sequence('stock.pack', sequence)
