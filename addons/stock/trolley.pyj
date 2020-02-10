@@ -3,6 +3,7 @@ import orm.fields as fields
 import orm.api as api
 from ir.ui import menu, view
 from utils import create_upload_button, show_qrcode
+from stock.location import defaults as locations
 
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
@@ -16,6 +17,7 @@ class StockTrolley(models.Model):
     def update_location(self, trolley, location_id):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
+        if location_id in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return
         picking_list_id = await [self.env['stock.picking.list'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
         return picking_list_id.check_pulley()
 
