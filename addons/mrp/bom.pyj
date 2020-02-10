@@ -13,9 +13,9 @@ class MrpBom(models.Model):
         product_id = await [self.env['product.product'].browse(self.product_id)]
         return product_id.code
 
-    name = fields.Char(string="Model")
+    name = fields.Char(string="Model", required=True)
     code = fields.Char(string="Code", compute=_get_code, store=False)
-    product_id = fields.Many2one('product.product', string="Finish Good", index=True)
+    product_id = fields.Many2one('product.product', string="Finish Good", index=True, required=True)
     reference = fields.Char(string="Reference")
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
 
