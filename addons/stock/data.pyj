@@ -184,6 +184,7 @@ class PurchaseOrderPack(models.Model):
     received = fields.Boolean(string="Received")
     inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
+    is_pulley = fields.Boolean(string="Is Pulley")
 
     """@async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -227,7 +228,7 @@ class PurchaseOrderPack(models.Model):
             nonlocal pack_sequence
             pack_sequence += 1
             if pack_sequence >= 10: pack_sequence = 1
-            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id}), record.write({'received': True})])
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds().toString()), 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id, 'is_pulley': record.is_pulley}), record.write({'received': True})])
             pack_ids.push(pack_id.id)
         picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
         self.env['log.data'].log('Receive', self.name, 'id:', self.id, 'model:', self._name)

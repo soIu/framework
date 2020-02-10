@@ -111,8 +111,11 @@ class ReceiveInhouse(models.Model):
     @async
     def receive(self):
         product_id = await [self.env['product.product'].browse(self.product_id)]
+        is_pulley = False
+        if 'pulley' in product_id.name.toLowerCase():
+           is_pulley = True
         self.env['log.data'].log('Receive Inhouse part:', product_id.name)
-        order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': self.product_qty, 'part_no': product_id.code, 'inhouse_ckd': True})]
+        order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': self.product_qty, 'part_no': product_id.code, 'inhouse_ckd': True, 'is_pulley': is_pulley})]
         await [order_pack_id.receive(immediate=True)]
         order_pack_id.print_label()
         tools.navigate('/')

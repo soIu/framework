@@ -22,6 +22,7 @@ class MrpSequence(models.Model):
     date = fields.Datetime(string="Date", index=True)
     destination = fields.Char(string="Destination")
     quantity = fields.Float(string="Quantity")
+    finished = fields.Boolean(string="Finished", readonly=True)
 
     @api.depends('sequence', async=True)
     def onchange_sequence(self, sequence):
@@ -38,7 +39,7 @@ menu.add(id='mrp_sequence', string="Sequence 4WD", parent='mrp_planning', model=
 menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_flexi', sequence=5)
 
 view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
-<tree domain="context.type ? ['type', '=', context.type] : []">
+<tree domain="context.type ? ['type', '=', context.type] : [], ['finished', '!=', True]">
     <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="quantity" string="Plan Qty"/>

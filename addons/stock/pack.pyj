@@ -33,6 +33,7 @@ class AgvCheckpoint(models.Model):
     @api.server(async=True)
     def receive_rfid(self, ip, epc):
         rfid_id = await [self.env['agv.rfid'].search(['name', '=', ip])]
+        self.env['stock.trolley'].update_location(epc, rfid_id.trolley_id).catch(console.error)
         return self.create({'agv': ip, 'daisha': epc, 'location_id': rfid_id.location_id})
 
 AgvCheckpoint()
@@ -174,6 +175,7 @@ class StockPack(models.Model):
     product_id = fields.Many2one('product.product', string="Product", index=True)
     product_qty = fields.Float(string="Quantity", index=True)
     available_qty = fields.Float(string="Available Quantity", index=True)
+    is_pulley = fields.Boolean(string="Is Pulley", readonly=True)
     #available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     #current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
 

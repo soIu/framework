@@ -408,6 +408,7 @@ class PickingList(models.Model):
             pack_map[line_id.product_id] = []
             lines[line_id.product_id] += await [line_id.product_qty]
         for pack_id in pack_ids:
+            pack_id.trolley_id = self.trolley_id
             if packs[pack_id.product_id]:
                packs[pack_id.product_id] += pack_id.product_qty
                pack_map[pack_id.product_id].push(pack_id)
@@ -441,6 +442,15 @@ class PickingList(models.Model):
             except Exception as error:
                 tools.dialog.alert(error.stack)
         await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking(), call_route()])
+
+    @api.server(async=True)
+    def check_pulley(self):
+        if not self.pack_ids or not self.pack_ids.length: return
+        pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]
+        for pack_id in pack_ids:
+            if not pack_id.is_pulley: continue
+            sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
+            return sequence_id.write({'finished': True})
 
 PickingList()
 
