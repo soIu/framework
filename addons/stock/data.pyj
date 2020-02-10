@@ -537,7 +537,7 @@ class HPPMData(models.Model):
         def create_product(model, code):
             product_id = await [self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg'])]
             if not product_id.length:
-               product_id = await [self.env['product.product'].create({'base_name': model.split(' ').slice(0, -2).join(' '), 'name': model, 'code': code, 'type': 'fg'})]
+               product_id = await [self.env['product.product'].create({'base_name': model.split(' ').slice(0, -2).join(' '), 'name': model.trim(), 'code': code, 'type': 'fg'})]
             return product_id
         @async
         def create_bom(model, product_id):
