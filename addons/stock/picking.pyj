@@ -152,12 +152,21 @@ class StockPicking(models.Model):
             return Promise.all(promises)
         )
 
+    @api.server(async=True)
+    def update_move(self, state):
+        move_ids = []
+        for record in self: move_ids.push(*record.move_ids)
+        move_ids = await [self.env['stock.move'].browse(move_ids)]
+        return move_ids.write({'state': state})
+
     @api.server
     def confirm(self):
+        self.update_move('confirmed').catch(console.error)
         return self.write({'state': 'confirmed'})
 
     #@api.server
     def validate(self, immediate):
+        self.update_move('validated').catch(console.error)
         for record in self:
             if immediate: break
             if record.type == 'putting' and not record.receive_zone_id: return tools.dialog.alert('Scan the zone first')
