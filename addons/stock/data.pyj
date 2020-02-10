@@ -18,20 +18,23 @@ class PurchaseOrder(models.Model):
     @async
     def _get_received_qty(self):
         if not self.env.context.actual_receiving: return None
+        if not self.printed: return 0
         pack_ids = await [self.env['stock.pack'].search(['order_pack_id', 'in', self.pack_ids])]
-        picking_ids = []
+        if not pack_ids.length: return 0
+        picking_ids = self.env['stock.picking'].search(['state', '=', 'validated'])
         moves = {}
         #quantity = 0
         @async
         def get_moves(pack_id):
             #nonlocal quantity
             quantity = 0
-            if pack_id.picking_id in picking_ids: return 0
-            picking_ids.push(pack_id.picking_id)
-            picking_id = await [self.env['stock.picking'].browse(pack_id.picking_id)]
-            if picking_id.state == 'validated':
-               move_ids = await [self.env['stock.move'].browse(picking_id.move_ids)]
-               for move_id in move_ids: quantity += move_id.product_qty
+            move_ids = await [self.env['stock.move'].browse(pack_id.move_ids)]
+            console.log(move_ids.length)
+            picking_validated_ids = await (picking_ids)
+            for move_id in move_ids:
+                #picking_id = picking_validated_ids.find(move_id.picking_id)
+                #alert(picking_id.name)
+                if move_id.location_dest_id == location_defaults.internal_id and move_id.picking_id in picking_validated_ids.ids: quantity += move_id.product_qty
             return quantity
         promises = []
         for pack_id in pack_ids:
@@ -42,19 +45,20 @@ class PurchaseOrder(models.Model):
     @async
     def _get_received_boxes(self):
         if not self.env.context.actual_receiving: return None
+        if not self.printed: return 0
         pack_ids = await [self.env['stock.pack'].search(['order_pack_id', 'in', self.pack_ids])]
-        picking_ids = []
+        if not pack_ids.length: return 0
+        picking_ids = self.env['stock.picking'].search(['state', '=', 'validated'])
         moves = {}
         #quantity = 0
         @async
         def get_boxes(pack_id):
             #nonlocal quantity
             quantity = 0
-            if pack_id.picking_id in picking_ids: return 0
-            picking_ids.push(pack_id.picking_id)
-            picking_id = await [self.env['stock.picking'].browse(pack_id.picking_id)]
-            if picking_id.state == 'validated':
-               for pack_id in picking_id.pack_ids: quantity += 1
+            move_ids = await [self.env['stock.move'].browse(pack_id.move_ids)]
+            picking_validated_ids = await (picking_ids)
+            for move_id in move_ids:
+                if move_id.location_dest_id == location_defaults.internal_id and move_id.picking_id in picking_validated_ids.ids: quantity += 1
             return quantity
         promises = []
         for pack_id in pack_ids:
