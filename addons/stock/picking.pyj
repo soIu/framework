@@ -338,7 +338,7 @@ class PickingList(models.Model):
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
         self.env['log.data'].log('Scan', barcode, 'on Picking List')
-        if barcode.match(/^(.*?)-PICK-[0-1][0-1]$/):
+        if barcode.split('-PICK-')[0] == 'LC':
            self.pickup_zone = self.laser_scan
            #pickup_zone_id = await [self.env['stock.pickup.zone'].search(['name', '=', barcode])]
            self.laser_scan = ''
