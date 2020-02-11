@@ -228,7 +228,7 @@ class StockPack(models.Model):
 StockPack()
 
 menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pack', 'sequence': 6})
-menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing Packs', 'model': 'stock.pack', 'sequence': 3})
+#menu.add({'id': 'pack_historical', 'parent': 'historical', 'string': 'Existing Packs', 'model': 'stock.pack', 'sequence': 3})
 
 last_args = None
 
@@ -274,7 +274,7 @@ view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 </form>
 """})
 
-class HistoricalData(models.Model):
+'''class HistoricalData(models.Model):
     _name = 'historical.data'
 
     date_from = fields.Datetime(string="Date From", required=True)
@@ -314,4 +314,4 @@ view.add(model='historical.data', mode='filter', arch="""
         </group>
     </sheet>
 </form>
-""")
+""")'''

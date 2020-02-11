@@ -215,3 +215,29 @@ view.add(model='test.agv', mode='wizard', arch="""
     </sheet>
 </form>
 """)
+
+class VisualControl(models.Model):
+    _name = 'visual.control'
+
+    def open_sequence(self):
+        window.open('./vc-sequence.html')
+
+    def open_picking_list(self):
+        window.open('./vc-picking.html')
+
+VisualControl()
+
+menu.add(id='visual_control', string='Visual Control', model='visual.control', view_id='visual.control.open', sequence=500)
+
+view.add(model='visual.control', mode='open', arch="""
+<form>
+    <sheet>
+        <group>
+            <button name="open_sequence" string="Production Sequence"/>
+        </group>
+        <group>
+            <button name="open_picking_list" string="Picking List"/>
+        </group>
+    </sheet>
+</form>
+""")

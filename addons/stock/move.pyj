@@ -81,7 +81,7 @@ StockMove()
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'move', 'parent': 'stock', 'string': 'Movement', 'model': 'stock.move', 'sequence': 5})
-menu.add(id='historical', string='Historical Data', sequence=30)
+#menu.add(id='historical', string='Historical Data', sequence=30)
 
 view.add({'model': 'stock.move', 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="context.location ? ['location_dest_id', '=', models.env['stock.location'].location_defaults[context.location]] : []">
