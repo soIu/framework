@@ -130,6 +130,7 @@ class StockAdjust(models.Model):
     _name = 'stock.adjust'
 
     pack_id = fields.Many2one('stock.pack', string="Pack to Move", required=True)
+    product_id = fields.Many2one('product.product', string="Part", required=True)
     quantity = fields.Float(string="Quantity")
     location_id = fields.Many2one('stock.location', string="Destination", required=True)
     scan = fields.Char(string="Scan")
@@ -141,6 +142,12 @@ class StockAdjust(models.Model):
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         self.pack_id = pack_id
         self.scan = ''
+
+    @api.onchange('pack_id', async=True)
+    def onchange_pack(self):
+        if not self.pack_id: return
+        pack_id = await [self.env['stock.pack'].browse(self.pack_id)]
+        self.product_id = pack_id.product_id
 
     @async
     def adjust(self):
@@ -159,7 +166,8 @@ view.add(model='stock.adjust', mode='wizard', arch="""
 <form>
     <sheet>
         <group>
-            <field name="pack_id"/>
+            <field name="pack_id" domain="active_id.product_id ? ['product_id', '=', active_id.product_id] : []"/>
+            <field name="product_id"/>
             <scanner-field name="scan"/>
         </group>
         <group>
