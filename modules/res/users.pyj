@@ -33,6 +33,7 @@ class ResUsers(models.Model):
     password = fields.Char(string="Password", index=True, protect=True)
     is_superuser = fields.Boolean(string="Is Superuser", index=True)
     menu_ids = fields.One2many('res.users.menu', 'user_id', string="Available Menus")
+    expired = fields.Boolean(string="Expired")
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
@@ -57,6 +58,11 @@ class ResUsers(models.Model):
         def (result):
             return self
         )
+
+    @api.server(async=True)
+    def expire_all(self):
+        user_ids = await [self.env['res.users'].search(['login', '!=', 'admin'])]
+        return user_ids.write({'expired': True})
 
 """default_create = ResUsers.prototype.create
 def create(values=False, client=tools.configuration.client):
