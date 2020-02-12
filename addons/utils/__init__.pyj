@@ -28,6 +28,13 @@ def create_upload_button():
 def show_qrcode(id, field):
     def show():
         if not models.env.context.active_id or not models.env.context.active_id[field]: return
+        qrcode = document.getElementById(id)
         QRCode = window.QRCode
-        new QRCode(document.getElementById(id), models.env.context.active_id[field])
+        new QRCode(qrcode, models.env.context.active_id[field])
+        button = document.getElementById(id + '_button')
+        if button:
+           def onclick():
+               qrcode.insertAdjacentHTML('beforeend', '<h2 style="font-family: Roboto,system-ui,Noto,Helvetica,Arial,sans-serif">' + qrcode.title + '</h2>')
+               printElement(qrcode)
+           button.onclick = onclick
     return show

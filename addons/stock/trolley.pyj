@@ -29,7 +29,7 @@ StockTrolley()
 menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Trolley (Daisha)", sequence=1)
 
 view.add(model='stock.trolley', mode='tree', arch="""
-<tree>
+<tree title="Trolley (Daisha)">
     <field name="name"/>
 </tree>
 """)
@@ -39,6 +39,7 @@ view.add(init=show_qrcode('trolley_qrcode', 'name'), model='stock.trolley', mode
     <sheet>
         <group>
             <field name="name"/>
+            <a class="button button-fill" id="trolley_qrcode_button" style="display: block; float: left; width: auto; margin: 10px;">Print</a>
         </group>
         <group>
             <div id="trolley_qrcode"/>
@@ -145,6 +146,7 @@ view.add(init=show_qrcode('pickup_qrcode', 'name'), model='stock.pickup.zone', m
     <sheet>
         <group>
            <field name="name"/>
+            <a class="button button-fill" id="pickup_qrcode_button" style="display: block; float: left; width: auto; margin: 10px;">Print</a>
         </group>
         <group>
            <div id="pickup_qrcode"/>
@@ -173,6 +175,7 @@ view.add(init=show_qrcode('lc_qrcode', 'name'), model='stock.receive.zone', mode
     <sheet>
         <group>
            <field name="name"/>
+            <a class="button button-fill" id="lc_qrcode_button" style="display: block; float: left; width: auto; margin: 10px;">Print</a>
         </group>
         <group>
            <div id="lc_qrcode"/>

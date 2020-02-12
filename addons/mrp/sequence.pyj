@@ -118,7 +118,7 @@ class MrpSequenceReorder(models.Model):
 
     @api.onchange('sequence_to', async=True)
     def onchange_sequence_to(self):
-        date = self.date or self.date_to
+        date = self.date_to or self.date
         if self.sequence_to_changing or not self.sequence_to or not self.type or not date: return
         self.sequence_to_changing = True
         date = new Date(date)
@@ -148,7 +148,7 @@ class MrpSequenceReorder(models.Model):
         promises = [self.env['mrp.sequence'].browse(self.sequence_from_id)]
         if self.sequence_to_id: promises.push(self.env['mrp.sequence'].browse(self.sequence_to_id))
         sequence_from_id, sequence_to_id = await (promises)
-        return await ([sequence_from_id.write({'sequence': self.sequence_to}), sequence_to_id and sequence_to_id.write({'sequence': self.sequence_from})])
+        return await ([sequence_from_id.write({'sequence': self.sequence_to, 'date': self.date_to or sequence_from_id.date}), sequence_to_id and sequence_to_id.write({'sequence': self.sequence_from, 'date': self.date})])
 
 MrpSequenceReorder()
 
