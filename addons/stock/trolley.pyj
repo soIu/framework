@@ -8,10 +8,15 @@ from stock.location import defaults as locations
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
 
+    @async
+    def _get_type(self):
+        return self.env['stock.picking'].with_context(limit=1).search(['trolley_id', '=', self.id])
+
     name = fields.Char(string="Trolley Number", required=True, index=True)
     location_id = fields.Many2one('stock.location', string="Current Location")
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", compute=_get_type, store=False)
 
     @api.server(async=True)
     def update_location(self, trolley, location_id):
@@ -31,6 +36,7 @@ menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Troll
 view.add(model='stock.trolley', mode='tree', arch="""
 <tree title="Trolley (Daisha)">
     <field name="name"/>
+    <field name="trolley_type_id"/>
 </tree>
 """)
 
