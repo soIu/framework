@@ -341,7 +341,7 @@ class PickingList(models.Model):
         #await (bom_line_ids.map(after_create))
         return result
 
-    @api.onchange('laser_scan')
+    @api.onchange('laser_scan', async=True)
     def onchange_scan(self):
         barcode = self.laser_scan
         if not barcode: return
