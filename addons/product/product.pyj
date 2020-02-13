@@ -1,5 +1,6 @@
 import orm.models as models
 import orm.fields as fields
+import orm.tools as tools
 import orm.api as api
 from stock.pack import StockPack
 from stock.location import defaults as location_default
