@@ -39,7 +39,7 @@ menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Troll
 view.add(model='stock.trolley', mode='tree', arch="""
 <tree title="Trolley (Daisha)">
     <field name="name"/>
-    <field name="trolley_type_id"/>
+    <!--<field name="trolley_type_id"/>-->
 </tree>
 """)
 
