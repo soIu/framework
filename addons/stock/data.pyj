@@ -684,10 +684,11 @@ class HPPMData(models.Model):
             if row < 1: continue
             #if not data[0]: continue
             date = data[7] #.split('/')
-            date_object = new Date('1899-12-30 00:00:00')
-            date_object.setDate(date_object.getDate() + parseInt(date))
-            date = date_object
-            date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
+            if date and type(date) == Number:
+               date_object = new Date('1899-12-30 00:00:00')
+               date_object.setDate(date_object.getDate() + parseInt(date))
+               date = date_object
+               date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
             value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
             await [create_po(value)]
         #return Promise.all(promises)
@@ -780,10 +781,10 @@ class ChangePassword(models.Model):
 
     @async
     def change_password(self):
-        new_password = document.getElementById('hppm_new_password').value
-        confirm_password = document.getElementById('hppm_confirm_password').value
+        new_password = document.getElementById('hppm_new_password').querySelector('input').value
+        confirm_password = document.getElementById('hppm_confirm_password').querySelector('input').value
         if new_password != confirm_password: return tools.dialog.alert("New password doesn't match")
-        result = await [self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').value), btoa(new_password), btoa(confirm_password))]
+        result = await [self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').querySelector('input').value), btoa(new_password), btoa(confirm_password))]
         def reload():
             href = window.location.origin + window.location.pathname
             window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'

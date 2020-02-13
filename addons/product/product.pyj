@@ -42,12 +42,13 @@ def check_session():
     date.setDate(date.getDate() + 90)
     if date.toISOString() <= tools.date.now().toISOString(): return True
 
-if check_session(): window.hash = '#!/view/change.password.wizard'
+if check_session() and window.location.hash != '#!/view/change.password.wizard': window.location.href = window.location.href.replace(window.location.hash, '') + '#!/view/change.password.wizard'
 
 def restrict_session():
     if not check_session(): return
     for menu in tools.menu:
         del tools.menu[menu]
+    window.hash = '#!/view/change.password.wizard'
 
 data.append(restrict_session)
 
