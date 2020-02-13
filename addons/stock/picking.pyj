@@ -465,6 +465,11 @@ class PickingList(models.Model):
         await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking(), call_route()])
 
     @api.server(async=True)
+    def update_location(self, location_id):
+        sequence_id, location_id = await ([self.env['mrp.sequence'].browse(self.sequence_id), self.env['stock.location'].browse(location_id)])
+        return sequence_id.write({'location_name': location_id.name})
+
+    @api.server(async=True)
     def check_pulley(self):
         if not self.pack_ids or not self.pack_ids.length: return
         pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]

@@ -23,6 +23,7 @@ class MrpSequence(models.Model):
     destination = fields.Char(string="Destination")
     quantity = fields.Float(string="Quantity")
     finished = fields.Boolean(string="Finished", readonly=True)
+    location_name = fields.Char(string="Location")
 
     @api.depends('sequence', async=True)
     def onchange_sequence(self, sequence):
