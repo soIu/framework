@@ -842,6 +842,9 @@ view.add(model='change.password', mode='wizard', arch="""
         <group>
             <button name="change_password" string="Change"/>
         </group>
+        <group invisible="true">
+            <field name="trigger"/>
+        </group>
     </sheet>
 </form>
 """)
