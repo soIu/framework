@@ -39,9 +39,16 @@ def check_session():
        return
     date = new Date(window.localStorage.session_start_date)
     date.setDate(date.getDate() + 90)
-    if date.toISOString() <= tools.date.now().toISOString():
+    if date.toISOString() <= tools.date.now().toISOString(): return True
 
-data.append(check_session)
+if check_session(): window.hash = '#!/view/change.password.wizard'
+
+def restrict_session():
+    if not check_session(): return
+    for menu in tools.menu:
+        del tools.menu[menu]
+
+data.append(restrict_session)
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Packing', 'model': 'product.product', 'view_id': 'product.product.tree_packing', 'sequence': 10})
