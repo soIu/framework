@@ -24,7 +24,7 @@ class StockTrolley(models.Model):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
         picking_list_id = await [self.env['stock.picking.list'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
-        pack_ids = await [self.env['stock.pack'].browse(picking_id.pack_ids)]
+        pack_ids = await [self.env['stock.pack'].browse(picking_list_id.pack_ids)]
         for pack_id in pack_ids:
             await ([pack_id.write({'location_id': location_id}), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id})])
         #picking_list_id = await (picking_list_id)
