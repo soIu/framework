@@ -4,6 +4,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 import orm.exceptions as exceptions
+from orm.db import db
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
@@ -798,9 +799,9 @@ class ChangePassword(models.Model):
         user_id = await [self.env['res.users'].browse(uid)]
         self.env['log.data'].create({'name': ['Changing Password', 'success:', user_id.password == current].join(' '), 'user_id': user_id.id})
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
-        doc = await [models.db.get(models.db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
+        doc = await [db.get(db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
         doc.password = new_password
-        return models.db.put(doc)
+        return db.put(doc)
 
 ChangePassword()
 
