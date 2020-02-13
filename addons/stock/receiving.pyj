@@ -150,7 +150,7 @@ view.add(model='stock.receive.inhouse', mode='wizard', arch="""
 class StockReceiveCKD(models.Model):
     _name = 'stock.receive.ckd'
 
-    name = fields.Char(string="CKD Number", readonly=True)
+    name = fields.Char(string="PC No.", readonly=True)
     reference = fields.Char(string="Reference")
     file = fields.Binary(string="File Manifest", required=True, protect=True)
     order_pack_ids = fields.One2many('purchase.order.pack', 'ckd_id', string="Packs")

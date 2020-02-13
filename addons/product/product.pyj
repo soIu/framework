@@ -24,6 +24,11 @@ class ProductProduct(models.Model):
     flexi_trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type (Flexi)", index=True)
     qty_box = fields.Float(string="Qty/Box")
     min_box = fields.Float(string="Minimum Box")
+    pl_from = fields.Char(string="P/L From")
+    supplier = fields.Char(string="Supplier")
+    model_type = fields.Char(string="Model")
+    packing_type = fields.Char(string="Packing Type")
+    c_code = fields.Char(string="C/Code")
 
 ProductProduct()
 
@@ -43,14 +48,15 @@ menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
 
 view.add({'model': 'product.product', 'init': check_session, 'mode': 'tree', 'string': False, 'arch': """
-<tree>
-    <field name="base_name"/>
+<tree domain="context.types ? ['type', 'in', context.types] : []">
+    <field name="type"/>
     <field name="code"/>
-    <!--<field name="trolley_type_id"/>
-    <field name="total_qty"/>
-    <field name="incoming_qty"/>
-    <field name="actual_qty"/>
-    <field name="remaining_qty"/>-->
+    <field name="base_name"/>
+    <field name="pl_from"/>
+    <field name="supplier"/>
+    <field name="model_type"/>
+    <field name="packing_type"/>
+    <field name="c_code"/>
 </tree>
 """})
 

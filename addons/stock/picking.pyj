@@ -285,6 +285,18 @@ view.add({'model': 'stock.picking', 'mode': 'settings', 'init': init_settings, '
 </page>
 """})
 
+class PickingListFilter(models.Model):
+    _name = 'stock.picking.list.filter'
+
+    date = fields.Date(string="Date", required=True)
+
+    def filter(self):
+        domain = [['date', '=', self.date.toISOString()]]
+        if self.env.context.type: domain.push(['type', '=', self.env.context.type])
+        tools.navigate('/tree/stock.picking.list?domain=' + JSON.stringify(domain))
+
+PickingListFilter()
+
 class PickingList(models.Model):
     _name = 'stock.picking.list'
 
@@ -464,13 +476,13 @@ class PickingList(models.Model):
 PickingList()
 
 menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
-menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list', string="Queue & Print", sequence=1)
-menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_mcvt', string="MCVT", sequence=2)
-menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_fwd', string="4WD", sequence=3)
-menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list', view_id='stock.picking.list.tree_flexi', string="Flexi", sequence=4)
+menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.wizard', string="Queue & Print", sequence=1)
+menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.mcvt', string="MCVT", sequence=2)
+menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd', string="4WD", sequence=3)
+menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
-<tree domain="context.type ? ['type', '=', context.type] : []">
+<tree> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>
     <field name="model_code"/>
@@ -480,16 +492,48 @@ view.add(model='stock.picking.list', mode='tree', arch="""
 </tree>
 """)
 
-view.add(model='stock.picking.list', mode='tree_mcvt', arch="""
-<tree-page title="Picking List MCVT"/>
+view.add(model='stock.picking.list.filter', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+view.add(model='stock.picking.list.filter', mode='mcvt', arch="""
+<form mode="mcvt">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
 """, context={'type': 'mcvt'})
 
-view.add(model='stock.picking.list', mode='tree_fwd', arch="""
-<tree-page title="Picking List 4WD"/>
+view.add(model='stock.picking.list.filter', mode='fwd', arch="""
+<form mode="fwd">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
 """, context={'type': 'fwd'})
 
-view.add(model='stock.picking.list', mode='tree_flexi', arch="""
-<tree-page title="Piking List Flexi"/>
+view.add(model='stock.picking.list.filter', mode='flexi', arch="""
+<form mode="flexi">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
 """, context={'type': 'flexi'})
 
 view.add(model='stock.picking.list', mode='form', arch="""

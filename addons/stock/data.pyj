@@ -378,7 +378,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['sozai', 'Parts Sozai'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -410,7 +410,7 @@ class HPPMData(models.Model):
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
         if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
-        if self.type == 'sozai': return self.import_sozai().then(after_finish)
+        if self.type == 'data_packing': return self.import_data_packing().then(after_finish)
         if self.type == 'route_agv': return self.import_route().then(after_finish)
 
     @api.server #(async=True)
@@ -667,23 +667,35 @@ class HPPMData(models.Model):
         #return Promise.all(promises)
 
     @api.server(async=True)
-    def import_sozai(self):
+    def import_data_packing(self):
         promises = []
         xlsx = require('node-xlsx')
-        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[4]
+        sheets = xlsx.parse(tools.atob(self.excel, buffer=True))
         row = -1
         @async
-        def create_part(value):
+        def create_part_sozai(value):
             product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', 'sozai']))
             if product_id.length: return
             return self.env['product.product'].create(value)
-        for data in sheet.data:
+        for data in sheets[4].data:
             row += 1
             if row < 3: continue
             #if not data[0]: continue
-            value = {'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'name': data[1] + '-' + data[2], 'base_name': data[2], 'qty_box': data[9], 'vendor': data[4], 'type': 'sozai'}
-            await [create_part(value)]
-        #return Promise.all(promises)
+            value = {'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'name': data[1] + '-' + data[2], 'base_name': data[2], 'qty_box': data[9], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8], 'type': 'sozai'}
+            await [create_part_sozai(value)]
+        @async
+        def update_part(value, type):
+            product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', type]))
+            if not product_id.length: return
+            if product_id.qty_box: del value.qty_box
+            return product_id.write(value)
+        for type, sheet in Object.entries({'local': sheets[0], 'ckd': sheets[2], 'inhouse': sheets[3]}):
+            row = -1
+            for data in sheet.data:
+                row += 1
+                if row < 3: continue
+                value = {'code': data[1], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8]}
+                await [update_part(value, type)]
 
     @api.server(async=True)
     def import_po_old(self):
