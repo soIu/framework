@@ -817,8 +817,7 @@ class ChangePassword(models.Model):
         self.env['log.data'].create({'name': ['Changing Password', 'success:', user_id.password == current].join(' '), 'user_id': user_id.id})
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
         doc = await [db.get(db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
-        doc.password = new_password
-        console.log(doc)
+        doc.data.password = new_password
         return db.put(doc)
 
 ChangePassword()
