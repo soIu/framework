@@ -1,3 +1,4 @@
+import orm.exceptions as exceptions
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
@@ -456,7 +457,18 @@ class HPPMData(models.Model):
                   trolleys[trolley_type][part_code] = [part_qty, box_qty]
                else:
                   trolley_id = get_trolley(trolley_type, type)
-                  product_ids = await [self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley_type])])]
+                  product_ids = self.env['product.product']
+                  products = []
+                  @async
+                  def check_part(code):
+                      product_id = await [self.env['product.product'].search(['code', '=', code])]
+                      if not product_id.length: raise exceptions.ValidationError("Part Number " + code + "is missing")
+                      return product_id
+                  for code in Object.keys(trolleys[trolley_type]):
+                      products.push(check_part(code))
+                  products = await (products)
+                  for product_id in products:
+                      product_ids.add(product_id)
                   trolley_id = await (trolley_id)
                   for product_id in product_ids:
                       product_id[type + '_trolley_type_id'] = trolley_id.id
@@ -474,7 +486,19 @@ class HPPMData(models.Model):
                trolleys[trolley_type][part_code] = [part_qty, box_qty]
         for trolley in trolleys:
             trolley_id = get_trolley(trolley, type)
-            product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
+            #product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
+            product_ids = self.env['product.product']
+            products = []
+            @async
+            def check_part(code):
+                product_id = await [self.env['product.product'].search(['code', '=', code])]
+                if not product_id.length: raise exceptions.ValidationError("Part Number " + code + "is missing")
+                return product_id
+            for code in Object.keys(trolleys[trolley_type]):
+                products.push(check_part(code))
+            products = await (products)
+           for product_id in products:
+               product_ids.add(product_id)
             trolley_id = await (trolley_id)
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
@@ -580,7 +604,9 @@ class HPPMData(models.Model):
             date_object.setDate(date_object.getDate() + parseInt(date))
             date = date_object
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
+            if not product_id.length: raise exceptions.ValidationError("Model Number " + code + " is missing")
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
+            if not bom_id.length: raise exceptions.ValidationError("Bill of Materials for Model Number " + code + " is missing")
             bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1]})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
@@ -649,7 +675,7 @@ class HPPMData(models.Model):
             if order_id.length:
                return order_id.recompute_pack(value.product_qty)
             product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
-            if not product_id.length: return
+            if not product_id.length: raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
             value.product_id = product_id.id
             order_id = await [self.env['purchase.order'].create(value)] #{'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
             order_id.compute_pack()
@@ -686,7 +712,7 @@ class HPPMData(models.Model):
         @async
         def update_part(value, type):
             product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', type]))
-            if not product_id.length: return
+            if not product_id.length: raise exceptions.ValidationError("Part Number " + value.code + " is missing")
             if product_id.qty_box: del value.qty_box
             return product_id.write(value)
         for type, sheet in Object.entries({'local': sheets[0], 'ckd': sheets[2], 'inhouse': sheets[3]}):

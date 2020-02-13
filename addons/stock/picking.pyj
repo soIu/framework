@@ -291,7 +291,7 @@ class PickingListFilter(models.Model):
     date = fields.Date(string="Date", required=True)
 
     def filter(self):
-        domain = [['date', '=', self.date.toISOString()]]
+        domain = [['date', '=', self.date]]
         if self.env.context.type: domain.push(['type', '=', self.env.context.type])
         tools.navigate('/tree/stock.picking.list?domain=' + JSON.stringify(domain))
 

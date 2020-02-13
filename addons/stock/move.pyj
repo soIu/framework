@@ -168,7 +168,8 @@ view.add(model='stock.adjust', mode='wizard', arch="""
         <group>
             <field name="pack_id" domain="active_id.product_id ? ['product_id', '=', active_id.product_id] : []"/>
             <field name="product_id"/>
-            <scanner-field name="scan"/>
+            <!--<scanner-field name="scan"/>-->
+            <button name="adjust" string="Adjust"/>
         </group>
         <group>
             <field name="quantity"/>

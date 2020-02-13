@@ -10,7 +10,8 @@ class StockTrolley(models.Model):
 
     @async
     def _get_type(self):
-        return self.env['stock.picking'].with_context(limit=1).search(['trolley_id', '=', self.id])
+        picking_id = await [self.env['stock.picking'].with_context(limit=1).search(['trolley_id', '=', self.id])]
+        return picking_id.trolley_type_id
 
     name = fields.Char(string="Trolley Number", required=True, index=True)
     location_id = fields.Many2one('stock.location', string="Current Location")
