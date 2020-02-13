@@ -322,7 +322,7 @@ class PickingList(models.Model):
     #pickup_zone_id = fields.Many2one('stock.pickup.zone', string="Pickup Zone")
     pickup_zone = fields.Char(string="Pickup Zone")
     trolley_id = fields.Many2one('stock.trolley', string="Trolley")
-    part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Type", index=True)
+    part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Part Type", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -482,7 +482,7 @@ menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
 view.add(model='stock.picking.list', mode='tree', arch="""
-<tree> <!--domain="context.type ? ['type', '=', context.type] : []">-->
+<tree title="Picking List"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>
     <field name="model_code"/>

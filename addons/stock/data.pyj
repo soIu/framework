@@ -450,6 +450,7 @@ class HPPMData(models.Model):
             part_code = data[4]
             part_qty = data[7] or 0
             box_qty = data[24] or 0
+            if row == 4 and part_code and not data[21]: raise exceptions.ValidationError("Trolley Type Empty")
             if data[21] and data[21] != trolley_type:
                if not trolley_type:
                   trolley_type = data[21]
@@ -780,13 +781,25 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
 class ChangePassword(models.Model):
     _name = 'change.password'
 
+    def _trigger(self):
+        if v'typeof window' == 'undefined': return
+        interval = None
+        def getValues():
+            if not document.getElementById('hppm_current_password'):
+               nonlocal interval
+               clearInterval(interval)
+            self.env.context.current_password = document.getElementById('hppm_current_password').querySelector('input').value
+            self.env.context.new_password = document.getElementById('hppm_new_password').querySelector('input').value
+            self.env.context.confirm_password = document.getElementById('hppm_confirm_password').querySelector('input').value
+        interval = setInterval(getValues(), 0)
+
+    trigger = fields.Char(string="Trigger", defaults=_trigger)
+
     @async
     def change_password(self):
-        new_password = document.getElementById('hppm_new_password').querySelector('input').value
-        confirm_password = document.getElementById('hppm_confirm_password').querySelector('input').value
-        console.log(document.getElementById('hppm_current_password').querySelector('input').value, new_password, confirm_password)
+        current_password, new_password, confirm_password = [models.env.context[key + '_password'] for key in ('current', 'new', 'confirm')]
         if new_password != confirm_password: return tools.dialog.alert("New password doesn't match")
-        result = await [self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').querySelector('input').value), btoa(new_password), btoa(confirm_password))]
+        result = await [self.change_password_server(self.env.user.id, btoa(current_password), btoa(new_password), btoa(confirm_password))]
         def reload():
             href = window.location.origin + window.location.pathname
             window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'
