@@ -784,6 +784,7 @@ class ChangePassword(models.Model):
     def change_password(self):
         new_password = document.getElementById('hppm_new_password').querySelector('input').value
         confirm_password = document.getElementById('hppm_confirm_password').querySelector('input').value
+        console.log(document.getElementById('hppm_current_password').querySelector('input').value, new_password, confirm_password)
         if new_password != confirm_password: return tools.dialog.alert("New password doesn't match")
         result = await [self.change_password_server(self.env.user.id, btoa(document.getElementById('hppm_current_password').querySelector('input').value), btoa(new_password), btoa(confirm_password))]
         def reload():
@@ -800,6 +801,7 @@ class ChangePassword(models.Model):
         self.env['log.data'].create({'name': ['Changing Password', 'success:', user_id.password == current].join(' '), 'user_id': user_id.id})
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
         doc = await [db.get(db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
+        console.log(doc)
         doc.password = new_password
         return db.put(doc)
 
@@ -824,7 +826,7 @@ view.add(model='change.password', mode='wizard', arch="""
             </list>
         </group>
         <group>
-            <a class="button button-fill" onclick="models.env.context.active_id.change_password()" style="display: block; float: left; width: auto; margin: 10px;">Change</a>
+            <button name="change_password" string="Change"/>
         </group>
     </sheet>
 </form>
