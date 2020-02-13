@@ -139,7 +139,7 @@ td {
                   <th><h3>50</h3></th>
                   <th></th>
                 </tr>
-                <tr id="default_mcvt_row">
+                <tr id="default_mcvt_row" style="display: none">
                   <td class="mcvt_row">1</td>
                   <td class="mcvt_trolley">IH01</td>
                   <td class="status-uncompleted">07:15</td>
@@ -230,6 +230,11 @@ function tolong_saya() {
   if (!localStorage.last_color) setdor('on-process')
   else if (localStorage.last_color === 'on-process')  setdor('finish')
   else if (localStorage.last_color === 'finish') setdor('planning')
+}
+
+document.onkeypress = function (e) {
+  if (e.keyCode !== 114) return;
+  tolong_saya()
 }
 </script>
 </body>
