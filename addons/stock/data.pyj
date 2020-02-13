@@ -464,7 +464,7 @@ class HPPMData(models.Model):
                   @async
                   def check_part(code):
                       product_id = await [self.env['product.product'].search(['code', '=', code])]
-                      if not product_id.length: raise exceptions.ValidationError("Part Number " + code + "is missing")
+                      if not product_id.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
                       return product_id
                   for code in Object.keys(trolleys[trolley_type]):
                       products.push(check_part(code))
@@ -494,7 +494,7 @@ class HPPMData(models.Model):
             @async
             def check_part(code):
                 product_id = await [self.env['product.product'].search(['code', '=', code])]
-                if not product_id.length: raise exceptions.ValidationError("Part Number " + code + "is missing")
+                if not product_id.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
                 return product_id
             for code in Object.keys(trolleys[trolley_type]):
                 products.push(check_part(code))
