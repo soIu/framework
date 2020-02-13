@@ -133,6 +133,7 @@ class StockAdjust(models.Model):
     product_id = fields.Many2one('product.product', string="Part", required=True)
     quantity = fields.Float(string="Quantity")
     location_id = fields.Many2one('stock.location', string="Destination", required=True)
+    location_current_id = fields.Many2one('stock.location', string="Current Location", required=True)
     scan = fields.Char(string="Scan")
 
     @api.onchange('scan', async=True)
@@ -148,6 +149,7 @@ class StockAdjust(models.Model):
         if not self.pack_id: return
         pack_id = await [self.env['stock.pack'].browse(self.pack_id)]
         self.product_id = pack_id.product_id
+        self.location_id = pack_id.location_id
 
     @async
     def adjust(self):
@@ -174,6 +176,7 @@ view.add(model='stock.adjust', mode='wizard', arch="""
         <group>
             <field name="quantity"/>
             <field name="location_id"/>
+            <field name="location_curren_id" readonly="True"/>
         </group>
     </sheet>
 </form>
