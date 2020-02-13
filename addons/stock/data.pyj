@@ -690,7 +690,8 @@ class HPPMData(models.Model):
                date_object = new Date('1899-12-30 00:00:00')
                date_object.setDate(date_object.getDate() + parseInt(date))
                date = date_object
-               date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
+            else: date = new Date(date.split('/').reverse().join('-'))
+            date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
             value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
             await [create_po(value)]
         #return Promise.all(promises)
@@ -797,9 +798,9 @@ class ChangePassword(models.Model):
 
     @async
     def change_password(self):
-        current_password, new_password, confirm_password = [models.env.context[key + '_password'] for key in ('current', 'new', 'confirm')]
-        if new_password != confirm_password: return tools.dialog.alert("New password doesn't match")
-        result = await [self.change_password_server(self.env.user.id, btoa(current_password), btoa(new_password), btoa(confirm_password))]
+        context = self.env.context
+        if context.new_password != context.confirm_password: return tools.dialog.alert("New password doesn't match")
+        result = await [self.change_password_server(self.env.user.id, btoa(context.current_password), btoa(context.new_password), btoa(context.confirm_password))]
         def reload():
             href = window.location.origin + window.location.pathname
             window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'
