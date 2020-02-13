@@ -40,9 +40,8 @@ def check_session():
     date = new Date(window.localStorage.session_start_date)
     date.setDate(date.getDate() + 90)
     if date.toISOString() <= tools.date.now().toISOString():
-       def navigate():
-           tools.navigate('/view/change.password.wizard')
-       tools.dialog.alert('After 90 Days, you have to change your password', navigate)
+
+data.append(check_session)
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Packing', 'model': 'product.product', 'view_id': 'product.product.tree_packing', 'sequence': 10})

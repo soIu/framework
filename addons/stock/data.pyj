@@ -497,8 +497,8 @@ class HPPMData(models.Model):
             for code in Object.keys(trolleys[trolley_type]):
                 products.push(check_part(code))
             products = await (products)
-           for product_id in products:
-               product_ids.add(product_id)
+            for product_id in products:
+                product_ids.add(product_id)
             trolley_id = await (trolley_id)
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
