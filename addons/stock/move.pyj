@@ -176,7 +176,7 @@ view.add(model='stock.adjust', mode='wizard', arch="""
         <group>
             <field name="quantity"/>
             <field name="location_id"/>
-            <field name="location_curren_id" readonly="True"/>
+            <field name="location_current_id" readonly="True"/>
         </group>
     </sheet>
 </form>
