@@ -824,7 +824,7 @@ view.add(model='change.password', mode='wizard', arch="""
             </list>
         </group>
         <group>
-            <button name="change_password" string="Change Password"/>
+            <a class="button button-fill" onclick="models.env.context.active_id.change_password()" style="display: block; float: left; width: auto; margin: 10px;">Change</a>
         </group>
     </sheet>
 </form>
