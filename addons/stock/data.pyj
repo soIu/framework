@@ -801,7 +801,9 @@ class ChangePassword(models.Model):
         context = self.env.context
         if context.new_password != context.confirm_password: return tools.dialog.alert("New password doesn't match")
         result = await [self.change_password_server(self.env.user.id, btoa(context.current_password), btoa(context.new_password), btoa(context.confirm_password))]
+        @async
         def reload():
+            await [window.session_db.destroy()]
             href = window.location.origin + window.location.pathname
             window.location.href = href.substring(0, href.lastIndexOf('/')) + '/'
         window.localStorage.session_start_date = tools.date.now().toISOString()
@@ -815,8 +817,8 @@ class ChangePassword(models.Model):
         self.env['log.data'].create({'name': ['Changing Password', 'success:', user_id.password == current].join(' '), 'user_id': user_id.id})
         if user_id.password != current: raise exceptions.ValidationError('Wrong password')
         doc = await [db.get(db.rel.makeDocID({'type': user_id._name, 'id': user_id.id}))]
-        console.log(doc)
         doc.password = new_password
+        console.log(doc)
         return db.put(doc)
 
 ChangePassword()
