@@ -341,10 +341,16 @@ class PickingList(models.Model):
         #await (bom_line_ids.map(after_create))
         return result
 
-    @async
-    def listen_scan(self, barcode):
+    @api.onchange('laser_scan')
+    def onchange_scan(self):
+        barcode = self.laser_scan
         if not barcode: return
-        #window.alert(barcode)
+        def write(value):
+            def write_value(): models.env.context.active_id.write(value)
+            setTimeout(write_value, 500)
+        def write_pack(pack_id, value):
+            def write_value(): pack_id.write(value)
+            setTimeout(write_value, 500)
         picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
            self.laser_scan = ''
@@ -356,23 +362,19 @@ class PickingList(models.Model):
            self.laser_scan = ''
            #if not pickup_zone_id.length: return
            #self.pickup_zone_id = pickup_zone_id.id
-           return self.write({'pickup_zone': self.laser_scan})
+           return write({'pickup_zone': self.laser_scan})
         elif barcode.slice(0, 6) == 'Daisha':
            trolley_id = await [self.env['stock.trolley'].search(['name', '=', barcode])]
            self.laser_scan = ''
            if not trolley_id.length: return
            self.trolley_id = trolley_id.id
-           return self.write({'trolley_id': trolley_id.id})
+           return write({'trolley_id': trolley_id.id})
         value = JSON.parse(barcode)
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         if pack_id.picking_list_id: return
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
-        return pack_id.write({'picking_list_id': self.id})
-
-    @api.onchange('laser_scan')
-    def onchange_laser(self):
-        return self.listen_scan(self.laser_scan)
+        return write_pack(pack_id, {'picking_list_id': self.id})
 
     def print_barcode(self):
         if v'typeof window' != 'undefined' and window.printBarcode:
