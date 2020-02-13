@@ -1,3 +1,4 @@
+
 def wait(ms):
     return new Promise(
     def (resolve, reject):
@@ -22,6 +23,12 @@ def create_upload_button():
         if defaults[model]: models.env.context.default_import_type = defaults[model]
         tools.navigate('/form/hppm.data')
     document.getElementById('upload_shortcut').onclick = onclick
+    if models.env.context.active_model != 'stock.picking.list': return
+    first_row = document.querySelector('div.ag-body-container div[row-id="0"]')
+    sequence = first_row.querySelector('div[col-id=sequence]').innerHTML
+    for column in document.querySelectorAll('div.ag-body-container div[col-id=sequence]'):
+        if column.innerHTML != sequence: continue
+        column.parentElement.style.color = 'red'
 
 #if v'typeof window' != 'undefined': window.create_upload_button = create_upload_button
 

@@ -142,11 +142,11 @@ td {
                 <tr id="default_mcvt_row">
                   <td class="mcvt_row">1</td>
                   <td class="mcvt_trolley">IH01</td>
-                  <td class="status-finish">07:15</td>
-                  <td class="status-on-process">07:30</td>
+                  <td class="status-uncompleted">07:15</td>
+                  <td class="status-uncompleted">07:30</td>
                   <td class="status-uncompleted">07:45</td>
-                  <td class="status-planning">08:00</td>
-                  <td class="status-planning">08:15</td>
+                  <td class="status-uncompleted">08:00</td>
+                  <td class="status-uncompleted">08:15</td>
                   <td></td>
                 </tr>
               </table>
@@ -171,11 +171,11 @@ td {
                 <tr id="default_flexi_row">
                   <td class="flexi_row">1</td>
                   <td class="flexi_trolley">IH01</td>
-                  <td class="status-finish">07:15</td>
-                  <td class="status-on-process">07:30</td>
+                  <td class="status-uncompleted">07:15</td>
+                  <td class="status-uncompleted">07:30</td>
                   <td class="status-uncompleted">07:45</td>
-                  <td class="status-planning">08:00</td>
-                  <td class="status-planning">08:15</td>
+                  <td class="status-uncompleted">08:00</td>
+                  <td class="status-uncompleted">08:15</td>
                   <td></td>
                 </tr>
               </table>
@@ -193,6 +193,7 @@ function add_row(type, trolley) {
   new_row.querySelector('.' + type + '_row').innerHTML = (rows[type] += 1);
   new_row.querySelector('.' + type + '_trolley').innerHTML = trolley;
   new_row.style.display = ''
+  if (localStorage.last_color && rows[type] === 1) new_row.children[2].className = 'status-' + localStorage.last_color;
   row.parentElement.insertAdjacentElement('beforeend', new_row)
 }
 
@@ -219,5 +220,16 @@ async function get_picking() {
 }
 
 get_picking().catch(window.alert)
+
+function setdor(color) {
+  localStorage.last_color = color;
+  window.location.reload();
+}
+
+function tolong_saya() {
+  if (!localStorage.last_color) setdor('on-process')
+  else if (localStorage.last_color === 'on-process')  setdor('finish')
+  else if (localStorage.last_color === 'finish') setdor('planning')
+}
 </script>
 </body>
