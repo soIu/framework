@@ -362,7 +362,7 @@ class PickingList(models.Model):
            self.laser_scan = ''
            #if not pickup_zone_id.length: return
            #self.pickup_zone_id = pickup_zone_id.id
-           return write({'pickup_zone': self.laser_scan})
+           return write({'pickup_zone': barcode})
         elif barcode.slice(0, 6) == 'Daisha':
            trolley_id = await [self.env['stock.trolley'].search(['name', '=', barcode])]
            self.laser_scan = ''
