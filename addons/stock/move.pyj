@@ -149,7 +149,7 @@ class StockAdjust(models.Model):
         if not self.pack_id: return
         pack_id = await [self.env['stock.pack'].browse(self.pack_id)]
         self.product_id = pack_id.product_id
-        self.location_id = pack_id.location_id
+        self.location_current_id = pack_id.location_id
 
     @async
     def adjust(self):
