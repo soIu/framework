@@ -681,7 +681,7 @@ class HPPMData(models.Model):
             row += 1
             if row < 3: continue
             #if not data[0]: continue
-            value = {'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'name': data[1] + '-' + data[2], 'base_name': data[2], 'qty_box': data[9], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8], 'type': 'sozai'}
+            value = {'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'name': data[1] + '-' + data[2], 'base_name': data[2], 'qty_box': data[9] or 0, 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8], 'type': 'sozai'}
             await [create_part_sozai(value)]
         @async
         def update_part(value, type):
@@ -694,7 +694,7 @@ class HPPMData(models.Model):
             for data in sheet.data:
                 row += 1
                 if row < 3: continue
-                value = {'code': data[1], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8]}
+                value = {'code': data[1], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8] or 0}
                 await [update_part(value, type)]
 
     @api.server(async=True)
