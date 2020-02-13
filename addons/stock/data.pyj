@@ -4,7 +4,7 @@ import orm.fields as fields
 import orm.tools as tools
 import orm.api as api
 import orm.exceptions as exceptions
-from orm.db import db
+from orm.pouchdb import db
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
