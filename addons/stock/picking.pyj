@@ -490,6 +490,7 @@ menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.li
 
 view.add(model='stock.picking.list', mode='tree', arch="""
 <tree title="Picking List"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
+    <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>
     <field name="model_code"/>

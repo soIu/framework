@@ -10,7 +10,8 @@ def wait(ms):
 
 @async
 def create_upload_button():
-    await [wait(500)]
+    def wait(): document.querySelector('div.ag-body-container') and document.querySelector('div.ag-body-container').children.length
+    await [window.tools.wait_exist(wait)]
     if document.getElementById('upload_shortcut'):
        document.getElementById('upload_shortcut').remove()
     create_element = document.querySelector('.data-table-title .button.button-fill')
