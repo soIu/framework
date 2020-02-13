@@ -45,7 +45,7 @@ def check_session():
        tools.dialog.alert('After 90 Days, you have to change your password', navigate)
 
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
-menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Products', 'model': 'product.product', 'sequence': 10})
+menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Packing', 'model': 'product.product', 'view_id': 'product.product.tree_packing', 'sequence': 10})
 
 view.add({'model': 'product.product', 'init': check_session, 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="context.types ? ['type', 'in', context.types] : []">
@@ -59,6 +59,10 @@ view.add({'model': 'product.product', 'init': check_session, 'mode': 'tree', 'st
     <field name="c_code"/>
 </tree>
 """})
+
+view.add(model='product.product', mode='tree_packing', arch="""
+<tree-page title="Master Data Packing"/>
+""", context={'types': ['ckd', 'local', 'inhouse', 'sozai']})
 
 view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': """
 <form>
