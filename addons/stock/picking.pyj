@@ -7,6 +7,7 @@ from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_default
 from jasper.report import get_jasper_report
+from utils import create_upload_button
 
 sequence = {}
 add_sequence('stock.picking', sequence)
@@ -488,7 +489,7 @@ menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.lis
 menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd', string="4WD", sequence=3)
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
-view.add(model='stock.picking.list', mode='tree', arch="""
+view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
 <tree title="Picking List"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
     <field name="sequence" sort="asc"/>

@@ -16,7 +16,7 @@ def create_upload_button():
        document.getElementById('upload_shortcut').remove()
     create_element = document.querySelector('.data-table-title .button.button-fill')
     if not create_element: return
-    defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt'}
+    defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt', 'stock.picking.list': 'sequence_mcvt'}
     upload_button = '<a id="upload_shortcut" class="button" href="#" style="display: inline-block;background-color: rgb(255, 255, 255);">Upload</a>'
     create_element.insertAdjacentHTML('afterend', upload_button)
     def onclick():
