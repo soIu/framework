@@ -45,10 +45,11 @@ def create_locations():
     external = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'EXT'])
     scr = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'SCR'])
     assy = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'ASSY'])
-    return Promise.all([internal, external, scr, assy]).then(
+    out = models.env['stock.location'].with_context(limit=1).search(['code', '=', 'out'])
+    return Promise.all([internal, external, scr, assy, out]).then(
     def (result):
         promises = []
-        internal_id, external_id, scr_id, assy_id = result
+        internal_id, external_id, scr_id, assy_id, out_id = result
         if internal_id.length:
            defaults.internal_id = internal_id.ids[0]
         else:
@@ -65,10 +66,14 @@ def create_locations():
            defaults.assy_id = assy_id.ids[0]
         else:
            promises.push(models.env['stock.location'].create({'name': 'ASSY', 'type': 'internal', 'code': 'ASSY'}))
+        if out_id.length:
+           defaults.out_id = out_id.ids[0]
+        else:
+           promises.push(models.env['stock.location'].create({'name': 'Stock Out', 'type': 'internal', 'code': 'out'}))
         if promises.length:
            return Promise.all(promises).then(
            def (result):
-               defaults.internal_id, defaults.external_id, defaults.scr_id, defaults.assy_id = [record.id for record in result]
+               defaults.internal_id, defaults.external_id, defaults.scr_id, defaults.assy_id, defaults.out_id = [record.id for record in result]
            )
     )
 

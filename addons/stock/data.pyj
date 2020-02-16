@@ -188,6 +188,11 @@ class PurchaseOrderPack(models.Model):
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
     is_pulley = fields.Boolean(string="Is Pulley")
 
+    @api.onchange('product_qty')
+    def onchange_qty(self):
+        if not self.product_qty: return
+        return self.write({'product_qty': self.product_qty})
+
     """@async
     def create(self, values=False, is_client=tools.configuration.client):
         if v'typeof window' == 'undefined': return self.__super__('create')(values=values, is_client=is_client)

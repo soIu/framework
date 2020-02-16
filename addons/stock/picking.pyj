@@ -372,7 +372,8 @@ class PickingList(models.Model):
            return write({'trolley_id': trolley_id.id})
         value = JSON.parse(barcode)
         pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
-        if pack_id.picking_list_id: return
+        if pack_id.picking_list_id: return tools.dialog.alert('This pack was already scanned by another picking list')
+        if pack_id.on_hold: return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
         return write_pack(pack_id, {'picking_list_id': self.id})

@@ -38,7 +38,7 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
 <form>
     <sheet>
         <group>
-            <field name="scan"/>
+            <scanner-field name="scan"/>
         </group>
         <group width="100%">
             <field name="order_ids">
@@ -76,31 +76,48 @@ StockPickingWizard()
 #menu.add(id='scanner', string="Scanner", sequence=5)
 menu.add(id='scanner_picking', string="Picking", parent='scanner', model='stock.picking.wizard', view_id='stock.picking.wizard.scan', sequence=2)
 
-def init_picking():
-    form = this
-    if not form.refs.camera: return
-    @async
-    def onDetect(data):
-        window.alert(data.codeResult.code)
-        picking_list_id = await (models.env['stock.picking.list'].search(['name', '=', data.codeResult.code]))
-        if not picking_list_id.length: return
-        tools.navigate('/form/stock.picking.list?id=' + picking_list_id.id)
-    form.refs.camera.onDetect = onDetect
-
-view.add(model='stock.picking.wizard', mode='scan', init=init_picking, arch="""
+view.add(model='stock.picking.wizard', mode='scan', arch="""
 <form>
     <sheet>
         <group>
             <field name="scan"/>
         </group>
-        <group width="100%">
-            <scanner-camera ref="camera"/>
-        </group>
     </sheet>
 </form>
 """)
 
+class StockOnHold(models.Model):
+    _name = 'stock.on.hold'
 
+    #name = fields.Char(string="")
+    scan = fields.Char(string="Laser Scan")
+
+    @api.onchange('scan', async=True)
+    def onchange_scan(self):
+        if not self.scan: return
+        self.env['log.data'].log('Scan On-Hold', self.scan)
+        value = JSON.parse(self.scan)
+        pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
+        self.scan = ''
+        if pack_id.picking_list_id: return tools.dialog.alert('This pack was already scanned by a picking list')
+        if pack_id.on_hold: return tools.dialog.alert('This pack is already On Hold')
+        def on_hold():
+            return pack_id.write({'on_hold': True})
+        return tools.dialog.confirm('Make this pack On Hold?', on_hold)
+
+StockOnHold()
+
+menu.add(id='scanner_onhold', string="On Hold", parent='scanner', model='stock.on.hold', view_id='stock.on.hold.scan', sequence=3)
+
+view.add(model='stock.on.hold', mode='scan', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="scan"/>
+        </group>
+    </sheet>
+</form>
+""")
 
 class ReceiveInhouse(models.Model):
     _name = 'stock.receive.inhouse'
