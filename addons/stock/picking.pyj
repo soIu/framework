@@ -324,6 +324,7 @@ class PickingList(models.Model):
     pickup_zone = fields.Char(string="Pickup Zone")
     trolley_id = fields.Many2one('stock.trolley', string="Trolley")
     part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Part Type", index=True)
+    location_name = fields.Char(string="Location")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -469,9 +470,9 @@ class PickingList(models.Model):
         await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking(), call_route()])
 
     @api.server(async=True)
-    def update_location(self, location_id):
-        sequence_id, location_id = await ([self.env['mrp.sequence'].browse(self.sequence_id), self.env['stock.location'].browse(location_id)])
-        return sequence_id.write({'location_name': location_id.name})
+    def update_location(self, location_id, is_pulley):
+        sequence_id, location_id = await ([self.env['mrp.sequence'].browse(self.sequence_id) if is_pulley else None, self.env['stock.location'].browse(location_id)])
+        return await ([sequence_id.write({'location_name': location_id.name}) if is_pulley else None, self.write({'location_name': location_id.name})])
 
     @api.server(async=True)
     def check_pulley(self):
