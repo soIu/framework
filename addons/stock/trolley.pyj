@@ -50,7 +50,7 @@ class StockTrolley(models.Model):
         def create_quant_report(pack_id):
             if quant_map[pack_id.product_id]: return
             quant_map[pack_id.product_id] True
-            quant_report_id = self.env['stock.quant.report'].search(['product_id', '=', pack_id.product_id])
+            quant_report_id = await [self.env['stock.quant.report'].search(['product_id', '=', pack_id.product_id])]
             if quant_report_id.length: return
             return self.env['stock.quant.report'].create({'product_id': pack_id.product_id})
         @async
