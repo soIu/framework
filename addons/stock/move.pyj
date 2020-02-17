@@ -200,6 +200,11 @@ class StockQuantReport(models.Model):
     _name = 'stock.quant.report'
 
     @async
+    def _get_lc_qty(self):
+        quant_ids = await [self.env['stock.quant'].search(['product_id', '=', self.product_id], ['location_id', '=', self.env['stock.location'].location_defaults.internal_id])]
+        return sum(quant_id.product_qty for quant_id in quant_ids)
+
+    @async
     def _get_scr_qty(self):
         quant_ids = await [self.env['stock.quant'].search(['product_id', '=', self.product_id], ['location_id', '=', self.env['stock.location'].location_defaults.scr_id])]
         return sum(quant_id.product_qty for quant_id in quant_ids)
@@ -215,6 +220,7 @@ class StockQuantReport(models.Model):
         return sum(quant_id.product_qty for quant_id in quant_ids)
 
     product_id = fields.Many2one('product.product', string='Part', index=True)
+    lc_qty = fields.Float(string="LC Qty", compute=_get_lc_qty, store=False)
     scr_qty = fields.Float(string="SCR Qty", compute=_get_scr_qty, store=False)
     assy_qty = fields.Float(string="ASSY Qty", compute=_get_assy_qty, store=False)
     out_qty = fields.Float(string="Out Qty", compute=_get_out_qty, store=False)
@@ -226,6 +232,7 @@ menu.add(id='stock_report', parent='stock_movement', string='Report', model='sto
 view.add(model='stock.quant.report', mode='tree', arch="""
 <tree>
     <field name="product_id"/>
+    <field name="lc_qty"/>
     <field name="scr_qty"/>
     <field name="assy_qty"/>
     <field name="out_qty"/>

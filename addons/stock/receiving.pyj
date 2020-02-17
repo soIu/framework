@@ -245,6 +245,7 @@ view.add(model='stock.receive.ckd', mode='form', arch="""
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
+                    <field name="received" string="Printed"/>
                 </tree>
             </field>
         </group>

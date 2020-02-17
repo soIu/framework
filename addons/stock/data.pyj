@@ -84,6 +84,7 @@ class PurchaseOrder(models.Model):
     date_string = fields.Char(string="Date (String)", index=True)
     received_qty = fields.Float(string="Received Qty (Pcs)", compute=_get_received_qty, store=False)
     received_boxes = fields.Float(string="Received Qty (Box)", compute=_get_received_boxes, store=False)
+    print_number = fields.Char(string="Print No.")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -95,19 +96,23 @@ class PurchaseOrder(models.Model):
         result = await (self.__super__('create')(values=values, is_client=is_client))
         return result
 
-    def print_barcode(self):
-        if v'typeof window' != 'undefined' and window.printBarcode:
-           for record in self: printBarcode(record.name)
-
     @async
     def print_label(self):
      try:
+        date = new Date()
+        print_date = date.getDate().toString() + date.getMilliseconds().toString() + date.getSeconds()
+        count = 0
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         values = []
         for record in self:
             value = record.read()
             value.date_string = value.date_string.split('/')[0:2].join('/')
             pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
+            for pack_id in pack_ids:
+                if pack_id.print_number: continue
+                count += 1
+                pack_id.print_number = print_date + '-' + str.zfill(count.toString(), 4)
+                pack_id.write()
             pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
             for pack_value in pack_values:
                 pack_value.order_id = value
@@ -204,9 +209,16 @@ class PurchaseOrderPack(models.Model):
     @async
     def print_label(self):
      try:
+        date = new Date()
+        print_date = date.getDate().toString() + date.getMilliseconds().toString() + date.getSeconds()
+        count = 0
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         for record in self:
             if record.ckd_id and not record.received: record.receive(immediate=True)
+            if record.print_number: continue
+            count += 1
+            record.print_number = print_date + '-' + str.zfill(count.toString(), 4)
+            record.write()
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
         @async
@@ -274,6 +286,7 @@ view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch
     <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
+    <field name="received" string="Printed"/>
 </tree>
 """, 'action': {'print_label': 'Print'}})
 
@@ -707,10 +720,12 @@ class HPPMData(models.Model):
             if date and type(date) == Number:
                date_object = new Date('1899-12-30 00:00:00')
                date_object.setDate(date_object.getDate() + parseInt(date))
+               date_object.setMonth(date_object.getDate() - 1, date_object.getMonth() + 1)
                date = date_object
             else: date = new Date(date.split('/').reverse().join('-'))
             date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
-            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': data[0], 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
+            ps_month = date.toDateString().split(' ')[1] + '-' + date.getDate().toString()
+            value = {'part_no': data[4].split(' ').join(''), 'product_qty': data[10], 'ps_month': ps_month, 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
             await [create_po(value)]
         #return Promise.all(promises)
 
