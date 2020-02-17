@@ -23,8 +23,13 @@ class StockTrolley(models.Model):
     def print_qrcode(self):
         length = self.length
         parent_div = document.createElement('div')
+        parent_div.style.display = 'flex'
+        parent_div.style.flexWrap = 'wrap'
+        parent_div.style.width = '2480px'
         for record in self:
             div = document.createElement('div')
+            div.style.margin = 'auto'
+            div.style.marginBottom = '20px'
             new QRCode(div, record.name)
             parent_div.appendChild(div)
         for div in parent_div.children:
@@ -70,7 +75,7 @@ view.add(model='stock.trolley', mode='tree', arch="""
     <field name="name"/>
     <!--<field name="trolley_type_id"/>-->
 </tree>
-""")
+""", action={'print_qrcode': 'Print'})
 
 view.add(init=show_qrcode('trolley_qrcode', 'name'), model='stock.trolley', mode='form', arch="""
 <form>
