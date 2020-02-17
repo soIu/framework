@@ -499,7 +499,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
     <field name="model_code"/>
     <field name="trolley_type_id"/>
     <field name="part_type"/>
-    <field name="called"/>
+    <field name="called" string="Finished"/>
 </tree>
 """)
 
