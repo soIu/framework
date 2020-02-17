@@ -19,6 +19,20 @@ class StockTrolley(models.Model):
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", compute=_get_type, store=False)
 
+    @async
+    def print_qrcode(self):
+        length = self.length
+        parent_div = document.createElement('div')
+        for record in self:
+            div = document.createElement('div')
+            new QRCode(div, record.name)
+            parent_div.appendChild(div)
+        for div in parent_div.children:
+            div.insertAdjacentHTML('beforeend', '<h2 style="font-family: Roboto,system-ui,Noto,Helvetica,Arial,sans-serif">' + div.title + '</h2>')
+        def wait(): return parent_div.querySelectorAll('img[src]').length == length
+        await [tools.wait_exist(wait)]
+        window.printElement(parent_div)
+
     @api.server(async=True)
     def update_location(self, trolley, location_id):
         trolley_id = await [self.search(['name', '=', trolley])]
