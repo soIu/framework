@@ -25,7 +25,7 @@ class StockTrolley(models.Model):
         parent_div = document.createElement('div')
         parent_div.style.display = 'flex'
         parent_div.style.flexWrap = 'wrap'
-        parent_div.style.width = 'auto'
+        parent_div.style.width = '297mm'
         for record in self:
             div = document.createElement('div')
             div.style.margin = 'auto'
