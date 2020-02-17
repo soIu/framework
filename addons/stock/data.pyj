@@ -738,6 +738,7 @@ class HPPMData(models.Model):
             for data in sheet.data:
                 row += 1
                 if row < 3: continue
+                if not data[0]: continue
                 value = {'code': data[1], 'pl_from': data[3], 'supplier': data[4], 'model_type': data[5], 'packing_type': data[6], 'c_code': data[7], 'qty_box': data[8] or 0}
                 await [update_part(value, type)]
 
