@@ -10,8 +10,6 @@ def wait(ms):
 
 @async
 def create_upload_button():
-    def wait(): return document.querySelector('div.ag-body-container') and document.querySelector('div.ag-body-container').children.length
-    await [window.tools.wait_exist(wait)]
     if document.getElementById('upload_shortcut'):
        document.getElementById('upload_shortcut').remove()
     create_element = document.querySelector('.data-table-title .button.button-fill')
@@ -25,6 +23,8 @@ def create_upload_button():
         tools.navigate('/form/hppm.data')
     document.getElementById('upload_shortcut').onclick = onclick
     if models.env.context.active_model != 'stock.picking.list': return
+    def wait(): return document.querySelector('div.ag-body-container') and document.querySelector('div.ag-body-container').children.length
+    await [window.tools.wait_exist(wait)]
     first_row = document.querySelector('div.ag-body-container div[row-id="0"]')
     sequence = first_row.querySelector('div[col-id=sequence]').innerHTML
     for column in document.querySelectorAll('div.ag-body-container div[col-id=sequence]'):
