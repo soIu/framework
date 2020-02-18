@@ -233,10 +233,9 @@ view.add({'model': 'stock.picking', 'mode': 'form', 'string': 'Operation', 'arch
         <group width="100%">
             <field name="pack_ids">
                 <tree create="false" choose="false">
-                    <field name="name"/>
-                    <!--<field name="order_id"/>-->
                     <field name="product_id"/>
                     <field name="product_qty"/>
+                    <field name="print_number"/>
                 </tree>
             </field>
         </group>
