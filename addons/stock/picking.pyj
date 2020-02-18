@@ -372,7 +372,23 @@ class PickingList(models.Model):
            self.trolley_id = trolley_id.id
            return write({'trolley_id': trolley_id.id})
         value = JSON.parse(barcode)
-        pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
+        @async
+        def get_product_ids():
+            line_ids = await [self.env['stock.picking.list.line'].browse(self.line_ids)]
+            product_ids = [line_id.product_id for line_id in line_ids]
+            valid = value.product_id in product_ids
+            if not valid:
+               self.laser_scan = ''
+               tools.dialog.alert("Wrong part")
+            return valid, product_ids
+        validity = get_product_ids()
+        pack_id = self.env['stock.pack'].search(['order_pack_id', '=', value.id])
+        valid, product_ids = await (validity)
+        if not valid: return
+        pack_id = await (pack_id)
+        if pack_id.product_id not in product_ids:
+           self.laser_scan = ''
+           return tools.dialog.alert("Wrong part")
         if pack_id.picking_list_id: return tools.dialog.alert('This pack was already scanned by another picking list')
         if pack_id.on_hold: return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
