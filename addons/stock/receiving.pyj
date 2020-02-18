@@ -43,9 +43,9 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
         <group width="100%">
             <field name="order_ids">
                 <tree>
-                    <field name="name"/>
                     <field name="product_id"/>
                     <field name="product_qty"/>
+                    <field name="print_number"/>
                 </tree>
             </field>
         </group>

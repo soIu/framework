@@ -84,7 +84,6 @@ class PurchaseOrder(models.Model):
     date_string = fields.Char(string="Date (String)", index=True)
     received_qty = fields.Float(string="Received Qty (Pcs)", compute=_get_received_qty, store=False)
     received_boxes = fields.Float(string="Received Qty (Box)", compute=_get_received_boxes, store=False)
-    print_number = fields.Char(string="Print No.")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -192,6 +191,7 @@ class PurchaseOrderPack(models.Model):
     inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
     is_pulley = fields.Boolean(string="Is Pulley")
+    print_number = fields.Char(string="Print No.")
 
     @api.onchange('product_qty')
     def onchange_qty(self):
@@ -268,6 +268,16 @@ class PurchaseOrderPack(models.Model):
            return picking_id.validate(immediate=True)
         tools.navigate('/view/stock.picking.form?id=' + picking_id.id)
 
+    def cancel(self):
+        @async
+        def cancel_pack(self):
+            if not self.received: return
+            pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', self.id])]
+            move_id = await [self.env['stock.move'].search(['pack_id', '=', pack_id.id])]
+            if move_id.length > 1: return
+            self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': move_id.location_dest_id})
+            await ([move_id.unlink(), pack_id.unlink(), self.write({'received': False})])
+        return Promise.all([cancel_pack(record) for record in self])
 
 PurchaseOrderPack()
 
@@ -288,7 +298,7 @@ view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch
     <field name="product_qty"/>
     <field name="received" string="Printed"/>
 </tree>
-""", 'action': {'print_label': 'Print'}})
+""", 'action': {'print_label': 'Print', 'cancel': 'Cancel'}})
 
 view.add({'model': 'purchase.order', 'init': create_upload_button, 'mode': 'tree', 'string': False, 'arch': """
 <tree>

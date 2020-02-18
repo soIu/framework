@@ -211,20 +211,18 @@ class StockPack(models.Model):
            )
         return result
 
-    def print_barcode(self):
-        if v'typeof window' != 'undefined' and window.printBarcode:
-           for record in self: printBarcode(record.name)
-           #self.read(format=True).then(
-           #def (values):
-           #    for record in values: printBarcode(record.name)
-           #)
-
     @api.onchange('product_id', async=True)
     def onchange_product(self):
         if not self.product_id: return
         if self.category_id: return
         product_id = await (self.env['product.product'].browse(self.product_id))
         if not self.category_id: self.category_id = product_id.category_id
+
+    def remove(self):
+        picking_id = self.env.context.active_id
+        if picking_id._name == 'stock.picking.list':
+           picking_id.pack_ids = [pack_id for pack_id in picking_id.pack_ids if pack_id != self.id]
+        return self.write({'picking_list_id': None})
 
 StockPack()
 
@@ -241,7 +239,7 @@ view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
     <field name="product_qty"/>
     <field name="date" sort="asc"/>
 </tree>
-""", 'action': {'print_barcode': 'Print', 'dispose': 'Dispose'}})
+""", 'action': {'remove': 'Remove'}})
 
 view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 <form>

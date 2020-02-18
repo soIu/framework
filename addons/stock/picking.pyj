@@ -565,6 +565,11 @@ view.add(model='stock.picking.list.filter', mode='flexi', arch="""
 
 view.add(model='stock.picking.list', mode='form', arch="""
 <form>
+    <style>
+        div.card-body a:nth-child(2), div.card-body a:nth-child(3), .rapyd-tree-delete-button {
+          display: none !important;
+        }
+    </style>
     <header>
         <button name="print_list" string="Print"/>
         <button name="call_agv" string="Call" invisible="active_id.called == True"/>
