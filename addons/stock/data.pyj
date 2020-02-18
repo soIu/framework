@@ -293,9 +293,9 @@ menu.add(id='receiving_actual', parent='receiving', model='purchase.order', view
 
 view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="['inhouse_ckd', '=', True]">
-    <field name="name"/>
     <field name="product_id"/>
     <field name="product_qty"/>
+    <field name="print_number"/>
     <field name="received" string="Printed"/>
 </tree>
 """, 'action': {'print_label': 'Print', 'cancel': 'Cancel'}})
