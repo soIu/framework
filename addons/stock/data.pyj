@@ -823,6 +823,12 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
 </form>
 """})
 
+view.add(model='hppm.data', mode='homepage', arch="""
+<page>
+   <img src="homepage.jpg" style="height: 100%"/>
+</page>
+""")
+
 class ChangePassword(models.Model):
     _name = 'change.password'
 
