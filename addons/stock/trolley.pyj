@@ -22,6 +22,7 @@ class StockTrolley(models.Model):
 
     @async
     def print_qrcode(self):
+        self = self.order_by('name')
         url = await [get_jasper_report('/Solu/HPPM/Daisha_QRCode', {'data': JSON.stringify([{'name': record.name} for record in self])})]
         window.open(url)
 
