@@ -642,7 +642,7 @@ class HPPMData(models.Model):
         row = -1
         products = {}
         @async
-        def create_picking_list(code, quantity, lot_no, sequence, date, type):
+        def create_picking_list(code, quantity, lot_no, sequence, date, type, time_start, time_end):
             date_object = new Date('1899-12-30 00:00:00')
             date_object.setDate(date_object.getDate() + parseInt(date))
             date = date_object
@@ -650,7 +650,7 @@ class HPPMData(models.Model):
             if not product_id.length: raise exceptions.ValidationError("Model Number " + code + " is missing")
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length: raise exceptions.ValidationError("Bill of Materials for Model Number " + code + " is missing")
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1]})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1], 'time_start': time_start, 'time_end': time_end})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
@@ -686,7 +686,7 @@ class HPPMData(models.Model):
                head = 1
                type = data[1].toLowerCase()"""
             lot_no = data.slice(head + 9, head + 14).join('-')
-            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type) #, original_type)
+            promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
             await (promise)
             #promises.push(promise)
         #await (promises)

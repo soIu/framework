@@ -24,6 +24,8 @@ class MrpSequence(models.Model):
     quantity = fields.Float(string="Quantity")
     finished = fields.Boolean(string="Finished", readonly=True)
     location_name = fields.Char(string="Location")
+    time_start = fields.Char(string="Start")
+    time_end = fields.Char(string="Finish")
 
     @api.depends('sequence', async=True)
     def onchange_sequence(self, sequence):
@@ -48,6 +50,8 @@ view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
     <field name="model_code"/>
     <field name="name"/>
     <field name="destination"/>
+    <field name="time_start"/>
+    <field name="time_end"/>
 </tree>
 """)
 
