@@ -43,6 +43,7 @@ class StockPicking(models.Model):
     #job_ids = fields.Many2many('wcs.job', string="WCS Jobs")
     receive_zone_id = fields.Many2one('stock.receive.zone', string="LC Zone")
     scan_zone = fields.Char(string="Scan Zone")
+    parts = fields.Char(string="Parts")
 
     @api.onchange('scan_zone', async=True)
     def onchange_scan_zone(self):
@@ -185,6 +186,8 @@ view.add({'model': 'stock.picking', 'mode': 'tree', 'string': 'Operation', 'arch
 <tree domain="['type', '=', context.default_operation_type]">
     <field name="name"/>
     <field name="date"/>
+    <field name="parts"/>
+    <field name="receive_zone_id"/>
 </tree>
 """})
 
@@ -324,6 +327,7 @@ class PickingList(models.Model):
     trolley_id = fields.Many2one('stock.trolley', string="Trolley")
     part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Part Type", index=True)
     location_name = fields.Char(string="Location")
+    printed = fields.Boolean(string="Printed", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -402,6 +406,7 @@ class PickingList(models.Model):
     def print_list(self):
         values, line_ids = await ([self.read(format=True, without_null=True), self.env['stock.picking.list.line'].browse(self.line_ids)])
         line_ids = await [line_ids.read(format=True, without_null=True)]
+        self.write({'printed': True})
         values[0].line_ids = line_ids
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
         window.open(url)
@@ -490,13 +495,23 @@ class PickingList(models.Model):
         return await ([sequence_id.write({'location_name': location_id.name}) if is_pulley else None, self.write({'location_name': location_id.name})])
 
     @api.server(async=True)
-    def check_pulley(self):
+    def check_pulley(self, location_id):
         if not self.pack_ids or not self.pack_ids.length: return
         pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]
+        @async
+        def create_quant(pack_id):
+            if pack_id.location_id:
+               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id})]
+            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id})]
+        pulley_location_updated = False
         for pack_id in pack_ids:
             if not pack_id.is_pulley: continue
-            sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
-            return sequence_id.write({'finished': True})
+            if not pulley_location_updated:
+               self.update_location(location_id, True)
+               pulley_location_updated = True
+               sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
+               sequence_id.write({'finished': True})
+            await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
 
 PickingList()
 
@@ -514,6 +529,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
     <field name="model_code"/>
     <field name="trolley_type_id"/>
     <field name="part_type"/>
+    <field name="printed"/>
     <field name="called" string="Finished"/>
 </tree>
 """)

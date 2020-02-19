@@ -208,17 +208,16 @@ class PurchaseOrderPack(models.Model):
 
     @async
     def print_label(self):
-     try:
         date = new Date()
         print_date = date.getDate().toString() + date.getMilliseconds().toString() + date.getSeconds()
         count = 0
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         for record in self:
+            if not record.print_number:
+               count += 1
+               record.print_number = print_date + '-' + str.zfill(count.toString(), 4)
+               record.write()
             if record.ckd_id and not record.received: record.receive(immediate=True)
-            if record.print_number: continue
-            count += 1
-            record.print_number = print_date + '-' + str.zfill(count.toString(), 4)
-            record.write()
         values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
         @async
@@ -232,11 +231,15 @@ class PurchaseOrderPack(models.Model):
                if value.order_id.id: ids.push(value.order_id.id)
             #for key in po_value:
             #    if key not in value: value[key] = po_value[key] or ''
-        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
-        for id in ids: write_order_id(id)
-        window.open(url)
-     except Exception as error:
-        alert(error.stack or error.message)
+        @async
+        def download():
+            try:
+                url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
+                for id in ids: write_order_id(id)
+                window.open(url)
+             except Exception as error:
+                alert(error.stack or error.message)
+        download()
 
     @async
     def receive(self, immediate):
@@ -255,14 +258,17 @@ class PurchaseOrderPack(models.Model):
         def create_quant(pack_id):
             create_quant_report(pack_id)
             await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': pack_id.location_id})]
+        product_ids = []
         for record in self:
+            if record.product_id not in product_ids: product_ids.push(record.product_id)
             nonlocal pack_sequence
             pack_sequence += 1
             if pack_sequence >= 10: pack_sequence = 1
-            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds().toString()), 'location_id': location_defaults.internal_id, 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id, 'is_pulley': record.is_pulley}), record.write({'received': True})])
+            pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds().toString()), 'location_id': location_defaults.internal_id, 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id, 'is_pulley': record.is_pulley, 'print_number': record.print_number}), record.write({'received': True})])
             create_quant(pack_id)
             pack_ids.push(pack_id.id)
-        picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids})]
+        product_ids = await [self.env['product.product'].browse(product_ids)]
+        picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids, 'parts': [product_id.name for product_id in product_ids].join(', ')})]
         self.env['log.data'].log('Receive', self.name, 'id:', self.id, 'model:', self._name)
         if immediate:
            return picking_id.validate(immediate=True)
@@ -772,22 +778,22 @@ class HPPMData(models.Model):
                 await [update_part(value, type)]
 
     @api.server(async=True)
-    def import_po_old(self):
+    def import_receive_zone(self):
         promises = []
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         @async
-        def create_po(value):
-            product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no]))
-            if not product_id.length: return
-            return self.env['purchase.order'].create({'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
+        def create_zone(value):
+            zone_id = await [self.env['stock.receive.zone'].search(['name', '=', value.name])]
+            if not zone_id.length: return
+            return self.env['stock.receive.zone'].create(value)
         for data in sheet.data:
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'part_no': data[0].split(' ').join(''), 'quantity': data[1], 'vendor': data[2]}
-            await [create_po(value)]
+            value = {'name': data[0]}
+            await [create_zone(value)]
         #return Promise.all(promises)
 
 HPPMData()

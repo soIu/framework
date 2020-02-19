@@ -138,8 +138,8 @@ class ReceiveInhouse(models.Model):
             for box in range(product_id.min_box):
                 order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': product_id.qty_box, 'part_no': product_id.code, 'inhouse_ckd': True, 'is_pulley': is_pulley})]
                 order_pack_ids.add(order_pack_id)
-        await [order_pack_ids.receive(immediate=True)]
-        order_pack_ids.print_label()
+        await [order_pack_ids.print_label()]
+        order_pack_ids.receive(immediate=True)
         tools.navigate('/')
 
 ReceiveInhouse()

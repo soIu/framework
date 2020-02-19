@@ -31,6 +31,7 @@ class StockTrolley(models.Model):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
         picking_list_id = await [self.env['stock.picking.list'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
+        if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
         pack_ids = await [self.env['stock.pack'].browse(picking_list_id.pack_ids)]
         #location_map = {locations[key]: key for key in locations}
         quant_map = {}
@@ -50,9 +51,7 @@ class StockTrolley(models.Model):
         for pack_id in pack_ids:
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
         #picking_list_id = await (picking_list_id)
-        picking_list_id.update_location(location_id, any(pack_id.is_pulley for pack_id in pack_ids)).catch(console.error)
-        if location_id in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return
-        return picking_list_id.check_pulley()
+        picking_list_id.update_location(location_id).catch(console.error)
 
 StockTrolley()
 
@@ -197,6 +196,12 @@ class StockReceiveZone(models.Model):
 
     name = fields.Char(string="Name", required=True, index=True)
 
+    @async
+    def print_qrcode(self):
+        self = self.sort_by('name')
+        url = await [get_jasper_report('/Solu/HPPM/Daisha_QRCode', {'data': JSON.stringify([{'name': record.name} for record in self])})]
+        window.open(url)
+
 StockReceiveZone()
 
 menu.add(id='receive_zone', parent='receiving', model='stock.receive.zone', string="LC Zone", sequence=1)
@@ -205,7 +210,7 @@ view.add(model='stock.receive.zone', mode='tree', arch="""
 <tree>
     <field name="name"/>
 </tree>
-""")
+""", action={'print_qrcode': 'Print'})
 
 view.add(init=show_qrcode('lc_qrcode', 'name'), model='stock.receive.zone', mode='form', arch="""
 <form>
