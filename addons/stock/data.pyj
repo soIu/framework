@@ -427,7 +427,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -461,6 +461,7 @@ class HPPMData(models.Model):
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
         if self.type == 'data_packing': return self.import_data_packing().then(after_finish)
         if self.type == 'route_agv': return self.import_route().then(after_finish)
+        if self.type == 'receive_zone': return self.import_receive_zone().then(after_finish)
 
     @api.server #(async=True)
     def import_route(self):

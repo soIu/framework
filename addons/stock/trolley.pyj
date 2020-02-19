@@ -5,6 +5,7 @@ from ir.ui import menu, view
 from utils import create_upload_button, show_qrcode
 from stock.location import defaults as locations
 from jasper.report import get_jasper_report
+from utils import create_upload_button
 
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
@@ -206,7 +207,7 @@ StockReceiveZone()
 
 menu.add(id='receive_zone', parent='receiving', model='stock.receive.zone', string="LC Zone", sequence=1)
 
-view.add(model='stock.receive.zone', mode='tree', arch="""
+view.add(init=create_upload_button, model='stock.receive.zone', mode='tree', arch="""
 <tree>
     <field name="name"/>
 </tree>

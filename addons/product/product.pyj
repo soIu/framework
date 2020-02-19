@@ -6,6 +6,7 @@ from stock.pack import StockPack
 from stock.location import defaults as location_default
 from ir.ui import menu, view
 from ir.data import data
+from utils import create_upload_button
 
 defaults = {}
 
@@ -58,7 +59,7 @@ data.append(restrict_session)
 menu.add({'id': 'stock', 'string': 'Inventory', 'sequence': 20})
 menu.add({'id': 'product', 'parent': 'master_data', 'string': 'Packing', 'model': 'product.product', 'view_id': 'product.product.tree_packing', 'sequence': 10})
 
-view.add({'model': 'product.product', 'init': check_session, 'mode': 'tree', 'string': False, 'arch': """
+view.add({'model': 'product.product', 'init': create_upload_button, 'mode': 'tree', 'string': False, 'arch': """
 <tree domain="context.types ? ['type', 'in', context.types] : []">
     <field name="type"/>
     <field name="code"/>
