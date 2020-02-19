@@ -237,7 +237,7 @@ class PurchaseOrderPack(models.Model):
                 url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
                 for id in ids: write_order_id(id)
                 window.open(url)
-             except Exception as error:
+            except Exception as error:
                 alert(error.stack or error.message)
         download()
 
