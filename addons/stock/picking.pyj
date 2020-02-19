@@ -476,12 +476,14 @@ class PickingList(models.Model):
                pack_ids = pack_id
                line_id.consumed = True
         self.env['log.data'].log('Calling AGV on', self.name, 'id:', self.id, 'model:', self._name)
-        host = self.ip_address or window.location.hostname
+        host = self.ip_address or '172.16.1.213' #window.location.hostname
         @async
         def call_route():
             try:
                 trolley_type_id = await [self.env['stock.trolley.type'].browse(self.trolley_type_id)]
-                route_id = await [self.env['agv.route'].with_context(limit=1).search(['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
+                route_ids = await [self.env['agv.route'].search()] #['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
+                def filter(route_id): return route_id.fitting = trolley_type_id.name and route_id.picking_zone == parseInt(self.pickup_zone.split('-')[-1]).toString()
+                route_id = route_ids.filter(filter)
                 response = await (fetch('http://' + host + ':8000/?route=' + route_id.name))
                 text = await (response.text())
                 tools.dialog.alert(text)
