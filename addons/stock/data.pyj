@@ -787,7 +787,7 @@ class HPPMData(models.Model):
         @async
         def create_zone(value):
             zone_id = await [self.env['stock.receive.zone'].search(['name', '=', value.name])]
-            if not zone_id.length: return
+            if zone_id.length: return
             return self.env['stock.receive.zone'].create(value)
         for data in sheet.data:
             row += 1
