@@ -404,7 +404,7 @@ class PickingList(models.Model):
 
     @async
     def print_list(self):
-        values, line_ids = await ([self.read(format=True, without_null=True), self.env['stock.picking.list.line'].browse(self.line_ids)])
+        values, line_ids = await ([self.read(format=True, without_null=True, relational_fields=['trolley_type_id']), self.env['stock.picking.list.line'].browse(self.line_ids)])
         line_ids = await [line_ids.read(format=True, without_null=True)]
         self.write({'printed': True})
         values[0].line_ids = line_ids

@@ -10,12 +10,17 @@ from utils import create_upload_button
 class StockTrolleyImage(models.Model):
     _name = 'stock.trolley.image'
 
-    trolley_id = fields.Many2one('stock.trolley', string="Trolley", required=True)
+    trolley_id = fields.Many2one('stock.trolley.type', string="Trolley", required=True)
     image = fields.Binary(string="Image", required=True)
 
-    @api.server(async=True)
+    @async
     def upload(self):
-        trolley_id = await [self.env['stock.trolley'].browse(self.trolley_id)]
+        await [self.upload_server()]
+        tools.navigate('/')
+
+    @api.server(async=True)
+    def upload_server(self):
+        trolley_id = await [self.env['stock.trolley.type'].browse(self.trolley_id)]
         return trolley_id.write({'image': self.image})
 
 StockTrolleyImage()
@@ -34,7 +39,6 @@ class StockTrolley(models.Model):
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", compute=_get_type, store=False)
-    image = fields.Binary(string="Image")
 
     @async
     def print_qrcode(self):
@@ -138,6 +142,7 @@ class StockTrolleyType(models.Model):
     mcvt_part_ids = fields.One2many('product.product', 'mcvt_trolley_type_id', string="MCVT Parts")
     fwd_part_ids = fields.One2many('product.product', 'fwd_trolley_type_id', string="4WD Parts")
     flexi_part_ids = fields.One2many('product.product', 'flexi_trolley_type_id', string="Flexi Parts")
+    image = fields.Binary(string="Image")
 
 StockTrolleyType()
 
