@@ -7,6 +7,20 @@ from stock.location import defaults as locations
 from jasper.report import get_jasper_report
 from utils import create_upload_button
 
+class StockTrolleyImage(models.Model):
+    _name = 'stock.trolley.image'
+
+    trolley_id = fields.Many2one('stock.trolley', string="Trolley", required=True)
+    image = fields.Binary(string="Image", required=True)
+
+    @api.server(async=True)
+    def upload(self):
+        trolley_id = await [self.env['stock.trolley'].browse(self.trolley_id)]
+        return trolley_id.write({'image': self.image})
+
+StockTrolleyImage()
+
+
 class StockTrolley(models.Model):
     _name = 'stock.trolley'
 
@@ -20,6 +34,7 @@ class StockTrolley(models.Model):
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", compute=_get_type, store=False)
+    image = fields.Binary(string="Image")
 
     @async
     def print_qrcode(self):
@@ -57,6 +72,7 @@ class StockTrolley(models.Model):
 StockTrolley()
 
 menu.add(id='trolley', parent='agv_chasun', model='stock.trolley', string="Trolley (Daisha)", sequence=1)
+menu.add(id='trolley_image', parent='agv_chasun', model='stock.trolley.image', view_id='stock.trolley.image.upload', string="Upload Layout (Daisha)", sequence=2)
 
 view.add(model='stock.trolley', mode='tree', arch="""
 <tree title="Trolley (Daisha)">
@@ -94,6 +110,20 @@ view.add(init=show_qrcode('trolley_qrcode', 'name'), model='stock.trolley', mode
                     <field name="location_dest_id"/>
                 </tree>
             </field>
+        </group>
+    </sheet>
+</form>
+""")
+
+view.add(model='stock.trolley.image', mode='upload', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="trolley_id"/>
+            <button name="upload" string="Upload"/>
+        </group>
+        <group>
+            <field name="image"/>
         </group>
     </sheet>
 </form>
