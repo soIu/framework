@@ -19,6 +19,19 @@ class MrpBom(models.Model):
     reference = fields.Char(string="Reference")
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
 
+    @async
+    def move_pulley_out(self, location_id, pack_id, ratio, product_ids):
+        line_ids = await [self.env['mrp.bom.line'].browse(self.line_ids)]
+        def create_quant_move(line_id):
+            return Promise.all([
+              self.env['stock.move'].create({'product_id': line_id.product_id, 'product_qty': line_id.product_qty * ratio, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}),
+              self.env['stock.quant'].create({'product_id': line_id.product_id, 'product_qty': -line_id.product_qty * ratio, 'location_id': pack_id.location_id}),
+              self.env['stock.quant'].create({'product_id': line_id.product_id, 'product_qty': line_id.product_qty * ratio, 'location_id': location_id}),
+            ])
+        for line_id in line_ids:
+            if line_id.product_id not in product_ids: continue
+            await [create_quant_move(line_id)]
+
 MrpBom()
 
 class MrpBomLine(models.Model):

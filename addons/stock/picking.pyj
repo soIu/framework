@@ -497,6 +497,7 @@ class PickingList(models.Model):
     @api.server(async=True)
     def check_pulley(self, location_id):
         if not self.pack_ids or not self.pack_ids.length: return
+        bom = self.env['mrp.bom'].browse(self.model_id)
         pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]
         @async
         def create_quant(pack_id):
@@ -505,12 +506,13 @@ class PickingList(models.Model):
             await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id})]
         pulley_location_updated = False
         for pack_id in pack_ids:
-            if not pack_id.is_pulley: continue
-            if not pulley_location_updated:
+            if pack_id.is_pulley and not pulley_location_updated:
                self.update_location(location_id, True)
                pulley_location_updated = True
                sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
                sequence_id.write({'finished': True})
+               bom_id = await (bom)
+               bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids])
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
 
 PickingList()
