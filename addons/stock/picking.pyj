@@ -54,7 +54,7 @@ class StockPicking(models.Model):
             pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]
             return pack_ids.write({'receive_zone': zone_id.name})
         write_pack()
-        self.scan = ''
+        self.scan_zone = ''
         if not zone_id.length: return
         self.receive_zone_id = zone_id
         return self.write({'receive_zone_id': zone_id.id})
@@ -460,7 +460,7 @@ class PickingList(models.Model):
             lines[line_id.product_id] += await [line_id.product_qty]
         for pack_id in pack_ids:
             pack_id.trolley_id = self.trolley_id
-            if packs[pack_id.product_id]:
+            if pack_map[pack_id.product_id]:
                packs[pack_id.product_id] += pack_id.product_qty
                pack_map[pack_id.product_id].push(pack_id)
         for line in lines:
@@ -725,8 +725,8 @@ class PickingListLine(models.Model):
 
     @async
     def _get_zones(self):
-        pack_ids = await [self.env['stock.pack'].with_context(limit=3).search(['location_id', '=', self.env['stock.location'].location_defaults.internal_id], ['product_id', '=', self.product_id])]
-        return [pack_id.receive_zone for pack_id in pack_ids].join(', ')
+        pack_ids = await [self.env['stock.pack'].search(['location_id', '=', self.env['stock.location'].location_defaults.internal_id], ['product_id', '=', self.product_id])]
+        return list({pack_id.receive_zone for pack_id in pack_ids.sort_by('date')})[0:3].join(', ')
 
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     #group_line_ids = fields.Many2many('stock.picking.list.line', string="Part List Group")
@@ -739,7 +739,7 @@ class PickingListLine(models.Model):
     actual_box = fields.Float(string="Actual Box")
     cached_product_qty = fields.Float(string="Total Qty")
     product_qty = fields.Float(string="Total Qty", compute=_get_part_qty, store=True)
-    received_qty = fields.Float(string="Received Qty", compute=_get_received_qty, store=False)
+    received_qty = fields.Float(string="Picked Qty", compute=_get_received_qty, store=False)
     actual_qty = fields.Float(string="Actual Qty")
     description = fields.Char(string="Description")
     date = fields.Datetime(string="Date")
