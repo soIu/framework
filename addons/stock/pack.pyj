@@ -179,6 +179,7 @@ class StockPack(models.Model):
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     print_number = fields.Char(string="Print No.")
     receive_zone = fields.Char(string="Receive Zone")
+    on_hold = fields.Boolean(string="On Hold")
     #available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     #current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
 
@@ -220,6 +221,9 @@ class StockPack(models.Model):
         product_id = await (self.env['product.product'].browse(self.product_id))
         if not self.category_id: self.category_id = product_id.category_id
 
+    def unhold(self):
+        return self.write({'on_hold': False})
+
     def remove(self):
         picking_id = self.env.context.active_id
         if picking_id._name == 'stock.picking.list':
@@ -234,14 +238,18 @@ menu.add({'id': 'pack', 'parent': 'stock', 'string': 'Packs', 'model': 'stock.pa
 last_args = None
 
 view.add({'model': 'stock.pack', 'mode': 'tree', 'string': False, 'arch': """
-<tree domain="(context.date_from_historical ? [] : ['disposed', '!=', True])">
+<tree domain="(context.on_hold ? ['on_hold', '=', True] : [])">
     <field name="name"/>
     <!--<field name="order_id"/>-->
     <field name="category_id"/>
     <field name="product_qty"/>
     <field name="date" sort="asc"/>
 </tree>
-""", 'action': {'remove': 'Remove'}})
+""", 'action': {'remove': 'Remove', 'unhold': 'Unhold'}})
+
+view.add(model='stock.pack', mode='tree_hold', arch="""
+<tree-page title="On Hold"/>
+""", context={'on_hold': True})
 
 view.add({'model': 'stock.pack', 'mode': 'form', 'string': False, 'arch': """
 <form>

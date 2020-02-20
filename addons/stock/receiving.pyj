@@ -326,3 +326,5 @@ view.add(model='stock.receiving.ckd', mode='scan', arch="""
     </sheet>
 </form>
 """)
+
+menu.add(id='pack_on_hold', string="On Hold", parent='receiving', model='stock.pack', view_id='stock.pack.tree_hold', sequence=100)
