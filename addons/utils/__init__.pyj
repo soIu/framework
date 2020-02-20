@@ -27,7 +27,7 @@ def create_upload_button():
            if defaults[model]: models.env.context.default_import_type = defaults[model]
            tools.navigate('/form/hppm.data')
         trolley_types = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]')})
-        trolleys = [str.format('<a class="button button-fill" style="margin: 6px" onclick="print_picking_list_hppm(this.innerHTML)">{}</a>', trolley) for trolley in trolley_types].join('')
+        trolleys = [str.format('<a class="button button-fill" style="margin: 3px" onclick="print_picking_list_hppm(this.innerHTML)">{}</a>', trolley) for trolley in trolley_types].join('')
         dialog = tools.dialog.create({'title': 'Choose Type', 'content': str.format('<div style="display: flex; flex-wrap: wrap; padding-top: 10px;">{}</div>', trolleys), 'closeByBackdropClick': True})
         @async
         def print_picking_list_hppm(trolley):
