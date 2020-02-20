@@ -37,7 +37,10 @@ def create_upload_button():
             for column in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]'):
                 if column.innerHTML != trolley: continue
                 row = column.parentElement
-                if row.querySelector('div[col-id=sequence]').innerHTML in JSON.parse(localStorage.last_list_sequence):
+                if localStorage.last_list_sequence != '[]' and row.querySelector('div[col-id=sequence]').innerHTML in JSON.parse(localStorage.last_list_sequence):
+                   row = None
+                   continue
+                elif localStorage.last_list_sequence == '[]' and row.querySelector('div[col-id=sequence]').innerHTML != '10':
                    row = None
                    continue
                 else: break
