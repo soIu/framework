@@ -539,7 +539,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
     <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>
-    <field name="model_code"/>
+    <!--<field name="model_code"/>-->
     <field name="trolley_type_id"/>
     <field name="part_type"/>
     <field name="printed"/>
@@ -634,7 +634,7 @@ view.add(model='stock.picking.list', mode='form', arch="""
                 <tree create="false">
                     <field name="product_id"/>
                     <field name="product_qty"/>
-                    <field name="name"/>
+                    <field name="print_number"/>
                 </tree>
             </field>
         </group>
@@ -663,7 +663,7 @@ class PickingListLine(models.Model):
     #@async
     def _get_received_qty(self):
         lines = self.env.context.active_lines
-        if not lines or not lines['stock.pack'] or lines['stock.pack'].picking_list_id: return 0
+        if not lines or not lines['stock.pack'] or not lines['stock.pack'].picking_list_id: return 0
         def filter(pack_id): return pack_id.product_id == self.product_id
         pack_ids = lines['stock.pack'].picking_list_id.filter(filter)
         return sum(pack_id.product_qty for pack_id in pack_ids)

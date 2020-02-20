@@ -172,7 +172,7 @@ class StockPack(models.Model):
     order_pack_id = fields.Many2one('purchase.order.pack', string="Purchase Order", index=True)
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
-    product_id = fields.Many2one('product.product', string="Product", index=True)
+    product_id = fields.Many2one('product.product', string="Part", index=True)
     product_qty = fields.Float(string="Quantity", index=True)
     available_qty = fields.Float(string="Available Quantity", index=True)
     is_pulley = fields.Boolean(string="Is Pulley", readonly=True)
