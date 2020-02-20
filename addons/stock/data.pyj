@@ -139,7 +139,7 @@ class PurchaseOrder(models.Model):
         if not quantity: quantity = self.product_qty
         promises = []
         for box_quantity in self.get_box_quantities(quantity, product_id):
-            promise = self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'part_name': product_id.name.split(' - ')[1], 'product_id': self.product_id, 'product_qty': box_quantity})
+            promise = self.env['purchase.order.pack'].create({'name': self.name, 'order_id': self.id, 'part_no': self.part_no, 'part_name': product_id.name.split(' - ')[1], 'product_id': self.product_id, 'product_qty': box_quantity, 'date': self.date, 'date_string': self.date_string})
         return await (promises)
 
 
@@ -192,6 +192,8 @@ class PurchaseOrderPack(models.Model):
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
     is_pulley = fields.Boolean(string="Is Pulley")
     print_number = fields.Char(string="Print No.")
+    date = fields.Datetime(string="Date", index=True)
+    date_string = fields.Char(string="Date", index=True)
 
     @api.onchange('product_qty')
     def onchange_qty(self):
@@ -463,12 +465,15 @@ class HPPMData(models.Model):
         if self.type == 'route_agv': return self.import_route().then(after_finish)
         if self.type == 'receive_zone': return self.import_receive_zone().then(after_finish)
 
-    @api.server #(async=True)
+    @api.server(async=True)
     def import_route(self):
+        route_ids = self.env['agv.route'].search()
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         promises = []
+        route_ids = await (route_ids)
+        route_ids.unlink()
         for data in sheet.data:
             row += 1
             if row == 0: continue

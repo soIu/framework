@@ -7,10 +7,28 @@ from ir.ui import view, menu
 class StockReceivingWizard(models.Model):
     _name = 'stock.receiving.wizard'
 
+    @async
+    def _get_summary(self):
+        if not self.order_ids or not self.order_ids.length: return ''
+        def wait(): return self.env.context.active_lines and self.env.context.active_lines['purchase.order.pack'] and self.env.context.active_lines['purchase.order.pack'].many2many_order_ids
+        await [tools.wait_exist(wait)]
+        lines = self.env.context.active_lines
+        pack_ids = lines['purchase.order.pack'].many2many_order_ids
+        summary_map = {}
+        for pack_id in pack_ids:
+            if not summary_map[pack_id.product_id]: summary_map[pack_id.product_id] = 0
+            summary_map[pack_id.product_id] += pack_id.product_qty
+        summary = []
+        for product_id in summary_map:
+            product_id = await [self.env['product.product'].browse(product_id)]
+            summary.push(product_id.name + ': ' + summary_map[product_id.id])
+        return summary.join('\n')
+
     #name = fields.Char(string="")
     scan = fields.Char(string="Laser Scan")
     order_ids = fields.Many2many('purchase.order.pack', string="Purchase Orders")
     received = fields.Boolean(string="Received")
+    fields.Text(string="Summary", compute=_get_summary, store=False)
 
     @api.onchange('scan', async=True)
     def onchange_scan(self):
@@ -40,11 +58,15 @@ view.add(model='stock.receiving.wizard', mode='scan', arch="""
         <group>
             <scanner-field name="scan"/>
         </group>
+        <group>
+            <field name="summary"/>
+        </group>
         <group width="100%">
             <field name="order_ids">
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
+                    <field name="date_string"/>
                     <field name="print_number"/>
                 </tree>
             </field>

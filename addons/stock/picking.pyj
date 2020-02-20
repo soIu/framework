@@ -299,6 +299,7 @@ class PickingListFilter(models.Model):
     date = fields.Date(string="Date", required=True)
 
     def filter(self):
+        del localStorage.last_list_sequence
         domain = [['date', '=', self.date]]
         if self.env.context.type: domain.push(['type', '=', self.env.context.type])
         tools.navigate('/tree/stock.picking.list?domain=' + JSON.stringify(domain))
@@ -416,6 +417,9 @@ class PickingList(models.Model):
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
         window.open(url)
 
+    def print_all(self):
+        return Promise.all([record.print_list() for record in self])
+
     @async
     def print_list_old(self):
         report = self.env['report.report'].with_context(limit=1).search(['reference', '=', 'Picking-List'])
@@ -525,6 +529,7 @@ class PickingList(models.Model):
                bom_id = await (bom)
                bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids])
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
+        if not pulley_location_updated: return self.update_location(location_id, False)
 
 PickingList()
 
@@ -545,7 +550,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
     <field name="printed"/>
     <field name="called" string="Finished"/>
 </tree>
-""")
+""", action={'print_all': 'Print'})
 
 view.add(model='stock.picking.list.filter', mode='wizard', arch="""
 <form>
