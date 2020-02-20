@@ -360,7 +360,11 @@ class PickingList(models.Model):
             def write_value(): models.env.context.active_id.write(value)
             setTimeout(write_value, 500)
         def write_pack(pack_id, value):
-            def write_value(): pack_id.write(value)
+            def write_value():
+                pack_id.write(value)
+                #if 'dor' not in self.line_ids: self.line_ids.push('dor')
+                #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
+                #models.env.context.refresh()
             setTimeout(write_value, 500)
         picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
@@ -402,6 +406,8 @@ class PickingList(models.Model):
         if pack_id.on_hold: return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
+        if 'dor' not in self.line_ids: self.line_ids.push('dor')
+        else: self.line_ids = [id for id in self.line_ids if id != 'dor']
         return write_pack(pack_id, {'picking_list_id': self.id})
 
     def print_barcode(self):
@@ -444,7 +450,7 @@ class PickingList(models.Model):
 
     @async
     def create_picking(self):
-        picking_id = await (self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'internal', 'pack_ids': self.pack_ids}))
+        picking_id = await (self.env['stock.picking'].create({'location_src_id': self.env['stock.location'].location_defaults.internal_id, 'location_dest_id': self.env['stock.location'].location_defaults.scr_id, 'type': 'internal', 'pack_ids': self.pack_ids}))
         return picking_id.validate()
         #tools.navigate('/form/stock.picking?id=' + picking_id.id)
 

@@ -197,9 +197,13 @@ function add_row(type, trolley, records) {
   for (let record of records) {
     index += 1;
     if (index === 5) break;
+    if (!record.location_name && record.called) {
+      new_row.children[2 + index].style.backgroundColor = 'orange'
+      continue;
+    }
     if (!record.location_name) continue;
     if (record.location_name.toLowerCase().match('scr')) new_row.children[2 + index].className = 'status-on-process';
-    if (record.location_name.toLowerCase().match('assy')) new_row.children[2 + index].className = 'status-finish';
+    else if (record.location_name.toLowerCase().match('assy')) new_row.children[2 + index].className = 'status-finish';
     else new_row.children[2 + index].className = 'status-planning';
   }
   //if (localStorage.last_color && rows[type] === 1) new_row.children[2].className = 'status-' + localStorage.last_color;
