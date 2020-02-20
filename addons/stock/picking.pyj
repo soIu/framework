@@ -660,10 +660,14 @@ class PickingListLine(models.Model):
         product_id = await (self.env['product.product'].browse(self.product_id))
         return Math.max(product_id.qty_box, self.product_qty)
 
-    #@async
+    @async
     def _get_received_qty(self):
+        picking_id = self.env.context.active_id
+        if not picking_id: return 0
+        if not picking_id.pack_ids or not picking_id.pack_ids.length: return 0
+        def wait(): return self.env.context.active_lines and self.env.context.active_lines['stock.pack'] and self.env.context.active_lines['stock.pack'].picking_list_id
+        await [tools.wait_exist(wait)]
         lines = self.env.context.active_lines
-        if not lines or not lines['stock.pack'] or not lines['stock.pack'].picking_list_id: return 0
         def filter(pack_id): return pack_id.product_id == self.product_id
         pack_ids = lines['stock.pack'].picking_list_id.filter(filter)
         return sum(pack_id.product_qty for pack_id in pack_ids)
