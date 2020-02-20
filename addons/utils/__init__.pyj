@@ -19,7 +19,7 @@ def create_upload_button():
     if not create_element: return
     defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt', 'stock.picking.list': 'sequence_mcvt', 'product.product': 'data_packing', 'stock.receive.zone': 'receive_zone'}
     upload_button = '<a id="upload_shortcut" class="button" href="#" style="display: inline-block;background-color: rgb(255, 255, 255);">Upload</a>'
-    if models.env.context.active_model == 'stock.picking.list': upload_button.replace('Upload', 'Print')
+    if models.env.context.active_model == 'stock.picking.list': upload_button = upload_button.replace('Upload', 'Print')
     create_element.insertAdjacentHTML('afterend', upload_button)
     def onclick():
         if models.env.context.active_model != 'stock.picking.list':
