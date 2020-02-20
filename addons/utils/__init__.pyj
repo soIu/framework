@@ -40,6 +40,7 @@ def create_upload_button():
                 if row.querySelector('div[col-id=sequence]').innerHTML in JSON.parse(localStorage.last_list_sequence):
                    row = None
                    continue
+                else: break
             if not row: return
             localStorage.last_list_sequence = JSON.stringify(JSON.parse(localStorage.last_list_sequence).concat([row.querySelector('div[col-id=sequence]').innerHTML]))
             row.querySelector('div[col-id=date] span.ag-icon-checkbox-unchecked').click()
