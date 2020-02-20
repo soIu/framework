@@ -178,6 +178,7 @@ class StockPack(models.Model):
     is_pulley = fields.Boolean(string="Is Pulley", readonly=True)
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     print_number = fields.Char(string="Print No.")
+    receive_zone = fields.Char(string="Receive Zone")
     #available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
     #current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
 

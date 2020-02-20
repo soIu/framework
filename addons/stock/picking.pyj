@@ -49,6 +49,11 @@ class StockPicking(models.Model):
     def onchange_scan_zone(self):
         if not self.scan_zone: return
         zone_id = await [self.env['stock.receive.zone'].search(['name', '=', self.scan_zone])]
+        @async
+        def write_pack():
+            pack_ids = await [self.env['stock.pack'].browse(self.pack_ids)]
+            return pack_ids.write({'receive_zone': zone_id.name})
+        write_pack()
         self.scan = ''
         if not zone_id.length: return
         self.receive_zone_id = zone_id
@@ -608,13 +613,11 @@ view.add(model='stock.picking.list', mode='form', arch="""
         <group width="100%">
             <field name="line_ids">
                 <tree create="false">
-                    <field name="route"/>
-                    <field name="part_no"/>
                     <field name="product_id"/>
-                    <field name="qty_box"/>
-                    <field name="box"/>
                     <field name="product_qty"/>
-                    <field name="description"/>
+                    <field name="received_qty"/>
+                    <field name="box"/>
+                    <field name="zones"/>
                 </tree>
             </field>
         </group>
@@ -652,6 +655,14 @@ class PickingListLine(models.Model):
         if not self.product_id: return
         product_id = await (self.env['product.product'].browse(self.product_id))
         return Math.max(product_id.qty_box, self.product_qty)
+
+    #@async
+    def _get_received_qty(self):
+        lines = self.env.context.active_lines
+        if not lines or not lines['stock.pack'] or lines['stock.pack'].picking_list_id: return 0
+        def filter(pack_id): return pack_id.product_id == self.product_id
+        pack_ids = lines['stock.pack'].picking_list_id.filter(filter)
+        return sum(pack_id.product_qty for pack_id in pack_ids)
 
     @async
     def _get_part_qty(self):
@@ -704,6 +715,11 @@ class PickingListLine(models.Model):
         else:
            return Math.ceil(quantity / self.qty_box)
 
+    @async
+    def _get_zones(self):
+        pack_ids = await [self.env['stock.pack'].with_context(limit=3).search(['location_id', '=', self.env['stock.location'].location_defaults.internal_id], ['product_id', '=', self.product_id])
+        return [pack_id.receive_zone for pack_id in pack_ids].join(', ')
+
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     #group_line_ids = fields.Many2many('stock.picking.list.line', string="Part List Group")
     route = fields.Integer(string="Route")
@@ -715,6 +731,7 @@ class PickingListLine(models.Model):
     actual_box = fields.Float(string="Actual Box")
     cached_product_qty = fields.Float(string="Total Qty")
     product_qty = fields.Float(string="Total Qty", compute=_get_part_qty, store=True)
+    received_qty = fields.Float(string="Received Qty", compute=_get_received_qty, store=False)
     actual_qty = fields.Float(string="Actual Qty")
     description = fields.Char(string="Description")
     date = fields.Datetime(string="Date")
@@ -722,6 +739,7 @@ class PickingListLine(models.Model):
     consumed = fields.Boolean(string="Consumed")
     consumed_pack_id = fields.Many2one('stock.pack', string="Pack to Consume")
     manual = fields.Boolean(string="Manual")
+    zones = fields.Char(string="Zones", compute=_get_zones, store=False)
 
     def print_barcode(self):
         for record in self:
