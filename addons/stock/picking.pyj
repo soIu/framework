@@ -721,7 +721,7 @@ class PickingListLine(models.Model):
 
     @async
     def _get_zones(self):
-        pack_ids = await [self.env['stock.pack'].with_context(limit=3).search(['location_id', '=', self.env['stock.location'].location_defaults.internal_id], ['product_id', '=', self.product_id])
+        pack_ids = await [self.env['stock.pack'].with_context(limit=3).search(['location_id', '=', self.env['stock.location'].location_defaults.internal_id], ['product_id', '=', self.product_id])]
         return [pack_id.receive_zone for pack_id in pack_ids].join(', ')
 
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
