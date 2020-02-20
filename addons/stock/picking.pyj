@@ -535,7 +535,7 @@ menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
 view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
-<tree title="Picking List"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
+<tree title="Picking List" limit="1000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>
