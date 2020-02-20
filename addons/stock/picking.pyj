@@ -464,7 +464,11 @@ class PickingList(models.Model):
                packs[pack_id.product_id] += pack_id.product_qty
                pack_map[pack_id.product_id].push(pack_id)
         for line in lines:
-            if packs[line] < lines[line]: return tools.dialog.alert('Quantity for product ' + (await [self.env['product.product'].browse(line)]).name + ' is not sufficient')
+            if packs[line] < lines[line]:
+               console.log(line)
+               console.log(packs[line], lines[line])
+               product_id = await [self.env['product.product'].browse(line)]
+               return tools.dialog.alert('Quantity for part ' + product_id.name + ' is not sufficient')
             line_id = line_map[line]
             actual_qty = line_id.actual_qty
             for pack_id in pack_map[line]:
