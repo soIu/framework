@@ -1,0 +1,237 @@
+<head>
+    <style>
+body {
+    margin: 0;
+}
+
+td {
+   color: white;
+}
+.visual-control {
+    background: black;
+    min-height: 100%;
+    color: white;
+    padding-bottom: 20px;
+}
+
+.visual-control .title {
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+}
+
+.visual-control .subtitle-section {
+    display: flex;
+    justify-content: space-between;
+}
+
+.visual-control .subtitle-section div {
+    width: 30%;
+    text-align: center;
+    padding: 20px;
+}
+
+.visual-control .subtitle-section div:first-child {
+    text-align: left;
+}
+
+.visual-control .subtitle-section div:last-child {
+    text-align: right;
+}
+
+.visual-control .subtitle-section h3 {
+    display: inline;
+}
+
+.visual-control .subtitle-section-label {
+    margin-right: 2rem;
+}
+
+/*.visual-control .content-wrapper {
+    display: flex;
+}*/
+
+.visual-control .content {
+    padding-bottom: 20px;
+}
+
+.visual-control table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.visual-control table {
+    border-collapse: collapse;
+}
+
+.visual-control table,
+.visual-control th,
+.visual-control td {
+    border: 5px solid white;
+}
+
+.visual-control th,
+.visual-control td {
+    padding: 0px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.visual-control th {
+    color: yellow;
+}
+
+.visual-control .content h1,
+.visual-control th h3 {
+    margin: 0;
+}
+
+.visual-control .status-planning {
+    background-color: blue;
+}
+
+.visual-control .status-on-process {
+    background-color: yellow;
+    color: black;
+}
+
+.visual-control .status-finish {
+    background-color: green;
+}
+
+.visual-control .status-uncompleted {
+    background-color: red;
+}
+    </style>
+</head>
+<body>
+        <div class="visual-control">
+          <h1 class="title">PICKING SCHEDULE</h1>
+          <div class="subtitle-section">
+            <div>
+              <h3 class="subtitle-section-label">SHIFT:</h3>
+              <h3 class="subtitle-section-value">1 / 2</h3>
+            </div>
+            <div>
+              <h3 class="subtitle-section-label">Tanggal Produksi:</h3>
+              <h3 class="subtitle-section-value" id="production_date"></h3>
+            </div>
+            <div>
+              <h3 class="subtitle-section-label">Waktu Sekarang:</h3>
+              <h3 class="subtitle-section-value" id="time_now"></h3>
+            </div>
+          </div>
+          <div class="content-wrapper">
+            <div class="content">
+              <table>
+                <tr>
+                  <th id="mcvt_colspan" colspan="8">
+                    <h2>LINE MCVT</h2>
+                  </th>
+                </tr>
+                <tr id="mcvt_columns">
+                  <th><a>SEQ</a></th>
+                </tr>
+                <tr id="default_mcvt_row">
+                  <td class="mcvt_sequence">10</td>
+                </tr>
+              </table>
+            </div>
+            <div class="content">
+              <table>
+                <tr>
+                  <th id="flexi_colspan" colspan="8">
+                    <h2>LINE FLEXI</h2>
+                  </th>
+                </tr>
+                <tr id="flexi_columns">
+                  <th><a>SEQ</a></th>
+                </tr>
+                <tr id="default_flexi_row">
+                  <td class="flexi_sequence">10</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+<script>
+function add_row(type, trolley, records) {
+  row = document.getElementById('default_' + type + '_row')
+  row.style.display = 'none'
+  document.getElementById(type + '_columns').innerHTML += `<th><a style="writing-mode: vertical-rl; text-orientation: mixed;">${trolley}</a></th>`;
+  let index = -1;
+  time = new Date()
+  time.setHours(7, 0, 0, 0)
+  rows = []
+  for (let record of records) {
+    index += 1;
+    if (index > 9) break;
+    new_row = document.querySelector(`.${type}_row_` + (index + 1))
+    if (!new_row) {
+      new_row = row.cloneNode(true)
+      new_row.querySelector(`.${type}_sequence`).innerHTML = record.sequence; //(index + 1) + '0';
+      new_row.id = ''
+      new_row.className = type + '_row_' + (index + 1);
+      row.parentElement.insertAdjacentElement('beforeend', new_row);
+      rows.push(new_row)
+    }
+    time.setMinutes(time.getMinutes() + 15)
+    cell = document.createElement('td')
+    //cell.style.writingMode = 'vertical-rl'
+    //cell.style.writingMode = ''
+    //cell.innerHTML = time.toTimeString().split(':').slice(0, 2).join(':');
+    if (!record.location_name && record.called) {
+      cell.style.backgroundColor = 'orange'
+      new_row.appendChild(cell)
+      new_row.style.display = ''
+      continue;
+    }
+    if (!record.location_name) {
+      new_row.appendChild(cell)
+      new_row.style.display = ''
+      continue;
+    }
+    if (record.location_name.toLowerCase().match('scr')) cell.className = 'status-on-process';
+    else if (record.location_name.toLowerCase().match('assy')) cell.className = 'status-finish';
+    else cell.className = 'status-planning';
+    new_row.appendChild(cell)
+    new_row.style.display = ''
+  }
+  document.getElementById(type + '_colspan').setAttribute('colspan', document.getElementById(type + '_columns').children.length)
+}
+
+async function get_picking() {
+  const date = new Date()
+  document.getElementById('production_date').innerHTML = (date.toDateString()).split(' ').slice(1, -1).reverse().concat([date.getFullYear()]).join(' / ')
+  document.getElementById('time_now').innerHTML = date.toTimeString().split(':').slice(0, 2).join(':')
+  const promises = ['mcvt', 'flexi'].map(async (type) => {
+    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list&args=[["date","=","${window.location.hash.slice(1)}"], ["type","=","${type}"], ["part_type","=","local"]]&options={"order": "sequence asc"}`).then((response) => response.json());
+    if (!Array.isArray(records.values)) return;
+    const trolleys = {};
+    for (let record of records.values) {
+      if (!trolleys[record.trolley_type_id]) trolleys[record.trolley_type_id] = [];
+      trolleys[record.trolley_type_id].push(record);
+    }
+    values = {}
+    await Promise.all(Object.keys(trolleys)/*.slice(0, 37)*/.map(async (trolley_id) => {
+      console.log(trolley_id)
+      if (!trolley_id) return;
+      const trolley = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trolley.type&ids=' + trolley_id).then((response) => response.json());
+      if (!trolley.values.name) return;
+      values[trolley.values.name] = [type, trolley.values.name, trolleys[trolley_id]]
+    }))
+    for (let value of Object.keys(values).sort()) values[value] && add_row(...values[value]);
+    //rows = [].concat(...rows)
+    //for (let row of rows) console.log(row) || document.getElementById('default_' + type + '_row').parentElement.insertAdjacentElement('beforeend', row);
+    //document.getElementById(type + '_colspan').setAttribute('colspan', document.getElementById(type + '_columns').children.length)
+    //const time = new Date()
+    //time.setHours(7, 15, 0, 0, 0)
+  });
+  await Promise.all(promises);
+  setTimeout(() => location.reload(), 10 * 1000);
+}
+
+get_picking().catch(window.alert)
+
+</script>
+</body>

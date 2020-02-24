@@ -302,11 +302,19 @@ view.add(model='test.agv', mode='wizard', arch="""
 class VisualControl(models.Model):
     _name = 'visual.control'
 
-    def open_sequence(self):
-        window.open('./vc-sequence.html')
+    date = fields.Date(string="Date", required=True)
 
-    def open_picking_list(self):
-        window.open('./vc-picking.html')
+    def open_sequence(self):
+        window.open('./vc-sequence.html#' + self.date)
+
+    def open_picking_list_local(self):
+        window.open('./vc-picking-local.html#' + self.date)
+
+    def open_picking_list_ckd(self):
+        window.open('./vc-picking-ckd.html#' + self.date)
+
+    def open_picking_list_fwd(self):
+        window.open('./vc-picking-fwd.html#' + self.date)
 
 VisualControl()
 
@@ -316,10 +324,19 @@ view.add(model='visual.control', mode='open', arch="""
 <form>
     <sheet>
         <group>
+            <button name="open_picking_list_local" string="Picking Local"/>
+        </group>
+        <group>
+            <button name="open_picking_list_ckd" string="Picking CKD"/>
+        </group>
+        <group>
+            <button name="open_picking_list_fwd" string="Picking 4WD"/>
+        </group>
+        <group>
             <button name="open_sequence" string="Production Sequence"/>
         </group>
         <group>
-            <button name="open_picking_list" string="Picking List"/>
+            <field name="date"/>
         </group>
     </sheet>
 </form>

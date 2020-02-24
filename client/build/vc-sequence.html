@@ -283,7 +283,7 @@ async function get_sequence() {
   document.getElementById('production_date').innerHTML = (date.toDateString()).split(' ').slice(1, -1).reverse().concat([date.getFullYear()]).join(' / ')
   document.getElementById('time_now').innerHTML = date.toTimeString().split(':').slice(0, 2).join(':')
   const promises = ['mcvt', 'flexi'].map(async (type) => {
-    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=mrp.sequence&args=[["type","=","${type}"], ["finished", "!=", true]]&options={"order": "sequence asc", "limit": 50}`).then((response) => response.json());
+    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=mrp.sequence&args=[["date","=","${window.location.hash.slice(1)}"], ["type","=","${type}"], ["finished", "!=", true]]&options={"order": "sequence asc"}`).then((response) => response.json());
     if (!Array.isArray(records.values)) return;
     await Promise.all(records.values.map(async (value, index) => {
       if ((index + 1) > 5) return;
@@ -299,7 +299,8 @@ async function get_sequence() {
       //time.setMinutes(time.getMinutes() + 15)
     }));
   });
-  return Promise.all(promises);
+  await Promise.all(promises);
+  setTimeout(() => location.reload(), 10 * 1000);
 }
 
 get_sequence().catch(window.alert)

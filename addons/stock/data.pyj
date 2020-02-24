@@ -429,7 +429,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd', 'Sequence 4WD'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -459,7 +459,9 @@ class HPPMData(models.Model):
         if self.type == 'daisha_fwd': return self.import_daisha('fwd').then(after_finish)
         if self.type == 'daisha_flexi': return self.import_daisha('flexi').then(after_finish)
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
-        if self.type == 'sequence_fwd': return self.import_sequence('fwd').then(after_finish)
+        if 'sequence_fwd' in self.type:
+           if self.type == 'sequence_fwd_trf': return self.import_sequence('fwd', 'fwd_trf').then(after_finish)
+           if self.type == 'sequence_fwd_dps': return self.import_sequence('fwd', 'fwd_dps').then(after_finish)
         if self.type == 'sequence_flexi': return self.import_sequence('flexi').then(after_finish)
         if self.type == 'data_packing': return self.import_data_packing().then(after_finish)
         if self.type == 'route_agv': return self.import_route().then(after_finish)
@@ -647,7 +649,7 @@ class HPPMData(models.Model):
         #return self.write({'imported': True})
 
     @api.server(async=True)
-    def import_sequence(self, type):
+    def import_sequence(self, type, fwd_type):
         promises = []
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
@@ -662,7 +664,7 @@ class HPPMData(models.Model):
             if not product_id.length: raise exceptions.ValidationError("Model Number " + code + " is missing")
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length: raise exceptions.ValidationError("Bill of Materials for Model Number " + code + " is missing")
-            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1], 'time_start': time_start, 'time_end': time_end})])
+            bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': fwd_type or type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1], 'time_start': time_start, 'time_end': time_end})])
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
@@ -673,7 +675,7 @@ class HPPMData(models.Model):
                    products[product_id.id] = product_id
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
                    if not product_id[type + '_trolley_type_id']: continue
-                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': type, 'part_type': product_id.type}))
+                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
                 list_id = trolley_group[product_id[type + '_trolley_type_id']]
                 if list_id.part_type != product_id.type and product_id.type == 'local':
                    list_id.write({'part_type': product_id.type})

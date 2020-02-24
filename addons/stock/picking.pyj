@@ -315,7 +315,7 @@ class PickingList(models.Model):
         return model_id.code
 
     name = fields.Char(string="Picking List", readonly=True, index=True)
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type")
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
@@ -501,14 +501,16 @@ class PickingList(models.Model):
             try:
                 trolley_type_id = await [self.env['stock.trolley.type'].browse(self.trolley_type_id)]
                 route_ids = await [self.env['agv.route'].search()] #['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
-                def filter(route_id): return route_id.fitting = trolley_type_id.name and route_id.picking_zone == parseInt(self.pickup_zone.split('-')[-1]).toString()
+                def filter(route_id): return route_id.fitting == trolley_type_id.name and route_id.picking_zone == parseInt(self.pickup_zone.split('-')[-1]).toString()
                 route_id = route_ids.filter(filter)
+                if not route_id.name: tools.dialog.alert('Route for Zone ' + self.pickup_zone + ' and Trolley Type ' + trolley_type_id.name + ' is not configured')
                 response = await (fetch('http://' + host + ':8000/?route=' + route_id.name))
                 text = await (response.text())
                 tools.dialog.alert(text)
             except Exception as error:
                 tools.dialog.alert(error.stack)
-        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking(), call_route()])
+        await [call_route()]
+        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking()])
 
     @api.server(async=True)
     def update_location(self, location_id, is_pulley):
@@ -542,7 +544,8 @@ PickingList()
 menu.add({'id': 'picking_list', 'string': 'Picking List', 'sequence': 8})
 menu.add(id='picking_list_queue', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.wizard', string="Queue & Print", sequence=1)
 menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.mcvt', string="MCVT", sequence=2)
-menu.add(id='picking_list_fwd', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd', string="4WD", sequence=3)
+menu.add(id='picking_list_fwd_trf', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd_trf', string="4WD TRF", sequence=3)
+menu.add(id='picking_list_fwd_dps', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd_dps', string="4WD DPS", sequence=3)
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
 view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
@@ -580,8 +583,8 @@ view.add(model='stock.picking.list.filter', mode='mcvt', arch="""
 </form>
 """, context={'type': 'mcvt'})
 
-view.add(model='stock.picking.list.filter', mode='fwd', arch="""
-<form mode="fwd">
+view.add(model='stock.picking.list.filter', mode='fwd_trf', arch="""
+<form mode="fwd_trf">
     <sheet>
         <group>
             <field name="date"/>
@@ -589,7 +592,18 @@ view.add(model='stock.picking.list.filter', mode='fwd', arch="""
         </group>
     </sheet>
 </form>
-""", context={'type': 'fwd'})
+""", context={'type': 'fwd_trf'})
+
+view.add(model='stock.picking.list.filter', mode='fwd_dps', arch="""
+<form mode="fwd_dps">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
+""", context={'type': 'fwd_dps'})
 
 view.add(model='stock.picking.list.filter', mode='flexi', arch="""
 <form mode="flexi">
@@ -781,7 +795,7 @@ view.add(model='stock.picking.list.line', mode='tree', arch="""
 class PickingManual(models.Model):
     _name = 'stock.picking.manual'
 
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type", required=True)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", required=True)
     date = fields.Date(string="Date", required=True)
     sequence = fields.Integer(string="Sequence")
     sequence_id = fields.Many2one('mrp.sequence', string="Lot No.", required=True)
