@@ -28,7 +28,7 @@ class StockReceivingWizard(models.Model):
     scan = fields.Char(string="Laser Scan")
     order_ids = fields.Many2many('purchase.order.pack', string="Purchase Orders")
     received = fields.Boolean(string="Received")
-    fields.Text(string="Summary", compute=_get_summary, store=False)
+    summary = fields.Text(string="Summary", compute=_get_summary, store=False)
 
     @api.onchange('scan', async=True)
     def onchange_scan(self):
@@ -55,18 +55,18 @@ menu.add(id='scanner_receiving', string="Receiving", parent='scanner', model='st
 view.add(model='stock.receiving.wizard', mode='scan', arch="""
 <form>
     <sheet>
-        <group>
+        <group width="100%">
             <scanner-field name="scan"/>
         </group>
         <group>
-            <field name="summary"/>
+            <field name="summary" readonly="True"/>
         </group>
         <group width="100%">
             <field name="order_ids">
                 <tree>
                     <field name="product_id"/>
                     <field name="product_qty"/>
-                    <field name="date_string"/>
+                    <field name="date"/>
                     <field name="print_number"/>
                 </tree>
             </field>
