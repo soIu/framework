@@ -402,8 +402,12 @@ class PickingList(models.Model):
         if pack_id.product_id not in product_ids:
            self.laser_scan = ''
            return tools.dialog.alert("Wrong part")
-        if pack_id.picking_list_id: return tools.dialog.alert('This pack was already scanned by another picking list')
-        if pack_id.on_hold: return tools.dialog.alert('This pack is on hold')
+        if pack_id.picking_list_id:
+           self.laser_scan = ''
+           return tools.dialog.alert('This pack was already scanned by another picking list')
+        if pack_id.on_hold:
+           self.laser_scan = ''
+           return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
         if 'dor' not in self.line_ids: self.line_ids.push('dor')
@@ -621,6 +625,11 @@ view.add(model='stock.picking.list', mode='form', arch="""
     <style>
         div.card-body a:nth-child(2), div.card-body a:nth-child(3), .rapyd-tree-delete-button {
           display: none !important;
+        }
+        @media only screen and (max-width: 960px) {
+          .component-group[style="float: left; padding: 10px; margin-top: 20px; height: auto;"] {
+            width: 100vw;
+          }
         }
     </style>
     <header>

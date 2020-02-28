@@ -16,7 +16,9 @@ class StockTrolleyImage(models.Model):
     @async
     def upload(self):
         await [self.upload_server()]
+        window.history.back()
         tools.navigate('/')
+        tools.dialog.alert('Upload Success')
 
     @api.server(async=True)
     def upload_server(self):
