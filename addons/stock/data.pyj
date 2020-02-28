@@ -247,7 +247,7 @@ class PurchaseOrderPack(models.Model):
     def receive(self, immediate):
         pack_ids = []
         for record in self:
-            if record.received: return tools.alert('One of the PO is already received')
+            if record.received: return tools.dialog.alert('One of the PO is already received')
         quant_map = {}
         @async
         def create_quant_report(pack_id):
