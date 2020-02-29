@@ -248,7 +248,7 @@ class PurchaseOrderPack(models.Model):
         pack_ids = []
         for record in self:
             if record.received:
-               tools.dialog.alert('One of the PO is already received')
+               tools.dialog.alert('PO with print number ' + record.print_number + ' is already received')
                raise exceptions.ValidationError('PO with print number ' + record.print_number + ' is already received')
         quant_map = {}
         @async

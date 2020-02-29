@@ -39,6 +39,7 @@ class StockReceivingWizard(models.Model):
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
         self.scan = ''
         if not order_id.length: return
+        if order_id.received: return tools.dialog.alert('This PO is already received')
         self.order_ids.push(order_id.id)
         #tools.navigate('/form/purchase.order?id=' + order_id.id)
 
