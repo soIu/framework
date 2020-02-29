@@ -1,4 +1,4 @@
-<head>
+w<head>
     <style>
 body {
     margin: 0;
@@ -156,7 +156,6 @@ td {
         </div>
 <script>
 
-trolley_packs = {}
 
 function add_row(type, trolley, records) {
   row = document.getElementById('default_' + type + '_row')
@@ -168,8 +167,8 @@ function add_row(type, trolley, records) {
   rows = []
   async function getBulk(record, cells, cellFunction, cellOriginal) {
     [pack_ids, line_ids] = await Promise.all([
-      fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.pack&ids=' + JSON.stringify(record.pack_ids)).then((response) => response.json()),
-      fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
+      fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.pack&ids=' + JSON.stringify(record.pack_ids)).then((response) => response.json()),
+      fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
     ])
     values = pack_ids.values || []
     if (!Array.isArray(value)) values = [values];
@@ -178,12 +177,11 @@ function add_row(type, trolley, records) {
       if (!packs[value.product_id]) packs[value.product_id] = 0
       packs[value.product_id] += value.product_qty
     }
-    trolley_packs[trolley] = packs;
     values = line_ids.values || []
     if (!Array.isArray(value)) values = [values];
     for (let value of values) packs[value.product_id] && (packs[value.product_id] -= value.actual_qty)
     await Promise.all(cells.map(async ([cell, record]) => {
-      line_ids = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
+      line_ids = await fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
       values = line_ids.values || []
       if (!Array.isArray(value)) values = [values];
       let sufficient = true;
@@ -240,7 +238,7 @@ async function get_picking() {
   document.getElementById('production_date').innerHTML = (date.toDateString()).split(' ').slice(1, -1).reverse().concat([date.getFullYear()]).join(' / ')
   document.getElementById('time_now').innerHTML = date.toTimeString().split(':').slice(0, 2).join(':')
   const promises = ['mcvt', 'flexi'].map(async (type) => {
-    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list&args=[["date","=","${window.location.hash.slice(1)}"], ["type","=","${type}"], ["part_type","=","local"]]&options={"order": "sequence asc"}`).then((response) => response.json());
+    const records = await fetch(`/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list&args=[["date","=","${window.location.hash.slice(1)}"], ["type","=","${type}"], ["part_type","=","local"]]&options={"order": "sequence asc"}`).then((response) => response.json());
     if (!Array.isArray(records.values)) return;
     const trolleys = {};
     for (let record of records.values) {
@@ -251,7 +249,7 @@ async function get_picking() {
     await Promise.all(Object.keys(trolleys)/*.slice(0, 37)*/.map(async (trolley_id) => {
       console.log(trolley_id)
       if (!trolley_id) return;
-      const trolley = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trolley.type&ids=' + trolley_id).then((response) => response.json());
+      const trolley = await fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trolley.type&ids=' + trolley_id).then((response) => response.json());
       if (!trolley.values.name) return;
       values[trolley.values.name] = [type, trolley.values.name, trolleys[trolley_id]]
     }))
