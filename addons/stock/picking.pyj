@@ -455,7 +455,7 @@ class PickingList(models.Model):
 
     @async
     def create_picking(self):
-        picking_id = await (self.env['stock.picking'].create({'location_src_id': self.env['stock.location'].location_defaults.internal_id, 'location_dest_id': self.env['stock.location'].location_defaults.scr_id, 'type': 'internal', 'pack_ids': self.pack_ids}))
+        picking_id = await (self.env['stock.picking'].create({'location_src_id': self.env['stock.location'].location_defaults.internal_id, 'location_dest_id': self.env['stock.location'].location_defaults.scr_id, 'type': 'picking', 'pack_ids': self.pack_ids}))
         await [picking_id.validate()]
         return self.write({'ready': True})
         #tools.navigate('/form/stock.picking?id=' + picking_id.id)
