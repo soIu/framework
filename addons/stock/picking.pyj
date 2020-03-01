@@ -367,7 +367,7 @@ class PickingList(models.Model):
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
                 #models.env.context.refresh()
             setTimeout(write_value, 500)
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['called', '!=', True], ['id', '!=', self.id])]
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True], ['id', '!=', self.id])]
         if picking_list_id.length:
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
