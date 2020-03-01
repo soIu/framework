@@ -334,6 +334,7 @@ class PickingList(models.Model):
     part_type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], string="Part Type", index=True)
     location_name = fields.Char(string="Location")
     printed = fields.Boolean(string="Printed", index=True)
+    ready = fields.Boolean(string="Ready", index=True)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -455,11 +456,12 @@ class PickingList(models.Model):
     @async
     def create_picking(self):
         picking_id = await (self.env['stock.picking'].create({'location_src_id': self.env['stock.location'].location_defaults.internal_id, 'location_dest_id': self.env['stock.location'].location_defaults.scr_id, 'type': 'internal', 'pack_ids': self.pack_ids}))
-        return picking_id.validate()
+        await [picking_id.validate()]
+        return self.write({'ready': True})
         #tools.navigate('/form/stock.picking?id=' + picking_id.id)
 
     @async
-    def call_agv(self):
+    def picking_ready(self):
         line_ids, pack_ids = await ([self.env['stock.picking.list.line'].browse(self.line_ids), self.env['stock.pack'].browse(self.pack_ids)])
         lines = {}
         line_map = {}
@@ -498,6 +500,10 @@ class PickingList(models.Model):
                pack_id.available_qty -= line_id.actual_qty
                pack_ids = pack_id
                line_id.consumed = True
+        await ([pack_ids.write(), line_ids.write(), self.create_picking()])
+
+    @async
+    def call_agv(self):
         self.env['log.data'].log('Calling AGV on', self.name, 'id:', self.id, 'model:', self._name)
         host = self.ip_address or '172.16.1.213' #window.location.hostname
         @async
@@ -514,7 +520,7 @@ class PickingList(models.Model):
             except Exception as error:
                 tools.dialog.alert(error.stack)
         await [call_route()]
-        await ([self.write({'called': True}), pack_ids.write(), line_ids.write(), self.create_picking()])
+        return self.write({'called': True})
 
     @api.server(async=True)
     def update_location(self, location_id, is_pulley):
@@ -634,7 +640,8 @@ view.add(model='stock.picking.list', mode='form', arch="""
     </style>
     <header>
         <button name="print_list" string="Print"/>
-        <button name="call_agv" string="Call" invisible="active_id.called == True"/>
+        <button name="picking_ready" string="Ready" invisible="active_id.ready == True"/>
+        <button name="call_agv" string="Call" invisible="active_id.ready != True || active_id.called == True"/>
     </header>
     <sheet>
         <group>

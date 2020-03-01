@@ -206,7 +206,7 @@ function add_row(type, trolley, records) {
     //cell.style.writingMode = 'vertical-rl'
     //cell.style.writingMode = ''
     //cell.innerHTML = time.toTimeString().split(':').slice(0, 2).join(':');
-    if (!record.location_name && record.called) {
+    if (!record.location_name && (record.ready || record.called)) {
       cells = [];
       getBulk(record, cells, (cell) => cell.style.backgroundColor = 'orange')
       cell.style.backgroundColor = 'orange'
