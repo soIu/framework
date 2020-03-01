@@ -25,27 +25,42 @@ def create_upload_button():
         if models.env.context.active_model != 'stock.picking.list':
            model = models.env.context.active_model
            if defaults[model]: models.env.context.default_import_type = defaults[model]
-           tools.navigate('/form/hppm.data')
+           return tools.navigate('/form/hppm.data')
         trolley_types = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]')}).sort()
-        trolleys = [str.format('<a class="button button-fill" style="margin: 3px" onclick="print_picking_list_hppm(this.title)" title="{0}">{0}</a>', trolley) for trolley in trolley_types].join('')
-        dialog = tools.dialog.create({'title': 'Choose Type', 'content': str.format('<div style="display: flex; flex-wrap: wrap; padding-top: 10px;">{}</div>', trolleys), 'closeByBackdropClick': True})
+        sequences = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=sequence]')}).sort()
+        types = []
+        for trolley in trolley_types:
+            type = ''
+            for word in trolley:
+                if not word.match(/[A-Za-z]/): break
+                type += word
+            if type in types: continue
+            types.push(type)
+        types = [str.format('<a class="button button-fill" style="margin: 3px" onclick="show_picking_list_trolley(this.title)" title="{0}">{0}</a>', type) for type in types].join('')
+        dialog = tools.dialog.create({'title': 'Choose Type', 'content': str.format('<div style="display: flex; flex-wrap: wrap; padding-top: 10px;">{}</div>', types), 'closeByBackdropClick': True})
+        def show_picking_list_trolley(type):
+            nonlocal dialog
+            dialog.close()
+            trolleys = [str.format('<a class="button button-fill" style="margin: 3px" onclick="show_picking_list_sequence(this.title)" title="{0}">{0}</a>', trolley) for trolley in trolley_types if type in trolley].join('')
+            dialog = tools.dialog.create({'title': 'Choose Type', 'content': str.format('<div style="display: flex; flex-wrap: wrap; padding-top: 10px;">{}</div>', trolleys), 'closeByBackdropClick': True})
+            dialog.open()
+        window.show_picking_list_trolley = show_picking_list_trolley
+        def show_picking_list_sequence(trolley):
+            nonlocal dialog
+            dialog.close()
+            sequences = [str.format('''<a class="button button-fill" style="margin: 3px" onclick="print_picking_list_hppm(this.title, '{1}')" title="{0}">{0}</a>''', sequence, trolley) for sequence in sequences].join('')
+            dialog = tools.dialog.create({'title': 'Choose Sequence', 'content': str.format('<div style="display: flex; flex-wrap: wrap; padding-top: 10px;">{}</div>', sequences), 'closeByBackdropClick': True})
+        window.show_picking_list_sequence = show_picking_list_sequence
         @async
-        def print_picking_list_hppm(trolley):
+        def print_picking_list_hppm(sequence, trolley):
             if not localStorage.last_list_sequence: localStorage.last_list_sequence = '[]'
             dialog.close()
             row = None
             for column in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]'):
                 if column.innerHTML != trolley: continue
+                if column.parentElement.querySelector('div[col-id=sequence]').innerHTML != sequence: continue
                 row = column.parentElement
-                if localStorage.last_list_sequence != '[]' and row.querySelector('div[col-id=sequence]').innerHTML in JSON.parse(localStorage.last_list_sequence):
-                   row = None
-                   continue
-                elif localStorage.last_list_sequence == '[]' and row.querySelector('div[col-id=sequence]').innerHTML != '10':
-                   row = None
-                   continue
-                else: break
             if not row: return
-            localStorage.last_list_sequence = JSON.stringify(JSON.parse(localStorage.last_list_sequence).concat([row.querySelector('div[col-id=sequence]').innerHTML]))
             row.querySelector('div[col-id=date] span.ag-icon-checkbox-unchecked').click()
             await [wait(500)]
             document.querySelector('div.card-body a.button:nth-child(6)').click()
