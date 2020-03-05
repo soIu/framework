@@ -656,6 +656,9 @@ view.add(model='stock.picking.list', mode='form', arch="""
         div.card-body a:nth-child(2), div.card-body a:nth-child(3), .rapyd-tree-delete-button {
           display: none !important;
         }
+        div.card-body a:nth-child(2) {
+          display: unset !important;
+        }
         @media only screen and (max-width: 960px) {
           .component-group[style="float: left; padding: 10px; margin-top: 20px; height: auto;"] {
             width: 100vw;
@@ -817,6 +820,12 @@ class PickingListLine(models.Model):
     def print_barcode(self):
         for record in self:
             window.printBarcode(record.part_no)
+
+    def remove(self):
+        picking_id = self.env.context.active_id
+        if picking_id._name == 'stock.picking.list':
+           picking_id.pack_ids = [pack_id for pack_id in picking_id.pack_ids if pack_id != self.id]
+        return self.write({'picking_list_id': None})
 
 PickingListLine()
 
