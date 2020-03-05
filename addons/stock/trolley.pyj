@@ -323,7 +323,6 @@ class VisualControl(models.Model):
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
-        vc.document.body.requestFullscreen()
 
     def open_picking_list_ckd(self):
         url = './vc-picking-ckd.html#'
