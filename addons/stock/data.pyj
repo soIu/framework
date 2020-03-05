@@ -71,7 +71,7 @@ class PurchaseOrder(models.Model):
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.", index=True)
     product_id = fields.Many2one('product.product', string="Part", index=True)
-    product_qty = fields.Float(string="Qty (Pcs)")
+    product_qty = fields.Integer(string="Qty (Pcs)")
     boxes = fields.Integer(string="Qty (Box)", compute=_get_boxes, store=False)
     printed = fields.Boolean(string="Printed", index=True)
     ps_month = fields.Char(string="P/S Month", index=True)
@@ -82,8 +82,8 @@ class PurchaseOrder(models.Model):
     pack_ids = fields.One2many('purchase.order.pack', 'order_id', string="Packs")
     date = fields.Datetime(string="Date", index=True)
     date_string = fields.Char(string="Date (String)", index=True)
-    received_qty = fields.Float(string="Received Qty (Pcs)", compute=_get_received_qty, store=False)
-    received_boxes = fields.Float(string="Received Qty (Box)", compute=_get_received_boxes, store=False)
+    received_qty = fields.Integer(string="Received Qty (Pcs)", compute=_get_received_qty, store=False)
+    received_boxes = fields.Integer(string="Received Qty (Box)", compute=_get_received_boxes, store=False)
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -187,7 +187,7 @@ class PurchaseOrderPack(models.Model):
     part_no = fields.Char(string="Part No.")
     part_name = fields.Char(string="Part Name")
     product_id = fields.Many2one('product.product', string="Part")
-    product_qty = fields.Float(string="Quantity")
+    product_qty = fields.Integer(string="Quantity")
     order_id = fields.Many2one('purchase.order', string="Purchase Order")
     barcode = fields.Text(string="Barcode", compute=_get_barcode, store=False)
     received = fields.Boolean(string="Received")

@@ -156,7 +156,7 @@ class ReceiveInhouse(models.Model):
     _name = 'stock.receive.inhouse'
 
     product_id = fields.Many2one('product.product', string="Inhouse Part")
-    product_qty = fields.Float(string="Daisha")
+    product_qty = fields.Integer(string="Daisha")
 
     @async
     def receive(self):

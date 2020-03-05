@@ -173,15 +173,15 @@ class StockPack(models.Model):
     move_ids = fields.One2many('stock.move', 'pack_id', string="Movements")
     category_id = fields.Many2one('product.category', string="Category")
     product_id = fields.Many2one('product.product', string="Part", index=True)
-    product_qty = fields.Float(string="Quantity", index=True)
-    available_qty = fields.Float(string="Available Quantity", index=True)
+    product_qty = fields.Integer(string="Quantity", index=True)
+    available_qty = fields.Integer(string="Available Quantity", index=True)
     is_pulley = fields.Boolean(string="Is Pulley", readonly=True)
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
     print_number = fields.Char(string="Print No.")
     receive_zone = fields.Char(string="Receive Zone")
     on_hold = fields.Boolean(string="On Hold")
-    #available_qty = fields.Float(string="Available Quantity", compute=_get_available_qty)
-    #current_qty = fields.Float(string="Stock", compute=_get_current_qty, store=False)
+    #available_qty = fields.Integer(string="Available Quantity", compute=_get_available_qty)
+    #current_qty = fields.Integer(string="Stock", compute=_get_current_qty, store=False)
 
     """def create(self, values=False, is_client=tools.configuration.client):
         if v"typeof window !== 'undefined'":

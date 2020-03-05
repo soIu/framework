@@ -171,19 +171,19 @@ function add_row(type, trolley, records) {
       fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
     ])
     values = pack_ids.values || []
-    if (!Array.isArray(value)) values = [values];
+    if (!Array.isArray(values)) values = [values];
     packs = {}
     for (let value of values) {
       if (!packs[value.product_id]) packs[value.product_id] = 0
       packs[value.product_id] += value.product_qty
     }
     values = line_ids.values || []
-    if (!Array.isArray(value)) values = [values];
+    if (!Array.isArray(values)) values = [values];
     for (let value of values) packs[value.product_id] && (packs[value.product_id] -= value.actual_qty)
     await Promise.all(cells.map(async ([cell, record]) => {
       line_ids = await fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
       values = line_ids.values || []
-      if (!Array.isArray(value)) values = [values];
+      if (!Array.isArray(values)) values = [values];
       let sufficient = true;
       for (let value of values) packs[value.product_id] && (packs[value.product_id] -= value.actual_qty) < 0 && (sufficient = false)
       if (!sufficient) return;

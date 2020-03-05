@@ -798,14 +798,14 @@ class PickingListLine(models.Model):
     route = fields.Integer(string="Route")
     part_no = fields.Char(string="Part No.") #, compute=_get_part_no, store=True)
     product_id = fields.Many2one('product.product', string="Part")
-    qty_box = fields.Float(string="Qty/Box") #, compute=_get_part_qty_box, store=True)
-    min_box = fields.Float(string="Minimum Box")
-    box = fields.Float(string="Box", compute=_get_box, store=True)
-    actual_box = fields.Float(string="Actual Box")
-    cached_product_qty = fields.Float(string="Total Qty")
-    product_qty = fields.Float(string="Total Qty", compute=_get_part_qty, store=True)
-    received_qty = fields.Float(string="Picked Qty", compute=_get_received_qty, store=False)
-    actual_qty = fields.Float(string="Actual Qty")
+    qty_box = fields.Integer(string="Qty/Box") #, compute=_get_part_qty_box, store=True)
+    min_box = fields.Integer(string="Minimum Box")
+    box = fields.Integer(string="Box", compute=_get_box, store=True)
+    actual_box = fields.Integer(string="Actual Box")
+    cached_product_qty = fields.Integer(string="Total Qty")
+    product_qty = fields.Integer(string="Total Qty", compute=_get_part_qty, store=True)
+    received_qty = fields.Integer(string="Picked Qty", compute=_get_received_qty, store=False)
+    actual_qty = fields.Integer(string="Actual Qty")
     description = fields.Char(string="Description")
     date = fields.Datetime(string="Date")
     sequence = fields.Integer(string="Sequence")
@@ -892,7 +892,7 @@ class PickingManualLine(models.Model):
     _name = 'stock.picking.manual.line'
 
     product_id = fields.Many2one('product.product', string="Product", required=True)
-    product_qty = fields.Float(string="Quantity")
+    product_qty = fields.Integer(string="Quantity")
 
 PickingManualLine()
 

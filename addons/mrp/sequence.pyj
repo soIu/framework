@@ -21,7 +21,7 @@ class MrpSequence(models.Model):
     bom_id = fields.Many2one('mrp.bom', string="Model")
     date = fields.Datetime(string="Date", index=True)
     destination = fields.Char(string="Destination")
-    quantity = fields.Float(string="Quantity")
+    quantity = fields.Integer(string="Quantity")
     finished = fields.Boolean(string="Finished", readonly=True)
     location_name = fields.Char(string="Location")
     time_start = fields.Char(string="Start")
