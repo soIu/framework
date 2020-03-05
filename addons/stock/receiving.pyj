@@ -22,6 +22,9 @@ class StockReceivingWizard(models.Model):
         for product_id in summary_map:
             product_id = await [self.env['product.product'].browse(product_id)]
             summary.push(product_id.name + ': ' + summary_map[product_id.id])
+        if self.pallet_id:
+           def navigate(): tools.navigate('/view/stock.picking.form?id=' + self.pallet_id)
+           setTimeout(navigate, 100)
         return summary.join('\n')
 
     #name = fields.Char(string="")
@@ -29,11 +32,17 @@ class StockReceivingWizard(models.Model):
     order_ids = fields.Many2many('purchase.order.pack', string="Purchase Orders")
     received = fields.Boolean(string="Received")
     summary = fields.Text(string="Summary", compute=_get_summary, store=False)
+    pallet_id = fields.Many2one('stock.picking', string="Pallet")
 
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
-        value = JSON.parse(self.scan)
+        value = None
+        try:
+            value = JSON.parse(self.scan)
+        except:
+            self.scan = ''
+            return tools.dialog.alert('Invalid Barcode')
         if value.inhouse_ckd: return tools.dialog.alert("Can't receive Inhouse/CKD Part")
         self.env['log.data'].log('Scan', value.name, 'id:', value.id, 'model: purchase.order.pack')
         order_id = await [self.env['purchase.order.pack'].browse(value.id)]
@@ -46,8 +55,8 @@ class StockReceivingWizard(models.Model):
     @async
     def receive(self):
         order_ids = await (self.env['purchase.order.pack'].browse(self.order_ids))
-        await [order_ids.receive()]
-        return self.write({'received': True})
+        pallet_id = await [order_ids.receive(self)]
+        return self.write({'received': True, 'pallet_id': pallet_id.id})
 
 StockReceivingWizard()
 

@@ -309,17 +309,28 @@ PickingListFilter()
 class PickingList(models.Model):
     _name = 'stock.picking.list'
 
-    @async
+    #@async
     def _get_model_code(self):
-        model_id = await [self.env['mrp.bom'].browse(self.model_id)]
-        return model_id.code
+        console.log('dor')
+        @async
+        def check_picking_list(self):
+            if self.sequence == 10: return
+            picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '=', True])]
+            if not picking_list_id.length:
+               self.laser_scan = ''
+               def back(): window.history.back()
+               return tools.dialog.alert("Can't pick if there's still a running sequence", 'App', back)
+        check_picking_list()
+        return ''
+        #model_id = await [self.env['mrp.bom'].browse(self.model_id)]
+        #return model_id.code
 
     name = fields.Char(string="Picking List", readonly=True, index=True)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type")
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
-    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)
+    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)	
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_list_id', string="Packs")
@@ -368,10 +379,13 @@ class PickingList(models.Model):
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
                 #models.env.context.refresh()
             setTimeout(write_value, 500)
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True])]
-        if picking_list_id.length:
-           self.laser_scan = ''
-           return tools.dialog.alert("Can't pick if there's still a running sequence")
+        if not sum(parseFloat(cell.innerText) for cell in document.querySelector('div.ag-cell[col-id=product_qty]')):
+           def back(): window.history.back()
+           return tools.dialog.alert("This Picking List doesn't need to be picked", "App", back)
+        #picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True])]
+        #if picking_list_id.length:
+        #   self.laser_scan = ''
+        #   return tools.dialog.alert("Can't pick if there's still a running sequence")
         self.env['log.data'].log('Scan', barcode, 'on Picking List')
         if barcode.split('-PICK-')[0] == 'LC':
            self.pickup_zone = self.laser_scan
@@ -390,11 +404,16 @@ class PickingList(models.Model):
         #@async
         def get_product_ids():
             line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_list_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
-            product_ids = [line_id.product_id for line_id in line_ids]
+            index = -1
+            product_ids = {line_id.product_id: parseFloat(document.querySelector('div.ag-row[row-id="' + (index += 1).toString() + '"] div.ag-cell[col-id=product_qty]').innerText) for line_id in line_ids}
             valid = value.product_id in product_ids
             if not valid:
                self.laser_scan = ''
                tools.dialog.alert("Wrong part")
+            if not product_ids[value.product_id]:
+               valid = False
+               self.laser_scan = ''
+               tools.dialog.alert("This part doesn't need to be picked")
             return valid, product_ids
         valid, product_ids = get_product_ids()
         if not valid: return
@@ -405,6 +424,9 @@ class PickingList(models.Model):
         if pack_id.product_id not in product_ids:
            self.laser_scan = ''
            return tools.dialog.alert("Wrong part")
+        if not product_ids[pack_id.product_id]:
+           self.laser_scan = ''
+           return tools.dialog.alert("This part doesn't need to be picked")
         if pack_id.picking_list_id:
            self.laser_scan = ''
            return tools.dialog.alert('This pack was already scanned by another picking list')
@@ -482,11 +504,11 @@ class PickingList(models.Model):
                packs[pack_id.product_id] += pack_id.product_qty
                pack_map[pack_id.product_id].push(pack_id)
         for line in lines:
-            if packs[line] < lines[line]:
+            if packs[line] != lines[line]:
                console.log(line)
                console.log(packs[line], lines[line])
                product_id = await [self.env['product.product'].browse(line)]
-               return tools.dialog.alert('Quantity for part ' + product_id.name + ' is not sufficient')
+               return tools.dialog.alert(lines[line] + ' Pcs of quantity is needed for part ' + product_id.name)
             line_id = line_map[line]
             actual_qty = line_id.actual_qty
             for pack_id in pack_map[line]:

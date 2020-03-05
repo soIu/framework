@@ -124,6 +124,9 @@ class PurchaseOrder(models.Model):
      except Exception as error:
         alert(error.stack or error.message)
 
+    def print_all(self):
+        return Promise.all([record.print_label() for record in self])
+
     def get_box_quantities(self, quantity, product_id):
         boxes = quantity / product_id.qty_box
         rounded_boxes = parseInt(boxes)
@@ -277,6 +280,7 @@ class PurchaseOrderPack(models.Model):
         if immediate:
            return picking_id.validate(immediate=True)
         tools.navigate('/view/stock.picking.form?id=' + picking_id.id)
+        return picking_id
 
     def cancel(self):
         @async
@@ -322,7 +326,7 @@ view.add({'model': 'purchase.order', 'init': create_upload_button, 'mode': 'tree
     <field name="received_boxes"/>
     <field name="printed"/>
 </tree>
-""", 'action': {'print_label': 'Print'}})
+""", 'action': {'print_all': 'Print'}})
 
 view.add(model='purchase.order', mode='actual_receiving', arch="""
 <tree-page title="Actual Receiving"/>
@@ -368,8 +372,8 @@ class PurchaseOrderPrint(models.Model):
     _name = 'purchase.order.print'
 
     supplier_id = fields.Many2one('purchase.order.supplier', string="Supplier")
-    date_from = fields.Datetime(string="Date From")
-    date_to = fields.Datetime(string="Date To")
+    date_from = fields.Date(string="Date From")
+    date_to = fields.Date(string="Date To")
 
     @async
     def print_label(self):
