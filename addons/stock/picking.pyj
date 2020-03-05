@@ -326,7 +326,7 @@ class PickingList(models.Model):
         #return model_id.code
 
     name = fields.Char(string="Picking List", readonly=True, index=True)
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
