@@ -313,12 +313,12 @@ class VisualControl(models.Model):
         url = './vc-picking-local.html#'
         def open(vc):
             new_vc = window.open(url + self.date)
-            vc.focus()
-            vc.document.body.requestFullscreen()
+            vc.document.scripts[0].remove()
+            dummy = window.open()
+            dummy.document.write(vc.document.documentElement.outerHTML)
+            vc.close()
             def focus():
                 open(new_vc)
-                #new_vc.focus()
-                vc.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
@@ -328,31 +328,29 @@ class VisualControl(models.Model):
         url = './vc-picking-ckd.html#'
         def open(vc):
             new_vc = window.open(url + self.date)
-            vc.focus()
-            vc.document.body.requestFullscreen()
+            vc.document.scripts[0].remove()
+            dummy = window.open()
+            dummy.document.write(vc.document.documentElement.outerHTML)
+            vc.close()
             def focus():
                 open(new_vc)
-                #new_vc.focus()
-                vc.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
-        vc.document.body.requestFullscreen()
 
     def open_picking_list_fwd(self):
         url = './vc-picking-fwd.html#'
         def open(vc):
             new_vc = window.open(url + self.date)
-            vc.focus()
-            vc.document.body.requestFullscreen()
+            vc.document.scripts[0].remove()
+            dummy = window.open()
+            dummy.document.write(vc.document.documentElement.outerHTML)
+            vc.close()
             def focus():
                 open(new_vc)
-                #new_vc.focus()
-                vc.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
-        vc.document.body.requestFullscreen()
 
 VisualControl()
 
