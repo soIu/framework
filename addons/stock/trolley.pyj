@@ -319,6 +319,7 @@ class VisualControl(models.Model):
             vc.close()
             def focus():
                 open(new_vc)
+                dummy.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
@@ -334,6 +335,7 @@ class VisualControl(models.Model):
             vc.close()
             def focus():
                 open(new_vc)
+                dummy.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
@@ -348,6 +350,7 @@ class VisualControl(models.Model):
             vc.close()
             def focus():
                 open(new_vc)
+                dummy.close()
             new_vc.open_new = focus
         vc = window.open(url + self.date)
         vc.open_new = open
