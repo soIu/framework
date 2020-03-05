@@ -427,7 +427,7 @@ class HPPMData(models.Model):
          if v'typeof window' != 'undefined':
             return window.models.env.context.default_import_type or None
 
-    name = fields.Char(string="Data Number", defaults=_get_number, required=True)
+    name = fields.Char(string="Data Number", defaults=_get_number, required=True, index=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")

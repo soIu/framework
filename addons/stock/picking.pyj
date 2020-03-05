@@ -335,6 +335,7 @@ class PickingList(models.Model):
     location_name = fields.Char(string="Location")
     printed = fields.Boolean(string="Printed", index=True)
     ready = fields.Boolean(string="Ready", index=True)
+    is_pulley_finished = fields.Boolean(string="Is Pulley and Finished")
 
     @async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -367,7 +368,7 @@ class PickingList(models.Model):
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
                 #models.env.context.refresh()
             setTimeout(write_value, 500)
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True], ['id', '!=', self.id])]
+        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True])]
         if picking_list_id.length:
            self.laser_scan = ''
            return tools.dialog.alert("Can't pick if there's still a running sequence")
@@ -386,19 +387,20 @@ class PickingList(models.Model):
            self.trolley_id = trolley_id.id
            return write({'trolley_id': trolley_id.id})
         value = JSON.parse(barcode)
-        @async
+        #@async
         def get_product_ids():
-            line_ids = await [self.env['stock.picking.list.line'].browse(self.line_ids)]
+            line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_list_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
             product_ids = [line_id.product_id for line_id in line_ids]
             valid = value.product_id in product_ids
             if not valid:
                self.laser_scan = ''
                tools.dialog.alert("Wrong part")
             return valid, product_ids
-        validity = get_product_ids()
-        pack_id = self.env['stock.pack'].search(['order_pack_id', '=', value.id])
-        valid, product_ids = await (validity)
+        valid, product_ids = get_product_ids()
         if not valid: return
+        pack_id = self.env['stock.pack'].search(['order_pack_id', '=', value.id])
+        #valid, product_ids = await (validity)
+        #if not valid: return
         pack_id = await (pack_id)
         if pack_id.product_id not in product_ids:
            self.laser_scan = ''
@@ -525,7 +527,7 @@ class PickingList(models.Model):
     @api.server(async=True)
     def update_location(self, location_id, is_pulley):
         sequence_id, location_id = await ([self.env['mrp.sequence'].browse(self.sequence_id) if is_pulley else None, self.env['stock.location'].browse(location_id)])
-        return await ([sequence_id.write({'location_name': location_id.name}) if is_pulley else None, self.write({'location_name': location_id.name})])
+        return await ([sequence_id.write({'location_name': location_id.name}) if is_pulley else None, self.write({'location_name': location_id.name, 'is_pulley_finished': True if is_pulley else False})])
 
     @api.server(async=True)
     def check_pulley(self, location_id):
@@ -559,7 +561,7 @@ menu.add(id='picking_list_fwd_dps', parent='picking_list', model='stock.picking.
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
 view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
-<tree title="Picking List" limit="1000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
+<tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="model_id"/>

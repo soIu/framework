@@ -259,10 +259,11 @@ async function get_picking() {
     //time.setHours(7, 15, 0, 0, 0)
   });
   await Promise.all(promises);
-  setTimeout(() => location.reload(), 10 * 1000);
+  window.open_new(window);
+  //setTimeout(() => location.reload(), 10 * 1000);
 }
 
-get_picking().catch(window.alert)
+get_picking().catch(window.location.reload)
 
 </script>
 </body>
