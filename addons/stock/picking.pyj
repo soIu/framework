@@ -313,7 +313,7 @@ class PickingList(models.Model):
     def _get_model_code(self):
         console.log('dor')
         @async
-        def check_picking_list(self):
+        def check_picking_list():
             if self.sequence == 10: return
             picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '=', True])]
             if not picking_list_id.length:
