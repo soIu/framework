@@ -379,7 +379,7 @@ class PickingList(models.Model):
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
                 #models.env.context.refresh()
             setTimeout(write_value, 500)
-        if not sum(parseFloat(cell.innerText) for cell in document.querySelector('div.ag-cell[col-id=product_qty]')):
+        if not sum(parseFloat(cell.innerText) for cell in document.querySelectorAll('div.ag-cell[col-id=product_qty]')):
            def back(): window.history.back()
            return tools.dialog.alert("This Picking List doesn't need to be picked", "App", back)
         #picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', self.date], ['trolley_type_id', '=', self.trolley_type_id], ['sequence', '<', self.sequence], ['ready', '!=', True])]
