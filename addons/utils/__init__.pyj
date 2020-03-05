@@ -27,7 +27,8 @@ def create_upload_button():
            if defaults[model]: models.env.context.default_import_type = defaults[model]
            return tools.navigate('/form/hppm.data')
         trolley_types = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]')}).sort()
-        sequences = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=sequence]')}).sort()
+        collator = new Intl.Collator(undefined, {'numeric': True, 'sensitivity': 'base'})
+        sequences = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=sequence]')}).sort(collator.compare)
         types = []
         for trolley in trolley_types:
             type = ''
