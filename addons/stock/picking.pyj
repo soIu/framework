@@ -656,7 +656,7 @@ view.add(model='stock.picking.list', mode='form', arch="""
         div.card-body a:nth-child(2), div.card-body a:nth-child(3), .rapyd-tree-delete-button {
           display: none !important;
         }
-        div.card-body a:nth-child(7) {
+        div.card-body a:nth-child(6) {
           display: unset !important;
         }
         @media only screen and (max-width: 960px) {
