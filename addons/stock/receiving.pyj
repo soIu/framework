@@ -55,7 +55,7 @@ class StockReceivingWizard(models.Model):
     @async
     def receive(self):
         order_ids = await (self.env['purchase.order.pack'].browse(self.order_ids))
-        pallet_id = await [order_ids.receive(self)]
+        pallet_id = await [order_ids.receive()]
         return self.write({'received': True, 'pallet_id': pallet_id.id})
 
 StockReceivingWizard()
