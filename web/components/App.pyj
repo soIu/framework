@@ -3,8 +3,6 @@ import orm.tools as tools
 import web.react as react
 from web.routes import routes
 
-api = client.api
-
 F7App, Statusbar, Panel, View, Popup, Page, Navbar, NavRight, Link, Block = react.get_framework_components('App', 'Statusbar', 'Panel', 'View', 'Popup', 'Page', 'Navbar', 'NavRight', 'Link', 'Block')
 
 def App(props):
@@ -45,7 +43,7 @@ def App(props):
         blob = new Blob([JSON.stringify(manifest)], {'type': 'application/json'})
         document.getElementById('rapyd-app-manifest').setAttribute('href', URL.createObjectURL(blob))
         manifestRegistered = True
-    api.globals.registerManifest = registerManifest
+    tools.client.api.globals.registerManifest = registerManifest
 
     f7params = {
     'id': 'org.rapyd.client',

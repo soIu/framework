@@ -7,7 +7,7 @@ Button = react.get_framework_components('Button')
 @async
 def button(props):
     def wait():
-        return not client.api.globals.onchange_running
+        return not tools.client.api.globals.onchange_running
     await [tools.wait_exist(wait)];
     if props.name:
        try:
@@ -18,7 +18,7 @@ def button(props):
               await [models.env.context.refresh()]
        except Exception as error:
            await [models.env.context.refresh()]
-           client.api.handleClientError(error)
+           tools.client.api.handleClientError(error)
            raise error
 
 class Button(React.Component):

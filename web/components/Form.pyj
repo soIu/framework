@@ -8,6 +8,11 @@ Page = react.get_components('Page')
 
 class Form(React.Component):
 
+    def __init__(self, props):
+        models.env.context.editing = True if props.isCustomView else False;
+        self.state = models.env.context
+        self.state.edit_function = self.edit.bind(self)
+
     @async
     def componentDidMount(self):
         model = models.env.context.active_model
@@ -19,13 +24,14 @@ class Form(React.Component):
            models.env.context.editing = True
            return this.setState(models.env.context)
         models.env.context.active_id = await [models.env[model].browse(models.env.context.active_ids)]
+        window.c = models.env.context.active_id
         return models.env.context.refresh()
 
     @async
     def edit(self):
         def wait():
-            return not client.api.globals.onchange_running
-        await [api.wait_exist(wait)]
+            return not tools.client.api.globals.onchange_running
+        await [tools.client.api.wait_exist(wait)]
         model = models.env.context.active_id._name
         offline = JSON.parse({'True': 'true', 'False': 'false'}[self.props.offline] or self.props.offline) if self.props.offline else False
         if not self.state.editing:
@@ -35,13 +41,13 @@ class Form(React.Component):
         try:
             await [models.env.context.active_id[operation]({}, not offline)]
         except Exception as error:
-            if error and error.constructor == window.tools.exceptions.RequiredError:
+            if error and error.constructor == tools.exceptions.RequiredError:
                error.field_map = {}
                for field in error.fields:
                    error.field_map[field] = True
                models.env.context.active_error = error;
                await [this.setState({'active_id': models.env.context.active_id})]
-               client.app.toast.create({'text': 'Some fields are required', 'closeButton': False, 'closeTimeout': 2000, position: 'center'}).open()
+               tools.client.app.toast.create({'text': 'Some fields are required', 'closeButton': False, 'closeTimeout': 2000, position: 'center'}).open()
                return
             else:
                raise error
@@ -50,7 +56,7 @@ class Form(React.Component):
             if result and result.constructor == Promise: await (result)
         models.env.context.active_task = [];
         if operation == 'create':
-           client.app.views.main.router.navigate(window.location.hash.replace('#!', '') + '?id=' + models.env.context.active_id.id, {'reloadCurrent': True})
+           tools.client.app.views.main.router.navigate(window.location.hash.replace('#!', '') + '?id=' + models.env.context.active_id.id, {'reloadCurrent': True})
            promises = []
            for model in models.env.context.active_lines:
                for inverse_field in models.env.context.active_lines[model]:
@@ -62,14 +68,14 @@ class Form(React.Component):
            if not models.env.context.unsaved: models.env.context.unsaved = {}
            if not models.env.context.unsaved[model]: models.env.context.unsaved[model] = {}
            models.env.context.unsaved[model][models.env.context.active_id.id] = models.env.context.active_id.id
-        await [api.update_session({'unsaved': models.env.context.unsaved})]
+        await [tools.client.api.update_session({'unsaved': models.env.context.unsaved})]
         await [self.setState(tools.merge({}, models.env.context, {'offline': offline}))]
 
     @async
     def upload(self):
         def wait():
-            return not client.api.globals.onchange_running
-        await [api.wait_exist(wait)]
+            return not tools.client.api.globals.onchange_running
+        await [tools.client.api.wait_exist(wait)]
         model = models.env.context.active_id._name;
         record = await [models.env[model].browse(models.env.context.active_id.id)]
         if record.length < 1:
@@ -82,33 +88,32 @@ class Form(React.Component):
            record = await [models.env.context.active_id.write()]
            models.env.context.active_id = record
         if models.env.context.unsaved and models.env.context.unsaved[model] and models.env.context.unsaved[model][record.id]: del models.env.context.unsaved[model][record.id]
-        await [api.update_session({'unsaved': models.env.context.unsaved})]
+        await [tools.client.api.update_session({'unsaved': models.env.context.unsaved})]
         return this.setState(tools.merge({}, models.env.context, {'offline': False}))
 
     def render(self, props):
-        self.state = models.env.context
-        self.state.edit_function = self.edit.bind(self)
-        if props.isCustomView: models.env.context.editing = True
+        #self.state = models.env.context
+        #self.state.edit_function = self.edit.bind(self)
+        #if props.isCustomView: models.env.context.editing = True
         model = models.env.context.active_model
-        console.log(self.state)
         buttonStyle = {'width': 'auto', 'float': 'left', 'margin-right': '10px'};
         uploadStyle = {}
         if not self.state.offline: uploadStyle['display'] = 'none'
-        if props.isCustomView: return Page (title=window.tools.view[model].string, props.children)
+        if props.isCustomView: return Page (title=tools.view[model].string, props.children)
         def onClickEdit():
-            return self.edit().catch(client.api.handleClientError)
+            return self.edit().catch(tools.client.api.handleClientError)
         def onClickCancel():
-            return client.app.views.main.router.back()
+            return tools.client.app.views.main.router.back()
         return (
-          Page (title=window.tools.view[model].string,
+          Page (title=tools.view[model].string,
             div (className="card", style={'margin': 0, 'boxShadow': 'none'},
               div (className="card-header", style={'borderRight': 'solid rgba(0,0,0,0.05) 0.5px'},
                 div (className="data-table-title",
-                  window.tools.view[model].string,
+                  tools.view[model].string,
                   span (style={'color': '#666666'}, ' / ' + (self.state.active_id.name if self.state.active_id and self.state.active_id.id else 'New')),
                   div(
                     Button (onClick=onClickEdit, style=buttonStyle, fill=True, 'Save' if self.state.editing else 'Edit'),
-                    Button (onClick=onClickCancel, style=tools.merge({}, buttonStyle, {'display': 'none'} if self.state.editing else {}),'Cancel'),
+                    Button (onClick=onClickCancel, style=tools.merge({}, buttonStyle, {'display': 'none'} if not self.state.editing else {}),'Cancel'),
                     Button (onClick=self.upload.bind(self), style=tools.merge({}, buttonStyle, uploadStyle), fill=True, 'Upload'),
                   )
                 )

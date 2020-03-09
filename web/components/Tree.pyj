@@ -6,11 +6,7 @@ import web.components.Grid
 import web.components.GridEditor
 import web.components.GridCheckbox
 
-api = client.api
-csv = client.csv
-FileSaver = client.FileSaver
-
-Button, Popup = react.get_framework_components('Button', 'Popup')
+Button, Popup, div, br = react.get_framework_components('Button', 'Popup', 'div', 'br')
 Page, Grid, GridEditor, GridCheckbox = react.get_components('Page', 'Grid', 'GridEditor', 'GridCheckbox')
 
 def autoSizeAll(gridOptions, listener):
@@ -20,7 +16,6 @@ def autoSizeAll(gridOptions, listener):
             return gridOptions.api.onFilterChanged()
         for column in gridOptions.api.gridCore.gridOptions.columnDefs:
             gridOptions.api.getFilterInstance(column.field).eClearButton.addEventListener('click', click)
-        
     div = gridOptions.api.gridCore.eGridDiv
     overflown = any(element.offsetWidth < element.scrollWidth for element in div.querySelectorAll('span.ag-header-cell-text'))
 
@@ -35,7 +30,7 @@ def autoSizeAll(gridOptions, listener):
 
     @async
     def forceResize():
-        await [api.wait(200)]
+        await [tools.client.api.wait(200)]
         allColumnIds = []
         for column in gridOptions.columnApi.getAllColumns():
             allColumnIds.push(column.colId)
@@ -53,11 +48,14 @@ def autoSizeAll(gridOptions, listener):
         document.querySelector('head').append(style)
         for element in document.querySelectorAll('div.ag-paging-panel'):
             element.style.width = parseFloat(element.parentElement.querySelector('.ag-header-viewport .ag-header-row').style.width.replace('px', '')) - 48 + 'px'
-    forceResize()        
+    forceResize()
 
 class Tree(React.Component):
 
     def __init__(self, props):
+        #self.__proto__.constructor(props)
+        #React.Component.prototype.constructor.apply(self, [props])
+        self.grid = React.createRef()
         model = props.model or models.env.context.active_model
         this_tree = self
 
@@ -97,7 +95,7 @@ class Tree(React.Component):
             models.env.context.active_task.push(task)
         self.taskJob = taskJob
 
-        def onchange(params):
+        def onChange(params):
             if not params.colDef.cellEditorFramework and params.newValue != params.oldValue:
                 value = params.newValue
                 records = models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field]
@@ -120,7 +118,7 @@ class Tree(React.Component):
                     row[params.colDef.field] = params.specialValue or value
                 @async
                 def wait():
-                    await [api.wait(100)]
+                    await [tools.client.api.wait(100)]
                     self.gridOptions.api.deselectAll()
                     await [self.setState({records: self.state.records})]
                     if not params.colDef.cellEditorParams: self.gridOptions.api.refreshCells()
@@ -138,14 +136,14 @@ class Tree(React.Component):
             self.pagingCalled = True
             @async
             def wait():
-                await [api.wait(100)]
+                await [tools.client.api.wait(100)]
                 self.pagingCalled = False
             return self.setState({'active_ids': ids, 'selected': selected})
 
         self.onSelectionChanged = onSelectionChanged
- 
+
         def handleOutside(event):
-            if self.refs.grid and not self.refs.grid.base.querySelector('div.ag-body').contains(event.target) and self.gridOptions: self.gridOptions.api.stopEditing()
+            if self.grid.current and not self.grid.current.base.querySelector('div.ag-body').contains(event.target) and self.gridOptions: self.gridOptions.api.stopEditing()
 
         self.handleOutside = handleOutside
 
@@ -158,6 +156,7 @@ class Tree(React.Component):
                 field['sort'] = child.props.sort
             if models.env[model]._fields[child.attributes.name].type in ['date', 'datetime', 'selection', 'boolean'] or models.env[model]._fields[child.attributes.name].relation:
                field = tools.merge(field, {'cellEditorFramework': models.env[model]._fields[child.attributes.name].type != 'boolean' and GridEditor, 'cellEditorParams': tools.merge({}, child.props, {'model': model, 'tree': self}), 'cellRendererParams': tools.merge({}, child.props, {'model': model, 'tree': self}), 'cellClass': 'editable-special-cell', 'cellRendererFramework': models.env[model]._fields[child.attributes.name].type == 'boolean' and GridCheckbox})
+            fields.push(field)
         fields[0].checkboxSelection = True
         fields[0].headerCheckboxSelection = True
         limit = parseInt(props.limit) or (50 if props.isTreeView else 500)
@@ -177,13 +176,13 @@ class Tree(React.Component):
             def limit_tree(limit):
                 self.state.limit = parseInt(limit)
                 self.paging(0, {'newData': False, 'forceUpdate': True})
-            api.globals.app.dialog.prompt('', 'Limit', limit_tree)
+            tools.client.api.globals.app.dialog.prompt('', 'Limit', limit_tree)
             input = document.querySelector('input.dialog-input')
             if input:
                 input.type = 'number'
                 input.value = self.state.limit
-        if self.refs.grid and self.refs.grid.base:
-            if self.props.isTreeView and self.refs.grid.base.querySelector('span.ag-paging-row-summary-panel'): self.refs.grid.base.querySelector('span.ag-paging-row-summary-panel').onclick = prompt_limit
+        if self.grid.current and self.grid.current.base:
+            if self.props.isTreeView and self.grid.current.base.querySelector('span.ag-paging-row-summary-panel'): self.grid.current.base.querySelector('span.ag-paging-row-summary-panel').onclick = prompt_limit
 
         document.addEventListener('mousedown', self.handleOutside)
 
@@ -224,13 +223,13 @@ class Tree(React.Component):
            params.newData = False
            params.forcePopup = True
            params.forceUpdate = True
-           self.paging.bind(this)(0, params)
+           self.paging(0, params)
 
     @async
     def filter(self, fields, params):
         if self.state.tree_field:
             def wait(): return models.env.context.active_id
-            await [api.wait_exist(wait)]
+            await [tools.client.api.wait_exist(wait)]
         args = []
         values = []
         for field in fields:
@@ -261,7 +260,7 @@ class Tree(React.Component):
             params.newData = False
             params.forcePopup = True
             params.forceUpdate = True
-            await [self.paging.bind(this)(0, params)]
+            await [self.paging(0, params)]
 
     @async
     def paging(self, index, params):
@@ -273,23 +272,23 @@ class Tree(React.Component):
         try:
             if self.state.tree_field:
                 def wait(): return models.env.context.active_id
-                await [api.wait_exist(wait)]
-            if self.state.tree_field  and (not models.env.context.active_id or self.props.view_model != models.env.context.active_id._name): return
+                await [tools.client.api.wait_exist(wait)]
+            if self.state.tree_field and (not models.env.context.active_id or self.props.view_model != models.env.context.active_id._name): return
             if params.deleting:
                 if not self.args: self.args = []
                 self.args.push(['id', 'not in', self.state.active_ids])
 
-            if not self.page_domain and api.globals.app.view.main.router.currentRoute.query.domain:
-                self.page_domain = JSON.parse(api.globals.app.view.main.router.currentRoute.query.domain)
+            if not self.page_domain and tools.client.api.globals.app.view.main.router.currentRoute.query.domain:
+                self.page_domain = JSON.parse(tools.client.api.globals.app.view.main.router.currentRoute.query.domain)
 
             args = ([['id', 'in', models.env.context.active_id[self.props.field_name] or []]] if self.props.field_name else []).concat(self.page_domain or [])
             if self.args: args.push(*self.args)
             models.env.context.active_args = args
             models.env.context.active_limit = self.state.limit
             models.env.context.active_index = index
-            if  not models.env.context.active_sort and self.default_sort: (models.env.context.active_sort = self.default_sort) and del self.default_sort
+            if not models.env.context.active_sort and self.default_sort: (models.env.context.active_sort = self.default_sort) and del self.default_sort
             self.pagingStarted = True
-            current_args = tools.list(*args, *((self.props.domain({}) if v'self.props.domain instanceof Function' else self.props.domain) or []))
+            current_args = tools.list(args, (self.props.domain({}) if v'self.props.domain instanceof Function' else self.props.domain) or [])
             if models.env.context.editing and self.last_args and self.last_args == JSON.stringify(current_args): return
             self.last_args = JSON.stringify(current_args)
             records = await [models.env[self.state.model].search(*current_args)]
@@ -311,8 +310,8 @@ class Tree(React.Component):
                             if (Array.isArray(args)) args[0] = record[args[0]]
                         return tools.apply_domain(*domain)
                     records = records.filter(filter)
-                records = await [records.sort_by(*([records._rec_name or 'name', False] if not models.env.context.active_sort else [False if value == 'asc' else value for value in models.env.context.active_sort.split(' ')]).read(True, [field.field for field in self.state.fields]), index)]
-                await [self.setState({'records': self.paginate(records), 'limit': self.state.limit})]
+                records = await [records.sort_by(*([records._rec_name or 'name', False] if not models.env.context.active_sort else [False if value == 'asc' else value for value in models.env.context.active_sort.split(' ')])).read(True, [field.field for field in self.state.fields])]
+                await [self.setState({'records': self.paginate(records, index), 'limit': self.state.limit})]
             elif records.length == 0: await [self.setState({'records': []})]
         except Exception as error:
           console.error(error)
@@ -335,8 +334,9 @@ class Tree(React.Component):
         if not self.props.treeView:
             models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field].add(record)
         await [self.setState({'records': self.state.records, 'new_records': self.state.new_records})]
-        self.gridOptions.api.updateRowData({'add': values})
-      
+        console.log(values)
+        #self.gridOptions.api.updateRowData({'add': values})
+
     @async
     def chooseItem(self):
         await [self.refs.popup.paging(0, {'newData': False, 'forcePopup': True})]
@@ -362,7 +362,7 @@ class Tree(React.Component):
         if self.props.isTreeView:
             records = await [models.env[self.state.model].browse(self.state.active_ids)]
             await [records.unlink()]
-            await [self.paging.bind(this)(0, {newData: False})]
+            await [self.paging(0, {'newData': False})]
             return self.gridOptions.api.deselectAll()
 
         field = models.env[self.props.parent_model or self.state.model]._fields[self.state.tree_field]
@@ -404,13 +404,13 @@ class Tree(React.Component):
         if type != 'many2one':
             models.env.context.active_id[self.state.tree_field] = models.env.context.active_lines[self.state.model][('many2many_' if self.props.parent_model else '') + self.state.tree_field]
 
-        await [self.paging.bind(this)(0, {'newData': False, 'deleting': True, 'forceUpdate': True})]
+        await [self.paging(0, {'newData': False, 'deleting': True, 'forceUpdate': True})]
         return self.gridOptions.api.deselectAll()
 
     def exportItem(self):
         if not self.state.selected:
             return self.gridOptions.api.deselectAll()
-        FileSaver.saveAs(new Blob([csv.serialize({'fields': [{'id': key} for key in self.state.selected[0]], 'records': self.state.selected})], {'type': 'text/csv;charset=utf-8'}), document.getElementById('main-view').querySelector('div.title').innerText + '.csv')
+        tools.client.FileSaver.saveAs(new Blob([tools.client.csv.serialize({'fields': [{'id': key} for key in self.state.selected[0]], 'records': self.state.selected})], {'type': 'text/csv;charset=utf-8'}), document.getElementById('main-view').querySelector('div.title').innerText + '.csv')
         return self.gridOptions.api.deselectAll()
 
     def render(self, props):
@@ -432,7 +432,7 @@ class Tree(React.Component):
         def onRowClicked(params):
             record = await [models.env[self.state.model].browse(None)]
             del models.env.context.active_id
-            api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id)
+            tools.client.api.globals.app.views.main.router.navigate('/form/' + model + '?id=' + params.data.id)
         def onPaginationChanged(params):
             return self.paging(params.api.paginationGetCurrentPage(), params)
         def onSortChanged(params):
@@ -444,14 +444,14 @@ class Tree(React.Component):
             records = await [models.env[self.state.model].browse(self.state.active_ids)]
             await [records[function_name]()]
             self.gridOptions.api.deselectAll()
-        columnDefs = [field.field for field in self.state.fields if not (not props.isTreeView and models.env.context.active_id and v'field.invisible instanceof Function' and field.invisible({}, models.env.context.active_id)) or field.invisible]
+        columnDefs = [field for field in self.state.fields if not (not props.isTreeView and models.env.context.active_id and v'field.invisible instanceof Function' and field.invisible({}, models.env.context.active_id)) or field.invisible]
         grid = (
           div (className="card-body" + (' rapyd-tree-is-invisible' if invisible else ''), style=tools.merge({'height': Math.min(self.state.records.length, self.state.limit) * 48 + 112 + editableHeight() + 'px'}, {'position': 'absolute', 'left': '-9999px', 'top': '-9999px'} if invisible else {}),
-            Grid (ref="grid",  onSelectionChanged=self.onSelectionChanged, paginationPageSize=self.state.limit, columnDefs=columnDefs, rowData=self.state.records, frameworkComponents=self.state.frameworkComponents),
-            Button (onClick=self.addItem.bind(self), style={'display': self.isEditable() and 'inline-block' if (props.create(models.env.context.active_id) if v'props.create instanceof Function' else props.create) != False else 'none', 'top': '-45px', 'backgroundColor': '#fff'}, "Add"),
+            Grid (ref=self.grid, onGridReady=onGridReady, onRowClicked=onRowClicked, onSelectionChanged=self.onSelectionChanged, onPaginationChanged=onPaginationChanged, onSortChanged=onSortChanged, onFilterChanged=onFilterChanged, paginationPageSize=self.state.limit, columnDefs=columnDefs, rowData=self.state.records, frameworkComponents=self.state.frameworkComponents),
+            Button (onClick=self.addItem.bind(self), style={'display': (self.isEditable() and 'inline-block' or 'none') if (props.create(models.env.context.active_id) if v'props.create instanceof Function' else props.create) != False else 'none', 'top': '-45px', 'backgroundColor': '#fff'}, "Add"),
             Button (onClick=self.chooseItem.bind(self), style={'display':  'inline-block' if choose and self.isEditable() else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Choose"),
             Button (onClick=self.selectItem.bind(self), style={'display':  'inline-block' if props.isPopup and self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Select"),
-            Button (onClick=self.exportItem.bind(self), style={display: props.isTreeView and 'inline-block' if self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Export"),
+            Button (onClick=self.exportItem.bind(self), style={'display': props.isTreeView and 'inline-block' if self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'},"Export"),
             not props.isPopup and tools.view[self.state.model] and tools.view[self.state.model].actions.tree and [
               Button (onClick=onClickButton, style={'display': 'inline-block' if (props.isTreeView or not models.env.context.editing) and self.state.selected.length > 0 else 'none', 'top': '-45px', 'backgroundColor': '#fff'}, string)
             for function_name, string in Object.entries(tools.view[self.state.model].actions.tree)],
@@ -468,13 +468,24 @@ class Tree(React.Component):
             )
           )
         )
+        @async
+        def updateOnRender():
+            if props.isTreeView: return
+            await [tools.client.api.wait(0)]
+            if self.pagingCalled: return
+            self.pagingCalled = True
+            self.paging(0, {'newData': False, 'forceUpdate': True})
+            await [tools.client.api.wait(1000)]
+            self.pagingCalled = False
+        updateOnRender()
+
         if not props.isTreeView or props.isPopup:
-          if models.env.context.editing:
-            del grid.props.children[0].props.onRowClicked
-          return grid
+           if models.env.context.editing:
+              del grid.props.children[0].props.onRowClicked
+           return grid
 
         def onClickCreate():
-            api.globals.app.views.main.router.navigate('/form/' + model)
+            tools.client.api.globals.app.views.main.router.navigate('/form/' + model)
         return (
           Page (title=props.title or tools.view[self.state.model].string,
             div (className="card rapyd-card-sheet",
@@ -482,7 +493,7 @@ class Tree(React.Component):
                 div (className="data-table-title",
                   props.title or tools.view[self.state.model].string,
                   br(),
-                  Button (onClick=onClickCreate, style={'display': 'inline-block'}, fill,"Create"),
+                  Button (onClick=onClickCreate, style={'display': 'inline-block'}, fill=True,"Create"),
                 )
               ),
               grid,

@@ -4,14 +4,13 @@ import web.react as react
 import web.components.Field
 
 Field = react.get_components('Field')
-api = client.api
 
 class GridEditor(React.Component):
 
     @async
     def afterGuiAttached(self):
         def wait(): return self.refs.loaded
-        await [api.wait_exist(wait)]
+        await [tools.client.api.wait_exist(wait)]
         if self.refs.selectivity and self.refs.selectivity.selectivity: self.refs.selectivity.selectivity.open()
 
     def getValue(self):
@@ -27,7 +26,7 @@ class GridEditor(React.Component):
            for temp_id in temp_ids:
                if not field.relation: break
                if temp_id.slice(0, 5) == 'etemp':
-                  records.add(api.globals.temp_records[temp_id])
+                  records.add(tools.client.api.globals.temp_records[temp_id])
                else:
                   record = records.browse()
                   record.update({'id': temp_id})
@@ -41,7 +40,7 @@ class GridEditor(React.Component):
 
     @async
     def onSelect(self):
-        await [api.wait(10)]
+        await [tools.client.api.wait(10)]
         self.props.api.stopEditing()
 
     def render(self, props):

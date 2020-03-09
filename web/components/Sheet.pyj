@@ -12,3 +12,5 @@ class Sheet(React.Component):
             )
           )
         )
+
+react.register_component(Sheet)

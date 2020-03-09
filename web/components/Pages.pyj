@@ -64,7 +64,7 @@ def parseAttribute(props, element):
     if props.domain: props.domain = new (Function.prototype.bind.apply(Function, [None, 'active_id', function_string + '[' + props.domain + ']']))();
 
 def parseTreeView(view, model, title):
-    Tree = client.components['Tree']
+    Tree = tools.client.components['Tree']
     customComponents = {'Tree': Tree, 'Field': None}
     view = new DOMParser().parseFromString(view, 'text/xml').children[0]
     console.log(view)
@@ -74,13 +74,13 @@ def parseTreeView(view, model, title):
         Array.prototype.slice.call(elements).forEach(
         def (element):
         #for element in elements:
-            console.log(element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1))
             component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {'model': model, 'view_model': model}
             parseAttribute(props, element)
             props.isTreeView = True
-            children = recurse(element.children, props) or [def render(): element.innerHTML;]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
+            children = recurse(element.children, props) or [def render(): return element.innerHTML;]
+            console.log(component, props)
+            components.push(def render(): return React.createElement(component, props, children.map(def (result): return result();));)
         )
         if not components.length: return None
         return components
@@ -108,6 +108,7 @@ class TreePage(React.Component):
         self.mode = mode
         view = tools.view[model].tree
         models.env.context.active_model = mode
+        console.log(view)
         if not cachedTreeViews[view + ('-' + props.title if props.title else '')]:
            cachedTreeViews[view + ('-' + props.title if props.title else '')] = parseTreeView(view, model, props.title)
         return cachedTreeViews[view + ('-' + props.title if props.title else '')]()
@@ -115,7 +116,8 @@ class TreePage(React.Component):
 react.register_component(TreePage)
 
 def parseFormView(view, model):
-    customComponents = client.components
+    customComponents = tools.client.components
+    Tree = tools.client.components['Tree']
     view = new DOMParser().parseFromString(view, 'text/xml').children[0]
     def recurse(elements, parent_props):
         components = []
@@ -134,8 +136,8 @@ def parseFormView(view, model):
                   props.tree_arch = element.outerHTML
                if parent_props.invisible: props.invisible = parent_props.invisible
                if parent_props.domain: props.domain = parent_props.domain
-            children = recurse(element.children, props) or [def render(): element.innerHTML;]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
+            children = recurse(element.children, props) or [tools.lambda(element.innerHTML)]
+            components.push(tools.lambda(React.createElement, component, props, tools.lambda_iter(children)))
         if not components.length: return None
         return components
     return recurse([view], True)[0]
@@ -187,7 +189,8 @@ class FormPage(React.Component):
 react.register_component(FormPage)
 
 def parseCustomView(view, model):
-    customComponents = client.components
+    customComponents = tools.client.components
+    Tree = tools.client.components['Tree']
     view = new DOMParser().parseFromString(view, 'text/xml').children[0]
     def recurse(elements, parent_props):
         components = []
@@ -207,8 +210,8 @@ def parseCustomView(view, model):
                if parent_props.invisible: props.invisible = parent_props.invisible
                if parent_props.domain: props.domain = parent_props.domain
             props.isCustomView = True
-            children = recurse(element.children, props) or [def render(): element.innerHTML;]
-            components.push(def render(): React.createElement(component, props, children.map(def (result): return result();));)
+            children = recurse(element.children, props) or [tools.lambda(element.innerHTML)]
+            components.push(tools.lambda(React.createElement, component, props, tools.lambda_iter(children)))
         if not components.length: return None
         return components
     return recurse([view], True)[0]
@@ -277,20 +280,20 @@ hide = False
 
 def hidePanel():
     nonlocal hide
-    client.api.globals.app.params.panel.leftBreakpoint = 768 if hide else 1000000
-    client.api.globals.app.panel.left.initBreakpoints()
+    tools.client.api.globals.app.params.panel.leftBreakpoint = 768 if hide else 1000000
+    tools.client.api.globals.app.panel.left.initBreakpoints()
     hide = not hide
 
 def PanelLeft(props):
     def onClick(event):
         event.preventDefault()
-        client.api.globals.app.panel.left.close()
+        tools.client.api.globals.app.panel.left.close()
         #Object.assign(models.env.context, tools.menu[menu].context)
-        client.api.globals.app.views.main.router.navigate(event.currentTarget.href.split('#!')[1])
+        tools.client.api.globals.app.views.main.router.navigate(event.currentTarget.href.split('#!')[1])
     @async
     def installPrompt():
-        client.api.globals.InstallPromp.prompt()
-        if (await (client.api.globals.InstallPromp.userChoice) == 'accepted'):
+        tools.client.api.globals.InstallPromp.prompt()
+        if (await (tools.client.api.globals.InstallPromp.userChoice) == 'accepted'):
            document.getElementById('pwa_install_button').style.display = 'none'
     return (
       Page (
@@ -315,7 +318,7 @@ def PanelLeft(props):
           )
           for index, menu in enumerate(tools.keys(tools.menu, 'sequence'))]
         ),
-        Button (fill=True, id="pwa_install_button", onClick=installPrompt, style={'display': 'inline-block' if client.api.globals.InstallPrompt else 'none', 'margin': '10px'}, "Install"),
+        Button (fill=True, id="pwa_install_button", onClick=installPrompt, style={'display': 'inline-block' if tools.client.api.globals.InstallPrompt else 'none', 'margin': '10px'}, "Install"),
         Link (iconMd="material:more_horiz", iconSize="30", onClick=hidePanel, style={'display': 'inline-block', 'margin': '10px'})
       )
     )
@@ -326,15 +329,15 @@ class PanelRight(React.Component):
 
     @async
     def componentDidMount(self, props):
-        client.api.globals.app = self.$f7
-        client.app = client.api.globals.app
-        if client.app.device.ios:
+        tools.client.api.globals.app = self.$f7
+        tools.client.app = tools.client.api.globals.app
+        if tools.client.app.device.ios:
            color = document.querySelector('meta[name=theme-color]').content
            style = document.createElement('style')
            style.innerHTML = '#framework7-root {padding-top: 24px !important; background-color: ' + color + ' !important} .panel {padding-top: 24px !important; background-color: ' + color + ' !important}'
            document.querySelector('head').append(style)
-        tools.navigate = client.app.views.main.router.navigate.bind(client.app.views.main.router)
-        tools.dialog = client.app.dialog
+        tools.navigate = tools.client.app.views.main.router.navigate.bind(tools.client.app.views.main.router)
+        tools.dialog = tools.client.app.dialog
         user_id = await [models.env.user.browse(models.env.user.id.toString())]
         return self.setState({'name': user_id.name})
 
@@ -358,7 +361,7 @@ class PanelRight(React.Component):
                 List (mediaList=True, style={'marginTop': '0px'},
                   ListItem (link="#", title="Notification Title", after="17:20", text="Notification Text")
                 ),
-                Button (fill=True, onClick=client.api.logout, style={'display': 'inline-block', 'margin': '10px'}, "Logout"),
+                Button (fill=True, onClick=tools.client.api.logout, style={'display': 'inline-block', 'margin': '10px'}, "Logout"),
               )
             )
           )

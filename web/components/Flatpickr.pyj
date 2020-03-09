@@ -3,8 +3,6 @@ import web.react as react
 
 input = react.get_framework_components('input')
 
-flatpickr = client.flatpickr
-
 flatpickr_count = 0
 
 class Flatpickr(React.Component):
@@ -38,7 +36,7 @@ class Flatpickr(React.Component):
         def onChangeValue(value):
             await [onChange(value)]
             self.flatpickr.open()
-        self.flatpickr = clone._flatpickr or flatpickr(clone, tools.merge({}, self.props, {'allowKeyboard': False, 'onChange': onChangeValue}))
+        self.flatpickr = clone._flatpickr or tools.client.flatpickr(clone, tools.merge({}, self.props, {'allowKeyboard': False, 'onChange': onChangeValue}))
 
     @async
     def componentDidUpdate(self):

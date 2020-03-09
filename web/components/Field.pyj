@@ -7,38 +7,47 @@ Button, List, ListInput, div, span, i = react.get_framework_components('Button',
 
 Flatpickr = react.get_components('Flatpickr')
 
-api = client.api
-selectivity = client.selectivity
-Selectivity = selectivity.Selectivity
-Templates = selectivity.Templates
 Flatpickr = react.get_components('Flatpickr')
 
-singleSelectInput = Templates.singleSelectInput
-Templates.singleSelectInput =
-def (options):
-    return singleSelectInput(options).replace('<i class="fa fa-sort-desc selectivity-caret"></i>', '<i class="selectivity-caret material-icons">expand_more</i>')
+selectivityOverrided = False
 
-singleSelectedItem = Templates.singleSelectedItem
-Templates.singleSelectedItem =
-def (options):
-    return singleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>')
+def overrideSelectivityTemplates():
+    nonlocal selectivityOverrided
+    if selectivityOverrided: return
+    selectivity = tools.client.selectivity
+    Selectivity = selectivity.Selectivity
+    Templates = selectivity.Templates
+    singleSelectInput = Templates.singleSelectInput
+    Templates.singleSelectInput =
+    def (options):
+        return singleSelectInput(options).replace('<i class="fa fa-sort-desc selectivity-caret"></i>', '<i class="selectivity-caret material-icons">expand_more</i>')
 
-multipleSelectedItem = Templates.multipleSelectedItem
-Templates.multipleSelectedItem =
-def (options):
-    return multipleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove selectivity-multi-remove material-icons">close</i>');
+    singleSelectedItem = Templates.singleSelectedItem
+    Templates.singleSelectedItem =
+    def (options):
+        return singleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove material-icons">close</i>')
+
+    multipleSelectedItem = Templates.multipleSelectedItem
+    Templates.multipleSelectedItem =
+    def (options):
+        return multipleSelectedItem(options).replace('<i class="fa fa-remove"></i>', '<i class="selectivity-remove selectivity-multi-remove material-icons">close</i>');
+    selectivityOverrided = True
 
 class Field(React.Component):
+
+    def __init__(self):
+        self.refs = {}
+        overrideSelectivityTemplates()
 
     @async
     def setValue(self, value, altvalue):
         props = self.props;
-        api.globals.onchange_running = True
-        await [api.wait(0)]
-        api.globals.onchange_running = False
+        tools.client.api.globals.onchange_running = True
+        await [tools.client.api.wait(0)]
+        tools.client.api.globals.onchange_running = False
         models.env.context.active_error and (models.env.context.active_error.field_map[self.props.name] = False)
         if self.input_type and self.input_type == 'file' and value:
-           value = await [api.readAsDataURL(value)]
+           value = await [tools.client.api.readAsDataURL(value)]
            value = value.split('base64,')[1]
         if not self.props.cellEdit: models.env.context.active_id[self.props.name] = value
         else return models.env.context.refresh()
@@ -66,7 +75,7 @@ class Field(React.Component):
         if value and v'typeof value' == 'object': return self.setState({'value': value})
         def wait():
             return self.refs.selectivity
-        await [api.wait_exist(wait)]
+        await [tools.client.api.wait_exist(wait)]
         if value and value == self.lastSelectivity: return
         self.lastSelectivity = value
         props = self.props
@@ -106,8 +115,9 @@ class Field(React.Component):
     def componentDidMount(self):
         def wait():
             return models.env.context.active_id
-        await [api.wait_exist(wait)]
+        await [tools.client.api.wait_exist(wait)]
         props = self.props
+        console.log(props)
         model = props.model or models.env.context.active_model
         field = models.env[model]._fields[props.name]
         type = field.type
@@ -131,6 +141,7 @@ class Field(React.Component):
         if self.refs.selectivity and self.refs.selectivity.selectivity: self.refs.selectivity.selectivity.destroy()
 
     def render(self, props):
+        Selectivity = tools.client.selectivity.Selectivity
         model = props.model or models.env.context.active_model
         field = models.env[model]._fields[props.name]
         if not field: return
@@ -163,8 +174,8 @@ class Field(React.Component):
                 for record in records:
                     if not record.id:
                        id = 'etemp' + Math.random().toString(36).substr(2, 9)
-                       if not api.globals.temp_records: api.globals.temp_records
-                       api.globals.temp_records[id] = record
+                       if not tools.client.api.globals.temp_records: tools.client.api.globals.temp_records
+                       tools.client.api.globals.temp_records[id] = record
                        results.push({'id': id, 'text': record[record._rec_name or 'name']})
                        continue
                     results.push({'id': record.id, 'text': record[record._rec_name or 'name']})
@@ -174,7 +185,7 @@ class Field(React.Component):
                 console.error(error)
                 raise error
         if type in ['many2many', 'one2many'] and props.children:
-           return props.children;
+           return props.children[0]
         component = None
         if type == 'selection' and props.widget == 'statusbar':
            first = True
@@ -207,12 +218,12 @@ class Field(React.Component):
                    models.env.context.active_id.values = active_id.values
                    models.env.context.active_id[props.name] = record.id
                    if not models.env.context.editing: models.env.context.active_id.write()
-               await [api.wait(100)]
-               api.globals.app.views.main.router.back()
+               await [tools.client.api.wait(100)]
+               tools.client.api.globals.app.views.main.router.back()
                if active_id.id:
                   def wait():
                       return models.env.context.active_id.id == active_id.id
-                  await [api.wait_exist(wait)]
+                  await [tools.client.api.wait_exist(wait)]
                assign_record()
            icon_create = (not readonly and context.editing) and (models.env.context.active_id and not models.env.context.active_id[props.name])
            def onChange(event):
@@ -224,8 +235,8 @@ class Field(React.Component):
                return self.setState({'selectivityOpened': False})
            @async
            def onClickIcon():
-               api.globals.app.views.main.router.navigate('/form/' + field.relation)
-               await [api.wait(100)]
+               tools.client.api.globals.app.views.main.router.navigate('/form/' + field.relation)
+               await [tools.client.api.wait(100)]
                models.env.context.active_task.push(after_create)
            component = [
              ListInput (label=string, input=False, disabled=readonly or not context.editing, errorMessageForce=models.env.context.active_error.field_map[props.name] if models.env.context.active_error else False, errorMessage="Field required", style=not props.cellEdit and type != 'selection' and icon_create and {'height': '65px'},
@@ -236,9 +247,9 @@ class Field(React.Component):
            if props.cellEdit: return component[0].children[0]
            @async
            def forceSet():
-               await [api.wait(500)]
+               await [tools.client.api.wait(500)]
                def wait(): return context.active_id
-               await [api.wait_exist(wait)]
+               await [tools.client.api.wait_exist(wait)]
                value = await (context.active_id[props.name])
                return self.setSelectivityValue(value)
            forceSet()
@@ -262,7 +273,7 @@ class Field(React.Component):
            @async
            def forceSet():
                def wait(): return self.refs.input
-               await [api.wait_exist(wait)]
+               await [tools.client.api.wait_exist(wait)]
                return self.setInputValue(await (value) or await (self.state.value) or None)
            forceSet()
         return (

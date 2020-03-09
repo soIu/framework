@@ -1,12 +1,12 @@
 import orm.models as models
 import web.react as react
 
-Page, Navbar, NavLeft, NavTitle, NavRight, Link = react.get_framework_components('Page', 'Navbar', 'NavLeft', 'NavTitle', 'NavRight', 'Link')
+F7Page, Navbar, NavLeft, NavTitle, NavRight, Link = react.get_framework_components('Page', 'Navbar', 'NavLeft', 'NavTitle', 'NavRight', 'Link')
 
 def Page(props):
     return (
-      Page (
-        Navbar (backLink=False if window.models.env.context.active_url == '/' or props.popup else 'Back',
+      F7Page (
+        Navbar (backLink=False if models.env.context.active_url == '/' or props.popup else 'Back',
           models.env.context.active_url == '/' and
           NavLeft (
             Link (iconMd="material:menu", panelOpen="left")
@@ -18,8 +18,8 @@ def Page(props):
           NavRight (
             Link (iconMd="material:close", popupClose=True),
           ),
-          props.children,
-        )
+        ),
+        props.children
       )
     )
 

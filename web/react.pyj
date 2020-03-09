@@ -1,7 +1,9 @@
 import orm.tools as tools
 
+new_components = {}
+
 def register_component(class_object):
-    client.components[class_object.name] = class_object
+    new_components[class_object.name] = class_object
     #def create_component(*children, **props):
     #    return window.React.createElement(class_object, tools.copy(props), children.as_array())
     #return create_component
@@ -9,6 +11,16 @@ def register_component(class_object):
 def get_components(*components):
     def wrap_component(component):
         def create_component(*children, **props):
+            nonlocal component
+            component = tools.client.components[component] or tools.client.Framework7Components[component] or component
+            if props.ref and type(props.ref) == String:
+               ref_name = props.ref
+               self = this
+               if not self.refs: self.refs = {}
+               def setRef(ref):
+                   self.refs[ref_name] = ref
+               del props.ref
+               props.ref = setRef
             for key in props:
                 if 'data_' in key:
                    props[key.replace('data_', 'data-')] = props[key]
@@ -17,13 +29,23 @@ def get_components(*components):
         return create_component
     new_components = []
     for component in components:
-        new_components.push(wrap_component(client.Framework7Components[component] or client.components[component] or component))
+        new_components.push(wrap_component(component)) #tools.client.Framework7Components[component] or tools.client.components[component] or component))
     if new_components.length < 2: return new_components[0]
     return new_components
 
 def get_framework_components(*components):
     def wrap_component(component):
         def create_component(*children, **props):
+            nonlocal component
+            component = tools.client.Framework7Components[component] or component
+            if props.ref and type(props.ref) == String:
+               ref_name = props.ref
+               self = this
+               if not self.refs: self.refs = {}
+               def setRef(ref):
+                   self.refs[ref_name] = ref
+               del props.ref
+               props.ref = setRef
             for key in props:
                 if 'data_' in key:
                    props[key.replace('data_', 'data-')] = props[key]
@@ -32,7 +54,7 @@ def get_framework_components(*components):
         return create_component
     new_components = []
     for component in components:
-        new_components.push(wrap_component(client.Framework7Components[component] or component))
+        new_components.push(wrap_component(component)) #tools.client.Framework7Components[component] or component))
     if new_components.length < 2: return new_components[0]
     return new_components
 

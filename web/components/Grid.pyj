@@ -1,12 +1,17 @@
+import orm.tools as tools
 import web.react as react
 
-AgGridReact = client.AgGridReact
+div = react.get_framework_components('div')
+
+def AgGridReact(*children, **props):
+    AgGrid = tools.client.AgGridReact
+    return React.createElement(AgGrid, tools.copy(props), children)
 
 class Grid(React.Component):
 
     def render(self, props):
         return (
-          div (style={height: '100%'}, className="ag-theme-material",
+          div (style={'height': '100%'}, className="ag-theme-material",
             AgGridReact (rowSelection="multiple", paginationPageSize=props.paginationPageSize, pagination=True, enableColResize=True, enableServerSideSorting=True, enableServerSideFilter=True,  suppressMultiSort=True, suppressRowClickSelection=True, onGridReady=props.onGridReady, onRowClicked=props.onRowClicked, onSelectionChanged=props.onSelectionChanged, onPaginationChanged=props.onPaginationChanged, onSortChanged=props.onSortChanged, onFilterChanged=props.onFilterChanged, columnDefs=props.columnDefs, rowData=props.rowData, frameworkComponents=props.frameworkComponents, singleClickEdit=True)
           )
         )
