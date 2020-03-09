@@ -110,11 +110,11 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
 </form>
 """})
 
-admin_password = 'r4pyd'
+admin_password = '91c2271e5c57b60717b0ba057615173e3bdc9403fdb26832ff1c7dbe84760a3b'
 
 def check_admin():
     def create_admin():
-        return models.env['res.users'].create({'name': 'Administrator', 'login': 'admin', 'password': admin_password, 'is_superuser': True}).then(
+        return models.env['res.users'].create({'name': 'Administrator', 'login': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'password': admin_password, 'is_superuser': True}).then(
         def (record):
             models.env.user = record
             models.superuser_id = record.id

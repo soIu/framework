@@ -1,0 +1,11 @@
+import react
+
+View, Text = react.get_components('View', 'Text')
+
+def App(props):
+
+    return (
+      View (
+        Text ('Hello World')
+      )
+    )

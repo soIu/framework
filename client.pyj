@@ -2,10 +2,10 @@ import modules.modules
 import orm.models as models
 import orm.exceptions as exceptions
 import orm.tools as tools
-import web.react as react
+import react as react
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
 from ir.data import data, create_data
-from web.components.App import App
+from react.components.App import App
 
 tools.exceptions = exceptions
 
@@ -48,10 +48,10 @@ def init_client():
             tools.client.components[key] = react.new_components[key]
         if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name
         #await []
-        ReactDOM.render(React.createElement(App), document.getElementById('app'))
+        window.renderApp(App)
         if tools.configuration.custom_navbar:
            style = document.createElement('style')
-           style.innerHTML = '.navbar, .toolbar, .statusbar {background-color: ' + tools.client.api.tools.configuration.custom_navbar + '!important}'
+           style.innerHTML = '.navbar, .toolbar, .statusbar {background-color: ' + tools.configuration.custom_navbar + '!important}'
            document.querySelector('head').append(style)
         if document.querySelector('div.navbar'):
            color_element = document.createElement('meta')
@@ -64,7 +64,7 @@ def init_client():
                return ('0' + hex) if hex.length == 1 else hex
            ).join('')
            document.querySelector('head').appendChild(color_element)
-        tools.client.api.globals.registerManifest()
+        #tools.client.api.globals.registerManifest()
     except Exception as error:
         raise error
 

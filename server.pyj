@@ -15,29 +15,6 @@ client_js = require(require('path').join(require('process').cwd(), 'client.js'))
 client_js_time = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
 client_js_compressed = require('buffer').Buffer.from(require('lzma').compress(client_js)).toString('base64')
 
-crypto = require('crypto')
-
-login_cache = {}
-
-encrypt_cache = {}
-
-def encrypt(string):
-    old_string = string
-    cipher = crypto.createCipher('aes-256-cbc', configuration.master_password)
-    string = cipher.update(string, 'utf-8', 'hex')
-    string += cipher.final('hex')
-    encrypt_cache[string] = old_string
-    return string
-
-def decrypt(string):
-    if encrypt_cache[string]: return encrypt_cache[string]
-    encrypted_string = string
-    decipher = crypto.createDecipher('aes-256-cbc', configuration.master_password)
-    string = decipher.update(string, 'hex', 'utf-8')
-    string += decipher.final('utf-8')
-    encrypt_cache[encrypted_string] = string
-    return string
-
 http.route('/api/login',
 def (request, response, next):
     #request.accepts('application/json')
@@ -48,22 +25,14 @@ def (request, response, next):
     if exist(request.params.login):
        old_login = params.login
        old_password = params.password
-       if params.encrypted == True:
-          if not (params.authentication == True or params.client_js_time) and login_cache[params.login] == params.password:
-             #request.env.context.user = user_id
-             response.result = {'status': 'success'}
-             return next()
-          params.login, params.password = decrypt(params.login), decrypt(params.password)
        request.env['res.users'].with_context(limit=1).search(['login', '=', params.login], ['password', '=', params.password]).then(
        def (user_id):
            if exist(user_id):
               request.env.context.user = user_id
               response.result = {'status': 'success'}
-              if params.encrypted == True:
-                 login_cache[old_login] = old_password
               if True:
-                 response.result.login, response.result.password = encrypt(params.login), encrypt(params.password)
-                 login_cache[response.result.login] = response.result.password
+                 #response.result.login, response.result.password = encrypt(params.login), encrypt(params.password)
+                 #login_cache[response.result.login] = response.result.password
                  response.result.id = user_id.id
                  if not params.client_js_time or params.client_js_time != client_js_time:
                     response.result.client_js = client_js
