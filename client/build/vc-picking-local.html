@@ -157,6 +157,10 @@ td {
 <script>
 bulkPromises = []
 
+function jump() {
+  return new Promise((resolve, reject) => setTimeout(resolve, 0))
+}
+
 function add_row(type, trolley, records) {
   row = document.getElementById('default_' + type + '_row')
   row.style.display = 'none'
@@ -180,12 +184,17 @@ function add_row(type, trolley, records) {
     values = line_ids.values || []
     if (!Array.isArray(values)) values = [values];
     for (let value of values) packs[value.product_id] && (packs[value.product_id] -= value.actual_qty)
+    const cellPromises = [];
     await Promise.all(cells.map(async ([cell, record]) => {
-      line_ids = await fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
+      line_ids = fetch('/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.picking.list.line&ids=' + JSON.stringify(record.line_ids)).then((response) => response.json())
+      cellPromises.push(line_ids)
+      await jump();
+      await Promise.all(cellPromises);
+      line_ids = await line_ids;
       values = line_ids.values || []
       if (!Array.isArray(values)) values = [values];
       let sufficient = true;
-      for (let value of values) packs[value.product_id] && (packs[value.product_id] -= value.actual_qty) < 0 && (sufficient = false)
+      for (let value of values) value.product_id in packs && (packs[value.product_id] -= value.actual_qty) < 0 && (sufficient = false)
       if (!sufficient) return;
       cellFunction(cell, cellOriginal);
     }))
@@ -226,7 +235,7 @@ function add_row(type, trolley, records) {
     else if (record.location_name.toLowerCase().match('assy')) cell.className = 'status-finish';
     else cell.className = 'status-planning';
     cells = []
-    bulkPromises(getBulk(record, cells, (new_cell, cell) => new_cell.className = cell.className, cell))
+    bulkPromises.push(getBulk(record, cells, (new_cell, cell) => new_cell.className = cell.className, cell))
     new_row.appendChild(cell)
     new_row.style.display = ''
   }
@@ -266,7 +275,7 @@ async function get_picking() {
   //setTimeout(() => location.reload(), 10 * 1000);
 }
 
-get_picking().catch(window.location.reload)
+get_picking().catch(() => window.location.reload())
 
 </script>
 </body>

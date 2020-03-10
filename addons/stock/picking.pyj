@@ -369,11 +369,19 @@ class PickingList(models.Model):
     def onchange_scan(self):
         barcode = self.laser_scan
         if not barcode: return
+        @async
+        def update_picked():
+            line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_list_id
+            index = -1
+            quantities = await ([line_id._get_received_qty() for line_id in line_ids])
+            for quantity in quantities:
+                document.querySelector('div.ag-row[row-id="' + (index += 1).toString() + '"] div.ag-cell[col-id=received_qty]').innerText = quantity
         def write(value):
             def write_value(): models.env.context.active_id.write(value)
             setTimeout(write_value, 500)
         def write_pack(pack_id, value):
             def write_value():
+                update_picked()
                 pack_id.write(value)
                 #if 'dor' not in self.line_ids: self.line_ids.push('dor')
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
@@ -400,7 +408,20 @@ class PickingList(models.Model):
            if not trolley_id.length: return
            self.trolley_id = trolley_id.id
            return write({'trolley_id': trolley_id.id})
-        value = JSON.parse(barcode)
+        value = None
+        pack_id = None
+        if '                   ' in barcode and barcode[0] != '{':
+           numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNan(parseInt(number))]
+           unique = 'CKD-' + barcode.split('\n')[0].split(' ').slice(-1)[0] + numbers[0]
+           order_pack_id = await [self.env['purchase.order.pack'].with_context(limit=1).search(['name', '=', unique])]
+           if order_pack_id.length:
+              self.laser_scan = ''
+              return tools.dialog.alert("This CKD Part is already picked")
+           qty = numbers[1]
+           code = barcode.split('\n')[0].split('                   ')[0].split('             ')[1].split('  ')[1].split(' ').join('')
+           product_id = await [self.env['product.product'].with_context(limit=1).search(['code_trimmed', '=', code], ['type', '=', 'ckd'])]
+           value = {'product_id': product_id.id}
+        else: value = JSON.parse(barcode)
         #@async
         def get_product_ids():
             line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_list_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
@@ -416,11 +437,14 @@ class PickingList(models.Model):
                tools.dialog.alert("This part doesn't need to be picked")
             return valid, product_ids
         valid, product_ids = get_product_ids()
+        if '                   ' in barcode and barcode[0] != '{':
+           order_pack_id = await [self.env['purchase.order.pack'].create({'name': unique, 'print_number': unique, 'product_id': product_id.id, 'product_qty': qty, 'inhouse_ckd': True})]
+           pack_id = await [order_pack_id.receive(immediate=True)]
         if not valid: return
-        pack_id = self.env['stock.pack'].search(['order_pack_id', '=', value.id])
+        if not pack_id: pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
         #valid, product_ids = await (validity)
         #if not valid: return
-        pack_id = await (pack_id)
+        #pack_id = await (pack_id)
         if pack_id.product_id not in product_ids:
            self.laser_scan = ''
            return tools.dialog.alert("Wrong part")
@@ -435,8 +459,6 @@ class PickingList(models.Model):
            return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
         self.pack_ids.push(pack_id.id)
-        if 'dor' not in self.line_ids: self.line_ids.push('dor')
-        else: self.line_ids = [id for id in self.line_ids if id != 'dor']
         return write_pack(pack_id, {'picking_list_id': self.id})
 
     def print_barcode(self):

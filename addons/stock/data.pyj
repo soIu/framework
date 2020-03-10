@@ -68,7 +68,7 @@ class PurchaseOrder(models.Model):
         quantities = await (promises)
         return sum(quantities)
 
-    name = fields.Char(string="PO Number")
+    name = fields.Char(string="PO Number", index=True)
     part_no = fields.Char(string="Part No.", index=True)
     product_id = fields.Many2one('product.product', string="Part", index=True)
     product_qty = fields.Integer(string="Qty (Pcs)")
@@ -248,7 +248,7 @@ class PurchaseOrderPack(models.Model):
 
     @async
     def receive(self, immediate):
-        pack_ids = []
+        pack_ids = self.env['stock.pack']
         for record in self:
             if record.received:
                tools.dialog.alert('PO with print number ' + record.print_number + ' is already received')
@@ -273,12 +273,13 @@ class PurchaseOrderPack(models.Model):
             if pack_sequence >= 10: pack_sequence = 1
             pack_id, order_id = await ([self.env['stock.pack'].create({'name': 'Pack ' + record.name.replace('PO ', '') + '-' + (pack_sequence + (new Date()).getMilliseconds().toString()), 'location_id': location_defaults.internal_id, 'product_id': record.product_id, 'product_qty': record.product_qty, 'order_pack_id': record.id, 'is_pulley': record.is_pulley, 'print_number': record.print_number}), record.write({'received': True})])
             create_quant(pack_id)
-            pack_ids.push(pack_id.id)
+            pack_ids.add(pack_id)
         product_ids = await [self.env['product.product'].browse(product_ids)]
-        picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids, 'parts': [product_id.name for product_id in product_ids].join(', ')})]
+        picking_id = await [self.env['stock.picking'].create({'location_src_id': location_defaults.external_id, 'location_dest_id': location_defaults.internal_id, 'type': 'putting', 'pack_ids': pack_ids.ids, 'parts': [product_id.name for product_id in product_ids].join(', ')})]
         self.env['log.data'].log('Receive', self.name, 'id:', self.id, 'model:', self._name)
         if immediate:
-           return picking_id.validate(immediate=True)
+           await [picking_id.validate(immediate=True)]
+           return pack_ids
         tools.navigate('/view/stock.picking.form?id=' + picking_id.id)
         return picking_id
 
