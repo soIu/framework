@@ -177,7 +177,10 @@ class StockPicking(models.Model):
         for record in self:
             if immediate: break
             if record.type == 'putting' and not record.receive_zone_id: return tools.dialog.alert('Scan the zone first')
-        return self.write({'state': 'validated'})
+        result = await [self.write({'state': 'validated'})]
+        if immediate: return result
+        tools.navigate('/')
+        return result
 
 StockPicking()
 
