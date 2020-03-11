@@ -172,6 +172,7 @@ class StockPicking(models.Model):
         return self.write({'state': 'confirmed'})
 
     #@api.server
+    @async
     def validate(self, immediate):
         self.update_move('validated').catch(console.error)
         for record in self:
