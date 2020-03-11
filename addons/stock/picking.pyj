@@ -769,10 +769,10 @@ class PickingListLine(models.Model):
     @async
     def _get_part_qty(self):
         if self.manual: return self.actual_qty
-        list_id = models.env.context.active_id
-        if not list_id: list_id = await [self.env['stock.picking.list'].browse(self.picking_list_id)]
-        picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', list_id.date], ['trolley_type_id', '=', list_id.trolley_type_id], ['type', '=', list_id.type], ['sequence', '<', list_id.sequence], ['ready', '!=', True])]
-        if picking_list_id.length: return 0
+        #list_id = models.env.context.active_id
+        #if not list_id: list_id = await [self.env['stock.picking.list'].browse(self.picking_list_id)]
+        #picking_list_id = await [self.env['stock.picking.list'].with_context(limit=1).search(['date', '=', list_id.date], ['trolley_type_id', '=', list_id.trolley_type_id], ['type', '=', list_id.type], ['sequence', '<', list_id.sequence], ['ready', '!=', True])]
+        #if picking_list_id.length: return 0
         if self.consumed: return self.cached_product_qty
         quantity = 0
         pack_id = await [self.env['stock.pack'].with_context(limit=1).search(['product_id', '=', self.product_id], ['location_id', 'in', (location_default.scr_id, location_default.assy_id)], ['available_qty', '>=', self.actual_qty])]
