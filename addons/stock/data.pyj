@@ -695,17 +695,14 @@ class HPPMData(models.Model):
             row += 1
             if row < 6: continue
             if not data[0] or not data[1]: continue
+            head = 0
+            if type == 'flexi': head = 1
             valid_sequence = False
             try:
-                if not isNaN(parseInt(data[1])): valid_sequence = True
+                if not isNaN(parseInt(data[head + 1])): valid_sequence = True
             except:
                 pass
             if not valid_sequence: continue
-            head = 0
-            """original_type = type
-            if type == 'flexi':
-               head = 1
-               type = data[1].toLowerCase()"""
             lot_no = data.slice(head + 9, head + 14).join('-')
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
             await (promise)
