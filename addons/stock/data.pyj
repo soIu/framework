@@ -702,9 +702,11 @@ class HPPMData(models.Model):
                 product_ids.add(product_id)
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
                    if not product_id[type + '_trolley_type_id']: return
-                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'name': str.zfill(sequence_id.sequence.toString(), 3), 'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
+                   trolley_group[product_id[type + '_trolley_type_id']] = self.env['stock.picking.list'].create({'name': str.zfill(sequence_id.sequence.toString(), 3), 'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type})
                    sequence_id.sequence += 1
+                   trolley_group[product_id[type + '_trolley_type_id']] = await (trolley_group[product_id[type + '_trolley_type_id']])
                    picking_list_ids.add(trolley_group[product_id[type + '_trolley_type_id']])
+                trolley_group[product_id[type + '_trolley_type_id']] = await (trolley_group[product_id[type + '_trolley_type_id']])
                 list_id = trolley_group[product_id[type + '_trolley_type_id']]
                 if list_id.part_type != product_id.type and product_id.type == 'local':
                    list_id.write({'part_type': product_id.type})
