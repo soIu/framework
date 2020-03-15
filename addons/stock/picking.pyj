@@ -405,6 +405,7 @@ class PickingLot(models.Model):
         for list_ids in lots:
             lines = {}
             for list_id in list_ids: #.sort_by('sequence'):
+                console.log(list_id.line_ids)
                 for id in list_id.line_ids:
                     line_id = line_ids.find(id)
                     product_id = product_ids.find(line_id.product_id)
