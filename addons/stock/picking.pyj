@@ -1074,6 +1074,18 @@ menu.add(id='picking_list_fwd_trf', parent='picking_list', model='stock.picking.
 menu.add(id='picking_list_fwd_dps', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd_dps', string="4WD DPS", sequence=3)
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
 
+view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
+<tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
+    <field name="date"/>
+    <field name="sequences" sort="asc"/>
+    <field name="model_id"/>
+    <field name="trolley_type_id"/>
+    <field name="part_type"/>
+    <field name="printed"/>
+    <field name="called" string="Finished"/>
+</tree>
+""", action={'print_all': 'Print'})
+
 view.add(init=create_upload_button, model='stock.picking.lot', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
