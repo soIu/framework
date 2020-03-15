@@ -352,12 +352,13 @@ class PickingLot(models.Model):
         lots = []
         last_sequence_id = None
         list_ids = self.env['stock.picking.list']
-        sequences = {}
+        """sequences = {}
         for sequence_id in sequence_ids:
             if not sequences[sequence_id.date]: sequences[sequence_id.date] = self.env['mrp.sequence']
-            sequences[sequence_id.date].add(sequence_id)
-        for date in sequences:
-            for sequence_id in sequences[date].order_by('sequence'):
+            sequences[sequence_id.date].add(sequence_id)"""
+        #for date in sequences:
+        if True:
+            for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
                 elif last_sequence_id.bom_id != sequence_id.bom_id or last_sequence_id.date != sequence_id.date:
                    last_sequence_id = sequence_id
