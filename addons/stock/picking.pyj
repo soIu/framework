@@ -306,7 +306,7 @@ class PickingListFilter(models.Model):
         del localStorage.last_list_sequence
         domain = [['date', '=', self.date]]
         if self.env.context.type: domain.push(['type', '=', self.env.context.type])
-        tools.navigate('/tree/stock.picking.list?domain=' + JSON.stringify(domain))
+        tools.navigate('/tree/stock.picking.lot?domain=' + JSON.stringify(domain))
 
 PickingListFilter()
 
@@ -357,8 +357,6 @@ class PickingLot(models.Model):
             if not sequences[sequence_id.date]: sequences[sequence_id.date] = self.env['mrp.sequence']
             sequences[sequence_id.date].add(sequence_id)"""
         #for date in sequences:
-        console.log(sequence_ids.length)
-        console.log(list_ids.length)
         if True:
             for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
@@ -384,11 +382,8 @@ class PickingLot(models.Model):
             while True:
                   index += 0
                   lot_id = None
-                  console.log(Object.keys(lines[trolley_type_id]))
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
-                      console.log(lines[trolley_type_id][product_id])
-                      console.log(line)
                       if not line: continue
                       if line and not lot_id:
                          list_id = line.list_id
@@ -401,13 +396,14 @@ class PickingLot(models.Model):
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
-        console.log(lots.length)
         for list_ids in lots:
             lines = {}
             for list_id in list_ids: #.sort_by('sequence'):
-                console.log(list_id.line_ids)
-                for id in list_id.line_ids:
-                    line_id = line_ids.find(id)
+                line_records = []
+                for line_id in line_ids:
+                    if line_id.picking_list_id == list_id: line_records.push(line_id)
+                for line_id in line_records:
+                    #line_id = line_ids.find(id)
                     product_id = product_ids.find(line_id.product_id)
                     trolley_type_id = product_id[type + '_trolley_type_id']
                     if product_id.carry_over:
@@ -431,7 +427,6 @@ class PickingLot(models.Model):
                     line.sequence.push(line_id.sequence)
             for line in lines: create_lot(lines, line)
         for line in carry_lines: create_lot(carry_lines, line)
-        console.log(Object.keys(lines))
         return Promise.all(promises)
 
     @api.onchange('laser_scan', async=True)
