@@ -395,7 +395,7 @@ class PickingLot(models.Model):
                             else:
                                sequences = sequences.join('')
                          else: console.log(trolley_type_id)
-                         lot_id = self.env['stock.picking.lot'].create({'type': fwd_type or type, 'model_id': list_id.model_id, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type, 'sequences': sequences})
+                         lot_id = self.env['stock.picking.lot'].create({'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
