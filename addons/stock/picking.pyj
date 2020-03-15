@@ -370,16 +370,17 @@ class PickingLot(models.Model):
         if list_ids.length: lots.push(list_ids)
         promises = []
         pulley_trolley_type_ids = {product_id.trolley_type_id: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
-        @async
+        #@async
         def create_line(values, lot_id):
             del values.list_id
             values.sequence.sort()
             values.sequence = values.sequence[0] + ' - ' + values.sequence.slice(-1)[0]
             sequences = values.sequence.split(' - ')
             if sequences[0] == sequences[1]: values.sequence = sequences[0]
-            lot_id = await (lot_id)
+            #lot_id = await (lot_id)
             values.picking_lot_id = lot_id.id
             return self.env['stock.picking.lot.line'].create(values)
+        @async
         def create_lot(lines, trolley_type_id):
             promises = []
             index = -1
@@ -400,7 +401,7 @@ class PickingLot(models.Model):
                             else:
                                sequences = sequences.join('')
                          #else: console.log(trolley_type_id)
-                         lot_id = self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})
+                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})]
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
