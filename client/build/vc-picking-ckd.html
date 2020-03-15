@@ -218,7 +218,7 @@ function add_row(type, trolley, records) {
     //cell.innerHTML = time.toTimeString().split(':').slice(0, 2).join(':');
     if (!record.location_name && (record.ready || record.called)) {
       cells = [];
-      bulkPromises.push(getBulk(record, cells, (cell) => cell.style.backgroundColor = 'orange'))
+//      bulkPromises.push(getBulk(record, cells, (cell) => cell.style.backgroundColor = 'orange'))
       cell.style.backgroundColor = 'orange'
       new_row.appendChild(cell)
       new_row.style.display = ''
@@ -234,7 +234,7 @@ function add_row(type, trolley, records) {
     else if (record.location_name.toLowerCase().match('assy')) cell.className = 'status-finish';
     else cell.className = 'status-planning';
     cells = []
-    bulkPromises.push(getBulk(record, cells, (new_cell, cell) => new_cell.className = cell.className, cell));
+//    bulkPromises.push(getBulk(record, cells, (new_cell, cell) => new_cell.className = cell.className, cell));
     new_row.appendChild(cell)
     new_row.style.display = ''
   }
