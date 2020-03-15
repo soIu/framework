@@ -1188,7 +1188,7 @@ view.add(model='stock.picking.lot', mode='form', arch="""
     <sheet>
         <group>
             <field name="name"/>
-            <field name="sequence"/>
+            <field name="sequences"/>
             <field name="trolley_type_id"/>
         </group>
         <group>
