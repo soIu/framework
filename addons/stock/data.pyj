@@ -732,11 +732,12 @@ class HPPMData(models.Model):
             if not valid_sequence: continue
             lot_no = data.slice(head + 9, head + 14).join('-')
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
-            promises.push(promise)
-            if promises.length == 16:
-               await (promises)
-               promises.length = 0
-        await (promises)
+            await (promise)
+            #promises.push(promise)
+            #if promises.length == 16:
+            #   await (promises)
+            #   promises.length = 0
+        #await (promises)
         ir_sequence_id.write()
         return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, line_ids, product_ids, type, fwd_type)
         #return self.write({'imported': True})
