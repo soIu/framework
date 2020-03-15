@@ -347,7 +347,7 @@ class PickingLot(models.Model):
         result = await (self.__super__('create')(values=values, is_client=is_client))
         return result
 
-    #@async
+    @async
     def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, ir_sequence_id, type, fwd_type):
         lots = []
         last_sequence_id = None
@@ -381,6 +381,7 @@ class PickingLot(models.Model):
             values.picking_lot_id = lot_id.id
             return self.env['stock.picking.lot.line'].create(values)
         def create_lot(lines, trolley_type_id):
+            promises = []
             index = -1
             while True:
                   index += 1
@@ -403,6 +404,7 @@ class PickingLot(models.Model):
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
+            return Promise.all(promises)
         carry_lines = {}
         empty_list_id = self.env['stock.picking.list']
         for list_ids in lots:
@@ -434,10 +436,10 @@ class PickingLot(models.Model):
                     line = lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                     line.product_qty += line_id.actual_qty
                     line.sequence.push(line_id.sequence)
-            for line in lines: create_lot(lines, line)
-        for line in carry_lines: create_lot(carry_lines, line)
+            for line in lines: await (create_lot(lines, line))
+        for line in carry_lines: await (create_lot(carry_lines, line))
         ir_sequence_id.write()
-        return Promise.all(promises)
+        #return Promise.all(promises)
 
     @api.onchange('laser_scan', async=True)
     def onchange_scan(self):
