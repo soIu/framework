@@ -357,6 +357,7 @@ class PickingLot(models.Model):
             if not sequences[sequence_id.date]: sequences[sequence_id.date] = self.env['mrp.sequence']
             sequences[sequence_id.date].add(sequence_id)"""
         #for date in sequences:
+        console.log(sequence_ids.length)
         if True:
             for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
@@ -382,8 +383,11 @@ class PickingLot(models.Model):
             while True:
                   index += 0
                   lot_id = None
+                  console.log(Object.keys(lines[trolley_type_id]))
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
+                      console.log(lines[trolley_type_id][product_id])
+                      console.log(line)
                       if not line: continue
                       if line and not lot_id:
                          list_id = line.list_id
@@ -424,6 +428,7 @@ class PickingLot(models.Model):
                     line.sequence.push(line_id.sequence)
             for line in lines: create_lot(lines, line)
         for line in carry_lines: create_lot(carry_lines, line)
+        console.log(Object.keys(lines))
         return Promise.all(promises)
 
     @api.onchange('laser_scan', async=True)
