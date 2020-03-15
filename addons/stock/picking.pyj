@@ -375,7 +375,7 @@ class PickingLot(models.Model):
             del values.list_id
             values.sequence.sort()
             values.sequence = values.sequence[0] + ' - ' + values.sequence.slice(-1)[0]
-            sequences = values.sequences.split(' - ')
+            sequences = values.sequence.split(' - ')
             if sequences[0] == sequences[1]: values.sequence = sequences[0]
             lot_id = await (lot_id)
             values.picking_lot_id = lot_id.id
