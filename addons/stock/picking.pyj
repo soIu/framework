@@ -493,7 +493,7 @@ class PickingLot(models.Model):
                tools.dialog.alert("Wrong part")
             if not product_ids[value.product_id]:
                valid = False
-               self.lwaser_scan = ''
+               self.laser_scan = ''
                tools.dialog.alert("This part doesn't need to be picked")
             return valid, product_ids
         valid, product_ids = get_product_ids()
