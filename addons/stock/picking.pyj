@@ -306,7 +306,7 @@ class PickingListFilter(models.Model):
         del localStorage.last_list_sequence
         domain = [['date', '=', self.date]]
         if self.env.context.type: domain.push(['type', '=', self.env.context.type])
-        tools.navigate('/tree/stock.picking.lot?domain=' + JSON.stringify(domain))
+        tools.navigate('/tree/stock.picking.list?domain=' + JSON.stringify(domain))
 
 PickingListFilter()
 
