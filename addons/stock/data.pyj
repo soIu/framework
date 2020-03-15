@@ -701,7 +701,7 @@ class HPPMData(models.Model):
                 product_id = await (products[bom_line_id.product_id])
                 product_ids.add(product_id)
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
-                   if not product_id[type + '_trolley_type_id']: continue
+                   if not product_id[type + '_trolley_type_id']: return
                    trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'name': str.zfill(sequence_id.sequence.toString(), 3), 'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
                    sequence_id.sequence += 1
                    picking_list_ids.add(trolley_group[product_id[type + '_trolley_type_id']])
