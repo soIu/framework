@@ -352,15 +352,20 @@ class PickingLot(models.Model):
         lots = []
         last_sequence_id = None
         list_ids = self.env['stock.picking.list']
+        sequences = {}
         for sequence_id in sequence_ids:
-            if not last_sequence_id: last_sequence_id = sequence_id
-            elif last_sequence_id.bom_id != sequence_id.bom_id or last_sequence_id.date != sequence_id.date:
-               last_sequence_id = sequence_id
-               lots.push(list_ids)
-               list_ids = self.env['stock.picking.list']
-            for list_id in picking_list_ids:
-                if list_id.sequence_id == sequence_id.id:
-                   list_ids.add(list_id)
+            if not sequences[sequence_id.date]: sequences[sequence_id.date] = self.env['mrp.sequence']
+            sequences[sequence_id.date].add(sequence_id)
+        for date in sequences:
+            for sequence_id in sequences[date].order_by('sequence'):
+                if not last_sequence_id: last_sequence_id = sequence_id
+                elif last_sequence_id.bom_id != sequence_id.bom_id or last_sequence_id.date != sequence_id.date:
+                   last_sequence_id = sequence_id
+                   lots.push(list_ids)
+                   list_ids = self.env['stock.picking.list']
+                for list_id in picking_list_ids:
+                    if list_id.sequence_id == sequence_id.id:
+                       list_ids.add(list_id)
         if list_ids.length: lots.push(list_ids)
         promises = []
         pulley_trolley_type_ids = {product_id.trolley_type_id: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
@@ -488,7 +493,7 @@ class PickingLot(models.Model):
                tools.dialog.alert("Wrong part")
             if not product_ids[value.product_id]:
                valid = False
-               self.laser_scan = ''
+               self.lwaser_scan = ''
                tools.dialog.alert("This part doesn't need to be picked")
             return valid, product_ids
         valid, product_ids = get_product_ids()

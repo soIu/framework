@@ -694,14 +694,13 @@ class HPPMData(models.Model):
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
-            @async
-            def create_line(bom_line_id):
+            for bom_line_id in bom_line_ids
                 if not products[bom_line_id.product_id]:
                    products[bom_line_id.product_id] = self.env['product.product'].browse(bom_line_id.product_id)
                 product_id = await (products[bom_line_id.product_id])
                 product_ids.add(product_id)
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
-                   if not product_id[type + '_trolley_type_id']: return
+                   if not product_id[type + '_trolley_type_id']: continue
                    trolley_group[product_id[type + '_trolley_type_id']] = self.env['stock.picking.list'].create({'name': str.zfill(sequence_id.sequence.toString(), 3), 'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type})
                    sequence_id.sequence += 1
                    trolley_group[product_id[type + '_trolley_type_id']] = await (trolley_group[product_id[type + '_trolley_type_id']])
@@ -717,8 +716,8 @@ class HPPMData(models.Model):
                     line_ids.add(line_id)
                     return line_id
                 promise = promise.then(add)
-                #promises.push(promise)
-            return Promise.all([create_line(bom_line_id) for bom_line_id in bom_line_ids])
+                promises.push(promise)
+            return Promise.all(promises) #[create_line(bom_line_id) for bom_line_id in bom_line_ids])
         for data in sheet.data:
             row += 1
             if row < 6: continue
@@ -733,9 +732,11 @@ class HPPMData(models.Model):
             if not valid_sequence: continue
             lot_no = data.slice(head + 9, head + 14).join('-')
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
-            await (promise)
-            #promises.push(promise)
-        #await (promises)
+            promises.push(promise)
+            if promises.length == 8:
+               await (promises)
+               promises.length = 0
+        await (promises)
         ir_sequence_id.write()
         return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, line_ids, product_ids, type, fwd_type)
         #return self.write({'imported': True})
