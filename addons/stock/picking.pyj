@@ -348,7 +348,7 @@ class PickingLot(models.Model):
         return result
 
     #@async
-    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, type, fwd_type):
+    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, ir_sequence_id, type, fwd_type):
         lots = []
         last_sequence_id = None
         list_ids = self.env['stock.picking.list']
@@ -397,7 +397,8 @@ class PickingLot(models.Model):
                             else:
                                sequences = sequences.join('')
                          #else: console.log(trolley_type_id)
-                         lot_id = self.env['stock.picking.lot'].create({'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})
+                         lot_id = self.env['stock.picking.lot'].create({'name': str.zfill(ir_sequence_id.sequence.toString(), 3), 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})
+                         ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
@@ -433,6 +434,7 @@ class PickingLot(models.Model):
                     line.sequence.push(line_id.sequence)
             for line in lines: create_lot(lines, line)
         for line in carry_lines: create_lot(carry_lines, line)
+        ir_sequence_id.write()
         return Promise.all(promises)
 
     @api.onchange('laser_scan', async=True)
