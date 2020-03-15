@@ -694,7 +694,8 @@ class HPPMData(models.Model):
             promises = []
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
-            for bom_line_id in bom_line_ids:
+            @async
+            def create_line(bom_line_id):
                 if not products[bom_line_id.product_id]:
                    products[bom_line_id.product_id] = self.env['product.product'].browse(bom_line_id.product_id)
                 product_id = await (products[bom_line_id.product_id])
@@ -714,8 +715,8 @@ class HPPMData(models.Model):
                     line_ids.add(line_id)
                     return line_id
                 promise = promise.then(add)
-                promises.push(promise)
-            return await (promises)
+                #promises.push(promise)
+            return Promise.all([create_line(bom_line_id) for bom_line_id in bom_line_ids])
         for data in sheet.data:
             row += 1
             if row < 6: continue
