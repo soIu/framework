@@ -396,13 +396,12 @@ class PickingLot(models.Model):
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
-        console.log(line_ids.length)
         for list_ids in lots:
             lines = {}
             for list_id in list_ids: #.sort_by('sequence'):
                 line_records = []
                 for line_id in line_ids:
-                    if line_id.picking_list_id == list_id: line_records.push(line_id)
+                    if line_id.picking_list_id == list_id.id: line_records.push(line_id)
                 for line_id in line_records:
                     #line_id = line_ids.find(id)
                     product_id = product_ids.find(line_id.product_id)
