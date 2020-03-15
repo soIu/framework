@@ -52,7 +52,7 @@ class StockTrolley(models.Model):
     def update_location(self, trolley, location_id):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
-        picking_list_id = await [self.env['stock.picking.list'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
+        picking_list_id = await [self.env['stock.picking.lot'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
         if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
         pack_ids = await [self.env['stock.pack'].browse(picking_list_id.pack_ids)]
         #location_map = {locations[key]: key for key in locations}
