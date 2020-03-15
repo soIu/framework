@@ -715,8 +715,9 @@ class HPPMData(models.Model):
                     line_ids.add(line_id)
                     return line_id
                 promise = promise.then(add)
-                promises.push(promise)
-            return await (promises)
+                await (promise)
+                #promises.push(promise)
+            #return await (promises)
         for data in sheet.data:
             row += 1
             if row < 6: continue
