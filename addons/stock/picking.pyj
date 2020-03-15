@@ -368,7 +368,6 @@ class PickingLot(models.Model):
                    list_ids = self.env['stock.picking.list']
                 for list_id in picking_list_ids:
                     if list_id.sequence_id == sequence_id.id:
-                       console.log(list_id)
                        list_ids.add(list_id)
         if list_ids.length: lots.push(list_ids)
         promises = []
@@ -402,6 +401,7 @@ class PickingLot(models.Model):
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
+        console.log(lots.length)
         for list_ids in lots:
             lines = {}
             for list_id in list_ids: #.sort_by('sequence'):
