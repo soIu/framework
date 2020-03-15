@@ -679,6 +679,7 @@ class HPPMData(models.Model):
         sequence_ids = self.env['mrp.sequence']
         line_ids = self.env['stock.picking.list.line']
         product_ids = self.env['product.product']
+        ir_sequence_id = await [self.env['ir.sequence'].with_context(limit=1).search(['code', '=', 'stock.picking.list'])]
         @async
         def create_picking_list(code, quantity, lot_no, sequence, date, type, time_start, time_end):
             date_object = new Date('1899-12-30 00:00:00')
@@ -700,7 +701,8 @@ class HPPMData(models.Model):
                 product_ids.add(product_id)
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
                    if not product_id[type + '_trolley_type_id']: continue
-                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
+                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'name': str.zfill(sequence_id.sequence.toString(), 3), 'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
+                   sequence_id.sequence += 1
                    picking_list_ids.add(trolley_group[product_id[type + '_trolley_type_id']])
                 list_id = trolley_group[product_id[type + '_trolley_type_id']]
                 if list_id.part_type != product_id.type and product_id.type == 'local':
@@ -731,6 +733,7 @@ class HPPMData(models.Model):
             #await (promise)
             promises.push(promise)
         await (promises)
+        ir_sequence_id.write()
         return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, line_ids, product_ids, type, fwd_type)
         #return self.write({'imported': True})
 

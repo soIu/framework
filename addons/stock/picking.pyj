@@ -341,6 +341,7 @@ class PickingLot(models.Model):
         if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
         values = values if exist(values) else self.values
         for value in each(values):
+            if value.name: continue
             sequence = await (self.env['ir.sequence'].get_next('stock.picking.lot'))
             value.name = 'Picking ' + str.zfill(sequence.toString(), 3)
         result = await (self.__super__('create')(values=values, is_client=is_client))
@@ -809,6 +810,7 @@ class PickingList(models.Model):
         if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
         values = values if exist(values) else self.values
         for value in each(values):
+            if value.name: continue
             sequence = await (self.env['ir.sequence'].get_next('stock.picking.list'))
             value.name = 'Picking List ' + str.zfill(sequence.toString(), 3)
         result = await (self.__super__('create')(values=values, is_client=is_client))
