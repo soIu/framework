@@ -401,7 +401,7 @@ class PickingLot(models.Model):
                             else:
                                sequences = sequences.join('')
                          #else: console.log(trolley_type_id)
-                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})]
+                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})]
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break

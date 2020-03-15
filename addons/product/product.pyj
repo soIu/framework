@@ -34,6 +34,8 @@ class ProductProduct(models.Model):
     model_type = fields.Char(string="Model")
     packing_type = fields.Char(string="Packing Type")
     c_code = fields.Char(string="C/Code")
+    carry_over = fields.Char(string="Carry Over")
+    carry_over_qty fields.Integer(string="Carry Over Threshold")
 
 ProductProduct()
 
