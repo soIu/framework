@@ -380,9 +380,8 @@ class PickingLot(models.Model):
             return self.env['stock.picking.lot.line'].create(values)
         def create_lot(lines, trolley_type_id):
             index = -1
-            stop = False
-            while not stop:
-                  index += 0
+            while True:
+                  index += 1
                   lot_id = None
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
@@ -399,11 +398,8 @@ class PickingLot(models.Model):
                                sequences = sequences.join('')
                          #else: console.log(trolley_type_id)
                          lot_id = self.env['stock.picking.lot'].create({'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences})
-                      console.log(line)
-                      console.log('Index: ' + index)
-                      console.log(Object.keys(lines[trolley_type_id]).length)
                       promises.push(create_line(line, lot_id))
-                  if not lot_id: stop = True
+                  if not lot_id: break
         carry_lines = {}
         empty_list_id = self.env['stock.picking.list']
         for list_ids in lots:
