@@ -358,6 +358,7 @@ class PickingLot(models.Model):
             sequences[sequence_id.date].add(sequence_id)"""
         #for date in sequences:
         console.log(sequence_ids.length)
+        console.log(list_ids.length)
         if True:
             for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
@@ -367,6 +368,7 @@ class PickingLot(models.Model):
                    list_ids = self.env['stock.picking.list']
                 for list_id in picking_list_ids:
                     if list_id.sequence_id == sequence_id.id:
+                       console.log(list_id)
                        list_ids.add(list_id)
         if list_ids.length: lots.push(list_ids)
         promises = []
@@ -1077,7 +1079,7 @@ menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.li
 view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
-    <field name="sequences" sort="asc"/>
+    <field name="sequence" sort="asc"/>
     <field name="model_id"/>
     <field name="trolley_type_id"/>
     <field name="part_type"/>
