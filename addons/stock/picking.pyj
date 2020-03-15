@@ -375,7 +375,8 @@ class PickingLot(models.Model):
             del values.list_id
             values.sequence.sort()
             values.sequence = values.sequence[0] + ' - ' + values.sequence.slice(-1)[0]
-            values.picking_lot_id = await (lot_id)
+            lot_id = await (lot_id)
+            values.picking_lot_id = lot_id.id
             return self.env['stock.picking.lot.line'].create(values)
         def create_lot(lines, trolley_type_id):
             index = -1
