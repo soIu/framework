@@ -685,10 +685,12 @@ class HPPMData(models.Model):
             date_object = new Date('1899-12-30 00:00:00')
             date_object.setDate(date_object.getDate() + parseInt(date))
             date = date_object
+            console.log('mencari bom')
             product_id = await (self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg']))
             if not product_id.length: raise exceptions.ValidationError("Model Number " + code + " is missing")
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length: raise exceptions.ValidationError("Bill of Materials for Model Number " + code + " is missing")
+            console.log('membuat production sequence')
             bom_line_ids, sequence_id = await ([self.env['mrp.bom.line'].browse(bom_id.line_ids), self.env['mrp.sequence'].create({'name': lot_no, 'sequence': sequence, 'type': fwd_type or type, 'date': date, 'bom_id': bom_id.id, 'quantity': quantity, 'destination': code.split('-')[1], 'time_start': time_start, 'time_end': time_end})])
             sequence_ids.add(sequence_id)
             promises = []
@@ -702,6 +704,7 @@ class HPPMData(models.Model):
                    products[product_id.id] = product_id
                 if not trolley_group[product_id[type + '_trolley_type_id']]:
                    if not product_id[type + '_trolley_type_id']: continue
+                   console.log('membuat picking list')
                    trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
                    sequence_id.sequence += 1
                    picking_list_ids.add(trolley_group[product_id[type + '_trolley_type_id']])
@@ -715,6 +718,7 @@ class HPPMData(models.Model):
                     line_ids.add(line_id)
                     return line_id
                 promise = promise.then(add)
+                console.log('membuat list line')
                 await (promise)
                 #promises.push(promise)
             #return await (promises)
@@ -733,6 +737,7 @@ class HPPMData(models.Model):
             lot_no = data.slice(head + 9, head + 14).join('-')
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
             await (promise)
+        console.log('mapping')
         return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, line_ids, product_ids, lot_sequence_id, type, fwd_type)
 
     @api.server(async=True)
