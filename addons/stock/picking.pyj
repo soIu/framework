@@ -396,6 +396,7 @@ class PickingLot(models.Model):
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
         carry_lines = {}
+        console.log(line_ids.length)
         for list_ids in lots:
             lines = {}
             for list_id in list_ids: #.sort_by('sequence'):
