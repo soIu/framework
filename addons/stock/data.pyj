@@ -415,8 +415,20 @@ class PurchaseOrderSupplier(models.Model):
 
 PurchaseOrderSupplier()
 
+add_sequence('hppm.data')
+
 class HPPMData(models.Model):
     _name = 'hppm.data'
+
+    @async
+    def create(self, values=False, is_client=tools.configuration.client):
+        if v'typeof window' != 'undefined': return self.__super__('create')(values=values, is_client=is_client)
+        values = values if exist(values) else self.values
+        for value in each(values):
+            sequence = await (self.env['ir.sequence'].get_next('hppm.data'))
+            value.name = 'Data ' + str.zfill(sequence.toString(), 3)
+        result = await (self.__super__('create')(values=values, is_client=is_client))
+        return result
 
     @api.server
     def _get_number(self):
@@ -432,7 +444,7 @@ class HPPMData(models.Model):
          if v'typeof window' != 'undefined':
             return window.models.env.context.default_import_type or None
 
-    name = fields.Char(string="Data Number", defaults=_get_number, required=True, index=True)
+    name = fields.Char(string="Data Number", required=True, index=True)
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
@@ -856,13 +868,12 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
     </header>
     <sheet>
         <group>
-            <field name="name"/>
+            <field name="date"/>
             <field name="excel" invisible="active_id.id != null"/>
         </group>
         <group>
-            <field name="date"/>
-            <field name="type"/>
             <field name="imported" readonly="True"/>
+            <field name="type"/>
         </group>
         <group invisible="active_id.id == null">
             <button name="download_excel" string="Download"/>
