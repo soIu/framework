@@ -369,7 +369,7 @@ class PickingLot(models.Model):
                        list_ids.add(list_id)
         if list_ids.length: lots.push(list_ids)
         promises = []
-        pulley_trolley_type_ids = {product_id.trolley_type_id: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
+        pulley_trolley_type_ids = {product_id[type+ '_trolley_type_id']: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
         #@async	
         def create_line(values, lot_id):
             del values.list_id

@@ -17,18 +17,18 @@ def create_upload_button():
        document.getElementById('upload_shortcut').remove()
     create_element = document.querySelector('.data-table-title .button.button-fill')
     if not create_element: return
-    defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt', 'stock.picking.list': 'sequence_mcvt', 'product.product': 'data_packing', 'stock.receive.zone': 'receive_zone'}
+    defaults = {'purchase.order': 'po', 'mrp.bom': 'bom', 'mrp.sequence': 'sequence_mcvt', 'stock.trolley.type': 'daisha_mcvt', 'stock.picking.lot': 'sequence_mcvt', 'product.product': 'data_packing', 'stock.receive.zone': 'receive_zone'}
     upload_button = '<a id="upload_shortcut" class="button" href="#" style="display: inline-block;background-color: rgb(255, 255, 255);">Upload</a>'
-    if models.env.context.active_model == 'stock.picking.list': upload_button = upload_button.replace('Upload', 'Print')
+    if models.env.context.active_model == 'stock.picking.lot': upload_button = upload_button.replace('Upload', 'Print')
     create_element.insertAdjacentHTML('afterend', upload_button)
     def onclick():
-        if models.env.context.active_model != 'stock.picking.list':
+        if models.env.context.active_model != 'stock.picking.lot':
            model = models.env.context.active_model
            if defaults[model]: models.env.context.default_import_type = defaults[model]
            return tools.navigate('/form/hppm.data')
         trolley_types = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]')}).sort()
         collator = new Intl.Collator(undefined, {'numeric': True, 'sensitivity': 'base'})
-        sequences = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=sequence]')}).sort(collator.compare)
+        sequences = list({trolley.innerHTML for trolley in document.querySelectorAll('div.ag-body-container div[col-id=sequences]')}).sort(collator.compare)
         types = []
         for trolley in trolley_types:
             type = ''
@@ -60,7 +60,7 @@ def create_upload_button():
             row = None
             for column in document.querySelectorAll('div.ag-body-container div[col-id=trolley_type_id]'):
                 if column.innerHTML != trolley: continue
-                if column.parentElement.querySelector('div[col-id=sequence]').innerHTML != sequence: continue
+                if column.parentElement.querySelector('div[col-id=sequences]').innerHTML != sequence: continue
                 row = column.parentElement
             if not row: return
             row.querySelector('div[col-id=date] span.ag-icon-checkbox-unchecked').click()
@@ -69,7 +69,7 @@ def create_upload_button():
         window.print_picking_list_hppm = print_picking_list_hppm
         dialog.open()
     document.getElementById('upload_shortcut').onclick = onclick
-    if models.env.context.active_model != 'stock.picking.list': return
+    if models.env.context.active_model != 'stock.picking.lot': return
     """first_row = document.querySelector('div.ag-body-container div[row-id="0"]')
     sequence = first_row.querySelector('div[col-id=sequence]').innerHTML
     for column in document.querySelectorAll('div.ag-body-container div[col-id=sequence]'):
