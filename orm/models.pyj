@@ -141,7 +141,7 @@ class Model():
                else:
                   schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': True, 'queryInverse': self[key].inverse}}}
                   self._one2many_fields.push(key)
-               if relation == 'belongsTo':
+               if relation == 'belongsTo' and not indexed_fields[key]:
                   indexed_fields[key] = True
                   db.createIndex({'index': {'fields': ['data.' + key, '_id']}})
             self._fields[key] = self[key]
