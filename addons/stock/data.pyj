@@ -716,9 +716,9 @@ class HPPMData(models.Model):
                 box = Math.ceil(line_qty / product_id.qty_box)
                 promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'min_box': product_id[type + '_min_box'], 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
                 def add(line_id):
-                    if not lines[line_id.picking_list_id]: lines[line_id.picking_list_id] = []
+                    if not lines_ids[line_id.picking_list_id]: lines_ids[line_id.picking_list_id] = []
                     #line_ids.add(line_id)
-                    lines[line_id.picking_list_id].push(line_id)
+                    lines_ids[line_id.picking_list_id].push(line_id)
                     return line_id
                 promise = promise.then(add)
                 console.log('membuat list line')
