@@ -769,7 +769,7 @@ class HPPMData(models.Model):
             if order_id.length:
                return order_id.recompute_pack(value.product_qty)
             product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
-            if not product_id.length: raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
+            if not product_id.length: return #raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
             value.product_id = product_id.id
             order_id = await [self.env['purchase.order'].create(value)] #{'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
             order_id.compute_pack()
