@@ -458,7 +458,7 @@ class PickingLot(models.Model):
                        length = 0
                        for part_id in lines[trolley_type_id]:
                            if part_id == product_id.id: continue
-                           if lines[trolley_type_id][part_id].list_id.model_id == list_id.model_id: continue
+                           if lines[trolley_type_id][part_id].slice(-1)[0].list_id.model_id == list_id.model_id: continue
                            length = Math.max(length, lines[trolley_type_id][part_id].length)
                        length -= lines[trolley_type_id][line_id.product_id].slice(-1)[0].length
                        if length > 0:
