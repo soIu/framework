@@ -678,7 +678,7 @@ class HPPMData(models.Model):
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         products = {}
-        picking_list_ids = self.env['stock.picking.list']
+        picking_list_ids = {} #self.env['stock.picking.list']
         sequence_ids = self.env['mrp.sequence']
         line_ids = self.env['stock.picking.list.line']
         lines_ids = {}
@@ -710,8 +710,9 @@ class HPPMData(models.Model):
                    if not product_id[type + '_trolley_type_id']: continue
                    console.log('membuat picking list')
                    trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
-                   sequence_id.sequence += 1
-                   picking_list_ids.add(trolley_group[product_id[type + '_trolley_type_id']])
+                   #sequence_id.sequence += 1
+                   if not picking_list_ids[sequence_id.id]: picking_list_ids[sequence_id.id] = []
+                   picking_list_ids[sequence_id.id].push(trolley_group[product_id[type + '_trolley_type_id']])
                 list_id = trolley_group[product_id[type + '_trolley_type_id']]
                 if list_id.part_type != product_id.type and product_id.type == 'local':
                    list_id.write({'part_type': product_id.type})
