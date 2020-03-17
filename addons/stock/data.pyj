@@ -448,7 +448,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over', 'Carry Over Parts'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over_mcvt', 'Carry Over MCVT'], ['carry_over_flexi', 'Carry Over Flexi'], ['carry_over_fwd', 'Carry Over 4WD'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -477,6 +477,9 @@ class HPPMData(models.Model):
         if self.type == 'daisha_mcvt': return self.import_daisha('mcvt').then(after_finish)
         if self.type == 'daisha_fwd': return self.import_daisha('fwd').then(after_finish)
         if self.type == 'daisha_flexi': return self.import_daisha('flexi').then(after_finish)
+        if self.type == 'carry_mcvt': return self.import_carry_over('mcvt').then(after_finish)
+        if self.type == 'carry_fwd': return self.import_carry_over('fwd').then(after_finish)
+        if self.type == 'carry_flexi': return self.import_carry_over('flexi').then(after_finish)
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
         if 'sequence_fwd' in self.type:
            if self.type == 'sequence_fwd_trf': return self.import_sequence('fwd', 'fwd_trf').then(after_finish)
@@ -485,7 +488,6 @@ class HPPMData(models.Model):
         if self.type == 'data_packing': return self.import_data_packing().then(after_finish)
         if self.type == 'route_agv': return self.import_route().then(after_finish)
         if self.type == 'receive_zone': return self.import_receive_zone().then(after_finish)
-        if self.type == 'carry_over': return self.import_carry_over().then(after_finish)
 
     @api.server(async=True)
     def import_route(self):
@@ -522,6 +524,7 @@ class HPPMData(models.Model):
             row += 1
             if row < 4: continue
             #if not data[5] or data[5] == '-': continue
+            transit = data[0] or ''
             part_code = data[4]
             part_qty = data[7] or 0
             box_qty = data[24] or 0
@@ -531,7 +534,7 @@ class HPPMData(models.Model):
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
                else:
                   trolley_id = get_trolley(trolley_type, type)
                   product_ids = self.env['product.product']
@@ -549,18 +552,18 @@ class HPPMData(models.Model):
                   trolley_id = await (trolley_id)
                   for product_id in product_ids:
                       product_id[type + '_trolley_type_id'] = trolley_id.id
-                      product_id.qty_box,  product_id[type + '_min_box'] = trolleys[trolley_type][product_id.code] or [0, 0]
+                      product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley_type][product_id.code] or [0, 0]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
                   del trolleys[trolley_type]
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
-               trolleys[trolley_type][part_code] = [part_qty, box_qty]
+               trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
         for trolley in trolleys:
             trolley_id = get_trolley(trolley, type)
             #product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
@@ -580,7 +583,7 @@ class HPPMData(models.Model):
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
                 product_id[type + '_trolley_type_id'] = trolley_id.id
-                product_id.qty_box, product_id[type + '_min_box'] = trolleys[trolley][product_id.code] or [0, 0]
+                product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley][product_id.code] or [0, 0, '']
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
 
@@ -823,7 +826,7 @@ class HPPMData(models.Model):
                 await [update_part(value, type)]
 
     @api.server(async=True)
-    def import_carry_over(self):
+    def import_carry_over(self, type):
         promises = []
         xlsx = require('node-xlsx')
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
@@ -832,7 +835,7 @@ class HPPMData(models.Model):
         def write_carry_over(value):
             product_ids = await [self.env['product.product'].search(['code', '=', value.code])]
             if not product_ids.length: return
-            return product_ids.write({'carry_over': True, 'carry_over_qty': value.qty})
+            return product_ids.write({type + '_carry_over': True if value.qty else False, type + '_carry_over_qty': value.qty})
         for data in sheet.data:
             row += 1
             if row < 1: continue
