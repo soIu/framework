@@ -96,11 +96,13 @@ view.add({'model': 'product.product', 'mode': 'form', 'string': False, 'arch': "
         <group>
             <field name="base_name"/>
             <field name="code"/>
-            <field bawah_icon="hehe" name="type"/>
+            <field name="type"/>
         </group>
         <group>
             <field name="description"/>
             <field name="route"/>
+            <field name="supplier"/>
+            <field name="qty_box"/>
         </group>
         <!--<group>
             <field name="total_qty"/>
