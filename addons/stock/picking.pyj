@@ -535,7 +535,7 @@ class PickingLot(models.Model):
            if order_pack_id.length:
               self.laser_scan = ''
               return tools.dialog.alert("This CKD Part is already picked")
-           qty = numbers[1]
+           qty = numbers[3][0:-7]
            code = barcode.split('\n')[0].split('                   ')[0].split('             ')[1].split('  ')[1].split(' ').join('')
            product_id = await [self.env['product.product'].with_context(limit=1).search(['code_trimmed', '=', code], ['type', '=', 'ckd'])]
            value = {'product_id': product_id.id}
