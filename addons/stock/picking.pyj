@@ -318,7 +318,8 @@ class PickingLot(models.Model):
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model")
-    sequences = fields.Char(string="Sequences")
+    sequences = fields.Char(string="Seq Prod")
+    sequence_picking = fields.Integer(string="Seq Picking")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.lot.line', 'picking_lot_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_lot_id', string="Packs")
@@ -398,6 +399,14 @@ class PickingLot(models.Model):
             while True:
                   index += 1
                   lot_id = None
+                  sequence = None
+                  for product_id in lines[trolley_type_id]:
+                      line = lines[trolley_type_id][product_id][index]
+                      if not line: continue
+                      if sequence == None or sequence > line.sequence_picking: sequence = line.sequence_picking
+                  if sequence:
+                     sequence -= 20
+                     if sequence <= 0: sequence = None
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
                       if not line: continue
@@ -413,7 +422,7 @@ class PickingLot(models.Model):
                                sequences = sequences.join('')
                          #else: console.log(trolley_type_id)
                          console.log('membuat lot')
-                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences, 'carry_over': line.is_carry_over or False})]
+                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequences': sequences, 'sequence_picking': sequence, 'carry_over': line.is_carry_over or False})]
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
@@ -434,9 +443,9 @@ class PickingLot(models.Model):
                     if product_id[type + '_carry_over']:
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
                        if not carry_lines[trolley_type_id][line_id.product_id]:
-                          carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [line_id.sequence], 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']}]
+                          carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [line_id.sequence], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']}]
                        elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > product_id[type+ '_min_box']:
-                          carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']})
+                          carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [line_id.sequence], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']})
                        line = carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                        line.product_qty += line_id.actual_qty
                        continue
@@ -451,11 +460,11 @@ class PickingLot(models.Model):
                            if lines[trolley_type_id][part_id].slice(-1)[0].list_id.model_id == list_id.model_id: model_before_exist = True
                        if not model_before_exist:
                           for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
                     elif list_id.trolley_type_id in pulley_trolley_type_ids:
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': product_id[type+ '_min_box']})
                     elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None:
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
                     elif ((lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > product_id[type+ '_min_box']:
                        length = 0
                        for part_id in lines[trolley_type_id]:
@@ -465,7 +474,7 @@ class PickingLot(models.Model):
                        length -= lines[trolley_type_id][line_id.product_id].slice(-1)[0].length
                        if length > 0:
                           for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
                     line = lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                     line.product_qty += line_id.actual_qty
                     line.sequence.push(line_id.sequence)
@@ -1137,7 +1146,8 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
 view.add(init=create_upload_button, model='stock.picking.lot', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
-    <field name="sequences" sort="asc"/>
+    <field name="sequence_picking" sort="asc"/>
+    <field name="sequences"/>
     <field name="model_id"/>
     <field name="trolley_type_id"/>
     <field name="part_type"/>
