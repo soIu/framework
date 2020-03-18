@@ -33,7 +33,7 @@ class AgvCheckpoint(models.Model):
     @api.server(async=True)
     def receive_rfid(self, ip, epc):
         rfid_id = await [self.env['agv.rfid'].search(['name', '=', ip])]
-        self.env['stock.trolley'].update_location(epc, rfid_id.location_id).catch(console.error)
+        self.env['stock.trolley'].update_location(epc, rfid_id.location_id, trigger=(epc == '172.16.1.82')).catch(console.error)
         return self.create({'agv': ip, 'daisha': epc, 'location_id': rfid_id.location_id})
 
 AgvCheckpoint()

@@ -7,6 +7,27 @@ from stock.location import defaults as locations
 from jasper.report import get_jasper_report
 from utils import create_upload_button
 
+class StockTriggerBoard(models.Model):
+    _name = 'stock.trigger.board'
+
+    date = fields.Datetime(string="Date", default=tools.date.now)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", index=True)
+
+    @async
+    def trigger(self, type, trolley_type_id):
+        trigger_id = await [self.search(['trolley_type_id', '=', trolley_type_id], ['type', '=', type])]
+        if trigger_id.length: return
+        return self.create({'trolley_type_id': trolley_type_id})
+
+    @async
+    def remove(self, type, trolley_type_id):
+        trigger_id = await [self.search(['trolley_type_id', '=', trolley_type_id], ['type', '=', type])]
+        if not trigger_id.length: return
+        return trigger_id.unlink()
+
+StockTriggerBoard()
+
 class StockTrolleyImage(models.Model):
     _name = 'stock.trolley.image'
 
@@ -49,10 +70,12 @@ class StockTrolley(models.Model):
         window.open(url)
 
     @api.server(async=True)
-    def update_location(self, trolley, location_id):
+    def update_location(self, trolley, location_id, trigger):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
         picking_list_id = await [self.env['stock.picking.lot'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
+        if trigger and not picking_list_id.is_carry_over:
+           self.env['stock.trigger.board'].trigger(picking_list_id.type, picking_list_id.trolley_type_id)
         if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
         pack_ids = await [self.env['stock.pack'].browse(picking_list_id.pack_ids)]
         #location_map = {locations[key]: key for key in locations}

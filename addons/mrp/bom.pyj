@@ -20,8 +20,20 @@ class MrpBom(models.Model):
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
 
     @async
-    def move_pulley_out(self, location_id, pack_id, ratio, product_ids):
+    def move_pulley_out(self, location_id, pack_id, ratio, product_ids, line_type):
         line_ids = await [self.env['mrp.bom.line'].browse(self.line_ids)]
+        @async
+        def check_carry_over(line_id):
+            type = line_type.split('_')[0]
+            product_id = await [self.env['product.product'].browse(line_id.product_id)]
+            threshold = product_id[type + '_carry_over_qty']
+            if not threshold: return
+            trolley_type_id = product_id[type + '_trolley_type_id']
+            quant_id = self.env['stock.quant'].browse()
+            quant_id.product_id = product_id.id
+            quantity = await [quant_id._get_assy_qty()]
+            if quantity <= threshold:
+               return self.env['stock.trigger.board'].trigger(line_type, trolley_type_id)
         def create_quant_move(line_id):
             return Promise.all([
               self.env['stock.move'].create({'product_id': line_id.product_id, 'product_qty': line_id.product_qty * ratio, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}),
@@ -29,8 +41,9 @@ class MrpBom(models.Model):
               self.env['stock.quant'].create({'product_id': line_id.product_id, 'product_qty': line_id.product_qty * ratio, 'location_id': location_id}),
             ])
         for line_id in line_ids:
-            if line_id.product_id not in product_ids: continue
+            if line_id.product_id in product_ids: continue
             await [create_quant_move(line_id)]
+            check_carry_over(line_id)
 
 MrpBom()
 
