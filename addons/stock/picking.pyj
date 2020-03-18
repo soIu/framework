@@ -478,7 +478,7 @@ class PickingLot(models.Model):
         if not barcode: return
         @async
         def update_picked():
-            line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_lot_id
+            line_ids = self.env.context.active_lines['stock.picking.lot.line'].picking_lot_id
             index = -1
             quantities = await ([line_id._get_received_qty() for line_id in line_ids])
             for quantity in quantities:
