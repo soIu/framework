@@ -529,7 +529,7 @@ class PickingLot(models.Model):
         value = None
         pack_id = None
         if '                   ' in barcode and barcode[0] != '{':
-           numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNan(parseInt(number))]
+           numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNaN(parseInt(number))]
            unique = 'CKD-' + barcode.split('\n')[0].split(' ').slice(-1)[0] + numbers[0]
            order_pack_id = await [self.env['purchase.order.pack'].with_context(limit=1).search(['name', '=', unique])]
            if order_pack_id.length:
@@ -937,7 +937,7 @@ class PickingList(models.Model):
         value = None
         pack_id = None
         if '                   ' in barcode and barcode[0] != '{':
-           numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNan(parseInt(number))]
+           numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNaN(parseInt(number))]
            unique = 'CKD-' + barcode.split('\n')[0].split(' ').slice(-1)[0] + numbers[0]
            order_pack_id = await [self.env['purchase.order.pack'].with_context(limit=1).search(['name', '=', unique])]
            if order_pack_id.length:
