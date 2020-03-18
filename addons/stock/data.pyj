@@ -478,9 +478,9 @@ class HPPMData(models.Model):
         if self.type == 'daisha_mcvt': return self.import_daisha('mcvt').then(after_finish)
         if self.type == 'daisha_fwd': return self.import_daisha('fwd').then(after_finish)
         if self.type == 'daisha_flexi': return self.import_daisha('flexi').then(after_finish)
-        if self.type == 'carry_mcvt': return self.import_carry_over('mcvt').then(after_finish)
-        if self.type == 'carry_fwd': return self.import_carry_over('fwd').then(after_finish)
-        if self.type == 'carry_flexi': return self.import_carry_over('flexi').then(after_finish)
+        if self.type == 'carry_over_mcvt': return self.import_carry_over('mcvt').then(after_finish)
+        if self.type == 'carry_over_fwd': return self.import_carry_over('fwd').then(after_finish)
+        if self.type == 'carry_over_flexi': return self.import_carry_over('flexi').then(after_finish)
         if self.type == 'sequence_mcvt': return self.import_sequence('mcvt').then(after_finish)
         if 'sequence_fwd' in self.type:
            if self.type == 'sequence_fwd_trf': return self.import_sequence('fwd', 'fwd_trf').then(after_finish)
