@@ -552,6 +552,9 @@ class PickingLot(models.Model):
         #valid, product_ids = await (validity)
         #if not valid: return
         #pack_id = await (pack_id)
+        if not pack_id.length:
+           self.laser_scan = ''
+           return tools.dialog.alert("This pack is missing or not received yet")
         if pack_id.product_id not in product_ids:
            self.laser_scan = ''
            return tools.dialog.alert("Wrong part")
