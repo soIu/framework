@@ -125,7 +125,8 @@ class PurchaseOrder(models.Model):
         alert(error.stack or error.message)
 
     def print_all(self):
-        return Promise.all([record.print_label() for record in self])
+        return self.print_label()
+        #return Promise.all([record.print_label() for record in self])
 
     def get_box_quantities(self, quantity, product_id):
         boxes = quantity / product_id.qty_box
