@@ -10,7 +10,7 @@ from utils import create_upload_button
 class StockTriggerBoard(models.Model):
     _name = 'stock.trigger.board'
 
-    date = fields.Datetime(string="Date", default=tools.date.now)
+    date = fields.Datetime(string="Date", defaults=tools.date.now)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", index=True)
 
