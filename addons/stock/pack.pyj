@@ -177,6 +177,7 @@ class StockPack(models.Model):
     available_qty = fields.Integer(string="Available Quantity", index=True)
     is_pulley = fields.Boolean(string="Is Pulley", readonly=True)
     picking_list_id = fields.Many2one('stock.picking.list', string="Picking List")
+    picking_lot_id = fields.Many2one('stock.picking.lot', string="Picking List")
     print_number = fields.Char(string="Print No.")
     receive_zone = fields.Char(string="Receive Zone")
     on_hold = fields.Boolean(string="On Hold")
