@@ -478,7 +478,7 @@ class PickingLot(models.Model):
         if not barcode: return
         @async
         def update_picked():
-            line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_list_id
+            line_ids = self.env.context.active_lines['stock.picking.list.line'].picking_lot_id
             index = -1
             quantities = await ([line_id._get_received_qty() for line_id in line_ids])
             for quantity in quantities:
@@ -531,7 +531,7 @@ class PickingLot(models.Model):
         else: value = JSON.parse(barcode)
         #@async
         def get_product_ids():
-            line_ids = self.env.context.active_lines['stock.picking.lot.line'].picking_list_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
+            line_ids = self.env.context.active_lines['stock.picking.lot.line'].picking_lot_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
             index = -1
             product_ids = {line_id.product_id: line_id.product_qty for line_id in line_ids}
             valid = value.product_id in product_ids
