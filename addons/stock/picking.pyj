@@ -382,7 +382,7 @@ class PickingLot(models.Model):
             values.product_qty = Math.max(values.product_qty, values.qty_box)
             qty = 0
             if values.product_qty != values.qty_box and values.product_qty != (values.qty_box * values.min_box):
-               for index in range(value.min_box):
+               for index in range(values.min_box):
                    if qty < values.product_qty:
                       qty += values.qty_box
                       continue
