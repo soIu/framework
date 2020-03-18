@@ -370,10 +370,11 @@ class PickingLot(models.Model):
         promises = []
         pulley_trolley_type_ids = {product_id[type+ '_trolley_type_id']: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
         #@async
+        def sort(a, b): return a - b
         def create_line(values, lot_id):
             if values == None: return
             del values.list_id
-            values.sequence.sort()
+            values.sequence.sort(sort)
             values.sequence = values.sequence[0] + ' - ' + values.sequence.slice(-1)[0]
             sequences = values.sequence.split(' - ')
             if sequences[0] == sequences[1]: values.sequence = sequences[0]
@@ -404,7 +405,7 @@ class PickingLot(models.Model):
                          sequences = line.sequence
                          if Array.isArray(sequences):
                             if sequences.length > 1:
-                               sequences = line.sequence.sort()
+                               sequences = line.sequence.sort(sort)
                                if sequences[0] == sequences.slice(-1)[0]: sequences = sequences[0]
                                else: sequences = sequences[0] + ' - ' + sequences.slice(-1)[0]
                             else:
