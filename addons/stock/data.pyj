@@ -585,7 +585,7 @@ class HPPMData(models.Model):
                 args.push(['code', '=', code])
                 if supplier == 'CKD':
                    args.push(['type', '=', 'ckd'])
-                product_ids = await [self.env['product.product'].search(*args)
+                product_ids = await [self.env['product.product'].search(*args)]
                 if not product_ids.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
                 if supplier == 'CKD':
                    ckd_ids.push(*product_ids.ids)
