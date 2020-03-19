@@ -515,6 +515,7 @@ class HPPMData(models.Model):
         trolleys = {}
         trolley_map = {}
         trolley_type = None
+        ckd_ids = []
         @async
         def get_trolley(trolley_type, type):
             trolley_id = await [self.env['stock.trolley.type'].search(['name', '=', trolley_type], ['type', '=', type])]
@@ -529,29 +530,37 @@ class HPPMData(models.Model):
             part_code = data[4]
             part_qty = data[7] or 0
             box_qty = data[24] or 0
+            supplier = data[38] or ''
             if row == 4 and part_code and not data[21]: raise exceptions.ValidationError("Trolley Type Empty")
             if data[21] and data[21] != trolley_type:
                if not trolley_type:
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
                else:
                   trolley_id = get_trolley(trolley_type, type)
                   product_ids = self.env['product.product']
                   products = []
                   @async
-                  def check_part(code):
-                      product_id = await [self.env['product.product'].search(['code', '=', code])]
-                      if not product_id.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
-                      return product_id
+                  def check_part(code, supplier):
+                      args = []
+                      args.push(['code', '=', code])
+                      if supplier == 'CKD':
+                         args.push(['type', '=', 'ckd'])
+                      product_ids = await [self.env['product.product'].search(*args)]
+                      if supplier == 'CKD':
+                         ckd_ids.push(*product_ids.ids)
+                      if not product_ids.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
+                      return product_ids
                   for code in Object.keys(trolleys[trolley_type]):
-                      products.push(check_part(code))
+                      products.push(check_part(code, trolleys[trolley_type][code][3]))
                   products = await (products)
                   for product_id in products:
                       product_ids.add(product_id)
                   trolley_id = await (trolley_id)
                   for product_id in product_ids:
+                      if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                       product_id[type + '_trolley_type_id'] = trolley_id.id
                       product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley_type][product_id.code] or [0, 0]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
@@ -560,29 +569,36 @@ class HPPMData(models.Model):
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
-               trolleys[trolley_type][part_code] = [part_qty, box_qty, transit]
+               trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
         for trolley in trolleys:
             trolley_id = get_trolley(trolley, type)
             #product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
             product_ids = self.env['product.product']
             products = []
             @async
-            def check_part(code):
-                product_id = await [self.env['product.product'].search(['code', '=', code])]
-                if not product_id.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
-                return product_id
+            def check_part(code, supplier):
+                args = []
+                args.push(['code', '=', code])
+                if supplier == 'CKD':
+                   args.push(['type', '=', 'ckd'])
+                product_ids = await [self.env['product.product'].search(*args)
+                if not product_ids.length: raise exceptions.ValidationError("Part Number " + code + " is missing")
+                if supplier == 'CKD':
+                   ckd_ids.push(*product_ids.ids)
+                return product_ids
             for code in Object.keys(trolleys[trolley_type]):
-                products.push(check_part(code))
+                products.push(check_part(code, trolleys[trolley_type][code][3]))
             products = await (products)
             for product_id in products:
                 product_ids.add(product_id)
             trolley_id = await (trolley_id)
             await (product_ids.write({type + '_trolley_type_id': trolley_id.id}))
             for product_id in product_ids:
+                if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                 product_id[type + '_trolley_type_id'] = trolley_id.id
                 product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley][product_id.code] or [0, 0, '']
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
