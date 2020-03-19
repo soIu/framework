@@ -161,14 +161,14 @@ class ReceiveInhouse(models.Model):
     @async
     def receive(self):
         product_id = await [self.env['product.product'].browse(self.product_id)]
-        if not product_id.min_box or not product_id.qty_box: return tools.dialog.alert("Minimum Box per-Daisha and Qty per-Box of the part must be set")
+        if not product_id.mcvt_min_box or not product_id.qty_box: return tools.dialog.alert("Minimum Box per-Daisha and Qty per-Box of the part must be set")
         is_pulley = False
         if 'pulley' in product_id.name.toLowerCase():
            is_pulley = True
         self.env['log.data'].log('Receive Inhouse part:', product_id.name)
         order_pack_ids = self.env['purchase.order.pack']
         for index in range(self.product_qty):
-            for box in range(product_id.min_box):
+            for box in range(product_id.mcvt_min_box):
                 order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': product_id.qty_box, 'part_no': product_id.code, 'inhouse_ckd': True, 'is_pulley': is_pulley})]
                 order_pack_ids.add(order_pack_id)
         await [order_pack_ids.print_label()]
