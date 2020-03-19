@@ -262,7 +262,7 @@ async function get_picking() {
         value = {...record};
         value.sequence = (a / 10 + index) * 10;
         trolleys[record.trolley_type_id].push(value);
-      ]
+      })]
     }
     values = {}
     await Promise.all(Object.keys(trolleys)/*.slice(0, 37)*/.map(async (trolley_id) => {
