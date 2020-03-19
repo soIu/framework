@@ -200,7 +200,7 @@ function add_row(type, trolley, records) {
     }))
   }
   let cells = [];
-  for (let record of records) {
+  for (let record of records.sort((a, b) => a.sequence - b.sequence)) {
     index += 1;
     if (index > 9) break;
     new_row = document.querySelector(`.${type}_row_` + (index + 1))
