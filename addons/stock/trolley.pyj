@@ -20,7 +20,7 @@ class StockTriggerBoard(models.Model):
         if not trolley_type_id: return
         trigger_id = await [self.search(['trolley_type_id', '=', trolley_type_id], ['type', '=', type])]
         if trigger_id.length: return
-        return self.create({'trolley_type_id': trolley_type_id})
+        return self.create({'trolley_type_id': trolley_type_id, 'type': type})
 
     @async
     def remove(self, type, trolley_type_id):
