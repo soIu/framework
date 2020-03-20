@@ -30,6 +30,14 @@ class StockTriggerBoard(models.Model):
 
 StockTriggerBoard()
 
+view.add(model='stock.trigger.board', mode='tree', arch="""
+<tree>
+    <field name="date"/>
+    <field name="trolley_type_id"/>
+    <field name="type"/>
+</tree>
+""")
+
 class StockTrolleyImage(models.Model):
     _name = 'stock.trolley.image'
 
