@@ -43,6 +43,7 @@ menu.add(id='checkpoint', parent='agv_chasun', model='agv.checkpoint', string="C
 
 view.add(model='agv.checkpoint', mode='tree', arch="""
 <tree>
+    <field name="date"/>
     <field name="name"/>
     <field name="daisha"/>
     <field name="location_id"/>
