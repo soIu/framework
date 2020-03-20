@@ -124,16 +124,16 @@ td {
           </div>
           <div class="content-wrapper">
             <div class="content">
-              <h1>LINE MCVT</h1>
-              <table>
+              
+              <table id="mcvt">
                 <tbody><tr>
-                  <th><h3>IHPL</h3></th>
+                  <th><h3>MCVT</h3></th>
                   
                   
                   
                   
                   
-                <th><h3>CO</h3></th></tr>
+                </tr>
                 
                 
                 
@@ -141,16 +141,16 @@ td {
             </div>
             
           <div class="content">
-              <h1>LINE FLEXI</h1>
-              <table>
+              
+              <table id="flexi">
                 <tbody><tr>
-                  <th><h3>IHPL</h3></th>
+                  <th><h3>FLEXI</h3></th>
                   
                   
                   
                   
                   
-                <th><h3>CO</h3></th></tr>
+                </tr>
                 
                 
                 
@@ -158,16 +158,16 @@ td {
             </div></div>
         <div class="content-wrapper">
             <div class="content">
-              <h1>LINE 4WD TRF</h1>
-              <table>
+              
+              <table id="fwd_trf">
                 <tbody><tr>
-                  <th><h3>IHPL</h3></th>
+                  <th><h3>4WD TRF</h3></th>
                   
                   
                   
                   
                   
-                <th><h3>CO</h3></th></tr>
+                </tr>
                 
                 
                 
@@ -175,16 +175,16 @@ td {
             </div>
             
           <div class="content">
-              <h1>LINE 4WD DPS</h1>
-              <table>
+              
+              <table id="fwd_dps">
                 <tbody><tr>
-                  <th><h3>IHPL</h3></th>
+                  <th><h3>4WD DPS</h3></th>
                   
                   
                   
                   
                   
-                <th><h3>CO</h3></th></tr>
+                </tr>
                 
                 
                 
@@ -194,33 +194,30 @@ td {
 //const time = new Date()
 //time.setHours(7, 15, 0, 0, 0)
 
-async function get_sequence() {
+async function get_board() {
   const date = new Date()
   document.getElementById('production_date').innerHTML = (date.toDateString()).split(' ').slice(1, -1).reverse().concat([date.getFullYear()]).join(' / ')
   document.getElementById('time_now').innerHTML = date.toTimeString().split(':').slice(0, 2).join(':')
-  const promises = ['mcvt', 'flexi'].map(async (type) => {
-    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=mrp.sequence&args=[["date","=","${window.location.hash.slice(1)}"], ["type","=","${type}"], ["finished", "!=", true]]&options={"order": "sequence asc"}`).then((response) => response.json());
+  const promises = ['mcvt', 'flexi', 'fwd_trf', 'fwd_dps'].map(async (type) => {
+    const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trigger.board&args=[["type","=","${type}"]]&options={"order": "date asc"}`).then((response) => response.json());
     if (!Array.isArray(records.values)) return;
-    await Promise.all(records.values.map(async (value, index) => {
-      if ((index + 1) > 5) return;
-      const model = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=mrp.bom&ids=' + value.bom_id).then((response) => response.json());
-      document.getElementById('model_' + type + '_' + (index + 1)).innerHTML = model.values.name.split(' ')[0].split('(')[0]
-      document.getElementById('sequence_' + type + '_' + (index + 1)).innerHTML = value.sequence
-      document.getElementById('qty_' + type + '_' + (index + 1)).innerHTML = parseInt(value.quantity) || 30
-      if (value.location_name) {
-        document.getElementById('location_' + type + '_' + (index + 1)).innerHTML = value.location_name;
-        if (value.location_name.toLowerCase().match('assy')) ['model', 'location', 'qty'].forEach((field) => document.getElementById(field + '_' + type + '_' + (index + 1)).className = 'status-finish')
-        if (value.location_name.toLowerCase().match('scr')) ['model', 'location', 'qty'].forEach((field) => document.getElementById(field + '_' + type + '_' + (index + 1)).className = 'status-on-process')
-      }
-      //time.setMinutes(time.getMinutes() + 15)
+    let trolleys = Promise.all(records.values.map(async (value, index) => {
+      const trolley = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trolley.type&ids=' + value.trolley_type_id).then((response) => response.json());
+      return trolley.values.name;
     }));
+    trolleys = await trolleys;      
+    document.querySelectorAll('table#' + type +' .trigger-rows').forEach((row) => row.remove());
+    for (let trolley of trolleys) {
+      document.querySelector('table#' + type +' tbody').insertAdjacentHTML('beforeend', `<tr class="trigger-rows"><td>${trolley}</td></tr>`);
+    }
   });
   await Promise.all(promises);
-  setTimeout(() => location.reload(), 10 * 1000);
+  setTimeout(() => get_board().catch(window.location.reload), 10 * 1000);
 }
 
-//get_sequence().catch(window.alert)
+get_board().catch(window.location.reload)
 </script>
+
 
 
 
