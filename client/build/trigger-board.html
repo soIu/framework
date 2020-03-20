@@ -202,7 +202,7 @@ async function get_board() {
     const records = await fetch(`http://172.16.2.21:8069/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trigger.board&args=[["type","=","${type}"]]&options={"order": "date asc"}`).then((response) => response.json());
     if (!records.values) return;
     const values = Array.isArray(records.values) ? records.values : [records.values];
-    if (values[0]._search_count === 0) return;
+    if (Object.keys(values[0]).length === 1) return;
     let trolleys = Promise.all(values.map(async (value, index) => {
       const trolley = await fetch('http://172.16.2.21:8069/api/browse?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trolley.type&ids=' + value.trolley_type_id).then((response) => response.json());
       return trolley.values.name;
