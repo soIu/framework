@@ -811,9 +811,9 @@ class PickingLotLine(models.Model):
 
     def remove(self):
         picking_id = self.env.context.active_id
-        if picking_id._name == 'stock.picking.list':
+        if picking_id._name == 'stock.picking.lot':
            picking_id.pack_ids = [pack_id for pack_id in picking_id.pack_ids if pack_id != self.id]
-        return self.write({'picking_list_id': None})
+        return self.write({'picking_lot_id': None})
 
 PickingLotLine()
 
