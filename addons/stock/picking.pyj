@@ -310,6 +310,23 @@ class PickingListFilter(models.Model):
 
 PickingListFilter()
 
+class PickingListPrint(models.Model):
+    _name = 'stock.picking.list.print'
+
+    date = fields.Date(string="Date", required=True)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", required=True)
+    sequence_picking = fields.Integer(string="Seq Picking")
+
+    @async
+    def print_list(self):
+        if not self.sequence_picking: return tools.dialog.alert('Fill Seq Picking')
+        domain = [['date', '=', self.date]]
+        picking_lot_ids = await [self.env['stock.picking.lot'].search(['date', '=', self.date], ['type', '=', self.type], ['sequence_picking', '=', self.sequence_picking])]
+        if not picking_lot_ids.length: return tools.dialog.alert('Picking List not Found')
+        return picking_lot_ids.print_all()
+
+PickingListPrint()
+
 class PickingLot(models.Model):
     _name = 'stock.picking.lot'
 
@@ -603,7 +620,6 @@ class PickingLot(models.Model):
 
     @async
     def picking_ready(self):
-        self.env['stock.trigger.board'].remove(self.type, self.trolley_type_id)
         line_ids, pack_ids = await ([self.env['stock.picking.lot.line'].browse(self.line_ids), self.env['stock.pack'].browse(self.pack_ids)])
         lines = {}
         line_map = {}
@@ -642,6 +658,7 @@ class PickingLot(models.Model):
                pack_id.available_qty -= line_id.actual_qty
                pack_ids.add(pack_id)
                line_id.consumed = True
+        self.env['stock.trigger.board'].remove(self.type, self.trolley_type_id)
         await ([pack_ids.write(), line_ids.write(), self.create_picking()])
 
     @async
@@ -855,7 +872,7 @@ class PickingList(models.Model):
     sequence = fields.Integer(string="Sequence", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model", required=True)
-    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)	
+    model_code = fields.Char(string="Model Code", compute=_get_model_code, store=False)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.list.line', 'picking_list_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_list_id', string="Packs")
@@ -1130,6 +1147,7 @@ menu.add(id='picking_list_mcvt', parent='picking_list', model='stock.picking.lis
 menu.add(id='picking_list_fwd_trf', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd_trf', string="4WD TRF", sequence=3)
 menu.add(id='picking_list_fwd_dps', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.fwd_dps', string="4WD DPS", sequence=3)
 menu.add(id='picking_list_flexi', parent='picking_list', model='stock.picking.list.filter', view_id='stock.picking.list.filter.flexi', string="Flexi", sequence=4)
+menu.add(id='picking_list_print', parent='picking_list', model='stock.picking.list.print', view_id='stock.picking.list.print.wizard', string="Print by Sequence", sequence=5)
 
 view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
@@ -1155,6 +1173,21 @@ view.add(init=create_upload_button, model='stock.picking.lot', mode='tree', arch
     <field name="called" string="Finished"/>
 </tree>
 """, action={'print_all': 'Print'})
+
+view.add(model='stock.picking.list.print', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="sequence_picking"/>
+            <button name="print_list" string="Print"/>
+        </group>
+        <group>
+            <field name="date"/>
+            <field name="type"/>
+        </group>
+    </sheet>
+</form>
+""")
 
 view.add(model='stock.picking.list.filter', mode='wizard', arch="""
 <form>
