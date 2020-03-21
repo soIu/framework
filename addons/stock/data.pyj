@@ -213,7 +213,7 @@ class PurchaseOrderPack(models.Model):
         return result"""
 
     @async
-    def print_label(self):
+    def print_label(self, bulk):
         date = new Date()
         print_date = date.getDate().toString() + date.getMilliseconds().toString() + date.getSeconds()
         count = 0
@@ -237,6 +237,17 @@ class PurchaseOrderPack(models.Model):
                if value.order_id.id: ids.push(value.order_id.id)
             #for key in po_value:
             #    if key not in value: value[key] = po_value[key] or ''
+        if bulk:
+           bulk_values = []
+           for value in values:
+               if not bulk_values.length or bulk_values[-1].barcode.length == 10:
+                  bulk_values.push(tools.copy(value))
+                  bulk_values[-1].product_qty = 0
+                  bulk_values[-1].barcode = []
+               bulk_values[-1].product_qty += value.product_qty
+               bulk_values[-1].barcode.push({'id': value.id, 'product_id': value.product_id.id})
+           for bulk_value in bulk_values: bulk_value.barcode = window.PDF417(JSON.stringify(bulk_value.barcode), 1.5, 0.75).split('base64,')[1]
+           values = bulk_values
         @async
         def download():
             try:

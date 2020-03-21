@@ -446,6 +446,7 @@ class PickingLot(models.Model):
             return Promise.all(promises)
         carry_lines = {}
         empty_list_id = self.env['stock.picking.list']
+        lines_lot = []
         for list_ids in lots:
             console.log('grouping')
             lines = {}
@@ -461,8 +462,14 @@ class PickingLot(models.Model):
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
                        if not carry_lines[trolley_type_id][line_id.product_id]:
                           carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [line_id.sequence], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']}]
+                          if not lines[trolley_type_id]: lines[trolley_type_id] = {}
+                          if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
+                          lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
                        elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > product_id[type+ '_min_box']:
                           carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [line_id.sequence], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': empty_list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']})
+                          if not lines[trolley_type_id]: lines[trolley_type_id] = {}
+                          if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
+                          lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
                        line = carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                        line.product_qty += line_id.actual_qty
                        continue
@@ -495,8 +502,10 @@ class PickingLot(models.Model):
                     line = lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                     line.product_qty += line_id.actual_qty
                     line.sequence.push(line_id.sequence)
+            lines_lot.push(lines)
+        for lines in lines_lot:
             for line in lines: await (create_lot(lines, line))
-        for line in carry_lines: await (create_lot(carry_lines, line))
+        #for line in carry_lines: await (create_lot(carry_lines, line))
         ir_sequence_id.write()
         #return Promise.all(promises)
 
@@ -514,10 +523,10 @@ class PickingLot(models.Model):
         def write(value):
             def write_value(): models.env.context.active_id.write(value)
             setTimeout(write_value, 500)
-        def write_pack(pack_id, value):
+        def write_pack(pack_ids, value):
             def write_value():
                 update_picked()
-                pack_id.write(value)
+                pack_ids.write(value)
                 #if 'dor' not in self.line_ids: self.line_ids.push('dor')
                 #else: self.line_ids = [id for id in self.line_ids if id != 'dor']
                 #models.env.context.refresh()
@@ -544,7 +553,7 @@ class PickingLot(models.Model):
            self.trolley_id = trolley_id.id
            return write({'trolley_id': trolley_id.id})
         value = None
-        pack_id = None
+        pack_ids = None
         if '                   ' in barcode and barcode[0] != '{':
            numbers = [number for number in barcode.split('\n')[0].split('                   ')[1].split(' ') if not isNaN(parseInt(number))]
            unique = 'CKD-' + barcode.split('\n')[0].split(' ').slice(-1)[0] + numbers[0]
@@ -562,42 +571,43 @@ class PickingLot(models.Model):
             line_ids = self.env.context.active_lines['stock.picking.lot.line'].picking_lot_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
             index = -1
             product_ids = {line_id.product_id: line_id.product_qty for line_id in line_ids}
-            valid = value.product_id in product_ids
+            valid = all(object.product_id in product_ids for object in tools.each(value))
             if not valid:
                self.laser_scan = ''
                tools.dialog.alert("Wrong part")
-            if not product_ids[value.product_id]:
-               valid = False
-               self.laser_scan = ''
-               tools.dialog.alert("This part doesn't need to be picked")
+            for object in tools.each(value):
+                if not product_ids[object.product_id]:
+                   valid = False
+                   self.laser_scan = ''
+                   tools.dialog.alert("This part doesn't need to be picked")
             return valid, product_ids
         valid, product_ids = get_product_ids()
         if '                   ' in barcode and barcode[0] != '{':
            order_pack_id = await [self.env['purchase.order.pack'].create({'name': unique, 'print_number': unique, 'product_id': product_id.id, 'product_qty': qty, 'inhouse_ckd': True})]
-           pack_id = await [order_pack_id.receive(immediate=True)]
+           pack_ids = await [order_pack_id.receive(immediate=True)]
         if not valid: return
-        if not pack_id: pack_id = await [self.env['stock.pack'].search(['order_pack_id', '=', value.id])]
+        if not pack_ids: pack_ids = await [self.env['stock.pack'].search(['order_pack_id', 'in', [object.id for object in tools.each(value)]])]
         #valid, product_ids = await (validity)
         #if not valid: return
-        #pack_id = await (pack_id)
-        if not pack_id.length:
+        #pack_ids = await (pack_ids)
+        if not pack_ids.length:
            self.laser_scan = ''
            return tools.dialog.alert("This pack is missing or not received yet")
-        if pack_id.product_id not in product_ids:
+        if any(pack_id.product_id not in product_ids for pack_id in pack_ids):
            self.laser_scan = ''
            return tools.dialog.alert("Wrong part")
-        if not product_ids[pack_id.product_id]:
+        if any(not product_ids[pack_id.product_id] for pack_id in pack_ids):
            self.laser_scan = ''
            return tools.dialog.alert("This part doesn't need to be picked")
-        if pack_id.picking_list_id or pack_id.picking_lot_id:
+        if any(pack_id.picking_list_id or pack_id.picking_lot_id for pack_id in pack_ids):
            self.laser_scan = ''
            return tools.dialog.alert('This pack was already scanned by another picking list')
-        if pack_id.on_hold:
+        if any(pack_id.on_hold for pack_id in pack_ids):
            self.laser_scan = ''
            return tools.dialog.alert('This pack is on hold')
         self.laser_scan = ''
-        self.pack_ids.push(pack_id.id)
-        return write_pack(pack_id, {'picking_lot_id': self.id})
+        self.pack_ids.push(*pack_ids.ids)
+        return write_pack(pack_ids, {'picking_lot_id': self.id})
 
     @async
     def print_list(self):
