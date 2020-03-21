@@ -607,16 +607,24 @@ class PickingLot(models.Model):
         return write_pack(pack_ids, {'picking_lot_id': self.id})
 
     @async
-    def print_list(self):
+    def print_list(self, buffer):
         values, line_ids = await ([self.read(format=True, without_null=True, relational_fields=['trolley_type_id']), self.env['stock.picking.lot.line'].browse(self.line_ids)])
         line_ids = await [line_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
         self.write({'printed': True})
         values[0].line_ids = line_ids
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
+        if buffer:
+           response = await [fetch(url, {'credentials': 'include'})]
+           return response.arrayBuffer()
         window.open(url)
 
+    @async
     def print_all(self):
-        return Promise.all([record.print_list() for record in self])
+        buffers = await ([record.print_list(buffer=True) for record in self])
+        pdf = new PDF.Document()
+        for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
+        buffer = await [pdf.asBuffer()]
+        window.open(URL.createObjectURL(new Blob([buffer], {'type': 'application/pdf'})))
 
     @async
     def create_picking(self):

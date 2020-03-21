@@ -119,6 +119,7 @@ class PurchaseOrder(models.Model):
                 #    if key not in pack_value: pack_value[key] = value[key]
             values.push(*pack_values)
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
+        console.log(url)
         self.write({'printed': True})
         window.open(url)
      except Exception as error:
