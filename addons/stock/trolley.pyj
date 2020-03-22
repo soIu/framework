@@ -185,11 +185,22 @@ StockTrolleyType()
 class StockTrolleyTypePart(models.Model):
     _name = 'stock.trolley.type.part'
 
+    @async
+    def _get_type(self):
+        product_id = await [self.env['product.product'].browse(self.product_id)]
+        return product_id.type
+
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     product_id = fields.Many2one('product.product', string="Part")
     min_box = fields.Integer(string="Box AGV")
     area_transit = fields.Char(string="Area Transit")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Line Type")
+    part_type = fields.Char(string="Type", compute=_get_type, store=False)
+
+    @async
+    def unlink_bom(self):
+        product_id, bom_line_ids = await ([self.env['product.product'].browse(self.product_id), self.env['mrp.bom.line'].search(['product_id', '=', product_id.id])])
+        return Promise.all([self.unlink(), product_id.unlink(), bom_line_ids.unlink()])
 
 StockTrolleyTypePart()
 
@@ -201,6 +212,15 @@ view.add(model='stock.trolley.type', init=create_upload_button, mode='tree', arc
     <field name="type"/>
 </tree>
 """)
+
+view.add(model='stock.trolley.type.part', mode='tree', arch="""
+<tree>
+    <field name="trolley_type_id"/>
+    <field name="area_transit"/>
+    <field name="product_id"/>
+    <field name="min_box"/>
+</tree>
+""", action={'unlink_bom': 'Unlink'})
 
 view.add(model='stock.trolley.type', mode='form', arch="""
 <form>
@@ -216,6 +236,7 @@ view.add(model='stock.trolley.type', mode='form', arch="""
                 <tree>
                     <field name="area_transit"/>
                     <field name="product_id"/>
+                    <field name="part_type"/>
                     <field name="min_box"/>
                 </tree>
             </field>
