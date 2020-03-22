@@ -636,6 +636,8 @@ class PickingLot(models.Model):
 
     @async
     def picking_ready(self):
+        self.env['stock.trigger.board'].remove(self.type, self.trolley_type_id)
+        return self.write({'ready': True})
         line_ids, pack_ids = await ([self.env['stock.picking.lot.line'].browse(self.line_ids), self.env['stock.pack'].browse(self.pack_ids)])
         lines = {}
         line_map = {}
