@@ -199,7 +199,7 @@ class StockTrolleyTypePart(models.Model):
 
     @async
     def unlink_bom(self):
-        product_id, bom_line_ids = await ([self.env['product.product'].browse(self.product_id), self.env['mrp.bom.line'].search(['product_id', '=', product_id.id])])
+        product_id, bom_line_ids = await ([self.env['product.product'].browse(self.product_id), self.env['mrp.bom.line'].search(['product_id', '=', self.product_id])])
         return Promise.all([self.unlink(), product_id.unlink(), bom_line_ids.unlink()])
 
 StockTrolleyTypePart()
