@@ -189,6 +189,7 @@ class StockTrolleyTypePart(models.Model):
     product_id = fields.Many2one('product.product', string="Part")
     min_box = fields.Integer(string="Box AGV")
     area_transit = fields.Char(string="Area Transit")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Line Type")
 
 StockTrolleyTypePart()
 

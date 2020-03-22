@@ -536,6 +536,7 @@ class HPPMData(models.Model):
             return trolley_id
         @async
         def get_trolley_part(product_id, trolley_id, values):
+            values.type = type
             trolley_part_id = await [self.env['stock.trolley.type.part'].search(['trolley_type_id', '=', trolley_id.id], ['product_id', '=', product_id.id])]
             if not trolley_part_id.length:
                return self.env['stock.trolley.type.part'].create(values)
