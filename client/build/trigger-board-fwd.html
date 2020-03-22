@@ -127,9 +127,9 @@ td {
           <div class="content-wrapper">
             <div class="content">
               
-              <table id="mcvt">
+              <table id="fwd_trf">
                 <tbody><tr>
-                  <th colspan="2"><h3>MCVT</h3></th>
+                  <th colspan="2"><h3>4WD TRF</h3></th>
                   
                   
                   
@@ -144,9 +144,9 @@ td {
             
           <div class="content">
               
-              <table id="flexi">
+              <table id="fwd_dps">
                 <tbody><tr>
-                  <th colspan="2"><h3>FLEXI</h3></th>
+                  <th colspan="2"><h3>4WD DPS</h3></th>
                   
                   
                   
@@ -182,7 +182,7 @@ async function get_board() {
   const date = new Date()
   document.getElementById('production_date').innerHTML = (date.toDateString()).split(' ').slice(1, -1).reverse().concat([date.getFullYear()]).join(' / ')
   document.getElementById('time_now').innerHTML = date.toTimeString().split(':').slice(0, 2).join(':')
-  const promises = ['mcvt', 'flexi'].map(async (type) => {
+  const promises = ['fwd_trf', 'fwd_dps'].map(async (type) => {
     get_sequence(type);
     const records = await fetch(`/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=stock.trigger.board&args=[["type","=","${type}"]]&options={"order": "date asc"}`).then((response) => response.json());
     if (!records.values) return;
