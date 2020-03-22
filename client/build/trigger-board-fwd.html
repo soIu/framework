@@ -167,8 +167,8 @@ async function get_sequence(type) {
     const date = new Date();
     date.setHours(0, 0, 0, 0);
     const sequences = await fetch(`/api/search?login=8c46b255e370acbdf61c5b47e4696dfa&password=982063ae578804d3c36ae646ffaecb64&encrypted=true&model=mrp.sequence&args=[["date","=","${date.toISOString()}"], ["type","=","${type}"], ["finished", "!=", true]]&options={"order": "sequence asc"}`).then((response) => response.json());
-    const sequence = Array.isArray(sequences.values) ? sequence.values[0] : sequences.values;
-    if (!sequence) return;
+    const sequence = Array.isArray(sequences.values) ? sequences.values[0] : sequences.values;
+    if (!sequence || !sequence.sequence) return;
     if (!document.querySelector('table#' + type + ' .sequence-header')) {
       const header = document.querySelector('table#' + type + ' th');
       header.colSpan = 1;
