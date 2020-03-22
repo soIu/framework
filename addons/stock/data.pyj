@@ -534,6 +534,12 @@ class HPPMData(models.Model):
             if not trolley_id.length:
                trolley_id = self.env['stock.trolley.type'].create({'name': trolley_type, 'type': type})
             return trolley_id
+        @async
+        def get_trolley_part(product_id, trolley_id, values):
+            trolley_part_id = await [self.env['stock.trolley.type.part'].search(['trolley_type_id', '=', trolley_id.id], ['product_id', '=', product_id.id])]
+            if not trolley_part_id.length:
+               return self.env['stock.trolley.type.part'].create(values)
+            return trolley_part_id.write(values)
         for data in sheet.data:
             row += 1
             if row < 4: continue
@@ -575,6 +581,7 @@ class HPPMData(models.Model):
                       if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                       product_id[type + '_trolley_type_id'] = trolley_id.id
                       product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley_type][product_id.code] or [0, 0]
+                      await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
                   del trolleys[trolley_type]
@@ -613,6 +620,7 @@ class HPPMData(models.Model):
                 if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                 product_id[type + '_trolley_type_id'] = trolley_id.id
                 product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley][product_id.code] or [0, 0, '']
+                await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
 
@@ -707,11 +715,13 @@ class HPPMData(models.Model):
         sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
         row = -1
         products = {}
+        trolley_parts = {}
         picking_list_ids = {} #self.env['stock.picking.list']
         sequence_ids = self.env['mrp.sequence']
         line_ids = self.env['stock.picking.list.line']
         lines_ids = {}
         product_ids = self.env['product.product']
+        trolley_type_part_ids = self.env['stock.trolley.type.part']
         lot_sequence_id = await [self.env['ir.sequence'].with_context(limit=1).search(['code', '=', 'stock.picking.lot'])]
         @async
         def create_picking_list(code, quantity, lot_no, sequence, date, type, time_start, time_end):
@@ -730,24 +740,30 @@ class HPPMData(models.Model):
             routes = {index: 0 for index in range(1, 6)}
             trolley_group = {}
             for bom_line_id in bom_line_ids:
+              trolley_part_ids = trolley_parts[bom_line_id.product_id]
+              if not trolley_part_ids:
+                 trolley_part_ids = await [self.env['stock.trolley.type.part'].search(['product_id', '=', bom_line_id.product_id], ['type', '=', type])]
+                 trolley_type_part_ids.add(trolley_part_ids)
+                 trolley_parts[bom_line_id.product_id] = trolley_part_ids
+              for trolley_part_id in trolley_part_ids:
                 product_id = products[bom_line_id.product_id]
                 if not product_id:
                    product_id = await [self.env['product.product'].browse(bom_line_id.product_id)]
                    product_ids.add(product_id)
                    products[product_id.id] = product_id
-                if not trolley_group[product_id[type + '_trolley_type_id']]:
-                   if not product_id[type + '_trolley_type_id']: continue
+                if not trolley_group[trolley_part_id.trolley_type_id]: #product_id[type + '_trolley_type_id']]:
+                   #if not product_id[type + '_trolley_type_id']: continue
                    console.log('membuat picking list')
-                   trolley_group[product_id[type + '_trolley_type_id']] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': product_id[type + '_trolley_type_id'], 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
+                   trolley_group[trolley_part_id.trolley_type_id] = await (self.env['stock.picking.list'].create({'model_id': bom_id.id, 'sequence_id': sequence_id.id, 'trolley_type_id': trolley_part_id.trolley_type_id, 'sequence': sequence, 'date': date, 'type': fwd_type or type, 'part_type': product_id.type}))
                    #sequence_id.sequence += 1
                    if not picking_list_ids[sequence_id.id]: picking_list_ids[sequence_id.id] = []
-                   picking_list_ids[sequence_id.id].push(trolley_group[product_id[type + '_trolley_type_id']])
-                list_id = trolley_group[product_id[type + '_trolley_type_id']]
+                   picking_list_ids[sequence_id.id].push(trolley_group[trolley_part_id.trolley_type_id])
+                list_id = trolley_group[trolley_part_id.trolley_type_id]
                 if list_id.part_type != product_id.type and product_id.type == 'local':
                    list_id.write({'part_type': product_id.type})
                 line_qty = bom_line_id.product_qty * quantity
                 box = Math.ceil(line_qty / product_id.qty_box)
-                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'min_box': product_id[type + '_min_box'], 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date})
+                promise = self.env['stock.picking.list.line'].create({'route': 1, 'product_id': bom_line_id.product_id, 'actual_qty': line_qty, 'qty_box': product_id.qty_box, 'min_box': trolley_part_id.min_box, 'part_no': product_id.code, 'actual_box': box, 'picking_list_id': list_id.id, 'sequence': sequence, 'date': date, 'trolley_part_id': trolley_part_id.id})
                 def add(line_id):
                     if not lines_ids[line_id.picking_list_id]: lines_ids[line_id.picking_list_id] = []
                     #line_ids.add(line_id)
@@ -774,7 +790,7 @@ class HPPMData(models.Model):
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
             await (promise)
         console.log('mapping')
-        return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, lines_ids, product_ids, lot_sequence_id, type, fwd_type)
+        return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, lines_ids, product_ids, trolley_type_part_ids, lot_sequence_id, type, fwd_type)
 
     @api.server(async=True)
     def import_po(self):

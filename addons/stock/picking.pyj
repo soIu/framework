@@ -367,7 +367,7 @@ class PickingLot(models.Model):
         return result"""
 
     @async
-    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, ir_sequence_id, type, fwd_type):
+    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, trolley_part_ids, ir_sequence_id, type, fwd_type):
         lots = []
         last_sequence_id = None
         list_ids = self.env['stock.picking.list']
@@ -449,16 +449,17 @@ class PickingLot(models.Model):
                 for line_id in line_ids[list_id.id]:
                     #line_id = line_ids.find(id)
                     product_id = product_ids.find(line_id.product_id)
-                    trolley_type_id = product_id[type + '_trolley_type_id']
+                    trolley_part_id = trolley_part_ids.find(line_id.trolley_part_id)
+                    trolley_type_id = trolley_part_id.trolley_type_id #product_id[type + '_trolley_type_id']
                     if product_id[type + '_carry_over']:
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
                        if not carry_lines[trolley_type_id][line_id.product_id]:
-                          carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']}]
+                          carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit}]
                           if not lines[trolley_type_id]: lines[trolley_type_id] = {}
                           if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
                           lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
-                       elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > product_id[type+ '_min_box']:
-                          carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': product_id[type+ '_min_box']})
+                       elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
+                          carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                           if not lines[trolley_type_id]: lines[trolley_type_id] = {}
                           if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
                           lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
@@ -479,12 +480,12 @@ class PickingLot(models.Model):
                            if lines[trolley_type_id][part_id].slice(-1)[0].list_id.model_id == list_id.model_id: model_before_exist = True
                        if not model_before_exist:
                           for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif list_id.trolley_type_id in pulley_trolley_type_ids:
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None:
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
-                    elif ((lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > product_id[type+ '_min_box']:
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
+                    elif ((lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
                        length = 0
                        for part_id in lines[trolley_type_id]:
                            if part_id == product_id.id: continue
@@ -493,7 +494,7 @@ class PickingLot(models.Model):
                        length -= lines[trolley_type_id][line_id.product_id].slice(-1)[0].length
                        if length > 0:
                           for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
-                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': product_id[type+ '_min_box']})
+                       lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     line = lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                     line.product_qty += line_id.actual_qty
                     if line.sequence[-1] != line_id.sequence:
@@ -1427,6 +1428,7 @@ class PickingListLine(models.Model):
     consumed_pack_id = fields.Many2one('stock.pack', string="Pack to Consume")
     manual = fields.Boolean(string="Manual")
     zones = fields.Char(string="Zones", compute=_get_zones, store=False)
+    trolley_part_id = fields.Many2one('stock.trolley.type.part', string="Fitting Line")
 
     def print_barcode(self):
         for record in self:

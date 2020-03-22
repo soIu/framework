@@ -174,12 +174,23 @@ class StockTrolleyType(models.Model):
     name = fields.Char(string="Trolley Type", index=True)
     reference = fields.Char(string="Reference")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Line Type")
+    part_ids = fields.One2many('stock.trolley.type.part', 'trolley_type_id', string="Parts")
     mcvt_part_ids = fields.One2many('product.product', 'mcvt_trolley_type_id', string="MCVT Parts")
     fwd_part_ids = fields.One2many('product.product', 'fwd_trolley_type_id', string="4WD Parts")
     flexi_part_ids = fields.One2many('product.product', 'flexi_trolley_type_id', string="Flexi Parts")
     image = fields.Binary(string="Image")
 
 StockTrolleyType()
+
+class StockTrolleyTypePart(models.Model):
+    _name = 'stock.trolley.type.part'
+
+    trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
+    product_id = fields.Many2one('product.product', string="Part")
+    min_box = fields.Integer(string="Box AGV")
+    area_transit = fields.Char(string="Area Transit")
+
+StockTrolleyTypePart()
 
 menu.add(id='trolley_type', parent='master_data', model='stock.trolley.type', string="Fitting Daisha", sequence=2)
 
@@ -199,7 +210,16 @@ view.add(model='stock.trolley.type', mode='form', arch="""
         <group>
             <field name="reference"/>
         </group>
-        <group width="100%" title="Parts" invisible="active_id.type != 'mcvt'">
+        <group width="100%" title="Parts">
+            <field name="part_ids">
+                <tree>
+                    <field name="area_transit"/>
+                    <field name="product_id"/>
+                    <field name="min_box"/>
+                </tree>
+            </field>
+        </group>
+        <!--<group width="100%" title="Parts" invisible="active_id.type != 'mcvt'">
             <field name="mcvt_part_ids">
                 <tree>
                     <field name="name"/>
@@ -222,7 +242,7 @@ view.add(model='stock.trolley.type', mode='form', arch="""
                     <field name="code"/>
                 </tree>
             </field>
-        </group>
+        </group>-->
     </sheet>
 </form>
 """)
