@@ -621,7 +621,10 @@ class PickingLot(models.Model):
 
     @async
     def print_all(self):
-        buffers = await ([record.print_list(buffer=True) for record in self])
+        buffers = []
+        for record in self:
+            buffer = await [record.print_list(buffer=True)]
+            buffers.push(buffer)
         pdf = new PDF.Document()
         for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
         buffer = await [pdf.asBuffer()]
