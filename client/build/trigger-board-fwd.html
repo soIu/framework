@@ -195,6 +195,7 @@ async function get_board() {
     trolleys = await trolleys;      
     document.querySelectorAll('table#' + type +' .trigger-rows').forEach((row) => row.remove());
     for (let trolley of trolleys) {
+      if (!trolley) return;
       document.querySelector('table#' + type +' tbody').insertAdjacentHTML('beforeend', `<tr class="trigger-rows"><td colspan="2">${trolley}</td></tr>`);
     }
   });
