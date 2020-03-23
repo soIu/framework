@@ -620,7 +620,8 @@ class PickingLot(models.Model):
     @async
     def print_list(self, buffer):
         values, line_ids = await ([self.read(format=True, without_null=True, relational_fields=['trolley_type_id']), self.env['stock.picking.lot.line'].browse(self.line_ids)])
-        line_ids = await [line_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
+        fields = [field for field in Object.keys(line_ids._fields) if field != 'zones']
+        line_ids = await [line_ids.read(format=True, without_null=True, fields=fields, relational_fields=['product_id'])]
         self.write({'printed': True})
         values[0].line_ids = line_ids
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
