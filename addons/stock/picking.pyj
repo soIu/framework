@@ -379,7 +379,7 @@ class PickingLot(models.Model):
         if True:
             for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
-                elif last_sequence_id.date != sequence_id.date: #or last_sequence_id.bom_id != sequence_id.bom_id:
+                elif last_sequence_id.date != sequence_id.date or last_sequence_id.bom_id != sequence_id.bom_id:
                    last_sequence_id = sequence_id
                    lots.push(list_ids)
                    list_ids = self.env['stock.picking.list']
@@ -419,7 +419,7 @@ class PickingLot(models.Model):
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
                       if not line: continue
-                      if sequence == None or sequence > line.sequence_picking: sequence = line.sequence_picking
+                      if sequence == None or sequence < line.sequence_picking: sequence = line.sequence_picking
                   if sequence:
                      sequence -= 20
                      if sequence <= 0: sequence = None
@@ -455,14 +455,14 @@ class PickingLot(models.Model):
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
                        if not carry_lines[trolley_type_id][line_id.product_id]:
                           carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit}]
-                          if not lines[trolley_type_id]: lines[trolley_type_id] = {}
-                          if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
-                          lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
+                          #if not lines[trolley_type_id]: lines[trolley_type_id] = {}
+                          #if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
+                          #lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
                        elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
                           carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
-                          if not lines[trolley_type_id]: lines[trolley_type_id] = {}
-                          if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
-                          lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
+                          #if not lines[trolley_type_id]: lines[trolley_type_id] = {}
+                          #if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
+                          #lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
                        line = carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                        line.product_qty += line_id.actual_qty
                        if line.sequence[-1] != line_id.sequence:
@@ -483,7 +483,7 @@ class PickingLot(models.Model):
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif list_id.trolley_type_id in pulley_trolley_type_ids:
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
-                    elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None or lines[trolley_type_id][line_id.product_id].slice(-1)[0].list_id.model_id != list_id.model_id:
+                    elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None: #or lines[trolley_type_id][line_id.product_id].slice(-1)[0].list_id.model_id != list_id.model_id:
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif ((lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
                        """length = 0
@@ -502,8 +502,18 @@ class PickingLot(models.Model):
                        else: line.sequence[-1] = line_id.sequence
             lines_lot.push(lines)
         for lines in lines_lot:
-            for line in lines: await (create_lot(lines, line))
-        #for line in carry_lines: await (create_lot(carry_lines, line))
+            for trolley_type_id in lines:
+                for carry_part_id in Object.keys(carry_lines[trolley_type_id] or {}):
+                    group = carry_lines[trolley_type_id][carry_part_id]
+                    line = group.shift()
+                    if not group.length:
+                       del carry_lines[trolley_type_id][carry_part_id]
+                    if not lines[trolley_type_id][carry_part_id]: lines[trolley_type_id][carry_part_id] = []
+                    lines[trolley_type_id][carry_part_id].push(line)
+                if carry_lines[trolley_type_id] and not Object.keys(carry_lines[trolley_type_id]).length:
+                   del carry_lines[trolley_type_id]
+                await (create_lot(lines, trolley_type_id))
+        for line in carry_lines: await (create_lot(carry_lines, line))
         ir_sequence_id.write()
         #return Promise.all(promises)
 
