@@ -379,7 +379,7 @@ class PickingLot(models.Model):
         if True:
             for sequence_id in sequence_ids: #s[date].order_by('sequence'):
                 if not last_sequence_id: last_sequence_id = sequence_id
-                elif last_sequence_id.date != sequence_id.date or last_sequence_id.bom_id != sequence_id.bom_id:
+                elif last_sequence_id.date != sequence_id.date: #or last_sequence_id.bom_id != sequence_id.bom_id:
                    last_sequence_id = sequence_id
                    lots.push(list_ids)
                    list_ids = self.env['stock.picking.list']
@@ -472,28 +472,28 @@ class PickingLot(models.Model):
                     if not lines[trolley_type_id]: lines[trolley_type_id] = {}
                     if line_id.product_id not in lines[trolley_type_id]:
                        lines[trolley_type_id][line_id.product_id] = []
-                       model_before_exist = False
+                       """model_before_exist = False
                        length = 0
                        for part_id in lines[trolley_type_id]:
                            if part_id == product_id.id: continue
                            length = Math.max(length, lines[trolley_type_id][part_id].length)
                            if lines[trolley_type_id][part_id].slice(-1)[0].list_id.model_id == list_id.model_id: model_before_exist = True
                        if not model_before_exist:
-                          for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
+                          for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)"""
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif list_id.trolley_type_id in pulley_trolley_type_ids:
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'pulley': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
-                    elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None:
+                    elif lines[trolley_type_id][line_id.product_id].slice(-1)[0] == None or lines[trolley_type_id][line_id.product_id].slice(-1)[0].list_id.model_id != list_id.model_id:
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     elif ((lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
-                       length = 0
+                       """length = 0
                        for part_id in lines[trolley_type_id]:
                            if part_id == product_id.id: continue
                            if lines[trolley_type_id][part_id].slice(-1)[0].list_id.model_id == list_id.model_id: continue
                            length = Math.max(length, lines[trolley_type_id][part_id].length)
                        length -= lines[trolley_type_id][line_id.product_id].slice(-1)[0].length
                        if length > 0:
-                          for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)
+                          for each in range(length): lines[trolley_type_id][line_id.product_id].push(None)"""
                        lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                     line = lines[trolley_type_id][line_id.product_id].slice(-1)[0]
                     line.product_qty += line_id.actual_qty
