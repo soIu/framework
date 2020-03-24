@@ -536,7 +536,7 @@ def query(db, type, args, limit):
         ids_map = {}
         index = 0
         for result in results:
-            if result.warning: console.log(warning) or console.log(type) or console.log(argsc)
+            if result.warning: console.log(result.warning) or console.log(type) or console.log(argsc)
             for doc in result.docs:
                 if doc._id in except_ids: continue
                 if index == 0: ids_map[doc._id] = 1
