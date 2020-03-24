@@ -527,7 +527,7 @@ def query(db, type, args, limit):
     for selector in selectors:
         field = selector._field
         del selector._field
-        promises.push(db.find({'selector': selector, 'fields': ['_id'], 'use_index': indexed_models[type + ':' field] or undefined}))
+        promises.push(db.find({'selector': selector, 'fields': ['_id'], 'use_index': indexed_models[type + ':' + field] or undefined}))
     promises.push(*excepts)
     return Promise.all(promises).then(
     def (results):
