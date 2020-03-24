@@ -22,7 +22,7 @@ def setIndexes():
     console.log(db.adapter)
     if db.adapter not in ['http', 'https']: return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(error)
     console.log(db.name)
-    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}).then(body) for key in indexed_models]).catch(error)
+    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'headers': {'Content-Type': 'application/json'}, 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}).then(body) for key in indexed_models]).catch(error)
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
