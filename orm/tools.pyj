@@ -388,6 +388,8 @@ configuration.ajax_load = ajax_load
 configuration.ajax_resolve = ajax_resolve
 configuration.ajax_reject = ajax_reject
 
+indexed_models = {}
+
 def query(db, type, args, limit):
     makeDocID = db.rel.makeDocID;
     default_selector = {'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}
@@ -398,11 +400,13 @@ def query(db, type, args, limit):
     excepts = []
     except_ids = {}
     index = 0;
+    argsc = copy(args)
     need_orm_operation = False
     for arg in args:
         need_orm = None
         if not arg or not arg[0] or not arg[0].length: continue
         selectors[index] = copy(default_selector);
+        selectors[index]._field = arg[0]
         if arg[0] == 'id':
            selectors[index]._id = {}
            if is_array(arg[2]):
@@ -521,7 +525,9 @@ def query(db, type, args, limit):
     if not selectors.length and not promises.length:
        promises.push(db.find({'selector': default_selector, 'fields': ['_id']}))
     for selector in selectors:
-        promises.push(db.find({'selector': selector, 'fields': ['_id']}))
+        field = selector._field
+        del selector._field
+        promises.push(db.find({'selector': selector, 'fields': ['_id'], 'use_index': indexed_models[type + ':' field] or undefined}))
     promises.push(*excepts)
     return Promise.all(promises).then(
     def (results):
@@ -530,6 +536,7 @@ def query(db, type, args, limit):
         ids_map = {}
         index = 0
         for result in results:
+            if result.warning: console.log(warning) or console.log(type) or console.log(argsc)
             for doc in result.docs:
                 if doc._id in except_ids: continue
                 if index == 0: ids_map[doc._id] = 1

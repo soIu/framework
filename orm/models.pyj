@@ -1,6 +1,6 @@
 import orm.fields as fields
 import orm.exceptions as exceptions
-from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, get_depends, query, each
+from orm.tools import exist, keys, sort, merge, copy, dict, checkBase64, configuration, ajax, date, queue, is_array, is_json, apply_domain_record, get_onchanges, get_depends, query, each, indexed_models
 from orm.pouchdb import db
 
 env = {}
@@ -10,19 +10,19 @@ onchange_models = {}
 depends_models = {}
 pending_sync = {}
 indexed_fields = {}
-indexed_models = {}
+#indexed_models = {}
 read_cache = {}
 
 def setIndexes():
-    @async
-    def body(result):
-        text = await [result.text()]
-        console.log(text)
+    def get_body(key):
+        @async
+        def get(result):
+            index = await [result.json()]
+            indexed_models[key] = index.id
+        return get
     def error(error): console.error(error)
-    console.log(db.adapter)
     if db.adapter not in ['http', 'https']: return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(error)
-    console.log(db.name)
-    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'headers': {'Content-Type': 'application/json'}, 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}).then(body) for key in indexed_models]).catch(error)
+    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'headers': {'Content-Type': 'application/json'}, 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}).then(get_body(key)) for key in indexed_models]).catch(error)
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
