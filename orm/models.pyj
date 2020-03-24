@@ -46,6 +46,7 @@ def queryInverse(field_type, records, fields, _fields):
     )
 
 def queryFind(db, type, args, limit, inverse=False):
+    #def skip(records): return records
     def processInverse(records):
         return queryInverse(type, records, env[type]._one2many_fields, env[type]._fields)
     if inverse: return db.rel.find(type, args).then(processInverse)
@@ -152,6 +153,8 @@ class Model():
                   schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': True}}} #Turning async into false since one2many doesn't work
                else:
                   schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': True, 'queryInverse': self[key].inverse}}}
+                  if not indexed_models[self[key].relation + ':' + self[key].inverse]: indexed_models[self[key].relation + ':' + self[key].inverse] = True
+                  if not indexed_fields[self[key].inverse]: indexed_fields[self[key].inverse] = True
                   self._one2many_fields.push(key)
                if relation == 'belongsTo':
                   if not indexed_models[self._name + ':' + key]: indexed_models[self._name + ':' + key] = True
@@ -486,7 +489,7 @@ class Model():
                else:
                   record._search_count = result.values._search_count
                #self.with_context(no_preload=True).browse(self.ids)
-               record.__sync__().catch(def (error): console.error(error);)
+               if options.limit <= 50: record.__sync__().catch(def (error): console.error(error);)
                return record
            ).catch(
            def (error):
