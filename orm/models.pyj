@@ -10,10 +10,15 @@ onchange_models = {}
 depends_models = {}
 pending_sync = {}
 indexed_fields = {}
+indexed_models = {}
 read_cache = {}
 
 def setIndexes():
-    return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields])
+    def error(error): console.error(error)
+    console.log(db.adapter)
+    if db.adapter not in ['http', 'https']: return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(error)
+    console.log(db.name)
+    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}) for key in indexed_models]).catch(error)
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
@@ -144,17 +149,20 @@ class Model():
                else:
                   schema.relations[key] = {relation: {'type': self[key].relation, 'options': {'async': True, 'queryInverse': self[key].inverse}}}
                   self._one2many_fields.push(key)
-               if relation == 'belongsTo' and not indexed_fields[key]:
-                  indexed_fields[key] = True
+               if relation == 'belongsTo':
+                  if not indexed_models[self._name + ':' + key]: indexed_models[self._name + ':' + key] = True
+                  if not indexed_fields[key]: indexed_fields[key] = True
                   #db.createIndex({'index': {'fields': ['data.' + key, '_id']}})
             self._fields[key] = self[key]
             if self[key].index:
+               if not indexed_models[self._name + ':' + key]: indexed_models[self._name + ':' + key] = True
                if not indexed_fields[key]:
                   indexed_fields[key] = True
                   #db.createIndex({'index': {'fields': ['data.' + key, '_id']}})
             if self[key].type == 'data' and is_array(self[key].index_fields) and self[key].index_fields.length:
                for field in self[key].index_fields:
                    field = key + '.' + field
+                   if not indexed_models[self._name + ':' + field]: indexed_models[self._name + ':' + field] = True
                    if not indexed_fields[field]:
                       indexed_fields[field] = True
                       #db.createIndex({'index': {'fields': ['data.' + field, '_id']}})
