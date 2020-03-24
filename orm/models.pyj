@@ -14,15 +14,7 @@ indexed_fields = {}
 read_cache = {}
 
 def setIndexes():
-    def get_body(key):
-        @async
-        def get(result):
-            index = await [result.json()]
-            indexed_models[key] = index.id
-        return get
-    def error(error): console.error(error)
-    if db.adapter not in ['http', 'https']: return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(error)
-    return Promise.all([require('node-fetch')(db.name + '/_index', {'method': 'POST', 'headers': {'Content-Type': 'application/json'}, 'body': JSON.stringify({'index': {'fields': ['data.' + key.split(':')[1], '_id'], 'partial_filter_selector': {'_id': {'$gt': key.split(':')[0] + '_0', '$lt': key.split(':')[0] + '_3'}}}, 'type': 'json'})}).then(get_body(key)) for key in indexed_models]).catch(error)
+    return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(error)
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
