@@ -1,3 +1,11 @@
+session = {}
+
+@async
+def get_jasper_session(server, username, password):
+    response = await [fetch(server + '/rest/login?j_username=' + username + '&j_password=' + password)]
+    result = response.url.split('jsessionid=')[1] or ''
+    return result.split('?')[0]
+
 @async
 def get_jasper_report(report, parameters, format='pdf', server=['https://jasper.odooabc.com/jasperserver'], username='c0b4d1b4c4', password='c0b4d1r4b4'):
     if Array.isArray(server):
@@ -15,9 +23,18 @@ def get_jasper_report(report, parameters, format='pdf', server=['https://jasper.
     jasper_parameters = []
     for key in parameters:
         jasper_parameters.push({'name': key, 'value': [parameters[key]]})
-    request = await [fetch(server + '/rest_v2/reportExecutions', {'credentials': 'include', 'method': 'POST', 'headers': {'Authorization': 'Basic ' + btoa(username + ':' + password), 'Content-Type': 'application/json'}, 'body': JSON.stringify({'reportUnitUri': report, 'outputFormat': format, 'parameters': {'reportParameter': jasper_parameters}})})]
+    url = server + '/rest_v2/reportExecutions'
+    headers = {'Authorization': 'Basic ' + btoa(username + ':' + password), 'Content-Type': 'application/json'}
+    if 'https' not in server:
+       if not session.SessionID: session.SessionID = get_jasper_session(server, username, password)
+       SessionID = await (session.SessionID)
+       url += ';jsessionid=' + SessionID
+    request = await [fetch(url, {'credentials': 'include', 'method': 'POST', 'headers': headers, 'body': JSON.stringify({'reportUnitUri': report, 'outputFormat': format, 'parameters': {'reportParameter': jasper_parameters}})})]
     text = await [request.text()]
     xml = new DOMParser().parseFromString(text, 'text/xml')
     request_id, export_id = xml.querySelector('requestId').innerHTML, xml.querySelector('export').querySelector('id').innerHTML
     url = server + '/rest_v2/reportExecutions/' + request_id + '/exports/' + export_id + '/outputResource'
+    if session.SessionID:
+       SessionID = await (session.SessionID)
+       url += ';jsessionid=' + SessionID
     return url
