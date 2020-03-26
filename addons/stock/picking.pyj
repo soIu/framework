@@ -701,7 +701,7 @@ class PickingLot(models.Model):
         def call_route():
             try:
                 trolley_type_id = await [self.env['stock.trolley.type'].browse(self.trolley_type_id)]
-                route_ids = await [self.env['agv.route'].search()] #['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
+                route_ids = await [self.env['agv.route'].with_context(limit=2000).search()] #['fitting', '=', trolley_type_id.name], ['pickup_zone', '=', parseInt(self.pickup_zone.split('-')[-1]).toString()])]
                 def filter(route_id): return route_id.fitting == trolley_type_id.name and route_id.picking_zone == parseInt(self.pickup_zone.split('-')[-1]).toString()
                 route_id = route_ids.filter(filter)
                 if not route_id.name: tools.dialog.alert('Route for Zone ' + self.pickup_zone + ' and Trolley Type ' + trolley_type_id.name + ' is not configured')
