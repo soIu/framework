@@ -500,17 +500,13 @@ def query(db, type, args, limit):
                ))
            )
         elif arg[1] == 'like':
-           #selectors[index]
-           #like_selector[arg[0]]['$regex'] =  arg[2];
-           #selectors[index][arg[0]]['$gte'] = arg[2];
-           #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
-           need_orm = True;
+           selectors[index][arg[0]]['$gte'] = arg[2]
+           selectors[index][arg[0]]['$lt'] = arg[2] + '\uffff'
+           #need_orm = True;
         elif arg[1] == 'ilike':
-           #selectors[index]
-           #like_selector[arg[0]]['$regex'] =  RegExp(arg[2], 'i') if db.adapter not in ['http', 'https'] else '(?i)' + arg[2];
-           #selectors[index][arg[0]]['$gte'] = arg[2];
-           #promises.push(db.search({query: arg[2], 'fields': [arg[0]], include_docs: False}));
-           need_orm = True;
+           selectors[index][arg[0]]['$gte'] = arg[2]
+           selectors[index][arg[0]]['$lt'] = arg[2] + '\uffff' 
+           #need_orm = True;
         if need_orm: need_orm_operation = True
         if not Object.keys(selectors[index][arg[0]]).length:
            del selectors[index][arg[0]];
