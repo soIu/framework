@@ -419,33 +419,14 @@ def query(db, type, args, limit):
         if not selectors[index][arg[0]]:
            selectors[index][arg[0]] = {}
         if arg[1] == '=':
-           if arg[2] != False: selectors[index][arg[0]]['$eq'] =  arg[2];
-           else: selectors[index][arg[0]]['$lte'] = False;
+           selectors[index][arg[0]]['$eq'] =  arg[2];
         elif arg[1] == '!=':
            if arg[0] == '_id':
               except_ids[arg[2]] = True
-              selectors.pop(index)
+              #selectors.pop(index)
               continue
            if arg[2] != False:
-              queries = []
-              #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
-              for operator in ['eq']: #, 'gt', 'lt']:
-                  selector = copy(default_selector)
-                  selector[arg[0]] = {'$' + operator: arg[2]}
-                  query = db.find({'selector': selector, 'fields': ['_id']})
-                  queries.push(query)
-              excepts.push(Promise.all(queries).then(
-              def (result):
-                  #equal, greater, less = result
-                  #all, equal = result
-                  equal = result[0]
-                  for doc in equal.docs: except_ids[doc._id] = True
-                  return
-                  #ids = [doc._id for doc in equal.docs]
-                  #if not ids.length: return all
-                  #all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
-                  #return all
-              ))
+              selectors[index][arg[0]]['$ne'] =  arg[2];
            else:
               selectors[index][arg[0]]['$gt'] = False;
         elif arg[1] == '>': selectors[index][arg[0]]['$gt'] = v"typeof arg[2] === 'number' ? (arg[2] + 0.000000000000001) : arg[2]";
@@ -474,31 +455,9 @@ def query(db, type, args, limit):
         elif arg[1] == 'not in' and is_array(arg[2]):
            if arg[0] == '_id':
               for id in arg[2]: except_ids[id] = True
-              selectors.pop(index)
+              #selectors.pop(index)
               continue
-           [[arg[0], value] for value in arg[2]].forEach(
-           def (result):
-               field, value = result
-               queries = []
-               #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
-               for operator in ['eq']: #, 'gt', 'lt']:
-                   selector = copy(default_selector)
-                   selector[field] = {'$' + operator: value}
-                   query = db.find({'selector': selector, 'fields': ['_id']})
-                   queries.push(query)
-               excepts.push(Promise.all(queries).then(
-               def (result):
-                   #equal, greater, less = result
-                   #all, equal = result
-                   equal = result[0]
-                   for doc in equal.docs: except_ids[doc._id] = True
-                   return
-                   #ids = [doc._id for doc in equal.docs]
-                   #if not ids.length: return all
-                   #all.docs = [doc for doc in all.docs if doc._id not in ids] #[doc for doc in greater.docs if doc._id not in ids].concat(less.docs)
-                   #return all
-               ))
-           )
+           selectors[index][arg[0]]['$nin'] =  arg[2];
         elif arg[1] == 'like':
            #selectors[index]
            #like_selector[arg[0]]['$regex'] =  arg[2];
@@ -514,13 +473,13 @@ def query(db, type, args, limit):
         if need_orm: need_orm_operation = True
         if not Object.keys(selectors[index][arg[0]]).length:
            del selectors[index][arg[0]];
-           selectors.pop(index);
+           #selectors.pop(index);
            if not need_orm: arg.splice(0, arg.length)
            elif arg[0] != 'id': arg[0] = arg[0][5:] #.replace('data.', '')
            continue;
         if not need_orm: arg.splice(0, arg.length);
         elif arg[0] != 'id': arg[0] = arg[0][5:] #.replace('data.', '')
-        index += 1;
+        #index += 1;
     if not selectors.length and not promises.length:
        promises.push(db.find({'selector': default_selector, 'fields': ['_id']}))
     for selector in selectors:
