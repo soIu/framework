@@ -14,7 +14,9 @@ indexed_fields = {}
 read_cache = {}
 
 def setIndexes():
-    return Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(console.error)
+    promise = Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(console.error)
+    if v'typeof window' != 'undefined': return
+    return promise
 
 def setSchema():
     db.setSchema([schemas[key] for key in schemas])
