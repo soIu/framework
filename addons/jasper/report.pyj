@@ -1,8 +1,8 @@
 session = {}
 
 @async
-def get_jasper_session(server, username, password):
-    response = await [fetch(server + '/rest/login?j_username=' + username + '&j_password=' + password)]
+def get_jasper_session(server, username):
+    response = await [fetch(server + '/rest/login?j_username=' + username)]
     result = response.url.split('jsessionid=')[1] or ''
     return result.split('?')[0]
 
