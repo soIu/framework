@@ -527,7 +527,7 @@ class PickingLot(models.Model):
             for trolley_type_id in lines:
                 if not new_carry_lines[trolley_type_id]: new_carry_lines[trolley_type_id] = {}
                 product_ids = []
-                for product_id in line[trolley_type_id]:
+                for product_id in lines[trolley_type_id]:
                     product_ids.push(product_id)
                     if not new_carry_lines[trolley_type_id][product_id]: new_carry_lines[trolley_type_id][product_id] = []
                     lengths = []
@@ -540,7 +540,7 @@ class PickingLot(models.Model):
                     if not all(value == lengths[0] for value in lengths): length -= 1
                     if length < 1: length = 0
                     for each in range(length): new_carry_lines[trolley_type_id][product_id].push(None)
-                    new_carry_lines[trolley_type_id][product_id].push(*line[trolley_type_id][product_id])
+                    new_carry_lines[trolley_type_id][product_id].push(*lines[trolley_type_id][product_id])
         for lines in lines_lot:
             for trolley_type_id in lines:
                 for carry_part_id in Object.keys(new_carry_lines[trolley_type_id] or {}):
