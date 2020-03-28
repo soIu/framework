@@ -400,13 +400,9 @@ class PickingLot(models.Model):
             values.picking_lot_id = lot_id.id
             values.product_qty = Math.max(values.product_qty, values.qty_box)
             qty = 0
-            if values.product_qty != values.qty_box and values.product_qty != (values.qty_box * values.min_box):
-               for index in range(values.min_box):
-                   if qty < values.product_qty:
-                      qty += values.qty_box
-                      continue
-                   values.product_qty = qty
-                   break
+            if values.product_qty != values.qty_box:
+               box = Math.ceil(values.product_qty / values.qty_box)
+               values.product_qty = values.qty_box * box
             return self.env['stock.picking.lot.line'].create(values)
         @async
         def create_lot(lines, trolley_type_id):
