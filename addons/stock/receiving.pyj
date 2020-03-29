@@ -155,8 +155,13 @@ view.add(model='stock.on.hold', mode='scan', arch="""
 class ReceiveInhouse(models.Model):
     _name = 'stock.receive.inhouse'
 
+    def _get_type(self):
+        type = self.env.context.inhouse_type
+        if type: return type
+
     product_id = fields.Many2one('product.product', string="Inhouse Part")
     product_qty = fields.Integer(string="Daisha")
+    type = fields.Selection(['al', 'AL'], ['gm', 'GM'], ['pulley', 'Pulley'], ['belt', 'Belt'], string="Dept.", defaults=_get_type)
 
     @async
     def receive(self):
@@ -178,14 +183,18 @@ class ReceiveInhouse(models.Model):
 ReceiveInhouse()
 
 menu.add(id='receiving', string="Receiving", sequence=20)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=1)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=11)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.al', string="Inhouse AL", sequence=12)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.gm', string="Inhouse GM", sequence=13)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.pulley', string="Inhouse Pulley", sequence=14)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.belt', string="Inhouse Belt", sequence=15)
 #menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
 
-view.add(model='stock.receive.inhouse', mode='wizard', arch="""
+inhouse_arch = """
 <form>
     <sheet>
         <group>
-            <field name="product_id" domain="['type', '=', 'inhouse']"/>
+            <field name="product_id" domain="['type', '=', 'inhouse'], active_id.type ? ['inhouse_type', '=', active_id.type] : []"/>
         </group>
         <group>
             <field name="product_qty"/>
@@ -195,7 +204,13 @@ view.add(model='stock.receive.inhouse', mode='wizard', arch="""
         </group>
     </sheet>
 </form>
-""")
+"""
+
+view.add(model='stock.receive.inhouse', mode='wizard', arch=inhouse_arch)
+view.add(model='stock.receive.inhouse', mode='al', arch=inhouse_arch, context={'inhouse_type': 'al'})
+view.add(model='stock.receive.inhouse', mode='gm', arch=inhouse_arch, context={'inhouse_type': 'gm'})
+view.add(model='stock.receive.inhouse', mode='pulley', arch=inhouse_arch, context={'inhouse_type': 'pulley'})
+view.add(model='stock.receive.inhouse', mode='belt', arch=inhouse_arch, context={'inhouse_type': 'belt'})
 
 class StockReceiveCKD(models.Model):
     _name = 'stock.receive.ckd'

@@ -581,7 +581,9 @@ class HPPMData(models.Model):
                   for product_id in product_ids:
                       if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                       product_id[type + '_trolley_type_id'] = trolley_id.id
-                      product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley_type][product_id.code] or [0, 0]
+                      product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl = trolleys[trolley_type][product_id.code] or [0, 0]
+                      if supl and 'IN HOUSE' in supl:
+                         product_id.inhouse_type = supl.split('IN HOUSE ')[1].toLowerCase()
                       await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
@@ -620,7 +622,9 @@ class HPPMData(models.Model):
             for product_id in product_ids:
                 if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                 product_id[type + '_trolley_type_id'] = trolley_id.id
-                product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'] = trolleys[trolley][product_id.code] or [0, 0, '']
+                product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl = trolleys[trolley][product_id.code] or [0, 0, '']
+                if supl and 'IN HOUSE' in supl:
+                   product_id.inhouse_type = supl.split('IN HOUSE ')[1].toLowerCase() 
                 await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
