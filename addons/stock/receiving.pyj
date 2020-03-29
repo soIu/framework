@@ -184,10 +184,10 @@ ReceiveInhouse()
 
 menu.add(id='receiving', string="Receiving", sequence=20)
 menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=11)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.al', string="Inhouse AL", sequence=12)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.gm', string="Inhouse GM", sequence=13)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.pulley', string="Inhouse Pulley", sequence=14)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.belt', string="Inhouse Belt", sequence=15)
+menu.add(id='receiving_inhouse_al', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.al', string="Inhouse AL", sequence=12)
+menu.add(id='receiving_inhouse_gm', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.gm', string="Inhouse GM", sequence=13)
+menu.add(id='receiving_inhouse_pulley', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.pulley', string="Inhouse Pulley", sequence=14)
+menu.add(id='receiving_inhouse_belt', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.belt', string="Inhouse Belt", sequence=15)
 #menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
 
 inhouse_arch = """
