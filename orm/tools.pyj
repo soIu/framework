@@ -499,11 +499,11 @@ def query(db, type, args, limit):
                    #return all
                ))
            )
-        elif arg[1] == 'like':
+        elif arg[1] == 'like' and arg[2]:
            selectors[index][arg[0]]['$gte'] = arg[2]
            selectors[index][arg[0]]['$lt'] = arg[2] + '\uffff'
            #need_orm = True;
-        elif arg[1] == 'ilike':
+        elif arg[1] == 'ilike' and arg[2]:
            selectors[index][arg[0]]['$gte'] = arg[2]
            selectors[index][arg[0]]['$lt'] = arg[2] + '\uffff' 
            #need_orm = True;

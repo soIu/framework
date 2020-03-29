@@ -194,7 +194,7 @@ inhouse_arch = """
 <form>
     <sheet>
         <group>
-            <field name="product_id" domain="['type', '=', 'inhouse'], active_id.type ? ['inhouse_type', '=', active_id.type] : []"/>
+            <field name="product_id" domain="!active_id.type ? ['type', '=', 'inhouse'] : [], active_id.type ? ['inhouse_type', '=', active_id.type] : []"/>
         </group>
         <group>
             <field name="product_qty"/>
