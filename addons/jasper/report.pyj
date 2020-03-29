@@ -2,7 +2,7 @@ session = {}
 
 @async
 def get_jasper_session(server, username):
-    response = await [fetch(server + '/rest/login?j_username=' + username)]
+    response = await [fetch(server)]
     result = response.url.split('jsessionid=')[1] or ''
     return result.split('?')[0]
 
@@ -25,16 +25,17 @@ def get_jasper_report(report, parameters, format='pdf', server=['https://jasper.
         jasper_parameters.push({'name': key, 'value': [parameters[key]]})
     url = server + '/rest_v2/reportExecutions'
     headers = {'Authorization': 'Basic ' + btoa(username + ':' + password), 'Content-Type': 'application/json'}
+    SessionID = None
     if 'https' not in server:
-       if not session.SessionID: session.SessionID = get_jasper_session(server, username, password)
-       SessionID = await (session.SessionID)
+       #if not session.SessionID: session.SessionID = get_jasper_session(server, username, password)
+       SessionID = await [get_jasper_session(server, username, password)]
        url += ';jsessionid=' + SessionID
     request = await [fetch(url, {'credentials': 'include', 'method': 'POST', 'headers': headers, 'body': JSON.stringify({'reportUnitUri': report, 'outputFormat': format, 'parameters': {'reportParameter': jasper_parameters}})})]
     text = await [request.text()]
     xml = new DOMParser().parseFromString(text, 'text/xml')
     request_id, export_id = xml.querySelector('requestId').innerHTML, xml.querySelector('export').querySelector('id').innerHTML
     url = server + '/rest_v2/reportExecutions/' + request_id + '/exports/' + export_id + '/outputResource'
-    if session.SessionID:
-       SessionID = await (session.SessionID)
+    if SessionID:
+       #SessionID = await (session.SessionID)
        url += ';jsessionid=' + SessionID
     return url
