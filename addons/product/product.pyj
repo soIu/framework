@@ -18,7 +18,7 @@ class ProductProduct(models.Model):
     code_trimmed = fields.Char(string="Product Code (Trimmed)", index=True)
     base_name = fields.Char(string="Product Name", index=True)
     type = fields.Selection(['ckd', 'CKD'], ['local', 'Local'], ['inhouse', 'Inhouse'], ['sozai', 'Sozai'], ['fg', 'Finish Good'], string="Type", index=True)
-    inhouse_type = fields.Selection(['al', 'AL'], ['gm', 'GM'], ['pulley', 'Pulley'], ['belt', 'Belt'], string="Inhouse Type")
+    inhouse_type = fields.Selection(['al', 'AL'], ['gm', 'GM'], ['pulley', 'Pulley'], ['belt', 'Belt'], string="Inhouse Type", index=True)
     description = fields.Text(string="Description")
     category_id = fields.Many2one('product.category', string="Category", index=True)
     route = fields.Integer(string="Route AGV")
