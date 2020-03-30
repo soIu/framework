@@ -194,6 +194,7 @@ class PurchaseOrderPack(models.Model):
     barcode = fields.Text(string="Barcode", compute=_get_barcode, store=False)
     received = fields.Boolean(string="Received")
     inhouse_ckd = fields.Boolean(string="Inhouse/CKD", index=True)
+    inhouse_type = fields.Char(string="Inhouse Type", index=True)
     ckd_id = fields.Many2one('stock.receive.ckd', string="Receiving CKD")
     is_pulley = fields.Boolean(string="Is Pulley")
     print_number = fields.Char(string="Print No.")
@@ -320,7 +321,7 @@ menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', 
 menu.add(id='receiving_actual', parent='receiving', model='purchase.order', view_id='purchase.order.actual_receiving', string="Actual Receiving", sequence=15)
 
 view.add({'model': 'purchase.order.pack', 'mode': 'tree', 'string': False, 'arch': """
-<tree domain="['inhouse_ckd', '=', True]">
+<tree domain="context.inhouse_type ? [] : ['inhouse_ckd', '=', True], context.inhouse_type ? ['inhouse_type', '=', context.inhouse_type] : []">
     <field name="product_id"/>
     <field name="product_qty"/>
     <field name="print_number"/>

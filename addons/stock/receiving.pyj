@@ -174,7 +174,7 @@ class ReceiveInhouse(models.Model):
         order_pack_ids = self.env['purchase.order.pack']
         for index in range(self.product_qty):
             for box in range(product_id.mcvt_min_box):
-                order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': product_id.qty_box, 'part_no': product_id.code, 'inhouse_ckd': True, 'is_pulley': is_pulley})]
+                order_pack_id = await [self.env['purchase.order.pack'].create({'name': 'PO-Inhouse-' + tools.date.format(new Date(), 'ynj'), 'product_id': product_id.id, 'product_qty': product_id.qty_box, 'part_no': product_id.code, 'inhouse_ckd': True, 'inhouse_type': product_id.inhouse_type, 'is_pulley': is_pulley})]
                 order_pack_ids.add(order_pack_id)
         await [order_pack_ids.print_label(bulk=True)]
         order_pack_ids.receive(immediate=True)
@@ -182,13 +182,38 @@ class ReceiveInhouse(models.Model):
 
 ReceiveInhouse()
 
+
+view.add(model='purchase.order.pack', mode='al', arch="""
+<tree-page title="Inhouse AL"/>
+""", context={'inhouse_type': 'al'})
+
+view.add(model='purchase.order.pack', mode='gm', arch="""
+<tree-page title="Inhouse GM"/>
+""", context={'inhouse_type': 'gm'})
+
+view.add(model='purchase.order.pack', mode='pulley', arch="""
+<tree-page title="Inhouse Pulley"/>
+""", context={'inhouse_type': 'pulley'})
+
+view.add(model='purchase.order.pack', mode='belt', arch="""
+<tree-page title="Inhouse Belt"/>
+""", context={'inhouse_type': 'belt'})
+
 menu.add(id='receiving', string="Receiving", sequence=20)
-menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=11)
-menu.add(id='receiving_inhouse_al', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.al', string="Inhouse AL", sequence=12)
-menu.add(id='receiving_inhouse_gm', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.gm', string="Inhouse GM", sequence=13)
-menu.add(id='receiving_inhouse_pulley', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.pulley', string="Inhouse Pulley", sequence=14)
-menu.add(id='receiving_inhouse_belt', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.belt', string="Inhouse Belt", sequence=15)
-#menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse & CKD", sequence=3)
+menu.add(id='receiving_inhouse', parent='receiving', model='stock.receive.inhouse', view_id='stock.receive.inhouse.wizard', string="Inhouse", sequence=1)
+menu.add(id='receiving_al', string="Inhouse AL", sequence=21)
+menu.add(id='receiving_inhouse_al', parent='receiving_al', model='stock.receive.inhouse', view_id='stock.receive.inhouse.al', string="Receiving", sequence=1)
+menu.add(id='reprint_inhouse_al', parent='receiving_al', model='purchase.order.pack', view_id='purchase.order.pack.al', string="Reprint", sequence=2)
+menu.add(id='receiving_gm', string="Inhouse GM", sequence=22)
+menu.add(id='receiving_inhouse_gm', parent='receiving_gm', model='stock.receive.inhouse', view_id='stock.receive.inhouse.gm', string="Receiving", sequence=1)
+menu.add(id='reprint_inhouse_gm', parent='receiving_gm', model='purchase.order.pack', view_id='purchase.order.pack.gm', string="Reprint", sequence=2)
+menu.add(id='receiving_pulley', string="Inhouse Pulley", sequence=23)
+menu.add(id='receiving_inhouse_pulley', parent='receiving_pulley', model='stock.receive.inhouse', view_id='stock.receive.inhouse.pulley', string="Receiving", sequence=1)
+menu.add(id='reprint_inhouse_pulley', parent='receiving_pulley', model='purchase.order.pack', view_id='purchase.order.pack.pulley', string="Reprint", sequence=2)
+menu.add(id='receiving_belt', string="Inhouse Belt", sequence=24)
+menu.add(id='receiving_inhouse_belt', parent='receiving_belt', model='stock.receive.inhouse', view_id='stock.receive.inhouse.belt', string="Receiving", sequence=1)
+menu.add(id='reprint_inhouse_belt', parent='receiving_belt', model='purchase.order.pack', view_id='purchase.order.pack.belt', string="Reprint", sequence=2)
+menu.add(id='receiving_print', parent='receiving', model='purchase.order.pack', string="Reprint Inhouse", sequence=3)
 
 inhouse_arch = """
 <form>
