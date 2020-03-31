@@ -103,10 +103,10 @@ class PurchaseOrder(models.Model):
         count = 0
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         values = []
-        for record in self:
-        #@async
-        #def get_values(record):
-        #    nonlocal count
+        #for record in self:
+        @async
+        def get_values(record):
+            nonlocal count
             value = record.read()
             value.date_string = value.date_string.split('/')[0:2].join('/')
             pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
@@ -115,18 +115,19 @@ class PurchaseOrder(models.Model):
                 count += 1
                 pack_id.print_number = print_date + '-' + str.zfill(count.toString(), 4)
                 pack_id.write()
-            pack_values = await [pack_ids.with_context(print_label=True).read(format=True, without_null=True, relational_fields=['product_id'])]
+            self.env.context.print_label = True
+            pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
             for pack_value in pack_values:
                 pack_value.order_id = value
                 #for key in value:
                 #    if key not in pack_value: pack_value[key] = value[key]
             values.push(*pack_values)
-        """promises = []
+        promises = []
         for record in self:
             promises.push(get_values(record))
             if promises.length == 10:
                await (promises)
-               promises.length = 0"""
+               promises.length = 0
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         console.log(url)
         self.write({'printed': True})
@@ -185,7 +186,7 @@ class PurchaseOrderPack(models.Model):
 
     @async
     def _get_barcode(self):
-        if not self._context.print_label: return ''
+        if not self.env.context.print_label: return ''
         json = tools.copy(self.read())
         del json.barcode
         del json.ids
@@ -239,7 +240,8 @@ class PurchaseOrderPack(models.Model):
                record.print_number = print_date + '-' + str.zfill(count.toString(), 4)
                record.write()
             if record.ckd_id and not record.received: record.receive(immediate=True)
-        values = await [self.with_context(print_label=True).read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
+        if not bulk: self.env.context.print_label = True
+        values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
         @async
         def write_order_id(id):
