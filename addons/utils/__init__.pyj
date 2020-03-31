@@ -110,7 +110,7 @@ def generate_pdf417(*args, **kwargs):
        def eventListener(event):
            pool_map[event.data.id](event.data.result)
            del pool_map[event.data.id]
-       pool[-1].addEventListener(eventListener)
+       pool[-1].addEventListener('message', eventListener)
        pool_current = pool.length - 1
     else:
        if pool_current == (pool_max - 1): pool_current = 0
