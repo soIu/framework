@@ -8,8 +8,8 @@ from orm.pouchdb import db
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
-from jasper.report import get_jasper_report, generate_pdf417
-from utils import create_upload_button
+from jasper.report import get_jasper_report
+from utils import create_upload_button, generate_pdf417
 
 class PurchaseOrder(models.Model):
     _name = 'purchase.order'
