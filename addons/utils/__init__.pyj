@@ -96,3 +96,27 @@ def show_qrcode(id, field):
                printElement(qrcode)
            button.onclick = onclick
     return show
+
+pool = []
+pool_max = 10
+pool_current = 0
+pool_map = {}
+
+def generate_pdf417(*args, **kwargs):
+    if not kwargs.id: return
+    nonlocal pool_current
+    if pool.length != pool_max:
+       pool.push(new Worker('./pdf417-worker.js'))
+       def eventListener(event):
+           pool_map[event.data.id](event.data.result)
+           del pool_map[event.data.id]
+       pool[-1].addEventListener(eventListener)
+       pool_current = pool.length - 1
+    else:
+       if pool_current == (pool_max - 1): pool_current = 0
+       else: pool_current += 1
+    worker = pool[pool_current]
+    def promise(resolve, reject):
+        pool_map[kwargs.id] = resolve
+    worker.postMessage({'id': kwargs.id, 'args': args})
+    return Promise(promise)

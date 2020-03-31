@@ -8,7 +8,7 @@ from orm.pouchdb import db
 from ir.ui import menu, view
 from ir.sequence import add_sequence
 from stock.location import defaults as location_defaults
-from jasper.report import get_jasper_report
+from jasper.report import get_jasper_report, generate_pdf417
 from utils import create_upload_button
 
 class PurchaseOrder(models.Model):
@@ -115,7 +115,7 @@ class PurchaseOrder(models.Model):
                 count += 1
                 pack_id.print_number = print_date + '-' + str.zfill(count.toString(), 4)
                 pack_id.write()
-            pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
+            pack_values = await [pack_ids.with_context(print_label=True).read(format=True, without_null=True, relational_fields=['product_id'])]
             for pack_value in pack_values:
                 pack_value.order_id = value
                 #for key in value:
@@ -183,7 +183,9 @@ pack_sequence = 0
 class PurchaseOrderPack(models.Model):
     _name = 'purchase.order.pack'
 
+    @async
     def _get_barcode(self):
+        if not self._context.print_label: return ''
         json = tools.copy(self.read())
         del json.barcode
         del json.ids
@@ -192,7 +194,9 @@ class PurchaseOrderPack(models.Model):
         del json._id
         for key in json:
             if not json[key]: del json[key]
-        return window.PDF417(JSON.stringify(json), 1.5, 0.75).split('base64,')[1]
+        #return window.PDF417(JSON.stringify(json), 1.5, 0.75).split('base64,')[1]
+        image = await [generate_pdf417(JSON.stringify(json), 1.5, 0.75, id=self.id)]
+        return image.split('base64,')[1]
 
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.")
@@ -235,7 +239,7 @@ class PurchaseOrderPack(models.Model):
                record.print_number = print_date + '-' + str.zfill(count.toString(), 4)
                record.write()
             if record.ckd_id and not record.received: record.receive(immediate=True)
-        values = await [self.read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
+        values = await [self.with_context(print_label=True).read(format=True, without_null=True, relational_fields=['product_id', 'order_id'])]
         #order_id = None
         @async
         def write_order_id(id):
