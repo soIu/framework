@@ -670,7 +670,7 @@ class HPPMData(models.Model):
                 for cell in data:
                     cell_index += 1
                     if cell_index < 5: continue
-                    if not cell or cell == '-' or cell == '0': continue
+                    if not cell or cell == '-': continue
                     model = [sheet.data[index][cell_index] for index in range(5, 11)].join(' ')
                     code = sheet.data[9][cell_index] + '-' + sheet.data[10][cell_index]
                     if not models[model]: models[model] = {}
