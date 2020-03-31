@@ -103,10 +103,10 @@ class PurchaseOrder(models.Model):
         count = 0
         self.env['log.data'].log('Printing', self.name, 'id:', self.id, 'model:', self._name)
         values = []
-        #for record in self:
-        @async
-        def get_values(record):
-            nonlocal count
+        for record in self:
+        #@async
+        #def get_values(record):
+        #    nonlocal count
             value = record.read()
             value.date_string = value.date_string.split('/')[0:2].join('/')
             pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
@@ -121,12 +121,12 @@ class PurchaseOrder(models.Model):
                 #for key in value:
                 #    if key not in pack_value: pack_value[key] = value[key]
             values.push(*pack_values)
-        promises = []
+        """promises = []
         for record in self:
             promises.push(get_values(record))
             if promises.length == 10:
                await (promises)
-               promises.length = 0
+               promises.length = 0"""
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         console.log(url)
         self.write({'printed': True})
