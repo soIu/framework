@@ -522,7 +522,7 @@ def query(db, type, args, limit):
         if selector in excluded_selectors: continue
         for key in selector:
             if key == '+_id': continue
-            if all(('$' + operation) not in selector[key] for operation ['gt', 'gte', 'lt', 'lte']): continue
+            if all(('$' + operation) not in selector[key] for operation in ['gt', 'gte', 'lt', 'lte']): continue
             operation = Object.keys(selector[key])[0]
             for other_selector in selectors:
                 if selector == other_selector: continue
