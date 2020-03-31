@@ -108,6 +108,7 @@ def generate_pdf417(*args, **kwargs):
     if pool.length != pool_max:
        pool.push(new Worker('./pdf417-worker.js'))
        def eventListener(event):
+           if not pool_map[event.data.id]: return
            pool_map[event.data.id](event.data.result)
            del pool_map[event.data.id]
        pool[-1].addEventListener('message', eventListener)

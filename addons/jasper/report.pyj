@@ -2,7 +2,7 @@ session = {}
 
 @async
 def get_jasper_session(server, username):
-    response = await [fetch(server)]
+    response = await [fetch(server + '?j_username=')]
     result = response.url.split('jsessionid=')[1] or ''
     return result.split('?')[0]
 
