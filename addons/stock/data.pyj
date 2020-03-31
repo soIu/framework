@@ -125,9 +125,10 @@ class PurchaseOrder(models.Model):
         promises = []
         for record in self:
             promises.push(get_values(record))
-            if promises.length == 10:
-               await (promises)
-               promises.length = 0
+            #if promises.length == 10:
+            #   await (promises)
+            #   promises.length = 0
+        await (promises)
         url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
         console.log(url)
         self.write({'printed': True})
