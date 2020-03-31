@@ -192,7 +192,7 @@ class PurchaseOrderPack(models.Model):
         del json._id
         for key in json:
             if not json[key]: del json[key]
-        return JSON.stringify(json) #window.PDF417(JSON.stringify(json), 1.5, 0.75).split('base64,')[1]
+        return window.PDF417(JSON.stringify(json), 1.5, 0.75).split('base64,')[1]
 
     name = fields.Char(string="PO Number")
     part_no = fields.Char(string="Part No.")
@@ -670,7 +670,7 @@ class HPPMData(models.Model):
                 for cell in data:
                     cell_index += 1
                     if cell_index < 5: continue
-                    if not cell or cell == '-': continue
+                    if cell != 0 and (not cell or cell == '-'): continue
                     model = [sheet.data[index][cell_index] for index in range(5, 11)].join(' ')
                     code = sheet.data[9][cell_index] + '-' + sheet.data[10][cell_index]
                     if not models[model]: models[model] = {}
