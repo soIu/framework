@@ -517,9 +517,28 @@ def query(db, type, args, limit):
         if not need_orm: arg.splice(0, arg.length);
         elif arg[0] != 'id': arg[0] = arg[0][5:] #.replace('data.', '')
         index += 1;
+    excluded_selectors = []
+    for selector in selectors:
+        if selector in excluded_selectors: continue
+        for key in selector:
+            if key == '+_id': continue
+            if all(('$' + operation) not in selector[key] for operation ['gt', 'gte', 'lt', 'lte']): continue
+            operation = Object.keys(selector[key])[0]
+            for other_selector in selectors:
+                if selector == other_selector: continue
+                for other_key in other_selector:
+                    if other_key == '_id': continue
+                    other_operation = Object.keys(other_selector[other_key])[0]
+                    if operation in ['$gt', '$gte'] and other_operation in ['$lt', '$lte']:
+                       selector[key][other_operation] = other_selector[other_key][other_operation]
+                       excluded_selector.push(other_selector)
+                    if operation in ['$lt', '$lte'] and other_operation in ['$gt', '$gte']:
+                       selector[key][other_operation] = other_selector[other_key][other_operation]
+                       excluded_selector.push(other_selector)
     if not selectors.length and not promises.length:
        promises.push(db.find({'selector': default_selector, 'fields': ['_id']}))
     for selector in selectors:
+        if selector in excluded_selectors: continue
         promises.push(db.find({'selector': selector, 'fields': ['_id']}))
     promises.push(*excepts)
     return Promise.all(promises).then(
