@@ -527,7 +527,7 @@ def query(db, type, args, limit):
             for other_selector in selectors:
                 if selector == other_selector: continue
                 for other_key in other_selector:
-                    if other_key == '_id': continue
+                    if other_key != key: continue
                     other_operation = Object.keys(other_selector[other_key])[0]
                     if operation in ['$gt', '$gte'] and other_operation in ['$lt', '$lte']:
                        selector[key][other_operation] = other_selector[other_key][other_operation]
