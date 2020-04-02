@@ -104,7 +104,7 @@ pool_map = {}
 
 def generate_pdf417(*args, **kwargs):
     if not kwargs.id: return
-    if pool_map[event.data.id]: return pool_map[event.data.id][1]
+    if pool_map[kwargs.id]: return pool_map[kwargs.id][1]
     nonlocal pool_current
     if pool.length != pool_max:
        pool.push(new Worker('./pdf417-worker.js'))
