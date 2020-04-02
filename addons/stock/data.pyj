@@ -130,12 +130,18 @@ class PurchaseOrder(models.Model):
             #   promises.length = 0
         await (promises)
         promises.length = 0
-        data = JSON.stringify(values)
-        values.length = 0
-        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': data})]
-        console.log(url)
+        buffers = []
+        while values.length:
+            data = JSON.stringify(values.splice(0, 1500))
+            url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': data})]
+            response = await [fetch(url, {'credentials': 'include'})]
+            buffer = await [response.arrayBuffer()]
+            buffers.push(buffer)
+        pdf = new PDF.Document()
+        for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
+        buffer = await [pdf.asBuffer()]
         self.write({'printed': True})
-        window.open(url)
+        window.open(URL.createObjectURL(new Blob([buffer], {'type': 'application/pdf'})))
      except Exception as error:
         alert(error.stack or error.message)
 
