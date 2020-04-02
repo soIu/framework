@@ -129,7 +129,10 @@ class PurchaseOrder(models.Model):
             #   await (promises)
             #   promises.length = 0
         await (promises)
-        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': JSON.stringify(values)})]
+        promises.length = 0
+        data = JSON.stringify(values)
+        values.length = 0
+        url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': data})]
         console.log(url)
         self.write({'printed': True})
         window.open(url)
