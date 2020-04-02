@@ -12,6 +12,7 @@ pending_sync = {}
 indexed_fields = {}
 #indexed_models = {}
 read_cache = {}
+sync_pool = []
 
 def setIndexes():
     promise = Promise.all([db.createIndex({'index': {'fields': ['data.' + key, '_id']}}) for key in indexed_fields]).catch(console.error)
@@ -374,30 +375,30 @@ class Model():
             self[method_name] = original_method
             return result
 
+    @async
     def __sync__(self):
-        promises = self.map(
-        def (record):
+        pool = copy(sync_pool)
+        await (pool)
+        for record in self:
             if not record.id: return
             if pending_sync[record.id]: return
             pending_sync[record.id] = True
-            def remove_pending(): del pending_sync[record.id]
             values = copy(record.values)
-            return db.get(db.rel.makeDocID({'type': self._name, 'id': record.id})).then(
-            def (doc):
+            try:
+                doc = await [db.get(db.rel.makeDocID({'type': self._name, 'id': record.id}))]
                 del values._id
                 del values._rev
                 del values.rev
                 values.rev = doc._rev
-                return db.rel.save(self._name, values).then(remove_pending)
-            ).catch(
-            def (error):
+                await [db.rel.save(self._name, values)]
+                del pending_sync[record.id]
+            except:
                 del values._id
                 del values._rev
                 del values.rev
-                return db.rel.save(self._name, values).then(remove_pending)
-            )
-        )
-        return Promise.all(promises)
+                await [db.rel.save(self._name, values)]
+                del pending_sync[record.id]
+        sync_pool.length = 0
 
     def __view__(self, view, view_type):
         return view
@@ -423,7 +424,7 @@ class Model():
                   record._search_count = result.values[0]._search_count
                else:
                   record._search_count = result.values._search_count
-               record.__sync__().catch(def (error): console.error(error);)
+               sync_pool.push(record.__sync__().catch(def (error): console.error(error);))
                return record
            ).catch(
            def (error):
@@ -483,7 +484,7 @@ class Model():
                else:
                   record._search_count = result.values._search_count
                #self.with_context(no_preload=True).browse(self.ids)
-               if options.limit <= 50: record.__sync__().catch(def (error): console.error(error);)
+               sync_pool.push(record.__sync__().catch(def (error): console.error(error);))
                return record
            ).catch(
            def (error):
@@ -787,7 +788,7 @@ class Model():
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
                #self.with_context(no_preload=True).browse(self.ids)
-               self.__sync__().catch(def (error): console.error(error);)
+               sync_pool.push(self.__sync__().catch(def (error): console.error(error);))
                return self
            ).catch(
            def (error):
@@ -843,7 +844,7 @@ class Model():
                self.update(result.values, no_onchange=True)
                self._compute_cache = {}
                #self.with_context(no_preload=True).browse(self.ids)
-               self.__sync__().catch(def (error): console.error(error);)
+               sync_pool.push(self.__sync__().catch(def (error): console.error(error);))
                return self
            ).catch(
            def (error):
