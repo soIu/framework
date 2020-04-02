@@ -104,12 +104,13 @@ pool_map = {}
 
 def generate_pdf417(*args, **kwargs):
     if not kwargs.id: return
+    if pool_map[event.data.id]: return pool_map[event.data.id][1]
     nonlocal pool_current
     if pool.length != pool_max:
        pool.push(new Worker('./pdf417-worker.js'))
        def eventListener(event):
            if not pool_map[event.data.id]: return
-           pool_map[event.data.id](event.data.result)
+           pool_map[event.data.id][0](event.data.result)
            del pool_map[event.data.id]
        pool[-1].addEventListener('message', eventListener)
        pool_current = pool.length - 1
@@ -118,6 +119,8 @@ def generate_pdf417(*args, **kwargs):
        else: pool_current += 1
     worker = pool[pool_current]
     def promise(resolve, reject):
-        pool_map[kwargs.id] = resolve
+        pool_map[kwargs.id] = [resolve]
     worker.postMessage({'id': kwargs.id, 'args': args})
-    return Promise(promise)
+    promise = Promise(promise)
+    pool_map[kwargs.id].push(promise)
+    return promise
