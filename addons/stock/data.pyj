@@ -130,13 +130,14 @@ class PurchaseOrder(models.Model):
             #   promises.length = 0
         await (promises)
         promises.length = 0
-        buffers = []
-        while values.length:
-            data = JSON.stringify(values.splice(0, 1500))
+        def get_report(data):
             url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': data})]
             response = await [fetch(url, {'credentials': 'include'})]
-            buffer = await [response.arrayBuffer()]
-            buffers.push(buffer)
+            return response.arrayBuffer()
+        while values.length:
+            data = JSON.stringify(values.splice(0, 1500))
+            promises.push(get_report(data))
+        buffers = await (promises)
         pdf = new PDF.Document()
         for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
         buffer = await [pdf.asBuffer()]
