@@ -391,6 +391,11 @@ configuration.ajax_reject = ajax_reject
 indexed_models = {}
 
 def query(db, type, args, limit):
+    def find(options):
+        def catch_error(error):
+            if error.error and error.error == 'badmatch': return find(options)
+            raise error
+        return db.find(options).catch(catch_error)
     makeDocID = db.rel.makeDocID;
     default_selector = {'_id': {'$gt': makeDocID({'type': type}), '$lt': makeDocID({'type': type, 'id': {}})}}
     #like_selector = {}
@@ -428,11 +433,11 @@ def query(db, type, args, limit):
               continue
            if arg[2] != False:
               queries = []
-              #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
+              #queries.push(find({'selector': copy(default_selector),'fields': ['_id']}))
               for operator in ['eq']: #, 'gt', 'lt']:
                   selector = copy(default_selector)
                   selector[arg[0]] = {'$' + operator: arg[2]}
-                  query = db.find({'selector': selector, 'fields': ['_id']})
+                  query = find({'selector': selector, 'fields': ['_id']})
                   queries.push(query)
               excepts.push(Promise.all(queries).then(
               def (result):
@@ -458,7 +463,7 @@ def query(db, type, args, limit):
                selector = copy(default_selector)
                selector[arg[0]] = {'$eq': value}
                #in_selectors.push(selector)
-               in_promises.push(db.find({'selector': selector, 'fields': ['_id']}));
+               in_promises.push(find({'selector': selector, 'fields': ['_id']}));
            if not arg[2].length:
               return new Promise(
               def (resolve, reject):
@@ -480,11 +485,11 @@ def query(db, type, args, limit):
            def (result):
                field, value = result
                queries = []
-               #queries.push(db.find({'selector': copy(default_selector),'fields': ['_id']}))
+               #queries.push(find({'selector': copy(default_selector),'fields': ['_id']}))
                for operator in ['eq']: #, 'gt', 'lt']:
                    selector = copy(default_selector)
                    selector[field] = {'$' + operator: value}
-                   query = db.find({'selector': selector, 'fields': ['_id']})
+                   query = find({'selector': selector, 'fields': ['_id']})
                    queries.push(query)
                excepts.push(Promise.all(queries).then(
                def (result):
@@ -536,10 +541,10 @@ def query(db, type, args, limit):
                        selector[key][other_operation] = other_selector[other_key][other_operation]
                        excluded_selectors.push(other_selector)
     if not selectors.length and not promises.length:
-       promises.push(db.find({'selector': default_selector, 'fields': ['_id']}))
+       promises.push(find({'selector': default_selector, 'fields': ['_id']}))
     for selector in selectors:
         if selector in excluded_selectors: continue
-        promises.push(db.find({'selector': selector, 'fields': ['_id']}))
+        promises.push(find({'selector': selector, 'fields': ['_id']}))
     promises.push(*excepts)
     return Promise.all(promises).then(
     def (results):
