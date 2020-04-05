@@ -533,7 +533,7 @@ class PickingLot(models.Model):
                            lengths.push(new_carry_lines[trolley_type_id][part_id].length)
                     length = Math.max(*lengths, new_carry_lines[trolley_type_id][product_id].length)
                     length -= new_carry_lines[trolley_type_id][product_id].length
-                    if not all(value == lengths[0] for value in lengths): length -= 1
+                    if not all(value == lengths[0] for value in lengths): length = list(set(lengths)).sort()[1] - new_carry_lines[trolley_type_id][product_id].length
                     if length < 1: length = 0
                     for each in range(length): new_carry_lines[trolley_type_id][product_id].push(None)
                     new_carry_lines[trolley_type_id][product_id].push(*lines[trolley_type_id][product_id])
@@ -549,7 +549,7 @@ class PickingLot(models.Model):
                     if not line: continue
                     if not lines[trolley_type_id][carry_part_id]: lines[trolley_type_id][carry_part_id] = []
                     lines[trolley_type_id][carry_part_id].push(line)
-                if new_carry_lines[trolley_type_id] and not Object.keys(carry_lines[trolley_type_id]).length:
+                if new_carry_lines[trolley_type_id] and not Object.keys(new_carry_lines[trolley_type_id]).length:
                    del new_carry_lines[trolley_type_id]
                 await (create_lot(lines, trolley_type_id))
         for line in new_carry_lines: await (create_lot(new_carry_lines, line))
