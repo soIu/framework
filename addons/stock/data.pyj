@@ -425,7 +425,7 @@ class PurchaseOrderPrint(models.Model):
         if self.supplier_id:
            supplier_id = await [self.env['purchase.order.supplier'].browse(self.supplier_id)]
            args.push(['pl_from', '=', supplier_id.name])
-        order_ids = await [self.env['purchase.order'].search(*args)]
+        order_ids = await [self.env['purchase.order'].with_context(limit=5000).search(*args)]
         return order_ids.print_label()
 
 PurchaseOrderPrint()
