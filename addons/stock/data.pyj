@@ -489,7 +489,7 @@ class HPPMData(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
-    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over_mcvt', 'Carry Over MCVT'], ['carry_over_flexi', 'Carry Over Flexi'], ['carry_over_fwd', 'Carry Over 4WD'], string="Type", required=True, defaults=_get_type)
+    type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over_mcvt', 'Carry Over MCVT'], ['carry_over_flexi', 'Carry Over Flexi'], ['carry_over_fwd', 'Carry Over 4WD'], ['time_mcvt', 'Sequence Time MCVT'], ['time_flexi', 'Sequence Time Flexi'], ['time_fwd', 'Sequence Time 4WD'], string="Type", required=True, defaults=_get_type)
 
     @async
     def download_excel(self):
@@ -529,6 +529,9 @@ class HPPMData(models.Model):
         if self.type == 'data_packing': return self.import_data_packing().then(after_finish)
         if self.type == 'route_agv': return self.import_route().then(after_finish)
         if self.type == 'receive_zone': return self.import_receive_zone().then(after_finish)
+        if self.type == 'time_mcvt': return self.import_time('mcvt').then(after_finish)
+        if self.type == 'time_fwd': return self.import_time('fwd').then(after_finish)
+        if self.type == 'time_flexi': return self.import_time('flexi').then(after_finish)
 
     @api.server(async=True)
     def import_route(self):
@@ -944,6 +947,24 @@ class HPPMData(models.Model):
             value = {'name': data[0]}
             await [create_zone(value)]
         #return Promise.all(promises)
+
+    @api.server(async=True)
+    def import_time(self, type):
+        promises = []
+        xlsx = require('node-xlsx')
+        sheet = xlsx.parse(tools.atob(self.excel, buffer=True))[0]
+        row = -1
+        @async
+        def create_time(value):
+            time_id = await [self.env['mrp.sequence.time'].search(['name', '=', value.name], ['type', '=', type])]
+            if time_id.length: return
+            return self.env['mrp.sequence.time'].create(value)
+        for data in sheet.data:
+            row += 1
+            if row < 1: continue
+            if not data[0] or isNaN(parseInt(data[0])): continue
+            value = {'name': data[0], 'time': data[1], 'type': type}
+            await [create_time(value)]
 
 HPPMData()
 

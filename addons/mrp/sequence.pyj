@@ -17,7 +17,7 @@ class MrpSequence(models.Model):
     name = fields.Char(string="Lot No.")
     sequence = fields.Integer(string="Sequence")
     picking_list_ids = fields.One2many('stock.picking.list', 'sequence_id', string="Picking Lists")
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type")
     bom_id = fields.Many2one('mrp.bom', string="Model")
     date = fields.Datetime(string="Date", index=True)
     destination = fields.Char(string="Destination")
@@ -92,7 +92,7 @@ view.add(model='mrp.sequence', mode='form', arch="""
 class MrpSequenceReorder(models.Model):
     _name = 'mrp.sequence.reorder'
 
-    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type", required=True)
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", required=True)
     date = fields.Date(string="Date", required=True)
     sequence_from = fields.Integer(string="Sequence")
     sequence_from_id = fields.Many2one('mrp.sequence', string="Lot No.", required=True)
@@ -111,7 +111,7 @@ class MrpSequenceReorder(models.Model):
         self.sequence_from_id = sequence_id
         self.sequence_from_changing = False
 
-    @api.onchange('sequence_from_id', async=True)
+    @api.onchange('sequence_from_id', async=True)w
     def onchange_sequence_from_id(self):
         if self.sequence_from_changing or not self.sequence_from_id: return
         self.sequence_from_changing = True
@@ -182,3 +182,12 @@ view.add(model='mrp.sequence.reorder', mode='wizard', arch="""
     </sheet>
 </form>
 """)
+
+class MrpSequenceTime(models.Model):
+    _name = 'mrp.sequence.time'
+
+    name = fields.Integer(string="Sequence", index=True)
+    time = fields.Char(string="Time")
+    type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Type", index=True)
+
+MrpSequenceTime()

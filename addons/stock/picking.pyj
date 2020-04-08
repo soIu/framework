@@ -315,7 +315,7 @@ class PickingListPrint(models.Model):
 
     date = fields.Date(string="Date", required=True)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", required=True)
-    sequence_picking = fields.Integer(string="Seq Picking")
+    sequence_picking = fields.Integer(string="Seq Start")
 
     @async
     def print_list(self):
@@ -330,13 +330,18 @@ PickingListPrint()
 class PickingLot(models.Model):
     _name = 'stock.picking.lot'
 
+    @async
+    def _get_time(self):
+        time_id = await [self.env['mrp.sequence.time'].search(['name', '=', self.sequence_picking], ['type', '=', self.type.split('_')[0]])]
+        if time_id.length: return time_id.time
+
     name = fields.Char(string="Picking No.", required=True, index=True)
     picking_list_ids = fields.One2many('stock.picking.list', 'picking_lot_id', string="Pick Lists")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
     sequence_id = fields.Many2one('mrp.sequence', string="Production Lot")
     model_id = fields.Many2one('mrp.bom', string="Model")
     sequences = fields.Char(string="Seq Prod")
-    sequence_picking = fields.Integer(string="Seq Picking")
+    sequence_picking = fields.Integer(string="Seq Start")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type")
     line_ids = fields.One2many('stock.picking.lot.line', 'picking_lot_id', string="Lines")
     pack_ids = fields.One2many('stock.pack', 'picking_lot_id', string="Packs")
@@ -354,6 +359,7 @@ class PickingLot(models.Model):
     ready = fields.Boolean(string="Ready", index=True)
     is_pulley_finished = fields.Boolean(string="Is Pulley and Finished")
     is_carry_over = fields.Boolean(string="Is Carry Over")
+    sequence_time = fields.Char(string="Est. Time", compute=_get_time, store=False)
 
     """@async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -417,7 +423,7 @@ class PickingLot(models.Model):
                       if not line: continue #or not Object.keys(line).length: continue
                       if sequence == None or sequence < line.sequence_picking: sequence = line.sequence_picking
                   if sequence:
-                     sequence -= 20
+                     #sequence -= 20
                      if sequence <= 0: sequence = None
                   for product_id in lines[trolley_type_id]:
                       line = lines[trolley_type_id][product_id][index]
@@ -1236,6 +1242,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
 view.add(init=create_upload_button, model='stock.picking.lot', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
+    <field name="time"/>
     <field name="sequence_picking" sort="asc"/>
     <field name="sequences"/>
     <field name="model_id"/>
