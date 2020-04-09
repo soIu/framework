@@ -963,6 +963,10 @@ class HPPMData(models.Model):
             row += 1
             if row < 1: continue
             if not data[0] or isNaN(parseInt(data[0])): continue
+            if data[1] and type(data[1]) == Number:
+               hours = data[1] * 24
+               minutes = (data[1] - parseInt(data[1])) * 60
+               data[1] = parseInt(data[1]) + ':' + parseInt(minutes)
             value = {'name': data[0], 'time': data[1], 'type': type}
             await [create_time(value)]
 
