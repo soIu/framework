@@ -787,7 +787,7 @@ class PickingLot(models.Model):
                sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
                sequence_id.write({'finished': True})
                bom_id = await (bom)
-               bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids])
+               bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids], self.type, self.sequence_picking)
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
         if not pulley_location_updated: return self.update_location(location_id, self.trolley_type_id in ['D27963B0-4492-C3C2-A94C-7FF78C55770C', '290E8962-EFA0-4AA2-B78C-64F774313255'])
 
@@ -1213,7 +1213,7 @@ class PickingList(models.Model):
                sequence_id = await [self.env['mrp.sequence'].browse(self.sequence_id)]
                sequence_id.write({'finished': True})
                bom_id = await (bom)
-               bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids], self.type)
+               bom_id.move_pulley_out(location_id, pack_id, sum(pack_sum_id.product_qty for pack_sum_id in pack_ids if pack_sum_id.product_id == pack_id.product_id), [pack_id.product_id for pack_id in pack_ids], self.type, self.sequence_picking)
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
         if not pulley_location_updated: return self.update_location(location_id, False)
 

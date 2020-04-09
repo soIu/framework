@@ -14,13 +14,14 @@ class StockTriggerBoard(models.Model):
     date = fields.Datetime(string="Date", defaults=tools.date.now)
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type", index=True)
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", index=True)
+    sequence = fields.Integer(string="Sequence")
 
     @async
-    def trigger(self, type, trolley_type_id):
+    def trigger(self, type, trolley_type_id, sequence):
         if not trolley_type_id: return
         trigger_id = await [self.search(['trolley_type_id', '=', trolley_type_id], ['type', '=', type])]
         if trigger_id.length: return
-        return self.create({'trolley_type_id': trolley_type_id, 'type': type})
+        return self.create({'trolley_type_id': trolley_type_id, 'type': type, 'sequence': sequence})
 
     @async
     def remove(self, type, trolley_type_id):
@@ -85,7 +86,7 @@ class StockTrolley(models.Model):
         trolley_id.write({'location_id': location_id})
         picking_list_id = await [self.env['stock.picking.lot'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
         if trigger and not picking_list_id.is_carry_over:
-           self.env['stock.trigger.board'].trigger(picking_list_id.type, picking_list_id.trolley_type_id)
+           self.env['stock.trigger.board'].trigger(picking_list_id.type, picking_list_id.trolley_type_id, picking_list_id.sequence_picking)
         if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
         pack_ids = await [self.env['stock.pack'].browse(picking_list_id.pack_ids)]
         #location_map = {locations[key]: key for key in locations}

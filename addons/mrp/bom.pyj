@@ -20,7 +20,7 @@ class MrpBom(models.Model):
     line_ids = fields.One2many('mrp.bom.line', 'bom_id', string="BoM Lines")
 
     @async
-    def move_pulley_out(self, location_id, pack_id, ratio, product_ids, line_type):
+    def move_pulley_out(self, location_id, pack_id, ratio, product_ids, line_type, sequence):
         line_ids = await [self.env['mrp.bom.line'].browse(self.line_ids)]
         @async
         def check_carry_over(line_id):
@@ -33,7 +33,7 @@ class MrpBom(models.Model):
             quant_id.product_id = product_id.id
             quantity = await [quant_id._get_assy_qty()]
             if quantity <= threshold:
-               return self.env['stock.trigger.board'].trigger(line_type, trolley_type_id)
+               return self.env['stock.trigger.board'].trigger(line_type, trolley_type_id, sequence)
         def create_quant_move(line_id):
             return Promise.all([
               self.env['stock.move'].create({'product_id': line_id.product_id, 'product_qty': line_id.product_qty * ratio, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}),
