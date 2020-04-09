@@ -339,7 +339,7 @@ class PickingLot(models.Model):
            time = parseFloat(time)
            hours = time * 24
            minutes = (time - parseInt(time)) * 60
-           time = parseInt(time) + ':' + parseInt(minutes)
+           time = parseInt(hours) + ':' + parseInt(minutes)
         return time
 
     name = fields.Char(string="Picking No.", required=True, index=True)

@@ -966,7 +966,7 @@ class HPPMData(models.Model):
             if data[1] and data[1].constructor == Number:
                hours = data[1] * 24
                minutes = (data[1] - parseInt(data[1])) * 60
-               data[1] = parseInt(data[1]) + ':' + parseInt(minutes)
+               data[1] = parseInt(hours) + ':' + parseInt(minutes)
             value = {'name': data[0], 'time': data[1], 'type': type}
             await [create_time(value)]
 
