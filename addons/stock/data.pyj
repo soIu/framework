@@ -872,7 +872,7 @@ class HPPMData(models.Model):
                date_object.setDate(date_object.getDate() + parseInt(date))
                date_object.setMonth(date_object.getDate() - 1, date_object.getMonth() + 1)
                date = date_object
-            else: date = new Date(date.split('/').reverse().join('-'))
+            else: date = new Date(date.split('/').reverse().join('-') + ' 00:00:00')
             date_string = [date.getDate(), date.getMonth() + 1, date.getFullYear()].join('/')
             ps_month = date.toDateString().split(' ')[1] + '-' + date.getDate().toString()
             value = {'part_no': data[4].toString().split(' ').join(''), 'product_qty': data[10], 'ps_month': ps_month, 'ps_code': data[1], 'pl_from': data[2], 'pl_to': data[3], 'date_string': date_string, 'date': date, 'lot_no': data[12] or ''}
@@ -963,7 +963,7 @@ class HPPMData(models.Model):
             row += 1
             if row < 1: continue
             if not data[0] or isNaN(parseInt(data[0])): continue
-            if data[1] and type(data[1]) == Number:
+            if data[1] and data[1].constructor == Number:
                hours = data[1] * 24
                minutes = (data[1] - parseInt(data[1])) * 60
                data[1] = parseInt(data[1]) + ':' + parseInt(minutes)
