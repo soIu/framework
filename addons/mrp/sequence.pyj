@@ -111,7 +111,7 @@ class MrpSequenceReorder(models.Model):
         self.sequence_from_id = sequence_id
         self.sequence_from_changing = False
 
-    @api.onchange('sequence_from_id', async=True)w
+    @api.onchange('sequence_from_id', async=True)
     def onchange_sequence_from_id(self):
         if self.sequence_from_changing or not self.sequence_from_id: return
         self.sequence_from_changing = True

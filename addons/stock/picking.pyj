@@ -1242,7 +1242,7 @@ view.add(init=create_upload_button, model='stock.picking.list', mode='tree', arc
 view.add(init=create_upload_button, model='stock.picking.lot', mode='tree', arch="""
 <tree title="Picking List" limit="2000"> <!--domain="context.type ? ['type', '=', context.type] : []">-->
     <field name="date"/>
-    <field name="time"/>
+    <field name="sequence_time"/>
     <field name="sequence_picking" sort="asc"/>
     <field name="sequences"/>
     <field name="model_id"/>
