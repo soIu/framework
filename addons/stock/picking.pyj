@@ -333,7 +333,14 @@ class PickingLot(models.Model):
     @async
     def _get_time(self):
         time_id = await [self.env['mrp.sequence.time'].search(['name', '=', self.sequence_picking], ['type', '=', self.type.split('_')[0]])]
-        if time_id.length: return time_id.time
+        if not time_id.length: return ''
+        time = time_id.time
+        if ':' not in time:
+           time = parseFloat(time)
+           hours = time * 24
+           minutes = (time - parseInt(time)) * 60
+           time = parseInt(time) + ':' + parseInt(minutes)
+        return time
 
     name = fields.Char(string="Picking No.", required=True, index=True)
     picking_list_ids = fields.One2many('stock.picking.list', 'picking_lot_id', string="Pick Lists")
@@ -433,7 +440,7 @@ class PickingLot(models.Model):
                          sequences = line.sequence
                          if Array.isArray(sequences): sequences = sequences.join(' - ')
                          console.log('membuat lot')
-                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequence_id': list_id.sequence_id if list_id else None, 'sequences': sequences, 'sequence_picking': sequence, 'carry_over': line.is_carry_over or False})]
+                         lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + tools.dict(self._fields.type)[fwd_type or type] + ' ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequence_id': list_id.sequence_id if list_id else None, 'sequences': sequences, 'sequence_picking': sequence, 'carry_over': line.is_carry_over or False})]
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break

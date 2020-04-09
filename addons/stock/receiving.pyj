@@ -98,10 +98,12 @@ class StockPickingWizard(models.Model):
     @api.onchange('scan', async=True)
     def onchange_scan(self):
         if not self.scan: return
+        scan = self.scan
         self.env['log.data'].log('Scan Picking', self.scan)
         picking_list_id = await (self.env['stock.picking.lot'].search(['name', '=', self.scan]))
         self.scan = ''
-        if not picking_list_id.length: return
+        if not picking_list_id.length: return tools.dialog.alert('Picking List not found')
+        if picking_list_id.length > 1: return tools.dialog.alert('There are ' + picking_list_id.length + ' picking lists with the name ' + scan)
         tools.navigate('/view/stock.picking.lot.form?id=' + picking_list_id.id)
 
 StockPickingWizard()
