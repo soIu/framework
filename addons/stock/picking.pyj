@@ -323,7 +323,11 @@ class PickingListPrint(models.Model):
         domain = [['date', '=', self.date]]
         picking_lot_ids = await [self.env['stock.picking.lot'].search(['date', '=', self.date], ['type', '=', self.type], ['sequence_picking', '=', self.sequence_picking])]
         if not picking_lot_ids.length: return tools.dialog.alert('Picking List not Found')
-        return picking_lot_ids.print_all()
+        picking_ids = self.env['stock.picking.lot']
+        for picking_list_id in picking_lot_ids:
+            trolley_type_id = await [self.env['stock.trolley.type'].browse(picking_list_id.trolley_type_id)]
+            if trolley_type_id.length: picking_ids.add(picking_list_id)
+        return picking_ids.print_all()
 
 PickingListPrint()
 
