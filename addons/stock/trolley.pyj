@@ -86,7 +86,7 @@ class StockTrolley(models.Model):
         trolley_id.write({'location_id': location_id})
         picking_list_id = await [self.env['stock.picking.lot'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
         trolley_type_id = await [self.env['stock.trolley.type'].browse(picking_list_id.trolley_type_id)]
-        require('node-fetch')('http://172.16.1.216:9000/api1?fitting=' + trolley_type_id.name + '&sequence_start=' + picking_list_id.sequence_picking)
+        require('node-fetch')('http://172.16.1.216:9000/api1?fitting=' + trolley_type_id.name + '&sequences' + picking_list_id.sequences)
         if trigger and not picking_list_id.is_carry_over:
            self.env['stock.trigger.board'].trigger(picking_list_id.type, picking_list_id.trolley_type_id, picking_list_id.sequence_picking)
         if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
