@@ -84,7 +84,7 @@ class StockTrolley(models.Model):
     def update_location(self, trolley, location_id, trigger):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
-        picking_list_id = await [self.env['stock.picking.lot'].with_context(order='date desc').search(['trolley_id', '=', trolley_id.id])]
+        picking_list_id = await [self.env['stock.picking.lot'].with_context(limit=1, order='date desc').search(['trolley_id', '=', trolley_id.id])]
         trolley_type_id = await [self.env['stock.trolley.type'].browse(picking_list_id.trolley_type_id)]
         console.log('nggolek biang kerok e')
         console.log(trolley, trolley_id.id, picking_list_id.id, trolley_type_id.name, location_id)
