@@ -1,4 +1,4 @@
-q2etytwreyimport orm.exceptions as exceptions
+import orm.exceptions as exceptions
 import orm.models as models
 import orm.fields as fields
 import orm.tools as tools
