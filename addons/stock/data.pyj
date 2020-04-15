@@ -957,7 +957,7 @@ class HPPMData(models.Model):
         @async
         def create_time(value):
             time_id = await [self.env['mrp.sequence.time'].search(['name', '=', value.name], ['type', '=', type])]
-            if time_id.length: return
+            if time_id.length: return time_id.write(value)
             return self.env['mrp.sequence.time'].create(value)
         for data in sheet.data:
             row += 1

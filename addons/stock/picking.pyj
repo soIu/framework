@@ -335,7 +335,7 @@ class PickingLot(models.Model):
     _name = 'stock.picking.lot'
 
     @async
-    def _get_time(self):
+    def get_time(self):
         time_id = await [self.env['mrp.sequence.time'].search(['name', '=', self.sequence_picking], ['type', '=', self.type.split('_')[0]])]
         if not time_id.length: return ''
         time = time_id.time
@@ -344,7 +344,7 @@ class PickingLot(models.Model):
            hours = time * 24
            minutes = (time - parseInt(time)) * 60
            time = parseInt(hours) + ':' + parseInt(minutes)
-        return time
+        return self.write({'sequence_time': time})
 
     name = fields.Char(string="Picking No.", required=True, index=True)
     picking_list_ids = fields.One2many('stock.picking.list', 'picking_lot_id', string="Pick Lists")
@@ -370,7 +370,7 @@ class PickingLot(models.Model):
     ready = fields.Boolean(string="Ready", index=True)
     is_pulley_finished = fields.Boolean(string="Is Pulley and Finished")
     is_carry_over = fields.Boolean(string="Is Carry Over")
-    sequence_time = fields.Char(string="Est. Time", compute=_get_time, store=False)
+    sequence_time = fields.Char(string="Est. Time")
 
     """@async
     def create(self, values=False, is_client=tools.configuration.client):
@@ -445,6 +445,7 @@ class PickingLot(models.Model):
                          if Array.isArray(sequences): sequences = sequences.join(' - ')
                          console.log('membuat lot')
                          lot_id = await [self.env['stock.picking.lot'].create({'name': 'Picking List ' + tools.dict(self._fields.type)[fwd_type or type] + ' ' + str.zfill(ir_sequence_id.sequence.toString(), 3), 'date': line.date, 'type': fwd_type or type, 'model_id': list_id.model_id if list_id else None, 'trolley_type_id': trolley_type_id, 'part_type': list_id.part_type if list_id else None, 'sequence_id': list_id.sequence_id if list_id else None, 'sequences': sequences, 'sequence_picking': sequence, 'carry_over': line.is_carry_over or False})]
+                         lot_id.get_time()
                          ir_sequence_id.sequence += 1
                       promises.push(create_line(line, lot_id))
                   if not lot_id: break
