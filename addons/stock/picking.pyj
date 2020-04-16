@@ -616,6 +616,7 @@ class PickingLot(models.Model):
            self.laser_scan = ''
            if not trolley_id.length: return
            self.trolley_id = trolley_id.id
+           trolley_id.write({'picking_lot_id': self.id})
            return write({'trolley_id': trolley_id.id})
         value = None
         pack_ids = None

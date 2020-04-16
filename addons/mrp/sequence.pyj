@@ -35,14 +35,27 @@ class MrpSequence(models.Model):
 
 MrpSequence()
 
+class MrpSequenceFilter(models.Model):
+    _name = 'mrp.sequence.filter'
+
+    date = fields.Date(string="Date", required=True)
+
+    def filter(self):
+        domain = [['date', '=', self.date]]
+        if self.env.context.type: domain.push(['type', '=', self.env.context.type])
+        tools.navigate('/tree/mrp.sequence?domain=' + JSON.stringify(domain))
+
+MrpSequenceFilter()
+
 menu.add(id='mrp_planning', string="Planning", sequence=3)
-menu.add(id='mrp_sequence', string="Sequence Plan", parent='mrp_planning', model='mrp.sequence', sequence=2)
-menu.add(id='mrp_sequence', string="Sequence MCVT", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_mcvt', sequence=3)
-menu.add(id='mrp_sequence', string="Sequence 4WD", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_fwd', sequence=4)
-menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence', view_id='mrp.sequence.tree_flexi', sequence=5)
+menu.add(id='mrp_sequence', string="Sequence Plan", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.wizard', sequence=2)
+menu.add(id='mrp_sequence', string="Sequence MCVT", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.mcvt', sequence=3)
+menu.add(id='mrp_sequence', string="Sequence 4WD TRF", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_trf', sequence=4)
+menu.add(id='mrp_sequence', string="Sequence 4WD DPS", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_dps', sequence=5)
+menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.flexi', sequence=6)
 
 view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
-<tree domain="context.type ? ['type', '=', context.type] : [], ['finished', '!=', True]">
+<tree domain="['finished', '!=', True]">
     <field name="date"/>
     <field name="sequence" sort="asc"/>
     <field name="quantity" string="Plan Qty"/>
@@ -55,16 +68,59 @@ view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
 </tree>
 """)
 
-view.add(model='stock.picking.list', mode='tree_mcvt', arch="""
-<tree-page title="Sequence MCVT"/>
+view.add(model='mrp.sequence.filter', mode='wizard', arch="""
+<form>
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
+""")
+
+view.add(model='mrp.sequence.filter', mode='mcvt', arch="""
+<form mode="mcvt">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
 """, context={'type': 'mcvt'})
 
-view.add(model='stock.picking.list', mode='tree_fwd', arch="""
-<tree-page title="Sequence 4WD"/>
-""", context={'type': 'fwd'})
+view.add(model='mrp.sequence.filter', mode='fwd_trf', arch="""
+<form mode="fwd_trf">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
+""", context={'type': 'fwd_trf'})
 
-view.add(model='stock.picking.list', mode='tree_flexi', arch="""
-<tree-page title="Sequence Flexi"/>
+view.add(model='mrp.sequence.filter', mode='fwd_dps', arch="""
+<form mode="fwd_dps">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
+""", context={'type': 'fwd_dps'})
+
+view.add(model='mrp.sequence.filter', mode='flexi', arch="""
+<form mode="flexi">
+    <sheet>
+        <group>
+            <field name="date"/>
+            <button name="filter" string="Filter"/>
+        </group>
+    </sheet>
+</form>
 """, context={'type': 'flexi'})
 
 view.add(model='mrp.sequence', mode='form', arch="""

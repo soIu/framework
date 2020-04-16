@@ -65,7 +65,7 @@ class StockTrolley(models.Model):
 
     @async
     def _get_type(self):
-        picking_id = await [self.env['stock.picking'].with_context(limit=1).search(['trolley_id', '=', self.id])]
+        picking_id = await [self.env['stock.picking.lot'].browse(self.picking_lot_id)]
         return picking_id.trolley_type_id
 
     name = fields.Char(string="Trolley Number", required=True, index=True)
@@ -73,6 +73,7 @@ class StockTrolley(models.Model):
     pack_ids = fields.One2many('stock.pack', 'trolley_id', string="Packs")
     move_ids = fields.One2many('stock.move', 'trolley_id', string="Movements")
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", compute=_get_type, store=False)
+    picking_lot_id = fields.Many2one('stock.picking.lot', string="Picking List")
 
     @async
     def print_qrcode(self):
@@ -84,12 +85,9 @@ class StockTrolley(models.Model):
     def update_location(self, trolley, location_id, trigger):
         trolley_id = await [self.search(['name', '=', trolley])]
         trolley_id.write({'location_id': location_id})
-        picking_list_id = await [self.env['stock.picking.lot'].with_context(limit=1, order='date desc').search(['trolley_id', '=', trolley_id.id])]
+        picking_list_id = await [self.env['stock.picking.lot'].browse(trolley_id.picking_lot_id)] #with_context(limit=1, order='date desc').search(['trolley_id', '=', trolley_id.id])]
         trolley_type_id = await [self.env['stock.trolley.type'].browse(picking_list_id.trolley_type_id)]
-        console.log('nggolek biang kerok e')
-        console.log(trolley, trolley_id.id, picking_list_id.id, trolley_type_id.name, location_id)
-        console.log('wes lur')
-        require('node-fetch')('http://172.16.1.216:9000/api1?fitting=' + trolley_type_id.name + '&sequences=' + picking_list_id.sequences)
+        require('node-fetch')('http://172.16.1.216:9000/api1?fitting=' + trolley_type_id.name + '&sequences=' + picking_list_id.sequences + '&location=' + location_id + '&date=' + picking_list_id.date)
         if trigger and not picking_list_id.is_carry_over:
            self.env['stock.trigger.board'].trigger(picking_list_id.type, picking_list_id.trolley_type_id, picking_list_id.sequence_picking)
         if location_id not in [locations[location + '_id'] for location in ('internal', 'scr', 'assy')]: return picking_list_id.check_pulley(location_id)
