@@ -49,10 +49,10 @@ MrpSequenceFilter()
 
 menu.add(id='mrp_planning', string="Planning", sequence=3)
 menu.add(id='mrp_sequence', string="Sequence Plan", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.wizard', sequence=2)
-menu.add(id='mrp_sequence', string="Sequence MCVT", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.mcvt', sequence=3)
-menu.add(id='mrp_sequence', string="Sequence 4WD TRF", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_trf', sequence=4)
-menu.add(id='mrp_sequence', string="Sequence 4WD DPS", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_dps', sequence=5)
-menu.add(id='mrp_sequence', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.flexi', sequence=6)
+menu.add(id='mrp_sequence_mcvt', string="Sequence MCVT", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.mcvt', sequence=3)
+menu.add(id='mrp_sequence_fwd_trf', string="Sequence 4WD TRF", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_trf', sequence=4)
+menu.add(id='mrp_sequence_fwd_dps', string="Sequence 4WD DPS", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.fwd_dps', sequence=5)
+menu.add(id='mrp_sequence_flexi', string="Sequence Flexi", parent='mrp_planning', model='mrp.sequence.filter', view_id='mrp.sequence.filter.flexi', sequence=6)
 
 view.add(init=create_upload_button, model='mrp.sequence', mode='tree', arch="""
 <tree domain="['finished', '!=', True]">
