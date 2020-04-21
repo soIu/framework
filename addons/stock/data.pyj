@@ -138,6 +138,7 @@ class PurchaseOrder(models.Model):
         while values.length:
             data = JSON.stringify(values.splice(0, 1500))
             promises.push(get_report(data))
+            await (promises)
         buffers = await (promises)
         pdf = new PDF.Document()
         for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
