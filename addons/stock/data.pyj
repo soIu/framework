@@ -11,6 +11,37 @@ from stock.location import defaults as location_defaults
 from jasper.report import get_jasper_report
 from utils import create_upload_button, generate_pdf417
 
+def preload():
+    root = document.getElementById('app')
+    if not root: return
+    globals = {}
+    def done(value):
+        globals.preload_loader.remove()
+        globals.preload_backdrop.remove()
+        return value
+    preloader = document.createElement('div')
+    preloader.className = 'preloader-modal'
+    preloader.insertAdjacentHTML('beforeend',
+    """<div class="preloader color-white">
+      <span class="preloader-inner">
+        <span class="preloader-inner-gap"></span>
+        <span class="preloader-inner-left">
+          <span class="preloader-inner-half-circle"></span>
+        </span>
+        <span class="preloader-inner-right">
+          <span class="preloader-inner-half-circle"></span>
+        </span>
+      </span>
+    </div>"""
+    )
+    backdrop = document.createElement('div')
+    backdrop.className = 'preloader-backdrop'
+    root.insertAdjacentElement('beforeend', backdrop)
+    root.insertAdjacentElement('beforeend', preloader)
+    globals.preload_loader = preloader
+    globals.preload_backdrop = backdrop
+    return {'done': done}
+
 class PurchaseOrder(models.Model):
     _name = 'purchase.order'
 
@@ -109,7 +140,9 @@ class PurchaseOrder(models.Model):
             nonlocal count
             value = record.read()
             value.date_string = value.date_string.split('/')[0:2].join('/')
+            load = preload()
             pack_ids = await [self.env['purchase.order.pack'].browse(record.pack_ids)]
+            load.done()
             for pack_id in pack_ids:
                 if pack_id.print_number: continue
                 count += 1
