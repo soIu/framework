@@ -685,7 +685,7 @@ class PickingLot(models.Model):
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
         if buffer:
            response = await [fetch(url, {'credentials': 'include'})]
-           return response.arrayBuffer()
+           return response.arrayBuffer(), values[0].trolley_type_id
         window.open(url)
 
     @async
@@ -695,7 +695,7 @@ class PickingLot(models.Model):
             buffer = await [record.print_list(buffer=True)]
             buffers.push(buffer)
         pdf = new PDF.Document()
-        for buffer in buffers: pdf.addPagesOf(new PDF.ExternalDocument(buffer))
+        for buffer in buffers.sort(): pdf.addPagesOf(new PDF.ExternalDocument(buffer[0]))
         buffer = await [pdf.asBuffer()]
         window.open(URL.createObjectURL(new Blob([buffer], {'type': 'application/pdf'})))
 
