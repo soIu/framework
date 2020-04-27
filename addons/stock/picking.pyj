@@ -685,7 +685,8 @@ class PickingLot(models.Model):
         url = await [get_jasper_report('/Solu/HPPM/Picking_List', {'data': JSON.stringify(values[0])})]
         if buffer:
            response = await [fetch(url, {'credentials': 'include'})]
-           return response.arrayBuffer(), values[0].trolley_type_id
+           arrayBuffer = await [response.arrayBuffer()]
+           return arrayBuffer, values[0].trolley_type_id
         window.open(url)
 
     @async
@@ -791,8 +792,8 @@ class PickingLot(models.Model):
         @async
         def create_quant(pack_id):
             if pack_id.location_id:
-               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id})]
-            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id})]
+               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id, 'line_type': self.type})]
+            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id, 'line_type': self.type})]
         pulley_location_updated = False
         for pack_id in pack_ids:
             if pack_id.is_pulley and not pulley_location_updated:
@@ -1217,8 +1218,8 @@ class PickingList(models.Model):
         @async
         def create_quant(pack_id):
             if pack_id.location_id:
-               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id})]
-            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id})]
+               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id, 'line_type': self.type})]
+            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id, 'line_type': self.type})]
         pulley_location_updated = False
         for pack_id in pack_ids:
             if pack_id.is_pulley and not pulley_location_updated:

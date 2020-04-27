@@ -193,6 +193,7 @@ class StockQuant(models.Model):
     product_id = fields.Many2one('product.product', string='Part', index=True)
     location_id = fields.Many2one('stock.location', string='Location', index=True)
     product_qty = fields.Integer(string="Quantity", index=True)
+    line_type = fields.Selection(['mcvt', 'MCVT'], ['fwd_trf', '4WD TRF'], ['fwd_dps', '4WD DPS'], ['flexi', 'Flexi'], string="Type")
 
 StockQuant()
 

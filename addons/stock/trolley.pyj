@@ -105,8 +105,8 @@ class StockTrolley(models.Model):
         def create_quant(pack_id):
             create_quant_report(pack_id)
             if pack_id.location_id:
-               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id})]
-            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id})]
+               await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': -pack_id.product_qty, 'location_id': pack_id.location_id, 'line_type': picking_list_id.type})]
+            await [self.env['stock.quant'].create({'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_id': location_id, 'line_type': picking_list_id.type})]
         for pack_id in pack_ids:
             await ([create_quant(pack_id), self.env['stock.move'].create({'pack_id': pack_id.id, 'product_id': pack_id.product_id, 'product_qty': pack_id.product_qty, 'location_src_id': pack_id.location_id, 'location_dest_id': location_id}), pack_id.write({'location_id': location_id})])
         #picking_list_id = await (picking_list_id)
