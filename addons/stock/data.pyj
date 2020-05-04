@@ -707,7 +707,7 @@ class HPPMData(models.Model):
         parts = {}
         @async
         def check_part(value):
-            product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', value.type]))
+            product_id = await (self.env['product.product'].search(['code', '=', value.code], ['type', '=', value.type], ['supplier_code', '=', value.supplier_code]))
             if not product_id.length:
                product_id = await (self.env['product.product'].create(value))
             if not parts[value.type]: parts[value.type] = {}
@@ -718,7 +718,7 @@ class HPPMData(models.Model):
                 row += 1
                 if row < 11: continue
                 if not data[1]: continue
-                value = {'base_name': data[2], 'name': data[1] + ' - ' + data[2], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'type': type}
+                value = {'base_name': data[2], 'name': data[1] + ' - ' + data[2] + ' - ' + data[3], 'code': data[1], 'code_trimmed': data[1].split(' ').join('').split('-').join(''), 'supplier_code': data[3], 'type': type}
                 if not value.name or not value.code: continue
                 promise = check_part(value)
                 cell_index = -1

@@ -32,6 +32,7 @@ class ProductProduct(models.Model):
     fwd_min_box = fields.Integer(string="Minimum Box")
     pl_from = fields.Char(string="P/L From")
     supplier = fields.Char(string="Supplier")
+    supplier_code = fields.Char(string="Supplier Code", index=True)
     model_type = fields.Char(string="Model")
     packing_type = fields.Char(string="Packing Type")
     c_code = fields.Char(string="C/Code")
@@ -79,7 +80,7 @@ view.add({'model': 'product.product', 'init': create_upload_button, 'mode': 'tre
     <field name="type"/>
     <field name="code"/>
     <field name="base_name"/>
-    <field name="pl_from"/>
+    <field name="supplier_code"/>
     <field name="supplier"/>
     <field name="model_type"/>
     <field name="packing_type"/>
