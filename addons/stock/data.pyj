@@ -803,7 +803,7 @@ class HPPMData(models.Model):
             date = date_object
             console.log('mencari bom')
             product_id = await [self.env['product.product'].search(['code', '=', code], ['type', '=', 'fg'])]
-            if not product_id.length = product_id = await [self.env['product.product'].search(['code', '=', code.split('-')[0] + '-'], ['type', '=', 'fg'])]
+            if not product_id.length: product_id = await [self.env['product.product'].search(['code', '=', code.split('-')[0] + '-'], ['type', '=', 'fg'])]
             if not product_id.length: raise exceptions.ValidationError("Model Number " + code + " is missing")
             bom_id = await (self.env['mrp.bom'].search(['product_id', '=', product_id.id]))
             if not bom_id.length: raise exceptions.ValidationError("Bill of Materials for Model Number " + code + " is missing")
