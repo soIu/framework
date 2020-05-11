@@ -9,10 +9,9 @@ def register_component(class_object):
     #return create_component
 
 def get_components(*components):
-    def wrap_component(component):
+    def wrap_component(component_name):
         def create_component(*children, **props):
-            nonlocal component
-            component = tools.client.components[component] or tools.client.Framework7Components[component] or component
+            component = tools.client.components[component_name]
             if props.ref and type(props.ref) == String:
                ref_name = props.ref
                self = this
@@ -25,6 +24,7 @@ def get_components(*components):
                 if 'data_' in key:
                    props[key.replace('data_', 'data-')] = props[key]
                    del props[key]
+            if not children.length: return window.React.createElement(component, tools.copy(props))
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []
@@ -34,10 +34,9 @@ def get_components(*components):
     return new_components
 
 def get_framework_components(*components):
-    def wrap_component(component):
+    def wrap_component(component_name):
         def create_component(*children, **props):
-            nonlocal component
-            component = tools.client.Framework7Components[component] or component
+            component = tools.client.MaterialComponents[component_name]
             if props.ref and type(props.ref) == String:
                ref_name = props.ref
                self = this
@@ -50,6 +49,7 @@ def get_framework_components(*components):
                 if 'data_' in key:
                    props[key.replace('data_', 'data-')] = props[key]
                    del props[key]
+            if not children.length: return window.React.createElement(component, tools.copy(props))
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []

@@ -49,6 +49,7 @@ def init_client():
         if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name
         #await []
         window.renderApp(App)
+        if tools.client.Native.Platform != 'web': return
         if tools.configuration.custom_navbar:
            style = document.createElement('style')
            style.innerHTML = '.navbar, .toolbar, .statusbar {background-color: ' + tools.configuration.custom_navbar + '!important}'

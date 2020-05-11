@@ -1,0 +1,23 @@
+import react
+import orm.tools as tools
+
+View, Router, Switch, Route = react.get_components('View', 'Router', 'Switch', 'Route')
+
+class Routes(React.Component):
+
+	def __init__(self):
+		return
+
+	def render(self):
+		return (
+			Router (
+				View (style={'backgroundcolor:' '#f2f6ff', 'minHeight:' 100},
+					Switch (
+						Route (exact=True, path='/', component=None),
+						Route (exact=True, path='/cards', component=None),
+					)
+				)
+			)
+		)
+
+react.register_component(Routes)

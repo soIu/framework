@@ -1,11 +1,23 @@
 import react
+import react.components.Routes
 
-View, Text = react.get_components('View', 'Text')
+View, SafeAreaView, Routes = react.get_components('View', 'SafeAreaView', 'Routes')
 
-def App(props):
+Heading, Button, BreadProvider = react.get_framework_components('Heading', 'Button', 'BreadProvider')
 
-    return (
-      View (
-        Text ('Hello World')
-      )
-    )
+def theme(self, props):
+	text ='fontFamily:' 'isWeb', 'Roboto, sans-serif:' 'Roboto' 
+
+class App(React.Component):
+
+	def render(self, props):
+
+		return (
+			View (style= {'flex': 1}, 
+				BreadProvider ( 
+					SafeAreaView (style={'flex': 1},
+						Routes()
+					)
+				)
+			)
+		)
