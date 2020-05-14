@@ -629,11 +629,13 @@ class HPPMData(models.Model):
                   @async
                   def check_part(code, supplier):
                       args = []
-                      args.push(['code', '=', code + '-' + supplier])
+                      args.push(['code', '=', code])
                       if supplier == 'CKD':
-                         args = (['code', 'ilike', code], ['type', '=', 'ckd'])
-                      if 'IN HOUSE' in supplier:
-                         args = (['code', 'ilike', code], ['type', '=', 'inhouse'])
+                         args.push(['type', '=', 'ckd'])
+                      elif 'IN HOUSE' in supplier:
+                         args.push(['type', '=', 'inhouse'])
+                      else:
+                         args.push(['supplier_code', '=', supplier])
                       product_ids = await [self.env['product.product'].search(*args)]
                       if supplier == 'CKD':
                          ckd_ids.push(*product_ids.ids)
@@ -894,7 +896,7 @@ class HPPMData(models.Model):
             order_id = await [self.env['purchase.order'].search(['part_no', '=', value.part_no], ['date_string', '=', value.date_string], ['ps_month', '=', value.ps_month], ['ps_code', '=', value.ps_code], ['pl_from', '=', value.pl_from], ['pl_to', '=', value.pl_to])]
             if order_id.length:
                return order_id.recompute_pack(value.product_qty)
-            product_id = await (self.env['product.product'].search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
+            product_id = await (self.env['product.product'].with_context(limit=1).search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
             if not product_id.length: return #raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
             value.product_id = product_id.id
             order_id = await [self.env['purchase.order'].create(value)] #{'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
