@@ -490,6 +490,15 @@ class PurchaseOrderSupplier(models.Model):
 
 PurchaseOrderSupplier()
 
+class HPPMDataOverview(models.Model):
+    _name = 'hppm.data.overview'
+
+    name = fields.Datetime(string="Date", defaults=tools.date.now, readonly=True)
+    type = fields.Char(string="Type")
+    data = fields.Data(string="Data")
+
+HPPMDataOverview()
+
 add_sequence('hppm.data')
 
 class HPPMData(models.Model):
@@ -524,6 +533,7 @@ class HPPMData(models.Model):
     excel = fields.Binary(string="Excel Data", required=True, protect=True)
     imported = fields.Boolean(string="Uploaded")
     type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over_mcvt', 'Carry Over MCVT'], ['carry_over_flexi', 'Carry Over Flexi'], ['carry_over_fwd', 'Carry Over 4WD'], ['time_mcvt', 'Sequence Time MCVT'], ['time_flexi', 'Sequence Time Flexi'], ['time_fwd', 'Sequence Time 4WD'], string="Type", required=True, defaults=_get_type)
+    overview_id = fields.Many2one('hppm.data.overview', string="Overview Data")
 
     @async
     def download_excel(self):
@@ -800,6 +810,8 @@ class HPPMData(models.Model):
         product_ids = self.env['product.product']
         trolley_type_part_ids = self.env['stock.trolley.type.part']
         lot_sequence_id = await [self.env['ir.sequence'].with_context(limit=1).search(['code', '=', 'stock.picking.lot'])]
+        overview_id = None
+        if self.overview_id: overview_id = await [self.env['hppm.data.overview'].browse(self.overview_id)]
         @async
         def create_picking_list(code, quantity, lot_no, sequence, date, type, time_start, time_end):
             date_object = new Date('1899-12-30 00:00:00')
@@ -869,7 +881,7 @@ class HPPMData(models.Model):
             promise = create_picking_list(data[head + 3] + '-' + data[head + 15], data[head + 2], lot_no, data[head + 1], data[0], type, data[head + 16], data[head + 17]) #, original_type)
             await (promise)
         console.log('mapping')
-        return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, lines_ids, product_ids, trolley_type_part_ids, lot_sequence_id, type, fwd_type)
+        return self.env['stock.picking.lot'].map_list(picking_list_ids, sequence_ids, lines_ids, product_ids, trolley_type_part_ids, lot_sequence_id, type, fwd_type, overview_id)
 
     @api.server(async=True)
     def import_po(self):
@@ -1034,6 +1046,7 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="imported" readonly="True"/>
             <field name="type"/>
+            <field name="overview_id" invisible="active_id.type.indexOf('sequence') == -1"/>
         </group>
         <group invisible="active_id.id == null">
             <button name="download_excel" string="Download"/>

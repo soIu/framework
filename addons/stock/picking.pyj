@@ -384,7 +384,7 @@ class PickingLot(models.Model):
         return result"""
 
     @async
-    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, trolley_part_ids, ir_sequence_id, type, fwd_type):
+    def map_list(self, picking_list_ids, sequence_ids, line_ids, product_ids, trolley_part_ids, ir_sequence_id, type, fwd_type, overview_id):
         lots = []
         last_sequence_id = None
         list_ids = self.env['stock.picking.list']
@@ -405,6 +405,7 @@ class PickingLot(models.Model):
         if list_ids.length: lots.push(list_ids)
         promises = []
         pulley_trolley_type_ids = {product_id[type+ '_trolley_type_id']: True for product_id in product_ids if 'pulley' in product_id.name.toLowerCase() and product_id.type == 'inhouse'}
+        overview_object = {'type': 'sequence', 'data': {}}
         #@async
         def sort(a, b): return a - b
         def create_line(values, lot_id):
@@ -420,6 +421,10 @@ class PickingLot(models.Model):
             if values.product_qty != values.qty_box:
                box = Math.ceil(values.product_qty / values.qty_box)
                values.product_qty = values.qty_box * box
+            if values.min_box > values.product_qty:
+               if not overview_object.data[values.product_id]: overview_object[values.product_id] = 0
+               overview_object.data[values.product_id] += values.min_box - values.product_qty
+               values.product_qty = values.min_box
             return self.env['stock.picking.lot.line'].create(values)
         @async
         def create_lot(lines, trolley_type_id):
@@ -572,6 +577,7 @@ class PickingLot(models.Model):
                 await (create_lot(lines, trolley_type_id))
         for line in new_carry_lines: await (create_lot(new_carry_lines, line))
         ir_sequence_id.write()
+        self.env['hppm.data.overview'].create(overview_object)
         #return Promise.all(promises)
 
     @api.onchange('laser_scan', async=True)
