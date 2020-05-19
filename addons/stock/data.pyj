@@ -493,7 +493,11 @@ PurchaseOrderSupplier()
 class HPPMDataOverview(models.Model):
     _name = 'hppm.data.overview'
 
-    name = fields.Datetime(string="Date", defaults=tools.date.now, readonly=True)
+    def _get_date(self):
+        date = Date()
+        return date.toLocaleString()
+
+    name = fields.Datetime(string="Date", defaults=_get_date, readonly=True)
     type = fields.Char(string="Type")
     data = fields.Data(string="Data")
 
