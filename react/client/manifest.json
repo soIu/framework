@@ -2,10 +2,18 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "lang": "en",
-  "name": "Blank Template",
-  "short_name": "Blank Template",
+  "name": "Solu Client",
+  "short_name": "Solu Client",
   "start_url": "/?utm_source=web_app_manifest",
   "orientation": "portrait",
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "http://play.google.com/store/apps/details?id=com.client.solu",
+      "id": "com.client.solu"
+    }
+  ],
+  "prefer_related_applications": true,
   "icons": [
     {
       "src": "/pwa/chrome-icon/chrome-icon-144.png",
