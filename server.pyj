@@ -10,10 +10,11 @@ configuration = merge(configuration, JSON.parse(require('process').env.rapyd_con
 
 admin_password = configuration.admin_password
 
-client_js = require(require('path').join(require('process').cwd(), 'client.js')) #require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
+client_js = {}
+#client_js['code'] = require(require('path').join(require('process').cwd(), 'client.js')) #require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
 #console.log(Object.keys(client_js))
-client_js_time = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
-client_js_compressed = require('buffer').Buffer.from(require('lzma').compress(client_js)).toString('base64')
+client_js['time'] = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
+#client_js['compressed'] = require('buffer').Buffer.from(require('lzma').compress(client_js)).toString('base64')
 
 http.route('/api/login',
 def (request, response, next):
@@ -34,10 +35,13 @@ def (request, response, next):
                  #response.result.login, response.result.password = encrypt(params.login), encrypt(params.password)
                  #login_cache[response.result.login] = response.result.password
                  response.result.id = user_id.id
-                 if not params.client_js_time or params.client_js_time != client_js_time:
-                    response.result.client_js = client_js
-                    if params.compress: response.result.client_js = client_js_compressed
-                    response.result.client_js_time = client_js_time
+                 if not params.client_js_time or params.client_js_time != client_js['time']:
+                    if 'code' not in client_js:
+                       client_js['code'] = require(require('path').join(require('process').cwd(), 'client.js'))
+                       client_js['compressed'] = require('buffer').Buffer.from(require('lzma').compress(client_js['code'])).toString('base64')
+                    response.result.client_js = client_js['code']
+                    if params.compress: response.result.client_js = client_js['compressed']
+                    response.result.client_js_time = client_js['time']
            next()
        ).catch(
        def (error):
