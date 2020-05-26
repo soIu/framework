@@ -1,15 +1,15 @@
 self.__precacheManifest = [
   {
-    "revision": "058efca942692e478f29",
-    "url": "/static/js/app.cd84b631.chunk.js"
+    "revision": "915329325c1d03ba7898",
+    "url": "/static/js/app.04b7ed7a.chunk.js"
   },
   {
     "revision": "3636aebd34579cc662c5",
     "url": "/static/js/runtime~app.4b0f5a04.js"
   },
   {
-    "revision": "42d2620e72e95a0b195f",
-    "url": "/static/js/2.70574bc9.chunk.js"
+    "revision": "2ec95eafffa69e04024b",
+    "url": "/static/js/2.f0bb3939.chunk.js"
   },
   {
     "revision": "ec543248d7b23864564429fc03837190",
@@ -24,7 +24,7 @@ self.__precacheManifest = [
     "url": "/MaterialIcons.ttf"
   },
   {
-    "revision": "e36632d3b5dc9eeee8b16b99bd83f6ba",
+    "revision": "d1f41b9243bb9e1c461157f24ecc5de5",
     "url": "/index.html"
   },
   {
