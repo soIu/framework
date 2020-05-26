@@ -1,7 +1,7 @@
 import react
 import react.components.Appbar
 import orm.tools as tools
-from react.component.Appbar import Appbar
+from react.components.Appbar import Appbar
 
 View, ScrollView, Appbar = react.get_components('View', 'ScrollView')
 
