@@ -31,7 +31,7 @@ class Page(React.Component):
 
     def render(self, props):
         mobile = react.check_is_mobile()
-        styles.body.minHeight = tools.client.Dimensions.get('window').height - 56
+        styles.body.minHeight = tools.client.Native.Dimensions.get('window').height - 56
         def onClose(): return self.setState({'open': False})
         def toggleDrawer(): return self.setState({'open': not self.state.open})
         appbar = react.wrapComponent(tools.client.ReactRouter.withRouter(Appbar))(toggleDrawer=toggleDrawer)
