@@ -3,7 +3,7 @@ import react.components.Appbar
 import orm.tools as tools
 from react.components.Appbar import Appbar
 
-View, ScrollView, Appbar = react.get_components('View', 'ScrollView')
+View, ScrollView = react.get_components('View', 'ScrollView')
 
 Drawer, Heading, ListItem = react.get_framework_components('Drawer', 'Heading', 'ListItem')
 
