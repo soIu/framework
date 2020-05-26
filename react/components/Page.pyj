@@ -34,7 +34,7 @@ class Page(React.Component):
         styles.body.minHeight = tools.client.Native.Dimensions.get('window').height - 56
         def onClose(): return self.setState({'open': False})
         def toggleDrawer(): return self.setState({'open': not self.state.open})
-        appbar = react.wrapComponent(tools.client.ReactRouter.withRouter(Appbar))(toggleDrawer=toggleDrawer)
+        appbar = react.wrap_component(tools.client.ReactRouter.withRouter(Appbar))(toggleDrawer=toggleDrawer)
         drawerContent = (
             ScrollView (style={'padding': 16 if mobile else 34, 'height': '100%', 'flex': 1},
                 View (style={'marginBottom': 24},
