@@ -1,17 +1,37 @@
 import orm.tools as tools
 
-new_components = {}
+Component = window.React.Component
+
+registered_components = {}
 
 def register_component(class_object):
-    new_components[class_object.name] = class_object
+    registered_components[class_object.name] = class_object
     #def create_component(*children, **props):
     #    return window.React.createElement(class_object, tools.copy(props), children.as_array())
     #return create_component
 
+def wrap_component(component):
+    def create_component(*children, **props):
+        if props.ref and type(props.ref) == String:
+           ref_name = props.ref
+           self = this
+           if not self.refs: self.refs = {}
+           def setRef(ref):
+               self.refs[ref_name] = ref
+           del props.ref
+           props.ref = setRef
+        for key in props:
+            if 'data_' in key:
+               props[key.replace('data_', 'data-')] = props[key]
+               del props[key]
+        if not children.length: return window.React.createElement(component, tools.copy(props))
+        return window.React.createElement(component, tools.copy(props), children)
+    return create_component
+
 def get_components(*components):
     def wrap_component(component_name):
         def create_component(*children, **props):
-            component = tools.client.components[component_name]
+            component = registered_components[component_name] or tools.client.components[component_name]
             if props.ref and type(props.ref) == String:
                ref_name = props.ref
                self = this
@@ -58,3 +78,13 @@ def get_framework_components(*components):
     if new_components.length < 2: return new_components[0]
     return new_components
 
+mobile_breakpoint = 767
+
+def check_is_mobile():
+    width = tools.client.Native.Dimensions.get('window').width
+    if width <= mobile_breakpoint: return True
+    return False
+
+def check_is_web():
+    if v'typeof document' != 'undefined': return True
+    return False

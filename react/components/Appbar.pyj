@@ -1,0 +1,15 @@
+import react
+import orm.tools as tools
+
+View  = react.get_components('View')
+
+AppBar, Button, Icon, Ripple  = react.get_framework_components('Appbar', 'Button', 'Icon', 'Ripple')
+
+def Appbar(props):
+
+    def onNavigation():
+        return props.toggleDrawer()
+
+    return (
+        AppBar (title='Home', navigation='menu', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'borderBottomColor': '#f1f1f1', 'borderBottomWidth': 1, 'zIndex': 1000}])
+    )

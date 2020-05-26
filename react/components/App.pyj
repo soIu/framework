@@ -6,18 +6,18 @@ View, SafeAreaView, Routes = react.get_components('View', 'SafeAreaView', 'Route
 Heading, Button, BreadProvider = react.get_framework_components('Heading', 'Button', 'BreadProvider')
 
 def theme(self, props):
-	text ='fontFamily:' 'isWeb', 'Roboto, sans-serif:' 'Roboto' 
+    text ='fontFamily:' 'isWeb', 'Roboto, sans-serif:' 'Roboto' 
 
 class App(React.Component):
 
-	def render(self, props):
+    def render(self, props):
 
-		return (
-			View (style= {'flex': 1}, 
-				BreadProvider ( 
-					SafeAreaView (style={'flex': 1},
-						Routes()
-					)
-				)
-			)
-		)
+        return (
+            View (style= {'flex': 1}, 
+                BreadProvider ( 
+                    SafeAreaView (style={'flex': 1},
+                        Routes()
+                    )
+                )
+            )
+        )

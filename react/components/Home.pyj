@@ -1,0 +1,17 @@
+import react
+import react.components.Page
+import orm.tools as tools
+
+View, Page = react.get_components('View', 'Page')
+
+class Home(React.Component):
+
+    def __init__(self):
+        return
+
+    def render(self):
+        return (
+            Page ('Hello this is Homepage')
+        )
+
+react.register_component(Home)
