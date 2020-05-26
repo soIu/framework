@@ -44,8 +44,6 @@ for key in tools.menu:
 def init_client():
     try:
         console.log('Initialize Client')
-        for key in react.new_components:
-            tools.client.components[key] = react.new_components[key]
         if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name
         #await []
         window.renderApp(App)
