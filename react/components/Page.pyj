@@ -29,7 +29,7 @@ class Page(React.Component):
     def __init__(self):
         return
 
-    def render(self, props):
+    def render(self):
         mobile = react.check_is_mobile()
         styles.body.minHeight = tools.client.Native.Dimensions.get('window').height - 56
         def onClose(): return self.setState({'open': False})
@@ -51,7 +51,7 @@ class Page(React.Component):
                 View (style=styles.body,
                     ScrollView (contentContainerStyle={'paddingBottom': 100},
                         View (style=[{'padding': 8 if mobile else 28}, {'flexDirection': 'row'}],
-                            props.children
+                            self.props.children
                         )
                     )
                 )
