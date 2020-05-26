@@ -11,10 +11,10 @@ configuration = merge(configuration, JSON.parse(require('process').env.rapyd_con
 admin_password = configuration.admin_password
 
 client_js = {}
-#client_js['code'] = require(require('path').join(require('process').cwd(), 'client.js')) #require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
+client_js['code'] = require(require('path').join(require('process').cwd(), 'client.js')) #require('child_process').spawnSync((require('process').execPath if '.exe' not in require('process').execPath else 'node'), ['server.js', '--client'], {'env': require('process').env, 'maxBuffer': 5000 * 1024}).stdout.toString()
 #console.log(Object.keys(client_js))
 client_js['time'] = Date().toISOString() if not require('process').env.rapyd_process_date else require('process').env.rapyd_process_date
-#client_js['compressed'] = require('buffer').Buffer.from(require('lzma').compress(client_js)).toString('base64')
+client_js['compressed'] = require('buffer').Buffer.from(require('lzma').compress(client_js['code'])).toString('base64')
 
 http.route('/api/login',
 def (request, response, next):
