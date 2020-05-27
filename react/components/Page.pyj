@@ -20,7 +20,7 @@ styles.body = {
     #'backgroundColor': theme.bodyBackground,
     #minHeight: screenHeight - appbarHeight,
     'position': 'relative',
-    'marginBottom': 100,
+    'marginBottom': 0,
     'maxWidth': 1440
 }
 
@@ -28,25 +28,36 @@ class Page(React.Component):
 
     state = {}
 
+    def componentDidMount(self):
+        def onResize(): return self.setState({'open': undefined, 'resizing': True})
+        if not self.onResize: self.onResize = onResize
+        tools.client.Native.Dimensions.addEventListener('change', self.onResize)
+
+    def componentWillUnmount(self):
+        tools.client.Native.Dimensions.removeEventListener('change', self.onResize)
+
     def render(self):
         mobile = react.check_is_mobile()
+        console.log(react)
         styles.body.minHeight = tools.client.Native.Dimensions.get('window').height - 56
-        def onClose(): return self.setState({'open': False})
-        def toggleDrawer(): return self.setState({'open': not self.state.open})
+        open = True if not mobile and self.state.open == undefined else self.state.open
+        def onClose(): return self.setState({'open': False, 'resizing': False})
+        def toggleDrawer(): return self.setState({'open': not open, 'resizing': False})
         appbar = react.wrap_component(tools.client.ReactRouter.withRouter(Appbar))(toggleDrawer=toggleDrawer)
         drawerContent = (
-            ScrollView (style={'padding': 16 if mobile else 34, 'height': '100%', 'flex': 1},
-                View (style={'marginBottom': 24},
-                    Heading (type=6, text='Test', style={'marginBottom': 24}),
-                    View (
-                        ListItem (text='Test 1', textStyle={'lineHeight': 24}, style={'borderRadius': 8}, rippleProps={'rippleContainerBorderRadius': 8}),
-                        ListItem (text='Test 2', textStyle={'lineHeight': 24}, style={'borderRadius': 8}, rippleProps={'rippleContainerBorderRadius': 8})
-                    )
-                )
+            ScrollView (style={'padding': 16 if mobile else 34, 'height': 'auto', 'flex': 1},
+                View (style={'marginBottom': 24}, [[
+                    Heading (type=6, text=tools.menu[menu].string, style={'marginBottom': 24}),
+                    tools.menu[menu].childs.length and
+                    View (style={'marginBottom': 20}, [
+                        ListItem (text=child_menu.string, textStyle={'lineHeight': 24}, style={'borderRadius': 8}, rippleProps={'rippleContainerBorderRadius': 8})
+                    for child_menu in tools.menu[menu].childs])
+                ]
+                for menu in tools.keys(window.tools.menu, 'sequence')])
             )
         )
         return (
-            Drawer (open=self.state.open, type='modal' if mobile else 'permanent', onClose=onClose, drawerContent=drawerContent, style=styles.pageContainer, scrimStyles={'position': 'absolute', 'height': '100%'}, width=280 if mobile else 265, appbar=appbar,
+            Drawer (open=open, type='modal' if mobile and not self.state.resizing else 'permanent', onClose=onClose, drawerContent=drawerContent, style=styles.pageContainer, scrimStyles={'position': 'absolute', 'height': '100%'}, width=280 if mobile else 265, appbar=appbar,
                 View (style=styles.body,
                     ScrollView (contentContainerStyle={'paddingBottom': 100},
                         View (style=[{'padding': 8 if mobile else 28}, {'flexDirection': 'row'}],
