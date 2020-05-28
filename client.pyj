@@ -6,6 +6,7 @@ import react as react
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
 from ir.data import data, create_data
 from react.components.App import App
+from utils.domparser import module
 
 tools.exceptions = exceptions
 
@@ -87,6 +88,7 @@ def check_session():
     console.log(storage_url)
     if storage_url: url = storage_url
     tools.configuration.url = url
+    if tools.client.Native.Platform != 'web': window.DOMParser = module('xmldom-qsa').DOMParser
     return init_client()
 
 def start_client():
