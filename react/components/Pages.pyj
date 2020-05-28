@@ -27,7 +27,7 @@ return """
 
 def parseAttribute(props, element):
     for attribute in element.attributes:
-        props[attribute.name] = attribute.value
+        props[attribute] = element.attributes[attribute]
     for attribute in ['invisible', 'required', 'readonly']:
         if attribute in props:
            if props[attribute] in ['true', 'True']: props[attribute] = True
@@ -38,23 +38,27 @@ def parseAttribute(props, element):
 
 def parseTreeView(view, title):
     customComponents = {'Tree': react.registered_components.Tree, 'Field': None}
-    view = new DOMParser().parseFromString(view.trim(), 'text/xml').children[0]
+    view = tools.client.XMLParser(view);
     console.log(view)
-    if title: view.setAttribute('title', title)
+    if title: view.attributes['title'] = title
     def recurse(elements, parent_props):
         components = []
         Array.prototype.slice.call(elements).forEach(
         def (element):
         #for element in elements:
             console.log(element)
+            if not element.tagName:
+               def render(): return React.createElement(tools.client.Native.Text, {}, element.text)
+               components.push(render)
+               return
             component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {} #{'model': model, 'view_model': model}
             parseAttribute(props, element)
             props.isTreeView = True
-            children = recurse(element.children, props) or [def render(): return React.createElement(tools.client.Native.Text, {}, element.innerHTML);]
+            children = recurse(element.children, props) #or [def render(): return React.createElement(tools.client.Native.Text, {}, element.innerHTML);]
             components.push(def render(**new_props): return React.createElement(component, tools.merge(new_props, props), children.map(def (result): return result();));)
         )
-        if not components.length: return None
+        #if not components.length: return None
         return components
     return recurse([view], True)[0]
 
