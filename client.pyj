@@ -6,7 +6,6 @@ import react as react
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
 from ir.data import data, create_data
 from react.components.App import App
-from utils.domparser import module
 
 tools.exceptions = exceptions
 
@@ -46,7 +45,7 @@ def init_client():
     try:
         console.log('Initialize Client')
         window.renderApp(App)
-        if tools.client.Native.Platform != 'web': return console.log('Im out')
+        if tools.client.Native.Platform.OS != 'web': return console.log('Im out')
         if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name
         if tools.configuration.custom_navbar:
            style = document.createElement('style')
@@ -81,14 +80,13 @@ def check_session():
     models.env.user.login = session.login
     models.env.user.password = session.password
     url = ''
-    if tools.client.Native.Platform == 'web':
+    if tools.client.Native.Platform.OS == 'web':
        href = window.location.origin + window.location.pathname
        url = href.substring(0, href.lastIndexOf('/')) + '/'
     storage_url = await [tools.client.Native.AsyncStorage.getItem('rapyd_server_url')]
     console.log(storage_url)
     if storage_url: url = storage_url
     tools.configuration.url = url
-    if tools.client.Native.Platform != 'web': window.DOMParser = module('xmldom-qsa').DOMParser
     return init_client()
 
 def start_client():

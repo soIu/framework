@@ -38,13 +38,15 @@ def parseAttribute(props, element):
 
 def parseTreeView(view, title):
     customComponents = {'Tree': react.registered_components.Tree, 'Field': None}
-    view = new DOMParser().parseFromString(view, 'text/xml').children[0]
+    view = new DOMParser().parseFromString(view.trim(), 'text/xml').children[0]
+    console.log(view)
     if title: view.setAttribute('title', title)
     def recurse(elements, parent_props):
         components = []
         Array.prototype.slice.call(elements).forEach(
         def (element):
         #for element in elements:
+            console.log(element)
             component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
             props = {} #{'model': model, 'view_model': model}
             parseAttribute(props, element)
