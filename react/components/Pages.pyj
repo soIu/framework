@@ -12,9 +12,8 @@ class HomePage(React.Component):
         return
 
     def render(self):
-        console.log(tools)
         return (
-            Page (history=self.props.history, 'Hello this is Homepage')
+            Page (history=self.props.history)
         )
 
 function_string =

@@ -589,7 +589,7 @@ def query(db, type, args, limit):
     )
 
 v"""
-if (typeof window !== 'undefined' && typeof window.HTMLBodyElement !== 'undefined') {configuration.client = true}
+if (typeof window !== 'undefined' && typeof window.XMLHttpRequest !== 'undefined') {configuration.client = true}
 else {configuration.client = false}
 """
 

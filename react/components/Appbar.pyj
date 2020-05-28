@@ -6,11 +6,12 @@ View  = react.get_components('View')
 AppBar, Button, Icon, Ripple  = react.get_framework_components('Appbar', 'Button', 'Icon', 'Ripple')
 
 def Appbar(props):
+    model = props.match.params.model
 
     def onNavigation():
         if props.location.pathname == '/': return props.toggleDrawer()
         return props.history.goBack()
 
     return (
-        AppBar (title='Home', navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
+        AppBar (title='Home' if props.location.pathname == '/' else tools.view[model].string, navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
     )

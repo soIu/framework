@@ -2,7 +2,7 @@ import react
 import orm.tools as tools
 from react.components.Pages import HomePage, TreePage
 
-View, Router, Switch, Route  = react.get_components('View', 'Router', 'Switch', 'Route')
+View, Router, Switch, Route, BackButton = react.get_components('View', 'Router', 'Switch', 'Route', 'BackButton')
 
 class Routes(React.Component):
 
@@ -13,10 +13,11 @@ class Routes(React.Component):
         return (
             Router (
                 View (style={'backgroundcolor': '#f2f6ff', 'minHeight': 100},
+                    tools.client.Native.Platform.OS != 'web' and BackButton(),
                     Switch (
                         Route (exact=True, path='/', component=HomePage),
                         Route (exact=True, path='/tree/:model', component=TreePage),
-                        Route (exact=True, path='/form/:model', component=None),
+                        Route (exact=True, path='/form/:model/:id', component=None),
                         Route (exact=True, path='/view/:view_id', component=None),
                         Route (exact=True, path='/cards', component=None),
                     )
