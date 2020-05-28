@@ -1,0 +1,53 @@
+import react
+import react.components.Page
+import orm.models as models
+import orm.tools as tools
+
+View, Page = react.get_components('View', 'Page')
+
+Table, Header, Row, Cell, Pagination = react.get_framework_components('DataTable', 'DataTableHeader', 'DataTableRow', 'DataTableCell', 'DataTablePagination')
+
+class Tree(React.Component):
+
+    state = {'records_formatted': [], 'page': 0, 'perPage': 50, 'numberOfRows': 0, 'numberOfPages': 1}
+
+    def __init__(self):
+        return
+
+    @async
+    def componentDidMount(self):
+        model = self.props.model
+        records = await [models.env[model].search()]
+        records_formatted = await [records.read(True, [children.props.name for children in self.props.children])]
+        return self.setState({'records': records, 'records_formatted': records_formatted, 'numberOfRows': records.length, 'numberOfPages': records.length / self.state.perPage})
+
+    def render(self):
+        model = self.props.model
+
+        def onChangePage(page):
+            return self.setState({'page': page})
+
+        def onChangeRowsPerPage(perPage):
+            return self.setState({'perPage': perPage})
+
+        tree = (
+            Table (
+                Header (title=self.props.title or tools.view[model].string, rightActions=[{'name': 'filter-list'}, {'name': 'add'}]),
+                Row ([
+                    Cell (text=children.props.string or models.env[model]._fields[children.props.name].string, type='header')
+                for children in tools.each(self.props.children or [])]), self.state.records_formatted.length > 0 and [
+                Row (key=record.id, [
+                    Cell (text=record[children.props.name])
+                for children in tools.each(self.props.children or [])])
+                for record in self.state.records_formatted],
+                Pagination (page=self.state.page, perPage=self.state.perPage, onChangePage=onChangePage, onChangeRowsPerPage=onChangeRowsPerPage, numberOfRows=self.state.numberOfRows, numberOfPages=self.state.numberOfPages)
+            )
+        )
+
+        if not self.props.isTreeView or self.props.isPopup: return tree
+
+        return (
+            Page (tree)
+        )
+
+react.register_component(Tree)

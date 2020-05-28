@@ -1,8 +1,8 @@
 import react
-import react.components.Home
 import orm.tools as tools
+from react.components.Pages import HomePage, TreePage
 
-View, Router, Switch, Route, Home = react.get_components('View', 'Router', 'Switch', 'Route', 'Home')
+View, Router, Switch, Route  = react.get_components('View', 'Router', 'Switch', 'Route')
 
 class Routes(React.Component):
 
@@ -14,8 +14,8 @@ class Routes(React.Component):
             Router (
                 View (style={'backgroundcolor': '#f2f6ff', 'minHeight': 100},
                     Switch (
-                        Route (exact=True, path='/', component=Home),
-                        Route (exact=True, path='/tree/:model', component=None),
+                        Route (exact=True, path='/', component=HomePage),
+                        Route (exact=True, path='/tree/:model', component=TreePage),
                         Route (exact=True, path='/form/:model', component=None),
                         Route (exact=True, path='/view/:view_id', component=None),
                         Route (exact=True, path='/cards', component=None),

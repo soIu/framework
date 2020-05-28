@@ -67,7 +67,24 @@ def init_client():
     except Exception as error:
         raise error
 
-tools.init_client = init_client
+@async
+def check_session():
+    session = None
+    try:
+        session = await [window.session_db.get('session')]
+    except Exception as error:
+        console.log(error)
+        await [window.session_db.changes({'since': 0, 'limit': 1})]
+        session = await [window.session_db.get('session')]
+    models.env.user = models.env['res.users'].browse()
+    models.env.user.login = session.login
+    models.env.user.password = session.password
+    return init_client()
+
+def start_client():
+    check_session()
+
+tools.init_client = start_client
 
 try:
     export_object.models = models

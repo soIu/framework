@@ -8,8 +8,9 @@ AppBar, Button, Icon, Ripple  = react.get_framework_components('Appbar', 'Button
 def Appbar(props):
 
     def onNavigation():
-        return props.toggleDrawer()
+        if props.location.pathname == '/': return props.toggleDrawer()
+        return props.history.goBack()
 
     return (
-        AppBar (title='Home', navigation='menu', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'borderBottomColor': '#f1f1f1', 'borderBottomWidth': 1, 'zIndex': 1000}])
+        AppBar (title='Home', navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
     )
