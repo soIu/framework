@@ -25,6 +25,8 @@ def wrap_component(component):
                props[key.replace('data_', 'data-')] = props[key]
                del props[key]
         if not children.length: return window.React.createElement(component, tools.copy(props))
+        for index, value in enumerate(children):
+            if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
         return window.React.createElement(component, tools.copy(props), children)
     return create_component
 
@@ -45,6 +47,8 @@ def get_components(*components):
                    props[key.replace('data_', 'data-')] = props[key]
                    del props[key]
             if not children.length: return window.React.createElement(component, tools.copy(props))
+            for index, value in enumerate(children):
+                if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []
@@ -70,6 +74,8 @@ def get_framework_components(*components):
                    props[key.replace('data_', 'data-')] = props[key]
                    del props[key]
             if not children.length: return window.React.createElement(component, tools.copy(props))
+            for index, value in enumerate(children):
+                if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []

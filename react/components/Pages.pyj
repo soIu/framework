@@ -49,7 +49,7 @@ def parseTreeView(view, title):
             props = {} #{'model': model, 'view_model': model}
             parseAttribute(props, element)
             props.isTreeView = True
-            children = recurse(element.children, props) or [def render(): return element.innerHTML;]
+            children = recurse(element.children, props) or [def render(): return React.createElement(tools.client.Native.Text, {}, element.innerHTML);]
             components.push(def render(**new_props): return React.createElement(component, tools.merge(new_props, props), children.map(def (result): return result();));)
         )
         if not components.length: return None
