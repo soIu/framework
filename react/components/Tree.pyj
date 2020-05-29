@@ -16,8 +16,13 @@ class Tree(React.Component):
 
     @async
     def componentDidMount(self):
+        props = self.props
         model = self.props.model
-        records = await [models.env[model].search()]
+        args = []
+        if not self.props.isTreeView:
+           await [models.env.context.wait_active_id]
+           args.push(['id', 'in', models.env.context.active_id[props.field_name] or []])
+        records = await [models.env[model].search(*args)]
         records_formatted = await [records.read(True, [children.props.name for children in self.props.children])]
         #alert(JSON.stringify(records_formatted))
         return self.setState({'records': records, 'records_formatted': records_formatted, 'numberOfRows': records.length, 'numberOfPages': records.length / self.state.perPage})
@@ -47,7 +52,8 @@ class Tree(React.Component):
 
         def onPressWrap(id):
             def onPress():
-                self.props.history.push('/form/' + model + '/' + id)
+                if not self.props.isTreeView and rightActions.length == 3: return
+                return self.props.history.push('/form/' + model + '/' + id)
             return onPress
 
         tree = (

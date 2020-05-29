@@ -133,7 +133,9 @@ cachedFormViews = {}
 class FormPage(React.Component):
 
     def __init__(self):
+        def wait(resolve): self.resolve = resolve
         models.env.context.active_id = None
+        models.env.context.wait_active_id = Promise(wait)
 
     def componentDidMount(self):
         model = self.model
@@ -152,6 +154,9 @@ class FormPage(React.Component):
         view = tools.view[model].form
         models.env.context.active_model = model
         def refresh():
+            if models.env.context.wait_active_id:
+               self.resolve()
+               del models.env.context.wait_active_id
             return self.setState({})
         models.env.context.refresh = refresh
         if not cachedFormViews[view]:
