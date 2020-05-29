@@ -1,6 +1,12 @@
 import react
 import react.components.Page
 import react.components.Tree
+import react.components.Form
+import react.components.Header
+import react.components.Button
+import react.components.Sheet
+import react.components.Group
+import react.components.Field
 import orm.models as models
 import orm.tools as tools
 
@@ -38,14 +44,12 @@ def parseAttribute(props, element):
 def parseTreeView(view, title):
     customComponents = {'Tree': react.registered_components.Tree, 'Field': None}
     view = tools.client.XMLParser(view);
-    console.log(view)
     if title: view.attributes['title'] = title
     def recurse(elements, parent_props):
         components = []
         Array.prototype.slice.call(elements).forEach(
         def (element):
         #for element in elements:
-            console.log(element)
             if not element.tagName:
                def render(): return React.createElement(tools.client.Native.Text, {}, element.text)
                components.push(render)
@@ -55,11 +59,11 @@ def parseTreeView(view, title):
             parseAttribute(props, element)
             props.isTreeView = True
             children = recurse(element.children, props) #or [def render(): return React.createElement(tools.client.Native.Text, {}, element.innerHTML);]
-            components.push(def render(**new_props): return React.createElement(component, tools.merge(new_props, props), children.map(def (result): return result();));)
+            components.push(def render(**new_props): return React.createElement(component, tools.merge({}, tools.copy(new_props), props), children.map(def (result): return result(new_props);));)
         )
         #if not components.length: return None
         return components
-    return recurse([view], True)[0]
+    return recurse([view], {})[0]
 
 cachedTreeViews = {}
 
@@ -80,9 +84,76 @@ class TreePage(React.Component):
         self.model = model
         self.mode = mode
         view = tools.view[model].tree
-        models.env.context.active_model = mode
+        models.env.context.active_model = model
         if not cachedTreeViews[view + ('-' + props.title if props.title else '')]:
            cachedTreeViews[view + ('-' + props.title if props.title else '')] = parseTreeView(view, props.title)
         return cachedTreeViews[view + ('-' + props.title if props.title else '')](model=model, history=self.props.history)
 
-#react.register_component(TreePage)
+def parseFormView(view):
+    customComponents = tools.merge({}, tools.client.components, tools.client.MaterialComponents, react.registered_components)
+    view = tools.client.XMLParser(view);
+    def recurse(elements, parent_props):
+        components = []
+        Array.prototype.slice.call(elements).forEach(
+        def (element):
+        #for element in elements:
+            if not element.tagName:
+               def render(): return React.createElement(tools.client.Native.Text, {}, element.text)
+               components.push(render)
+               return
+            component = customComponents[element.tagName[0].toUpperCase() + element.tagName.toLowerCase().slice(1)] or customComponents[element.tagName] or element.tagName
+            props = {} #{'model': model, 'view_model': model}
+            parseAttribute(props, element)
+            children = recurse(element.children, props)
+            def render(**new_props):
+                nonlocal props
+                props = tools.merge(props, tools.copy(new_props))
+                model = props.model
+                if component == react.registered_components.Tree:
+                   field = models.env[model]._fields[parent_props.name]
+                   props.title = parent_props.string or field.string
+                   props.view_model = model
+                   props.field_name = parent_props.name
+                   props.model = field.relation
+                   #props.field = field.inverse if field.type == 'one2many' else parent_props.name
+                   if field.type != 'one2many':
+                      props.parent_model = model
+                      props.tree_arch = element.text
+                   if parent_props.invisible: props.invisible = parent_props.invisible
+                   if parent_props.domain: props.domain = parent_props.domain
+                return React.createElement(component, props, children.map(def (result): return result(new_props);))
+            components.push(render)
+        )
+        #if not components.length: return None
+        return components
+    return recurse([view], {})[0]
+
+cachedFormViews = {}
+
+class FormPage(React.Component):
+
+    def __init__(self):
+        models.env.context.active_id = None
+
+    def componentDidMount(self):
+        model = self.model
+        mode = self.mode
+        if tools.view[model].custom_init and tools.view[model].custom_init[model + '.' + mode]:
+           tools.view[model].custom_init[model + '.' + mode].bind(self)(self.props)
+
+    def render(self):
+        self.props.history.match = self.props.match
+        props = self.props
+        model = self.props.history.match.params.model
+        id = self.props.history.match.params.id or None
+        mode = 'form'
+        self.model = model
+        self.mode = mode
+        view = tools.view[model].form
+        models.env.context.active_model = model
+        def refresh():
+            return self.setState({})
+        models.env.context.refresh = refresh
+        if not cachedFormViews[view]:
+           cachedFormViews[view] = parseFormView(view)
+        return cachedFormViews[view](active_id=id, model=model, history=self.props.history)

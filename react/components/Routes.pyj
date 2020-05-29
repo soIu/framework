@@ -1,6 +1,6 @@
 import react
 import orm.tools as tools
-from react.components.Pages import HomePage, TreePage
+from react.components.Pages import HomePage, TreePage, FormPage
 
 View, Router, Switch, Route, BackButton = react.get_components('View', 'Router', 'Switch', 'Route', 'BackButton')
 
@@ -17,9 +17,11 @@ class Routes(React.Component):
                     Switch (
                         Route (exact=True, path='/', component=HomePage),
                         Route (exact=True, path='/tree/:model', component=TreePage),
-                        Route (exact=True, path='/form/:model/:id', component=None),
+                        Route (exact=True, path='/form/:model', component=FormPage),
+                        Route (exact=True, path='/form/:model/:id', component=FormPage),
                         Route (exact=True, path='/view/:view_id', component=None),
-                        Route (exact=True, path='/cards', component=None),
+                        Route (exact=True, path='/view/:view_id/:id', component=None),
+
                     )
                 )
             )

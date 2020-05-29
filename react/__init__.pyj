@@ -26,7 +26,7 @@ def wrap_component(component):
                del props[key]
         if not children.length: return window.React.createElement(component, tools.copy(props))
         for index, value in enumerate(children):
-            if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
+            if value and value.constructor == String and component != tools.client.Native.Text: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
         return window.React.createElement(component, tools.copy(props), children)
     return create_component
 
@@ -48,7 +48,7 @@ def get_components(*components):
                    del props[key]
             if not children.length: return window.React.createElement(component, tools.copy(props))
             for index, value in enumerate(children):
-                if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
+                if value and value.constructor == String and component != tools.client.Native.Text: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []
@@ -75,7 +75,7 @@ def get_framework_components(*components):
                    del props[key]
             if not children.length: return window.React.createElement(component, tools.copy(props))
             for index, value in enumerate(children):
-                if value and value.constructor == String: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
+                if value and value.constructor == String and component != tools.client.Native.Text: children[index] = window.React.createElement(tools.client.Native.Text, {}, value)
             return window.React.createElement(component, tools.copy(props), children)
         return create_component
     new_components = []

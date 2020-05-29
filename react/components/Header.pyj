@@ -1,0 +1,25 @@
+import react
+import orm.models as models
+
+View = react.get_components('View')
+
+class Header(React.Component):
+
+    def __init__(self):
+        return
+
+    def render(self):
+        style = {'margin': 0, 'minHeight': 56, 'flex': 1, 'flexDirection': 'row', 'backgroundColor': '#8F8F8F'}
+        props = self.props
+        invisible = props.invisible
+        if v'props.invisible instanceof Function':
+           invisible = props.invisible(models.env.context.active_id)
+        if invisible: return None
+
+        return (
+            View (style=style,
+                self.props.children
+            )
+        )
+
+react.register_component(Header)

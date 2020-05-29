@@ -13,5 +13,5 @@ def Appbar(props):
         return props.history.goBack()
 
     return (
-        AppBar (title='Home' if props.location.pathname == '/' else tools.view[model].string, navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
+        AppBar (title='Home' if props.location.pathname == '/' else (props.title or tools.view[model].string), navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
     )

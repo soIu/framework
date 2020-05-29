@@ -24,7 +24,20 @@ class Tree(React.Component):
 
     def render(self):
         #alert(JSON.stringify(self.state))
+        props = self.props
         model = self.props.model
+        rightActions = [{'name': 'filter-list'}]
+        def onPressAdd():
+            if self.props.isTreeView: return self.props.history.push('/form/' + model)
+        add = {'name': 'add', 'onPress': onPressAdd}
+        if not props.isTreeView:
+           context = models.env.context
+           field = models.env[props.view_model]._fields[props.field_name]
+           props.readonly = field.readonly or props.readonly
+           readonly = props.readonly(active_id) if v'props.readonly instanceof Function' else props.readonly
+           if not (readonly or not context.editing): rightActions.push(add)
+        else: rightActions.push(add)
+        rightActions.push({'name': 'more-vert'})
 
         def onChangePage(page):
             return self.setState({'page': page})
@@ -39,7 +52,7 @@ class Tree(React.Component):
 
         tree = (
             View (
-                Header (title=self.props.title or tools.view[model].string, rightActions=[{'name': 'filter-list'}, {'name': 'add'}, {'name': 'more-vert'}]),
+                Header (title=self.props.title or tools.view[model].string, rightActions=rightActions),
                 Row ([
                     Cell (text=children.props.string or models.env[model]._fields[children.props.name].string, type='header')
                 for children in tools.each(self.props.children or [])]), self.state.records_formatted.length > 0 and [

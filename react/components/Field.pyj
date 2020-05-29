@@ -1,0 +1,50 @@
+import react
+import orm.models as models
+
+View = react.get_components('View')
+
+TextField, Checkbox = react.get_framework_components('TextField', 'Checkbox')
+
+class Field(React.Component):
+
+    def __init__(self):
+        return
+
+    def render(self):
+        props = self.props
+        model = props.model
+        context = models.env.context
+        field = models.env[model]._fields[props.name]
+        if field.type in ['many2many', 'one2many'] and props.children:
+           console.log(props.children)
+           return props.children
+        active_id = models.env.context.active_id or {}
+        invisible = props.invisible
+        if v'props.invisible instanceof Function':
+           invisible = props.invisible(models.env.context.active_id)
+        if invisible: return None
+        props.readonly = field.readonly or props.readonly
+        readonly = props.readonly(active_id) if v'props.readonly instanceof Function' else props.readonly
+
+        if field.type == 'boolean':
+           def onPress():
+               if readonly or not context.editing: return
+               active_id[props.name] = not active_id[props.name]
+               return self.setState({})
+           checkbox = (
+               Checkbox (checked=active_id[props.name] or False, onPress=onPress)
+           )
+           return (
+               TextField (prefix=checkbox, label=self.props.string or field.string, labelStyle={'marginTop': -5, 'fontSize': 20}, containerStyle={'marginTop': 5, 'maxWidth': 250}, style={'marginBottom': 5}, underlineColor='#e0e0e0', disabled=True, editable=False, value='')
+           )
+
+        def onChangeText(value):
+            if readonly or not context.editing: return
+            active_id[props.name] = value
+            return self.setState({})
+
+        return (
+            TextField (keyboardType='numeric' if field.type in ['integer', 'float'] else 'default', prefix=View(), style={'fontSize': 15, 'marginBottom': 5, 'paddingLeft': 0}, labelStyle={'marginTop': -5, 'fontSize': 20}, containerStyle={'marginTop': 5, 'maxWidth': 250}, underlineColor='#e0e0e0', disabled=readonly or not context.editing, editable=not (readonly or not context.editing), type='flat', label=self.props.string or field.string, value=active_id[props.name] or '', onChangeText=onChangeText)
+        )
+
+react.register_component(Field)

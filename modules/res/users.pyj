@@ -33,6 +33,8 @@ class ResUsers(models.Model):
     password = fields.Char(string="Password", index=True, protect=True)
     is_superuser = fields.Boolean(string="Is Superuser", index=True)
     menu_ids = fields.One2many('res.users.menu', 'user_id', string="Available Menus")
+    test_float = fields.Float(string='Test Float')
+    test_bool = fields.Boolean(string='Test Bool')
 
     def create(self, values=False, is_client=tools.configuration.client):
         if values.is_superuser and self._context.uid != models.superuser_id:
@@ -98,6 +100,10 @@ view.add({'model': 'res.users', 'mode': 'form', 'string': False, 'arch': """
         <group>
             <field name="login"/>
             <field name="password"/>
+        </group>
+        <group>
+            <field name="test_float"/>
+            <field name="test_bool"/>
         </group>
         <group width="100%" title="Available Menus">
             <field name="menu_ids">
