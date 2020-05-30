@@ -5,7 +5,7 @@ from react.components.Appbar import Appbar
 
 View, ScrollView = react.get_components('View', 'ScrollView')
 
-Drawer, Heading, ListItem = react.get_framework_components('Drawer', 'Heading', 'ListItem')
+Drawer, Heading, List, ListExpand, ListItem = react.get_framework_components('Drawer', 'Heading', 'List', 'ListExpand', 'ListItem')
 
 styles = {}
 
@@ -47,16 +47,22 @@ class Page(React.Component):
                 self.props.history.push('/tree/' + menu.model)
             return onPress
         appbar = react.wrap_component(tools.client.ReactRouter.withRouter(Appbar))(title=self.props.title, toggleDrawer=toggleDrawer)
+        #if self.props.history.location.pathname != '/' and self.props.history.match.path != '/tree/:model': open = False
         drawerContent = (
             ScrollView (style={'padding': 16 if mobile else 34, 'height': '100%', 'flex': 1},
-                View (style={'marginBottom': 24}, [[
-                    Heading (type=6, text=tools.menu[menu].string, style={'marginBottom': 24}),
-                    tools.menu[menu].childs.length > 0 and
-                    View (style={'marginBottom': 20}, [
-                        ListItem (text=child_menu.string, textStyle={'lineHeight': 24}, style={'borderRadius': 8}, rippleProps={'rippleContainerBorderRadius': 8}, onPress=onPressWrap(child_menu))
+                #View (style={'marginBottom': 24}, [[
+                #    Heading (type=6, text=tools.menu[menu].string, style={'marginBottom': 24}),
+                #    tools.menu[menu].childs.length > 0 and
+                #    View (style={'marginBottom': 20}, [
+                #        ListItem (text=child_menu.string, textStyle={'lineHeight': 24}, style={'borderRadius': 8}, rippleProps={'rippleContainerBorderRadius': 8}, onPress=onPressWrap(child_menu))
+                #    for child_menu in tools.menu[menu].childs])
+                #]
+                #for menu in tools.keys(tools.menu, 'sequence')])
+                List ([
+                    ListExpand (title=tools.menu[menu].string, titleStyle={'fontWeight': '500', 'fontSize': 15}, [
+                        ListItem (text=child_menu.string, onPress=onPressWrap(child_menu), textStyle={'fontWeight': '400', 'fontSize': 15})
                     for child_menu in tools.menu[menu].childs])
-                ]
-                for menu in tools.keys(window.tools.menu, 'sequence')])
+                for menu in tools.keys(tools.menu, 'sequence')])
             )
         )
         drawer = (

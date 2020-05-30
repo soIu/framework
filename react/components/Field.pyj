@@ -1,14 +1,33 @@
 import react
 import orm.models as models
+import orm.tools as tools
 
 View = react.get_components('View')
 
-TextField, Checkbox = react.get_framework_components('TextField', 'Checkbox')
+TextField, Checkbox, Select = react.get_framework_components('TextField', 'Checkbox', 'Select')
 
 class Field(React.Component):
 
     def __init__(self):
+        self.state = {'menuItems': []}
         return
+
+    @async
+    def componentDidMount(self):
+        props = self.props
+        model = props.model
+        context = models.env.context
+        field = models.env[model]._fields[props.name]
+        #value = active_id[props.name]
+        console.log(field)
+        if field.type in ['many2one', 'one2one']:
+           await [models.env.context.wait_active_id]
+           console.log('der')
+           active_id = props.add_active_id or models.env.context.active_id or {}
+           value = active_id[props.name]
+           #if not value: return
+           record, records = await ([models.env[field.relation].browse(value) if value else {}, models.env[field.relation].search()])
+           return self.setState({'selectedItem': record.name, 'menuItems': [{'id': record.id, 'name': record.name} for record in records]})
 
     def render(self):
         props = self.props
@@ -18,24 +37,48 @@ class Field(React.Component):
         if field.type in ['many2many', 'one2many'] and props.children:
            console.log(props.children)
            return props.children
-        active_id = models.env.context.active_id or {}
+        active_id = props.add_active_id or models.env.context.active_id or {}
         invisible = props.invisible
         if v'props.invisible instanceof Function':
-           invisible = props.invisible(models.env.context.active_id)
+           invisible = props.invisible(models, tools, active_id)
         if invisible: return None
         props.readonly = field.readonly or props.readonly
-        readonly = props.readonly(active_id) if v'props.readonly instanceof Function' else props.readonly
+        readonly = props.readonly(models, tools, active_id) if v'props.readonly instanceof Function' else props.readonly
+        labelStyle = {'marginTop': -10, 'marginLeft': -10, 'color': 'black', 'fontSize': 20, 'fontWeight': '500'}
+        containerStyle = {'marginTop': 5, 'maxWidth': 250, 'marginBottom': 20}
+        inputStyle = {'fontSize': 14, 'marginBottom': 5} #, 'height': 'auto', 'minHeight': 30}
+        underlineColor = 'black' #'#e0e0e0'
+
+        if field.type in ['many2one', 'one2one']:
+           @async
+           def onFocus():
+               console.log('dor')
+               records = await [models.env[field.relation].search()]
+               return self.setState({'menuItems': [{'id': record.id, 'name': record.name} for record in records]})
+           def onSelect(value):
+               console.log(value)
+               active_id[props.name] = value.id
+               return self.setState({'selectedItem': value.name})
+           inputStyle = tools.merge(inputStyle, {'height': 'auto', 'minHeight': 30, 'paddingLeft': 12})
+           textFieldProps = {'type': 'outlined', 'prefix': View(), 'labelStyle': labelStyle, 'containerStyle': containerStyle, 'style': inputStyle, 'underlineColor': underlineColor}
+           #textFieldProps.onFocus = onFocus
+           #console.log(textFieldProps)
+           return (
+               Select (label=self.props.string or field.string, textFieldProps=textFieldProps, onSelect=onSelect, menuItems=self.state.menuItems, selectedItem=self.state.selectedItem or '')
+           )
 
         if field.type == 'boolean':
            def onPress():
                if readonly or not context.editing: return
                active_id[props.name] = not active_id[props.name]
                return self.setState({})
+           del labelStyle.marginTop
+           labelStyle.marginLeft = 6
            checkbox = (
                Checkbox (checked=active_id[props.name] or False, onPress=onPress)
            )
            return (
-               TextField (prefix=checkbox, label=self.props.string or field.string, labelStyle={'marginTop': -5, 'fontSize': 20}, containerStyle={'marginTop': 5, 'maxWidth': 250}, style={'marginBottom': 5}, underlineColor='#e0e0e0', disabled=True, editable=False, value='')
+               TextField (type='flat', prefix=checkbox, label=self.props.string or field.string, labelStyle=labelStyle, containerStyle=containerStyle, style=inputStyle, underlineColor="transparent", disabled=True, editable=False, value='')
            )
 
         def onChangeText(value):
@@ -44,7 +87,7 @@ class Field(React.Component):
             return self.setState({})
 
         return (
-            TextField (keyboardType='numeric' if field.type in ['integer', 'float'] else 'default', prefix=View(), style={'fontSize': 15, 'marginBottom': 5, 'paddingLeft': 0}, labelStyle={'marginTop': -5, 'fontSize': 20}, containerStyle={'marginTop': 5, 'maxWidth': 250}, underlineColor='#e0e0e0', disabled=readonly or not context.editing, editable=not (readonly or not context.editing), type='flat', label=self.props.string or field.string, value=active_id[props.name] or '', onChangeText=onChangeText)
+            TextField (keyboardType='numeric' if field.type in ['integer', 'float'] else 'default', prefix=View(), style={'fontSize': 14, 'marginBottom': 5, 'paddingLeft': 12, 'height': 'auto', 'minHeight': 30}, labelStyle=labelStyle, containerStyle=containerStyle, underlineColor=underlineColor, disabled=readonly or not context.editing, editable=not (readonly or not context.editing), type='outlined', label=self.props.string or field.string, value=active_id[props.name] or '', onChangeText=onChangeText)
         )
 
 react.register_component(Field)

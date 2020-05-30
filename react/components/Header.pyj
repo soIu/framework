@@ -9,11 +9,11 @@ class Header(React.Component):
         return
 
     def render(self):
-        style = {'margin': 0, 'minHeight': 56, 'flex': 1, 'flexDirection': 'row', 'backgroundColor': '#8F8F8F'}
+        style = {'margin': 0, 'minHeight': 56, 'flex': 1, 'flexDirection': 'row', 'borderBottomColor': '#e1e1e1', 'borderBottomStyle': 'solid', 'borderBottomWidth': 0.5} #, 'backgroundColor': '#8F8F8F'}
         props = self.props
         invisible = props.invisible
         if v'props.invisible instanceof Function':
-           invisible = props.invisible(models.env.context.active_id)
+           invisible = props.invisible(models, tools, models.env.context.active_id)
         if invisible: return None
 
         return (

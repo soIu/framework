@@ -14,7 +14,7 @@ class Group(React.Component):
         props = self.props
         invisible = props.invisible
         if v'props.invisible instanceof Function':
-           invisible = props.invisible(models.env.context.active_id)
+           invisible = props.invisible(models, tools, models.env.context.active_id)
         if invisible: return None
 
         return (

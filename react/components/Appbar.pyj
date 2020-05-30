@@ -7,11 +7,14 @@ AppBar, Button, Icon, Ripple  = react.get_framework_components('Appbar', 'Button
 
 def Appbar(props):
     model = props.match.params.model
+    props.history.match = props.match
+    if not tools.client.history: tools.client.history = props.history
+    hideMenu = react.check_is_mobile() and props.location.pathname != '/'
 
     def onNavigation():
-        if props.location.pathname == '/': return props.toggleDrawer()
+        if not hideMenu: return props.toggleDrawer()
         return props.history.goBack()
 
     return (
-        AppBar (title='Home' if props.location.pathname == '/' else (props.title or tools.view[model].string), navigation='menu' if props.location.pathname == '/' else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
+        AppBar (title='Home' if props.location.pathname == '/' else (props.title or tools.view[model].string), navigation='menu' if not hideMenu else 'arrow-back', onNavigation=onNavigation, style=[{'boxShadow': 'none'}, {'zIndex': 1000, 'borderRadius': 0}])
     )

@@ -14,12 +14,16 @@ class Form(React.Component):
         models.env.context.editing = True if props.isCustomView else False
         self.state = models.env.context
         self.state.edit_function = self.edit.bind(self)
+        #models.env.context.active_lines = {}
+        #models.env.context.active_task = []
+        #models.env.context.active_mount = []
 
     @async
     def componentDidMount(self):
         model = self.props.model
         models.env.context.active_lines = {}
         models.env.context.active_task = []
+        models.env.context.active_mount = []
         if not self.props.active_id:
            models.env.context.active_id = models.env[model].browse()
            await [models.env.context.active_id._wait_promise()]
@@ -56,7 +60,7 @@ class Form(React.Component):
         for task in models.env.context.active_task:
             result = task()
             if result and result.constructor == Promise: await (result)
-        models.env.context.active_task = [];
+        models.env.context.active_task = []
         if operation == 'create':
            self.props.history.replace(self.props.history.location.pathname + '/' + models.env.context.active_id.id)
            promises = []
@@ -64,6 +68,7 @@ class Form(React.Component):
                if models.env.context.active_id._fields[field].type == 'many2many': continue
                inverse_field = models.env.context.active_id._fields[field].inverse
                promises.push(models.env.context.active_lines[field].write({inverse_field: models.env.context.active_id.id}))
+               models.env.context.active_id[field] = models.env.context.active_lines[field].ids
            await (promises)
         if not self.props.isCustomView: models.env.context.editing = False
         if offline:
@@ -80,7 +85,7 @@ class Form(React.Component):
     def render(self):
         props = self.props
         model = self.props.model
-        if props.isCustomView: return Page (title=tools.view[model].string, self.props.children)
+        if props.isCustomView: return Page (history=self.props.history, title=tools.view[model].string, self.props.children)
         title = (
             [
                 Text (self.props.title or tools.view[model].string),
@@ -91,7 +96,7 @@ class Form(React.Component):
         def onPressEdit():
             return self.edit() #.catch(tools.client.api.handleClientError)
         return (
-            Page (title=tools.view[model].string,
+            Page (history=self.props.history, title=tools.view[model].string,
                 View (
                     View (style={'borderBottomColor': '#e1e1e1', 'borderBottomStyle': 'solid', 'borderBottomWidth': 0.5},
                         Header (title=title, rightActions=[{'name': 'more-vert'}]),
