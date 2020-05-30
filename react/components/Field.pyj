@@ -44,7 +44,7 @@ class Field(React.Component):
         if invisible: return None
         props.readonly = field.readonly or props.readonly
         readonly = props.readonly(models, tools, active_id) if v'props.readonly instanceof Function' else props.readonly
-        labelStyle = {'marginTop': -10, 'marginLeft': -10, 'color': 'black', 'fontSize': 20, 'fontWeight': '500'}
+        labelStyle = {'marginTop': -15, 'marginLeft': -10, 'color': 'black', 'fontSize': 20, 'fontWeight': '500'}
         containerStyle = {'marginTop': 5, 'maxWidth': 250, 'marginBottom': 20}
         inputStyle = {'fontSize': 14, 'marginBottom': 5} #, 'height': 'auto', 'minHeight': 30}
         underlineColor = 'black' #'#e0e0e0'
