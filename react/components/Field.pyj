@@ -1,10 +1,22 @@
 import react
+import react.components.Selection
 import orm.models as models
 import orm.tools as tools
 
-View = react.get_components('View')
+View, Selection = react.get_components('View', 'Selection')
 
-TextField, Checkbox, Select = react.get_framework_components('TextField', 'Checkbox', 'Select')
+TextField, Checkbox, IconButton = react.get_framework_components('TextField', 'Checkbox', 'IconButton')
+
+Input = react.wrap_component('input') #Web only, will not work in Android/iOS
+
+def readAsDataURL(file):
+    def init(resolve, reject):
+        if not file: reject(new Error('No file available'))
+        reader = new FileReader();
+        def onload(event): return resolve(event.target.result)
+        reader.onload = onload
+        reader.readAsDataURL(file)
+    return new Promise(init)
 
 class Field(React.Component):
 
@@ -14,6 +26,7 @@ class Field(React.Component):
 
     @async
     def componentDidMount(self):
+        #if self.refs and self.refs.imageButton: self.refs.imageButton.onclick = self.onPressImage
         props = self.props
         model = props.model
         context = models.env.context
@@ -26,8 +39,8 @@ class Field(React.Component):
            active_id = props.add_active_id or models.env.context.active_id or {}
            value = active_id[props.name]
            #if not value: return
-           record, records = await ([models.env[field.relation].browse(value) if value else {}, models.env[field.relation].search()])
-           return self.setState({'selectedItem': record.name, 'menuItems': [{'id': record.id, 'name': record.name} for record in records]})
+           record, records = await ([models.env[field.relation].browse(value) if value else {}, {}]) #models.env[field.relation].search()])
+           return self.setState({'selectedItem': record.name}) #, 'menuItems': [{'id': record.id, 'name': record.name} for record in records]})
 
     def render(self):
         props = self.props
@@ -42,52 +55,82 @@ class Field(React.Component):
         if v'props.invisible instanceof Function':
            invisible = props.invisible(models, tools, active_id)
         if invisible: return None
-        props.readonly = field.readonly or props.readonly
-        readonly = props.readonly(models, tools, active_id) if v'props.readonly instanceof Function' else props.readonly
-        labelStyle = {'marginTop': -15, 'marginLeft': -10, 'color': 'black', 'fontSize': 20, 'fontWeight': '500'}
+        readonly = field.readonly or props.readonly
+        readonly = readonly(models, tools, active_id) if v'readonly instanceof Function' else readonly
+        labelStyle = {'marginTop': -10, 'marginLeft': -10, 'color': 'black', 'fontSize': 20, 'fontWeight': '500'}
         containerStyle = {'marginTop': 5, 'maxWidth': 250, 'marginBottom': 20}
         inputStyle = {'fontSize': 14, 'marginBottom': 5} #, 'height': 'auto', 'minHeight': 30}
         underlineColor = 'black' #'#e0e0e0'
 
-        if field.type in ['many2one', 'one2one']:
+        if field.type == 'boolean' or (field.type == 'binary' and self.props.widget == 'image'):
+           containerStyle.marginTop = -20
+           def onPress():
+               if readonly or not context.editing: return
+               if field.type == 'binary':
+                  @async
+                  def onChange(event):
+                      result = await [readAsDataURL(self.imageInput.files[0])]
+                      active_id[props.name] = result.split('base64,')[1]
+                      return self.setState({})
+                  self.imageInput.onchange = onChange
+                  self.imageInput.click()
+                  return
+               active_id[props.name] = not active_id[props.name]
+               return self.setState({})
+           #self.onPressImage = onPress.bind(self)
+           def onRef(input):
+               input = self.imageInput or input
+               if not input: return
+               self.imageInput = input
+               if input.previousElementSibling and input.previousElementSibling.children.length: input.previousElementSibling.onclick = onPress
+               else:
+                  element = input.parentElement.parentElement.parentElement.nextElementSibling
+                  if element: element.onclick = onPress
+           del labelStyle.marginTop
+           labelStyle.marginLeft = 6
+           prefix = (
+               Checkbox (checked=active_id[props.name] or False, onPress=onPress)
+           ) if field.type == 'boolean' else View (
+               IconButton (name='photo-camera', size=36) if not active_id[props.name] else View(), tools.client.Native.Platform.OS == 'web' and
+               Input (type='file', ref=onRef, style={'display': 'none'})
+           )
+           textField = TextField (type='flat', prefix=prefix, label=self.props.string or field.string, labelStyle=labelStyle, containerStyle=containerStyle, style=inputStyle, underlineColor='transparent', disabled=True, editable=False, value="")
+           if active_id[props.name] and field.type == 'binary': return [
+               textField,
+               react.wrap_component(tools.client.Native.Image) (style={'height': 150, 'marginTop': -50}, source={'uri': 'data:image;base64,' + active_id[props.name]}, onPress=onPress)
+           ]
+           return textField
+
+        if field.type in ['many2one', 'one2one', 'selection']:
            @async
            def onFocus():
                console.log('dor')
                records = await [models.env[field.relation].search()]
-               return self.setState({'menuItems': [{'id': record.id, 'name': record.name} for record in records]})
+               return self.setState({'menuItems': [{'id': record.id, 'text': record.name} for record in records]})
            def onSelect(value):
-               console.log(value)
                active_id[props.name] = value.id
-               return self.setState({'selectedItem': value.name})
-           inputStyle = tools.merge(inputStyle, {'height': 'auto', 'minHeight': 30, 'paddingLeft': 12})
+           if field.type == 'selection':
+              selection = field.selection.apply(None) if v'field.selection instanceof Function' else field.selection
+              self.state.menuItems = [{'id': key, 'text': value} for key, value in selection]
+              if active_id[props.name]: self.state.selectedItem = dict(selection)[active_id[props.name]]
+           inputStyle = tools.merge(inputStyle, {'paddingLeft': 12, 'height': 'auto', 'minHeight': 30})
            textFieldProps = {'type': 'outlined', 'prefix': View(), 'labelStyle': labelStyle, 'containerStyle': containerStyle, 'style': inputStyle, 'underlineColor': underlineColor}
            #textFieldProps.onFocus = onFocus
            #console.log(textFieldProps)
            return (
-               Select (label=self.props.string or field.string, textFieldProps=textFieldProps, onSelect=onSelect, menuItems=self.state.menuItems, selectedItem=self.state.selectedItem or '')
-           )
-
-        if field.type == 'boolean':
-           def onPress():
-               if readonly or not context.editing: return
-               active_id[props.name] = not active_id[props.name]
-               return self.setState({})
-           del labelStyle.marginTop
-           labelStyle.marginLeft = 6
-           checkbox = (
-               Checkbox (checked=active_id[props.name] or False, onPress=onPress)
-           )
-           return (
-               TextField (type='flat', prefix=checkbox, label=self.props.string or field.string, labelStyle=labelStyle, containerStyle=containerStyle, style=inputStyle, underlineColor="transparent", disabled=True, editable=False, value='')
+               Selection (label=self.props.string or field.string, onFocus=field.type != 'selection' and onFocus, onSelect=onSelect, items=self.state.menuItems, selectedItem=self.state.selectedItem, prefix=View(), disabled=readonly or not context.editing, editable=not (readonly or not context.editing), labelStyle=labelStyle, containerStyle=containerStyle, inputStyle=inputStyle, underlineColor=underlineColor)
            )
 
         def onChangeText(value):
+            if field.type in ['integer', 'float']:
+               if isNaN(value): return
+               if not value: value = 0
             if readonly or not context.editing: return
             active_id[props.name] = value
             return self.setState({})
 
         return (
-            TextField (keyboardType='numeric' if field.type in ['integer', 'float'] else 'default', prefix=View(), style={'fontSize': 14, 'marginBottom': 5, 'paddingLeft': 12, 'height': 'auto', 'minHeight': 30}, labelStyle=labelStyle, containerStyle=containerStyle, underlineColor=underlineColor, disabled=readonly or not context.editing, editable=not (readonly or not context.editing), type='outlined', label=self.props.string or field.string, value=active_id[props.name] or '', onChangeText=onChangeText)
+            TextField (keyboardType='numeric' if field.type in ['integer', 'float'] else 'default', prefix=View(), style={'fontSize': 14, 'marginBottom': 5, 'paddingLeft': 12, 'height': 'auto', 'minHeight': 30}, labelStyle=labelStyle, containerStyle=containerStyle, underlineColor=underlineColor, disabled=readonly or not context.editing, editable=not (readonly or not context.editing), type='outlined', label=self.props.string or field.string, value=(active_id[props.name] or '').toString(), onChangeText=onChangeText)
         )
 
 react.register_component(Field)

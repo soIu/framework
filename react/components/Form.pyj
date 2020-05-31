@@ -52,7 +52,7 @@ class Form(React.Component):
                    error.field_map[field] = True
                models.env.context.active_error = error;
                await [models.env.context.refresh()] #[this.setState({'active_id': models.env.context.active_id})]
-               window.alert('Some fields are required')
+               window.alert(error.message) #('Some fields are required')
                #tools.client.app.toast.create({'text': 'Some fields are required', 'closeButton': False, 'closeTimeout': 2000, position: 'center'}).open()
                return
             else:

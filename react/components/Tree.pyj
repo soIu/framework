@@ -54,8 +54,8 @@ class Tree(React.Component):
         if not props.isTreeView:
            context = models.env.context
            field = models.env[props.view_model]._fields[props.field_name]
-           props.readonly = field.readonly or props.readonly
-           readonly = props.readonly(active_id) if v'props.readonly instanceof Function' else props.readonly
+           readonly = field.readonly or props.readonly
+           readonly = readonly(active_id) if v'readonly instanceof Function' else readonly
            if not (readonly or not context.editing): rightActions.push(add)
         else: rightActions.push(add)
         rightActions.push({'name': 'more-vert'})
