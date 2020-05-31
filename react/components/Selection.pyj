@@ -1,0 +1,63 @@
+import react
+
+View, ScrollView = react.get_components('View', 'ScrollView')
+
+TextField, Banner, Menu, MenuItem, Icon = react.get_framework_components('TextField', 'Banner', 'Menu', 'MenuItem', 'Icon')
+
+class Selection(React.Component):
+
+    def __init__(self):
+        self.state = {}
+        return
+
+    def render(self):
+
+        def onPressWrap(item):
+            @async
+            def onPress():
+                #if self.blurTimer:
+                #   clearTimeout(self.blurTimer)
+                #   del self.blurTimer
+                await [self.setState({'visible': False, 'value': item.text, 'item_value': item.text})]
+                return self.props.onSelect(item)
+            return onPress
+
+        @async
+        def onFocus():
+            if self.props.onFocus:
+               await [self.props.onFocus()]
+            return self.setState({'visible': True, 'value': self.state.item_value and ''})
+
+        @async
+        def onBlur():
+            if self.props.onBlur:
+               await [self.props.onBlur()]
+            #def blur():
+            #    if self.blurTimer: del self.blurTimer
+            return self.setState({'visible': False, 'value': self.state.item_value})
+            #if tools.client.Native.Platform.OS == 'web': return blur()
+            #self.blurTimer = setTimeout(blur, 500)
+
+        def onChangeText(value):
+            if self.props.onFilter:
+               if self.timer: clearTimeout(self.timer)
+               def timer():
+                   del self.timer
+                   self.props.onFilter(value)
+               self.timer = setTimeout(timer, 1000)
+            return self.setState({'value': value})
+
+        menuItems = [MenuItem (text=item.text, onPress=onPressWrap(item)) for item in self.props.items] #if self.state.visible else []
+
+        textField = (
+            TextField (type='outlined', label=self.props.label, prefix=self.props.prefix, labelStyle=self.props.labelStyle, containerStyle=self.props.containerStyle, style=self.props.inputStyle, onFocus=onFocus, onBlur=tools.client.Native.Platform.OS == 'web' and onBlur, onChangeText=onChangeText, trailingIcon=Icon (style={'marginTop': -13}, name='arrow-drop-down', size=24), editable=self.props.editable, disabled=self.props.disabled, value=self.state.value or self.props.selectedItem or "")
+        )
+
+        return [
+            textField,
+            Banner (style={'marginTop': -23, 'marginBottom': 20, 'maxWidth': 250}, visible=self.state.visible, media=ScrollView(*menuItems))
+        ] if tools.client.Native.Platform.OS == 'web' else View (
+            Menu (visible=self.state.visible, menuStyle={'maxHeight': 200}, button=textField, fullWidth=True, onBackdropPress=onBlur, *menuItems)
+        )
+
+react.register_component(Selection)
