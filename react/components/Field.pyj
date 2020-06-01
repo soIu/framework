@@ -1,9 +1,10 @@
 import react
 import react.components.Selection
+import react.components.Picker
 import orm.models as models
 import orm.tools as tools
 
-View, Selection = react.get_components('View', 'Selection')
+View, Selection, Picker = react.get_components('View', 'Selection', 'Picker')
 
 TextField, Checkbox, IconButton = react.get_framework_components('TextField', 'Checkbox', 'IconButton')
 
@@ -70,7 +71,7 @@ class Field(React.Component):
                   @async
                   def onChange(event):
                       result = await [readAsDataURL(self.imageInput.files[0])]
-                      active_id[props.name] = result.split('base64,')[1]
+                      active_id[props.name] = result #.split(';base64,')[1]
                       return self.setState({})
                   self.imageInput.onchange = onChange
                   self.imageInput.click()
@@ -97,9 +98,23 @@ class Field(React.Component):
            textField = TextField (type='flat', prefix=prefix, label=self.props.string or field.string, labelStyle=labelStyle, containerStyle=containerStyle, style=inputStyle, underlineColor='transparent', disabled=True, editable=False, value="")
            if active_id[props.name] and field.type == 'binary': return [
                textField,
-               react.wrap_component(tools.client.Native.Image) (style={'height': 150, 'marginTop': -50}, source={'uri': 'data:image;base64,' + active_id[props.name]}, onPress=onPress)
+               react.wrap_component(tools.client.Native.Image) (style={'height': 150, 'marginTop': -50}, source={'uri': active_id[props.name]}, onPress=onPress)
            ]
            return textField
+
+        if field.type == 'binary':
+           def onClear():
+               active_id[props.name] = ''
+               return self.setState({})
+           @async
+           def onChange(event):
+               result = await [readAsDataURL(event.target.files[0])]
+               active_id[props.name] = result
+               return self.setState({})
+           inputStyle = tools.merge(inputStyle, {'paddingLeft': 12, 'height': 'auto', 'minHeight': 30})
+           return (
+               Picker (label=self.props.string or field.string, onClear=onClear, onChange=onChange, prefix=View(), disabled=readonly or not context.editing, editable=not (readonly or not context.editing), labelStyle=labelStyle, containerStyle=containerStyle, inputStyle=inputStyle, underlineColor=underlineColor, value=active_id[props.name])
+           )
 
         if field.type in ['many2one', 'one2one', 'selection']:
            @async
@@ -114,9 +129,6 @@ class Field(React.Component):
               self.state.menuItems = [{'id': key, 'text': value} for key, value in selection]
               if active_id[props.name]: self.state.selectedItem = dict(selection)[active_id[props.name]]
            inputStyle = tools.merge(inputStyle, {'paddingLeft': 12, 'height': 'auto', 'minHeight': 30})
-           textFieldProps = {'type': 'outlined', 'prefix': View(), 'labelStyle': labelStyle, 'containerStyle': containerStyle, 'style': inputStyle, 'underlineColor': underlineColor}
-           #textFieldProps.onFocus = onFocus
-           #console.log(textFieldProps)
            return (
                Selection (label=self.props.string or field.string, onFocus=field.type != 'selection' and onFocus, onSelect=onSelect, items=self.state.menuItems, selectedItem=self.state.selectedItem, prefix=View(), disabled=readonly or not context.editing, editable=not (readonly or not context.editing), labelStyle=labelStyle, containerStyle=containerStyle, inputStyle=inputStyle, underlineColor=underlineColor)
            )

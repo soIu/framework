@@ -1,4 +1,5 @@
 import react
+import orm.tools as tools
 
 View, ScrollView = react.get_components('View', 'ScrollView')
 
@@ -26,7 +27,9 @@ class Selection(React.Component):
         def onFocus():
             if self.props.onFocus:
                await [self.props.onFocus()]
-            return self.setState({'visible': True, 'value': self.state.item_value and ''})
+            await [self.setState({'visible': True, 'value': self.state.item_value and ''})]
+            if tools.client.Native.Platform.OS == 'web': return
+            tools.client.Native.Keyboard.dismiss()
 
         @async
         def onBlur():
