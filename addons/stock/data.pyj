@@ -629,13 +629,14 @@ class HPPMData(models.Model):
             part_qty = data[7] or 0
             box_qty = data[24] or 0
             supplier = data[38] or ''
+            group = data[39] or ''
             if row == 4 and part_code and not data[21]: raise exceptions.ValidationError("Trolley Type Empty")
             if data[21] and data[21] != trolley_type:
                if not trolley_type:
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier, group]
                else:
                   trolley_id = get_trolley(trolley_type, type)
                   product_ids = self.env['product.product']
@@ -664,21 +665,21 @@ class HPPMData(models.Model):
                   for product_id in product_ids:
                       if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                       product_id[type + '_trolley_type_id'] = trolley_id.id
-                      product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl = trolleys[trolley_type][product_id.code] or [0, 0]
+                      product_id.qty_box,  product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl, grp = trolleys[trolley_type][product_id.code] or [0, 0]
                       if supl and 'IN HOUSE' in supl:
                          product_id.inhouse_type = supl.split('IN HOUSE ')[1].toLowerCase()
-                      await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
+                      await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit'], 'group': grp})]
                   await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
                   #trolley_map[trolley_type] = product_ids.ids
                   del trolleys[trolley_type]
                   trolley_type = data[21]
                   if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                   if not data[5] or data[5] == '-': continue
-                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
+                  trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier, group]
             elif trolley_type:
                if not trolleys[trolley_type]: trolleys[trolley_type] = {}
                if not data[5] or data[5] == '-': continue
-               trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier]
+               trolleys[trolley_type][part_code] = [part_qty, box_qty, transit, supplier, group]
         for trolley in trolleys:
             trolley_id = get_trolley(trolley, type)
             #product_ids = await (self.env['product.product'].search(['code', 'in', Object.keys(trolleys[trolley])]))
@@ -705,10 +706,10 @@ class HPPMData(models.Model):
             for product_id in product_ids:
                 if product_id.type == 'ckd' and product_id.id in ckd_ids and trolleys[trolley_type][product_id.code][3] != 'CKD': continue
                 product_id[type + '_trolley_type_id'] = trolley_id.id
-                product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl = trolleys[trolley][product_id.code] or [0, 0, '']
+                product_id.qty_box, product_id[type + '_min_box'],  product_id[type + '_area_transit'], supl, grp = trolleys[trolley][product_id.code] or [0, 0, '']
                 if supl and 'IN HOUSE' in supl:
-                   product_id.inhouse_type = supl.split('IN HOUSE ')[1].toLowerCase() 
-                await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit']})]
+                   product_id.inhouse_type = supl.split('IN HOUSE ')[1].toLowerCase()
+                await [get_trolley_part(product_id, trolley_id, {'trolley_type_id': trolley_id.id, 'product_id': product_id.id, 'min_box': product_id[type + '_min_box'], 'area_transit': product_id[type + '_area_transit'], 'group': grp})]
             await [product_ids.write()] #{'trolley_type_id': trolley_id.id})]
 
 

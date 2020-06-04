@@ -432,8 +432,8 @@ class PickingLot(models.Model):
                if not values.product_qty: return
             if values.is_carry_over and (values.min_box * values.qty_box) > values.product_qty:
                if not overview_object.data[values.product_id]: overview_object[values.product_id] = 0
-               overview_object.data[values.product_id] += values.min_box - values.product_qty
-               values.product_qty = values.min_box
+               overview_object.data[values.product_id] += values.min_box * values.qty_box - values.product_qty
+               values.product_qty = values.min_box * values.qty_box
             return self.env['stock.picking.lot.line'].create(values)
         @async
         def create_lot(lines, trolley_type_id):
@@ -481,13 +481,14 @@ class PickingLot(models.Model):
                     product_id = product_ids.find(line_id.product_id)
                     trolley_part_id = trolley_part_ids.find(line_id.trolley_part_id)
                     trolley_type_id = trolley_part_id.trolley_type_id #product_id[type + '_trolley_type_id']
+                    grouping_id = trolley_part_id.group + '-' + product_id.code[0:5] if trolley_part_id.group else product_id.id
                     if product_id[type + '_carry_over']:
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
-                       if not carry_lines[trolley_type_id][line_id.product_id]:
-                          carry_lines[trolley_type_id][line_id.product_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit}]
+                       if not carry_lines[trolley_type_id][grouping_id]:
+                          carry_lines[trolley_type_id][grouping_id] = [{'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit}]
                           if True: #not carry_lot.length or carry_lot[-1] == carry_lot[0]:
                              if not carry[trolley_type_id]: carry[trolley_type_id] = {}
-                             if not carry[trolley_type_id][line_id.product_id]: carry[trolley_type_id][line_id.product_id] = carry_lines[trolley_type_id][line_id.product_id]
+                             if not carry[trolley_type_id][grouping_id]: carry[trolley_type_id][grouping_id] = carry_lines[trolley_type_id][grouping_id]
                              #carry[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
                           #else:
                           #   if not carry_lot[-1][trolley_type_id]: carry_lot[-1][trolley_type_id] = {}
@@ -496,8 +497,8 @@ class PickingLot(models.Model):
                           #if not lines[trolley_type_id]: lines[trolley_type_id] = {}
                           #if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
                           #lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
-                       elif ((carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
-                          carry_lines[trolley_type_id][line_id.product_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
+                       elif carry_lines[trolley_type_id][grouping_id].slice(-1)[0].product_id != product_id.id or ((carry_lines[trolley_type_id][grouping_id].slice(-1)[0].product_qty + line_id.actual_qty) / product_id.qty_box) > trolley_part_id.min_box:
+                          carry_lines[trolley_type_id][grouping_id].push({'product_id': line_id.product_id, 'product_qty': 0, 'qty_box': product_id.qty_box, 'sequence': [], 'sequence_picking': line_id.sequence, 'date': list_id.date, 'list_id': list_id, 'carry_over': True, 'min_box': trolley_part_id.min_box, 'area_transit': trolley_part_id.area_transit})
                           #if True: #not carry_lot.length or carry_lot[-1] == carry_lot[0]:
                              #if not carry[trolley_type_id]: carry[trolley_type_id] = {}
                              #if not carry[trolley_type_id][line_id.product_id]: carry[trolley_type_id][line_id.product_id] = []
@@ -556,6 +557,7 @@ class PickingLot(models.Model):
                 if not new_carry_lines[trolley_type_id]: new_carry_lines[trolley_type_id] = {}
                 product_ids = []
                 for product_id in lines[trolley_type_id]:
+                    #carry_line = lines[trolley_type_id][product_id]
                     product_ids.push(product_id)
                     if not new_carry_lines[trolley_type_id][product_id]: new_carry_lines[trolley_type_id][product_id] = []
                     lengths = []

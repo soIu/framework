@@ -200,6 +200,7 @@ class StockTrolleyTypePart(models.Model):
     area_transit = fields.Char(string="Area Transit")
     type = fields.Selection(['mcvt', 'MCVT'], ['fwd', '4WD'], ['flexi', 'Flexi'], string="Line Type")
     part_type = fields.Char(string="Type", compute=_get_type, store=False)
+    group = fields.Char(string="Group")
 
     @async
     def unlink_bom(self):
