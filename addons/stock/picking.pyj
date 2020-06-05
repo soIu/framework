@@ -510,7 +510,7 @@ class PickingLot(models.Model):
                           #if not lines[trolley_type_id]: lines[trolley_type_id] = {}
                           #if line_id.product_id not in lines[trolley_type_id]: lines[trolley_type_id][line_id.product_id] = []
                           #lines[trolley_type_id][line_id.product_id].push(carry_lines[trolley_type_id][line_id.product_id][-1])
-                       line = carry_lines[trolley_type_id][line_id.product_id].slice(-1)[0]
+                       line = carry_lines[trolley_type_id][grouping_id].slice(-1)[0]
                        line.product_qty += line_id.actual_qty
                        if line.sequence[-1] != line_id.sequence:
                           if line.sequence.length < 2 or line.sequence[-1] > line_id.sequence: line.sequence.push(line_id.sequence)
