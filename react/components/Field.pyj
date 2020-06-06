@@ -6,7 +6,7 @@ import orm.tools as tools
 
 View, Selection, Picker = react.get_components('View', 'Selection', 'Picker')
 
-TextField, Checkbox, IconButton = react.get_framework_components('TextField', 'Checkbox', 'IconButton')
+TextField, Checkbox, IconButton, Button = react.get_framework_components('TextField', 'Checkbox', 'IconButton', 'Button')
 
 Input = react.wrap_component('input') #Web only, will not work in Android/iOS
 
@@ -115,6 +115,24 @@ class Field(React.Component):
            return (
                Picker (label=self.props.string or field.string, onClear=onClear, onChange=onChange, prefix=View(), disabled=readonly or not context.editing, editable=not (readonly or not context.editing), labelStyle=labelStyle, containerStyle=containerStyle, inputStyle=inputStyle, underlineColor=underlineColor, value=active_id[props.name])
            )
+
+        if field.type == 'selection' and props.widget == 'statusbar':
+           color = 'rgba(0, 0, 0, 0.26)'
+           selections = field.selection.apply(context.active_id, [context.active_id]) if v'typeof field.selection' == 'function' else field.selection
+           if props.visible:
+              selections = [selection for selection in selections if props.visible.split(',').indexOf(selection[0]) > -1 or (models.env.context.active_id and models.env.context.active_id[props.name] == selection[0])]
+           selections = tools.copy(selections).reverse()
+           def template(selection):
+               return Button (style={'marginVertical': 10, 'marginHorizontal': 6, 'paddingHorizontal': 4, 'paddingLeft': 4, 'paddingRight': 4}, type='text', text=selection[1], textColor=color if not context.active_id or context.active_id[props.name] != selection[0] else undefined)
+           def arrow(selection):
+               style = {'marginVertical': 10, 'marginHorizontal': 0, 'paddingLeft': 0, 'paddingRight': 0, 'minWidth': 7, 'maxWidth': 10}
+               if not context.active_id or context.active_id[props.name] != selection[0]:
+                  return Button (style=style, type='text', disabled=True, text='>')
+               else:
+                  return Button (style=style, type='text', disabled=True, '>')
+           return View (style={'flex': 1, 'flexDirection': 'row-reverse'}, [
+               [arrow(selection), template(selection)] if index - 1 != -1 else template(selection)
+           for index, selection in enumerate(selections)])
 
         if field.type in ['many2one', 'one2one', 'selection']:
            @async
