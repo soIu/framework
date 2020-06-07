@@ -431,7 +431,7 @@ class PickingLot(models.Model):
                   overview_id.data[values.product_id] -= residual
                if not values.product_qty: return
             if values.is_carry_over and (values.min_box * values.qty_box) > values.product_qty:
-               if not overview_object.data[values.product_id]: overview_object[values.product_id] = 0
+               if not overview_object.data[values.product_id]: overview_object.data[values.product_id] = 0
                overview_object.data[values.product_id] += values.min_box * values.qty_box - values.product_qty
                values.product_qty = values.min_box * values.qty_box
             return self.env['stock.picking.lot.line'].create(values)
