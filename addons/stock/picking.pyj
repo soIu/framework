@@ -410,6 +410,7 @@ class PickingLot(models.Model):
         def sort(a, b): return a - b
         def create_line(values, lot_id):
             if values == None: return
+            list_id = values.list_id
             del values.list_id
             #values.sequence.sort(sort)
             values.sequence = values.sequence.join(' - ') #values.sequence[0] + ' - ' + values.sequence.slice(-1)[0]
@@ -421,18 +422,19 @@ class PickingLot(models.Model):
             if values.product_qty != values.qty_box:
                box = Math.ceil(values.product_qty / values.qty_box)
                values.product_qty = values.qty_box * box
-            if overview_id and overview_id.data[values.product_id]:
-               residual = values.product_qty - overview_id.data[values.product_id]
+            if overview_id and overview_id.data[values.product_id] and overview_id.data[values.product_id][list_id.trolley_type_id]:
+               residual = values.product_qty - overview_id.data[values.product_id][list_id.trolley_type_id]
                if residual < 0:
                   values.product_qty = 0
-                  overview_id.data[values.product_id] = -residual
+                  overview_id.data[values.product_id][list_id.trolley_type_id] = -residual
                else:
                   values.product_qty = residual
-                  overview_id.data[values.product_id] -= residual
+                  overview_id.data[values.product_id][list_id.trolley_type_id] -= residual
                if not values.product_qty: return
             if values.carry_over and (values.min_box * values.qty_box) > values.product_qty:
-               if not overview_object.data[values.product_id]: overview_object.data[values.product_id] = 0
-               overview_object.data[values.product_id] += values.min_box * values.qty_box - values.product_qty
+               if not overview_object.data[values.product_id]: overview_object.data[values.product_id] = {}
+               if not overview_object.data[values.product_id][list_id.trolley_type_id]: overview_object.data[values.product_id][trolley_type_id] = 0
+               overview_object.data[values.product_id][list_id.trolley_type_id] += values.min_box * values.qty_box - values.product_qty
                values.product_qty = values.min_box * values.qty_box
             return self.env['stock.picking.lot.line'].create(values)
         @async
