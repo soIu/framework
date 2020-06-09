@@ -388,7 +388,7 @@ class TestAgv(models.Model):
 
 TestAgv()
 
-menu.add(id='test_agv', string='Call AGV', model='test.agv', view_id='test.agv.wizard', sequence=50)
+menu.add(id='test_agv', parent='scanner', string='Call AGV', model='test.agv', view_id='test.agv.wizard', sequence=50)
 
 view.add(model='test.agv', mode='wizard', arch="""
 <form>

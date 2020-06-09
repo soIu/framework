@@ -422,7 +422,7 @@ class PickingLot(models.Model):
             if values.product_qty != values.qty_box:
                box = Math.ceil(values.product_qty / values.qty_box)
                values.product_qty = values.qty_box * box
-            if overview_id and overview_id.data[values.product_id] and overview_id.data[values.product_id][list_id.trolley_type_id]:
+            """if overview_id and overview_id.data[values.product_id] and overview_id.data[values.product_id][list_id.trolley_type_id]:
                residual = values.product_qty - overview_id.data[values.product_id][list_id.trolley_type_id]
                if residual < 0:
                   values.product_qty = 0
@@ -430,7 +430,7 @@ class PickingLot(models.Model):
                else:
                   values.product_qty = residual
                   overview_id.data[values.product_id][list_id.trolley_type_id] -= residual
-               if not values.product_qty: return
+               if not values.product_qty: return"""
             if values.carry_over and (values.min_box * values.qty_box) > values.product_qty:
                if not overview_object.data[values.product_id]: overview_object.data[values.product_id] = {}
                if not overview_object.data[values.product_id][list_id.trolley_type_id]: overview_object.data[values.product_id][trolley_type_id] = 0
@@ -484,6 +484,12 @@ class PickingLot(models.Model):
                     trolley_part_id = trolley_part_ids.find(line_id.trolley_part_id)
                     trolley_type_id = trolley_part_id.trolley_type_id #product_id[type + '_trolley_type_id']
                     grouping_id = trolley_part_id.group + '-' + product_id.code[0:5] if trolley_part_id.group else product_id.id
+                    if overview_id and overview_id.data[product_id.id] and overview_id.data[product_id.id][trolley_type_id.id]:
+                       overview_id.data[product_id.id][trolley_type_id.id] -= line_id.actual_qty
+                       if overview_id.data[product_id.id][trolley_type_id.id] < 0:
+                          line_id.actual_qty = -overview_id.data[product_id.id][trolley_type_id.id]
+                          overview_id.data[product_id.id][trolley_type_id.id] = 0
+                       continue
                     if product_id[type + '_carry_over']:
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
                        if not carry_lines[trolley_type_id][grouping_id]:
