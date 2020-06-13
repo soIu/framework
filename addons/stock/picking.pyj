@@ -484,11 +484,11 @@ class PickingLot(models.Model):
                     trolley_part_id = trolley_part_ids.find(line_id.trolley_part_id)
                     trolley_type_id = trolley_part_id.trolley_type_id #product_id[type + '_trolley_type_id']
                     grouping_id = trolley_part_id.group + '-' + product_id.code[0:5] if trolley_part_id.group else product_id.id
-                    if overview_id and overview_id.data[product_id.id] and overview_id.data[product_id.id][trolley_type_id.id]:
-                       overview_id.data[product_id.id][trolley_type_id.id] -= line_id.actual_qty
-                       if overview_id.data[product_id.id][trolley_type_id.id] < 0:
-                          line_id.actual_qty = -overview_id.data[product_id.id][trolley_type_id.id]
-                          overview_id.data[product_id.id][trolley_type_id.id] = 0
+                    if overview_id and overview_id.data[product_id.id] and overview_id.data[product_id.id][trolley_type_id]:
+                       overview_id.data[product_id.id][trolley_type_id] -= line_id.actual_qty
+                       if overview_id.data[product_id.id][trolley_type_id] < 0:
+                          line_id.actual_qty = -overview_id.data[product_id.id][trolley_type_id]
+                          overview_id.data[product_id.id][trolley_type_id] = 0
                        continue
                     if product_id[type + '_carry_over']:
                        if not carry_lines[trolley_type_id]: carry_lines[trolley_type_id] = {}
