@@ -978,12 +978,12 @@ class HPPMData(models.Model):
         def write_carry_over(value):
             product_ids = await [self.env['product.product'].search(['code', '=', value.code])]
             if not product_ids.length: return
-            return product_ids.write({type + '_carry_over': True if value.qty else False, type + '_carry_over_qty': value.qty})
+            return product_ids.write({type + '_carry_over': True if value.qty else False, type + '_carry_over_qty': value.qty, 'type_special_cary_over': value.special})
         for data in sheet.data:
             row += 1
             if row < 1: continue
             #if not data[0]: continue
-            value = {'code': data[0], 'qty': data[1]}
+            value = {'code': data[0], 'qty': data[1], 'special': True if data[2] else False}
             await [write_carry_over(value)]
 
     @api.server(async=True)
