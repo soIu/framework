@@ -351,6 +351,21 @@ class TestAgv(models.Model):
     trolley_type_id = fields.Many2one('stock.trolley.type', string="Trolley Type", required=True)
     pickup_zone = fields.Char(string="Pickup Zone")
     ip_address = fields.Char(string="IP Address")
+    laser_scan = fields.Char(string="Laser Scan")
+
+    @api.onchange('laser_scan', async=True)
+    def onchange_laser(self):
+        if not self.laser_scan: return
+        laser_scan = self.laser_scan
+        if barcode.split('-PICK-')[0] == 'LC':
+           self.laser_scan = ''
+           return self.write({'pickup_zone': laser_scan})
+        trolley_type_id = await [self.env['stock.trolley.type'].with_context(limit=1).search(['name', '=', laser_scan])]
+        if not trolley_type_id.length:
+           self.laser_scan = ''
+           return tools.dialog.alert('There are no Trolley Type with name ' laser_scan)
+        self.laser_scan = ''
+        return self.write({'trolley_type_id': trolley_type_id.id})
 
     """@async
     def call_agv(self):
@@ -400,8 +415,11 @@ view.add(model='test.agv', mode='wizard', arch="""
             <field name="pickup_zone"/>
             <field name="ip_address"/>
         </group>
-        <group width="100%">
+        <group>
             <button name="call_agv" string="Call AGV"/>
+        </group>
+        <group>
+            <scanner-field name="laser_scan"/>
         </group>
     </sheet>
 </form>

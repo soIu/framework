@@ -656,7 +656,12 @@ class PickingLot(models.Model):
            code = barcode.split('\n')[0].split('                   ')[0].split('             ')[1].split('  ')[1].split(' ').join('')
            product_id = await [self.env['product.product'].with_context(limit=1).search(['code_trimmed', '=', code], ['type', '=', 'ckd'])]
            value = {'product_id': product_id.id}
-        else: value = JSON.parse(barcode)
+        else:
+            try:
+                value = JSON.parse(barcode)
+            except:
+                self.laser_scan = ''
+                return tools.dialog.alert("Can't read barcode, barcode is not valid")
         #@async
         def get_product_ids():
             line_ids = self.env.context.active_lines['stock.picking.lot.line'].picking_lot_id #await [self.env['stock.picking.list.line'].browse(self.line_ids)]
