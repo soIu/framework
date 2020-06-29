@@ -363,7 +363,7 @@ class TestAgv(models.Model):
         trolley_type_id = await [self.env['stock.trolley.type'].with_context(limit=1).search(['name', '=', laser_scan])]
         if not trolley_type_id.length:
            self.laser_scan = ''
-           return tools.dialog.alert('There are no Trolley Type with name ' laser_scan)
+           return tools.dialog.alert('There are no Trolley Type with name ' + laser_scan)
         self.laser_scan = ''
         return self.write({'trolley_type_id': trolley_type_id.id})
 
