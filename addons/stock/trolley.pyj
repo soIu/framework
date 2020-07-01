@@ -357,7 +357,7 @@ class TestAgv(models.Model):
     def onchange_laser(self):
         if not self.laser_scan: return
         laser_scan = self.laser_scan
-        if barcode.split('-PICK-')[0] == 'LC':
+        if laser_scan.split('-PICK-')[0] == 'LC':
            self.laser_scan = ''
            return self.write({'pickup_zone': laser_scan})
         trolley_type_id = await [self.env['stock.trolley.type'].with_context(limit=1).search(['name', '=', laser_scan])]
