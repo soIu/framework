@@ -538,6 +538,7 @@ class HPPMData(models.Model):
     imported = fields.Boolean(string="Uploaded")
     type = fields.Selection(['bom', 'Bill of Materials'], ['data_packing', 'Master Data Packing'], ['daisha_mcvt', 'Fitting MCVT'], ['daisha_fwd', 'Fitting 4WD'], ['daisha_flexi', 'Fitting Flexi'], ['sequence_mcvt', 'Sequence MCVT'], ['sequence_fwd_trf', 'Sequence 4WD TRF'], ['sequence_fwd_dps', 'Sequence 4WD DPS'], ['sequence_flexi', 'Sequence Flexi'], ['po', 'Purchase Orders'], ['route_agv', 'Route AGV'], ['receive_zone', 'Receiving Zone (LC)'], ['carry_over_mcvt', 'Carry Over MCVT'], ['carry_over_flexi', 'Carry Over Flexi'], ['carry_over_fwd', 'Carry Over 4WD'], ['time_mcvt', 'Sequence Time MCVT'], ['time_flexi', 'Sequence Time Flexi'], ['time_fwd', 'Sequence Time 4WD'], string="Type", required=True, defaults=_get_type)
     overview_id = fields.Many2one('hppm.data.overview', string="Overview Data")
+    turbo = fields.Boolean(string="Turbo Mode (HATI-HATI, BEBERAPA FEATURE TIDAK AKAN BEKERJA DI MODE INI, HANYA UNTUK ENTRY PERTAMA KALI SAJA)")
 
     @async
     def download_excel(self):
@@ -899,24 +900,31 @@ class HPPMData(models.Model):
         @async
         def create_suppliers(supplier):
             if not suppliers_loaded:
+               console.log('Cache existing supplier')
                supplier_ids = await [self.env['purchase.order.supplier'].search()]
                for supplier_id in supplier_ids:
                    suppliers[supplier_id.name] = True
                nonlocal suppliers_loaded
                suppliers_loaded = True
             if supplier not in suppliers:
+               console.log('Create new supplier')
                self.env['purchase.order.supplier'].create({'name': supplier})
                suppliers[supplier] = True
         @async
         def create_po(value):
             create_suppliers(value.pl_from)
-            order_id = await [self.env['purchase.order'].search(['part_no', '=', value.part_no], ['date_string', '=', value.date_string], ['ps_month', '=', value.ps_month], ['ps_code', '=', value.ps_code], ['pl_from', '=', value.pl_from], ['pl_to', '=', value.pl_to])]
-            if order_id.length:
-               return order_id.recompute_pack(value.product_qty)
+            order_id = None
+            if not self.turbo:
+               order_id = await [self.env['purchase.order'].search(['part_no', '=', value.part_no], ['date_string', '=', value.date_string], ['ps_month', '=', value.ps_month], ['ps_code', '=', value.ps_code], ['pl_from', '=', value.pl_from], ['pl_to', '=', value.pl_to])]
+               if order_id.length:
+                  return order_id.recompute_pack(value.product_qty)
+            console.log('Get product')
             product_id = await (self.env['product.product'].with_context(limit=1).search(['code_trimmed', '=', value.part_no], ['type', 'in', ('local', 'sozai')]))
-            if not product_id.length: return #raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
+            if not product_id.length: return console.log('Product not found, terminating upload') #raise exceptions.ValidationError("Part Number " + value.part_no + " is missing")
             value.product_id = product_id.id
+            console.log('Creating PO')
             order_id = await [self.env['purchase.order'].create(value)] #{'product_id': product_id.id, 'product_qty': value.quantity, 'vendor': value.vendor})
+            console.log('PO Created')
             order_id.compute_pack()
         for data in sheet.data:
             row += 1
@@ -1052,6 +1060,7 @@ view.add({'model': 'hppm.data', 'mode': 'form', 'string': False, 'arch': """
             <field name="imported" readonly="True"/>
             <field name="type"/>
             <field name="overview_id" invisible="active_id.type.indexOf('sequence') == -1"/>
+            <field name="turbo" invisible="['po'].indexOf(active_id.type) == -1"/>
         </group>
         <group invisible="active_id.id == null">
             <button name="download_excel" string="Download"/>
