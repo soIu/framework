@@ -151,6 +151,7 @@ class PurchaseOrder(models.Model):
             self.env.context.print_label = True
             pack_values = await [pack_ids.read(format=True, without_null=True, relational_fields=['product_id'])]
             for pack_value in pack_values:
+                pack_value.date_iso = value.date
                 pack_value.order_id = value
                 #for key in value:
                 #    if key not in pack_value: pack_value[key] = value[key]
@@ -163,6 +164,13 @@ class PurchaseOrder(models.Model):
             #   promises.length = 0
         await (promises)
         promises.length = 0
+        def sort(a, b):
+            if a.date_iso < b.date_iso: return -1
+            if a.date_iso > b.date_iso: return 1
+            if a.product_id.code_trimmed < b.product_id.code_trimmed: return -1
+            if a.product_id.code_trimmed > b.product_id.code_trimmed: return 1
+            return 0
+        values = values.sort(sort)
         @async
         def get_report(data):
             url = await [get_jasper_report('/Solu/HPPM/Purchase_Order', {'data': data})]
