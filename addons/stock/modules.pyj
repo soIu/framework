@@ -1,7 +1,0 @@
-import stock.move
-import stock.location
-import stock.pack
-import stock.picking
-import stock.receiving
-import stock.trolley
-import stock.data
