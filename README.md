@@ -4,7 +4,7 @@ A full featured, ORM-backed, isomorphic framework using RapydScript, PouchDB/Cou
 # What's New
 
 - New [Async/Await support](#asyncawait-support)
-- New Frontend with React/Preact without JSX, using Python's args and kwargs syntax to mimic JSX and enable it to pass any kind of objects (not only primitive types) as props. Also, UI customization is more easier now as the React Components are transpiled directly from RapydScript
+- New Frontend with React Native without JSX, using Python's args and kwargs syntax to mimic JSX and enable it to pass any kind of objects (not only primitive types) as props. Also, UI customization is more easier now as the React Components are transpiled directly from RapydScript
 - Full external JS libraries compatibility, using CommonJS on Node and Webpack on React Native, supports Expo Modules too https://docs.expo.io/versions/latest/.
 - Full React Components compatibility, making it easier to build Frontend UI even on React Native.
 - Upcoming Python/Odoo backend compatibility. For developers who prefer Python or Odoo on server-side rather than Node.js https://github.com/rafi16jan/rapyd-odoo
