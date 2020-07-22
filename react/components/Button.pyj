@@ -1,0 +1,34 @@
+import react
+import orm.models as models
+
+View = react.get_components('View')
+
+MaterialButton = react.get_framework_components('Button')
+
+class Button(React.Component):
+
+    def __init__(self):
+        return
+
+    def render(self):
+        style = {}
+        props = self.props
+        invisible = props.invisible
+        console.log(invisible)
+        if v'props.invisible instanceof Function':
+           invisible = props.invisible(models, tools, models.env.context.active_id)
+        console.log(invisible)
+        if invisible: return None
+
+        @async
+        def onPress():
+            if models.env.context.editing:
+               await [models.env.context.edit_function()]
+            await [models.env.context.active_id[props.name]()]
+            return models.env.context.refresh()
+
+        return (
+            MaterialButton (style={'margin': 10}, text=self.props.string, type='flat', onPress=onPress)
+        )
+
+react.register_component(Button)

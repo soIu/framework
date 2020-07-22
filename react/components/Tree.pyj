@@ -1,0 +1,129 @@
+import react
+import react.components.Page
+import react.components.Field
+import orm.models as models
+import orm.tools as tools
+
+View, Page, Field = react.get_components('View', 'Page', 'Field')
+
+Table, Header, Row, Cell, Pagination, Dialog, Banner, Ripple, Avatar, BodyText = react.get_framework_components('DataTable', 'DataTableHeader', 'DataTableRow', 'DataTableCell', 'DataTablePagination', 'Dialog', 'Banner', 'Ripple', 'Avatar', 'BodyText')
+
+class Tree(React.Component):
+
+    def __init__(self):
+        self.state = {'records_formatted': [], 'page': 0, 'perPage': 50, 'numberOfRows': 0, 'numberOfPages': 1}
+        return
+
+    @async
+    def componentDidMount(self):
+        props = self.props
+        model = self.props.model
+        args = []
+        if not self.props.isTreeView:
+           await [models.env.context.wait_active_id]
+           models.env.context.active_mount.push(self.componentDidMount.bind(self))
+           if not models.env.context.active_lines[props.field_name]: models.env.context.active_lines[props.field_name] = models.env[model]
+           if not self.state.new_records: self.state.new_records = models.env[model]
+           args.push(['id', 'in', models.env.context.active_id[props.field_name] or []])
+        records = await [models.env[model].search(*args)]
+        if not self.props.isTreeView:
+           models.env.context.active_lines[props.field_name].add(records)
+           records = models.env.context.active_lines[props.field_name]
+        records_formatted = await [records.read(True, [children.props.name for children in self.props.children])]
+        #alert(JSON.stringify(records_formatted))
+        return self.setState({'records': records, 'records_formatted': records_formatted, 'numberOfRows': records.length, 'numberOfPages': records.length / self.state.perPage})
+
+    #@async
+    #def componentDidUpdate(self):
+    #    if self.updated: return
+    #    await [self.componentDidMount()]
+    #    self.updated = False
+
+    def render(self):
+        #alert(JSON.stringify(self.state))
+        props = self.props
+        model = self.props.model
+        rightActions = [{'name': 'filter-list'}]
+        @async
+        def onPressAdd():
+            if self.props.isTreeView: return self.props.history.push('/form/' + model)
+            active_id = models.env[model].browse()
+            await [active_id._wait_promise()]
+            return self.setState({'addItemVisible': True, 'addItemRecord': active_id})
+        add = {'name': 'add', 'onPress': onPressAdd}
+        if not props.isTreeView:
+           context = models.env.context
+           field = models.env[props.view_model]._fields[props.field_name]
+           readonly = field.readonly or props.readonly
+           readonly = readonly(active_id) if v'readonly instanceof Function' else readonly
+           if not (readonly or not context.editing): rightActions.push(add)
+        else: rightActions.push(add)
+        rightActions.push({'name': 'more-vert'})
+
+        def onChangePage(page):
+            return self.setState({'page': page})
+
+        def onChangeRowsPerPage(perPage):
+            return self.setState({'perPage': perPage})
+
+        def onPressWrap(id):
+            def onPress():
+                if not self.props.isTreeView and rightActions.length == 3: return
+                return self.props.history.push('/form/' + model + '/' + id)
+            return onPress
+
+        def onTouchOutside():
+            return self.setState({'addItemVisible': False})
+
+        addItemContent = []
+        if not self.props.isTreeView and self.state.addItemRecord:
+           @async
+           def onPressRipple():
+               console.log(self.state.new_records, self.state.addItemRecord)
+               self.state.new_records.add(self.state.addItemRecord)
+               models.env.context.active_lines[props.field_name].add(self.state.addItemRecord)
+               if not self.state.tasked:
+                  def task(): return self.state.new_records.create()
+                  models.env.context.active_task.push(task)
+                  self.state.tasked = True
+               await [self.setState({'addItemVisible': False, 'addItemRecord': undefined, 'tasked': True})]
+               return self.componentDidMount()
+           addItemContent.push(*[
+               Field (tools.kwargs(children.props, {'model': model, 'add_active_id': self.state.addItemRecord}))
+               for children in self.props.children],
+               Ripple (style={'flexDirection': 'row', 'alignItems': 'center', 'padding': 10, 'marginTop': 10}, onPress=onPressRipple,
+                   Avatar (type='icon', content='add', color='#ccc', contentColor='white', size=40),
+                   BodyText (style={'fontSize': 14, 'fontWeight': '400', 'color': 'rgba(0, 0, 0, 0.54)', 'marginLeft': 20}, 'Add Item')
+               )
+           )
+
+        addItem = (
+            not self.props.isTreeView == True and (
+                Dialog (visible=self.state.addItemVisible, onTouchOutside=onTouchOutside, title="", *addItemContent) if tools.client.Native.Platform.OS != 'web' else
+                Banner (visible=self.state.addItemVisible, media=addItemContent)
+            )
+        )
+
+        tree = (
+            View (
+                tools.client.Native.Platform.OS == 'web' and addItem,
+                Header (title=self.props.title or tools.view[model].string, rightActions=rightActions),
+                Row ([
+                    Cell (style={'height': '100%'}, text=children.props.string or models.env[model]._fields[children.props.name].string, type='header')
+                for children in tools.each(self.props.children or [])]), self.state.records_formatted.length > 0 and [
+                Row (key=record.id, hover=True, onPress=onPressWrap(record.id), [
+                    Cell (text=record[children.props.name])
+                for children in tools.each(self.props.children or [])])
+                for record in self.state.records_formatted],
+                Pagination (page=self.state.page, perPage=self.state.perPage, onChangePage=onChangePage, onChangeRowsPerPage=onChangeRowsPerPage, numberOfRows=self.state.numberOfRows, numberOfPages=self.state.numberOfPages),
+                tools.client.Native.Platform.OS != 'web' and addItem,
+            )
+        )
+
+        if not self.props.isTreeView or self.props.isPopup: return tree
+
+        return (
+            Page (tree, history=self.props.history)
+        )
+
+react.register_component(Tree)

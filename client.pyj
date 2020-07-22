@@ -2,8 +2,10 @@ import modules.modules
 import orm.models as models
 import orm.exceptions as exceptions
 import orm.tools as tools
+import react as react
 from orm.pouchdb import db #Whoever criticize me about this doesn't know this is local db object not the server's
 from ir.data import data, create_data
+from react.components.App import App
 
 tools.exceptions = exceptions
 
@@ -38,10 +40,66 @@ for key in tools.menu:
           )
        del tools.menu[key]
 
+#@async
+def init_client():
+    try:
+        console.log('Initialize Client')
+        window.renderApp(App)
+        if tools.client.Native.Platform.OS != 'web': return console.log('Im out')
+        if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name
+        if tools.configuration.custom_navbar:
+           style = document.createElement('style')
+           style.innerHTML = '.navbar, .toolbar, .statusbar {background-color: ' + tools.configuration.custom_navbar + '!important}'
+           document.querySelector('head').append(style)
+        if document.querySelector('div.navbar'):
+           color_element = document.createElement('meta')
+           color_element.name = 'theme-color';
+           color_element.content = '#' + getComputedStyle(document.querySelector('.navbar'), None).backgroundColor.replace('rgb(', '').replace(')', '').split(', ').map(
+           def (color):
+               return parseInt(color).toString(16)
+           ).map(
+           def (hex):
+               return ('0' + hex) if hex.length == 1 else hex
+           ).join('')
+           document.querySelector('head').appendChild(color_element)
+        #tools.client.api.globals.registerManifest()
+    except Exception as error:
+        raise error
+
+@async
+def check_session():
+    session = None
+    try:
+        session = await [window.session_db.get('session')]
+    except Exception as error:
+        console.log(error)
+        await [window.session_db.changes({'since': 0, 'limit': 1})]
+        session = await [window.session_db.get('session')]
+    models.env.user = models.env['res.users'].browse()
+    models.env.user.id = session.id
+    models.env.user.login = session.login
+    models.env.user.password = session.password
+    url = ''
+    if tools.client.Native.Platform.OS == 'web':
+       href = window.location.origin + window.location.pathname
+       url = href.substring(0, href.lastIndexOf('/')) + '/'
+    storage_url = await [tools.client.Native.AsyncStorage.getItem('rapyd_server_url')]
+    console.log(storage_url)
+    if storage_url: url = storage_url
+    tools.configuration.url = url
+    return init_client()
+
+def start_client():
+    check_session().catch(console.error)
+
+tools.init_client = start_client
+
 try:
     export_object.models = models
     export_object.tools = tools
     export_object.local_db = db
+    window.tools = tools
+    window.models = models
 except Exception as error:
     console.error(error)
     window.models = models
