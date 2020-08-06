@@ -2,6 +2,7 @@ node_modules
 *.pyj-cached
 modules/modules.pyj
 modules/controllers.pyj
+modules/views.pyj
 app.conf
 main
 main.json

@@ -22,15 +22,18 @@ var conf = "" +
 "server_db = main\n" +
 "server_db_adapter = memory\n" +
 "server_db_custom_adapter = False\n" +
-"local_app = True\n" +
+//"local_app = True\n" +
 "serverless = False\n"
 var modules_list = '';
 var controllerst_list = '';
+var views_list = '';
 try {
     modules_list = child_process.execSync('cd modules && find * -maxdepth 1 -mindepth 1 | grep modules.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
     controllers_list = child_process.execSync('cd modules && find * -maxdepth 1 -mindepth 1 | grep controllers.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
+    views_list = child_process.execSync('cd modules && find * -maxdepth 1 -mindepth 1 | grep views.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
     fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list);
     fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list);
+    fs.writeFileSync(__dirname + '/modules/views.pyj', views_list);
     if (fs.existsSync(__dirname + '/app.conf') === false) {
         fs.writeFileSync(__dirname + '/app.conf', conf);
     }
@@ -63,8 +66,10 @@ if (process.env.custom_modules !== undefined && process.env.custom_modules !== f
         }
         modules_list += child_process.execSync('cd ' + process.env.custom_modules + ' && find * -maxdepth 1 -mindepth 1 | grep modules.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
         controllers_list += child_process.execSync('cd ' + process.env.custom_modules + ' && find * -maxdepth 1 -mindepth 1 | grep controllers.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
+        views_list += child_process.execSync('cd ' + process.env.custom_modules + ' && find * -maxdepth 1 -mindepth 1 | grep views.pyj | grep -v .pyj-cached | tr / . | sed "s/.pyj//g" | sed "s/^/import /"', {cwd: __dirname}).toString();
         fs.writeFileSync(__dirname + '/modules/modules.pyj', modules_list);
         fs.writeFileSync(__dirname + '/modules/controllers.pyj', controllers_list);
+        fs.writeFileSync(__dirname + '/modules/views.pyj', views_list);
     } catch(error) {
         console.log(error);
     }

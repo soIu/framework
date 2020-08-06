@@ -1,6 +1,7 @@
 import react
 import orm.tools as tools
 from react.components.Pages import HomePage, TreePage, FormPage
+from ir.data import data
 
 View, Router, Switch, Route, BackButton = react.get_components('View', 'Router', 'Switch', 'Route', 'BackButton')
 
@@ -14,7 +15,7 @@ class Routes(React.Component):
             Router (
                 View (style={'backgroundcolor': '#f2f6ff', 'minHeight': 100},
                     tools.client.Native.Platform.OS != 'web' and BackButton(),
-                    Switch (
+                    Switch (swipable=False,
                         Route (exact=True, path='/', component=HomePage),
                         Route (exact=True, path='/tree/:model', component=TreePage),
                         Route (exact=True, path='/form/:model', component=FormPage),
@@ -28,3 +29,15 @@ class Routes(React.Component):
         )
 
 react.register_component(Routes)
+
+def patch_animation():
+    if tools.client.Native.Platform.OS == 'web': return
+    Animated = tools.client.Native.Animated
+    original_timing = Animated.timing
+    def timing(*args):
+        if not args[1]: args[1] = {}
+        args[1].useNativeDriver = True
+        return original_timing(*args)
+    Animated.timing = timing
+
+data.append(patch_animation)

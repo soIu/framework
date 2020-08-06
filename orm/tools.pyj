@@ -666,3 +666,8 @@ def ajax(type, dataType, url, data, opts):
         except Exception as error:
             reject(error)
     )
+
+def fetch(*args):
+    if v'typeof window' != undefined and window.fetch:
+       return window.fetch(*args)
+    return require('node-fetch')(*args)

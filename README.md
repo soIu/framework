@@ -32,7 +32,7 @@ To run the server, do `node server.js` or pass `--clear-cache` to clear the cach
 
 Modify app.conf to change port or other variables (Documentation is upcoming)
 
-The React Native Webclient is on react/client folder, put it on nginx or something else or simply open index.html on a browser, it should work. Or if you're lazy enough you can change local_app variable in app.conf to True. Then, open the server url (don't forget the port).
+The React Native Webclient is on react/client folder, put it on nginx or something else or simply open index.html on a browser, it should work. Or just upon the server url (don't forget the port)
 
 # Async/Await support
 We added async/await support out of the box for modern [browsers](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function#Browser_compatibility), React Native, and **older versions of node.js** (using yortus's [asyncawait](https://github.com/yortus/asyncawait)) to minimize Promise chaining and add readability for asynchronous operations. But, because we support old node.js versions (some platform like RHEL 6 on Power Architecture only have Node.js 6 compiled for the platform) the syntax is different with Python's Async/Await. For example instead of async and await being a keyword:

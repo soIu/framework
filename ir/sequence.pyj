@@ -35,3 +35,5 @@ def add_sequence(code, sequences):
             if sequences: sequences[sequence_id.code] = sequence_id.id
         )
     data.append(create_sequence)
+
+register_sequence = add_sequence

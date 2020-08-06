@@ -1,4 +1,5 @@
 import modules.modules
+import modules.views
 import orm.models as models
 import orm.exceptions as exceptions
 import orm.tools as tools
@@ -40,10 +41,11 @@ for key in tools.menu:
           )
        del tools.menu[key]
 
-#@async
+@async
 def init_client():
     try:
         console.log('Initialize Client')
+        await [tools.create_data()]
         window.renderApp(App)
         if tools.client.Native.Platform.OS != 'web': return console.log('Im out')
         if tools.configuration.long_name or tools.configuration.app_name: document.querySelector('title').innerHTML = tools.configuration.long_name or tools.configuration.app_name

@@ -108,10 +108,10 @@ class Tree(React.Component):
             View (
                 tools.client.Native.Platform.OS == 'web' and addItem,
                 Header (title=self.props.title or tools.view[model].string, rightActions=rightActions),
-                Row ([
+                Row (*[
                     Cell (style={'height': '100%'}, text=children.props.string or models.env[model]._fields[children.props.name].string, type='header')
                 for children in tools.each(self.props.children or [])]), self.state.records_formatted.length > 0 and [
-                Row (key=record.id, hover=True, onPress=onPressWrap(record.id), [
+                Row (key=record.id, hover=True, onPress=onPressWrap(record.id), *[
                     Cell (text=record[children.props.name])
                 for children in tools.each(self.props.children or [])])
                 for record in self.state.records_formatted],

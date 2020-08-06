@@ -42,7 +42,7 @@ class Controller():
                _controllers[key].unshift(_controllers['/api/login'][0][0])
             server.post(key, _controllers[key])
             server.get(key, _controllers[key])
-        if configuration.local_app == True:
+        if True: #configuration.local_app == True: #Default to true because React Native needs server-side directory to load external modules and etc
            server.get('/\/(.*)?.*/', restify.plugins.serveStatic({'directory': './react/client', 'default': 'index.html'}))
            if configuration.serverless:
               _controllers['/api/web'] = [restify.plugins.serveStatic({'directory': './react/client', 'default': 'index.html'})]

@@ -1,0 +1,68 @@
+import orm.exceptions as exceptions
+import orm.pouchdb as pouchdb
+import orm.models as models
+import orm.fields as fields
+import orm.tools as tools
+import orm.api as api
+import ir.ui as ui
+from ir.data import data
+
+def wait_loaded(method):
+    data.append(method)
+
+@async
+def import_external_module(url, defaults=False, force_url=False):
+    if force_url or (tools.client and tools.client.Native and tools.client.Native.Platform.OS != 'web'):
+       url = new URL(url, tools.configuration.url or '').href
+    code = ''
+    try:
+        response = await [tools.fetch(url, {'cache': 'force-cache'})]
+        code = await [response.text()]
+        stored = None
+        try:
+            stored = await [window.session_db.get('stored_' + url)]
+        except: pass
+        if not stored: window.session_db.put({'_id': 'stored_' + url, 'code': code})
+        elif stored.code != code:
+            stored.code = code
+            window.session_db.put(stored)
+    except Exception as fetch_error:
+        if v'typeof window' == 'undefined': raise fetch_error
+        console.log('Using stored ' + url)
+        try:
+            stored = await [window.session_db.get('stored_' + url)]
+            code = stored.code
+        except:
+            raise fetch_error
+    orm = {}
+    orm.exceptions = exceptions
+    orm.pouchdb = pouchdb
+    orm.models = models
+    orm.fields = fields
+    orm.tools = tools
+    orm.api = api
+    orm.ui = ui
+    module_object = {'exports': {}, 'orm': orm}
+    new (Function.prototype.bind.apply(Function, [None, 'module', 'exports', 'orm', code]))()(module_object, module_object.exports, orm)
+    if defaults: return module_object.exports.default
+    return module_object.exports
+
+@async
+def import_expo_module(module_name, defaults=False, raise_error=False):
+    #An empty promise is to await forever, except when raise_error is true
+    def empty(): return
+    empty_promise = new Promise(empty)
+    if v'typeof window' == 'undefined':
+       console.warn('You are on server-side')
+       if raise_error:
+          raise new Error('Expo modules does not exist on server-side')
+       return empty_promise
+    module = tools.client.Modules[module_name]
+    if module:
+       if not defaults: return module()
+       module = await [module()]
+       return module.default
+    message = 'Expo module ' + module_name + ' not found on platform ' + tools.client.Native.Platform.OS
+    if raise_error: raise new Error(message)
+    console.warn(message)
+    return empty_promise
