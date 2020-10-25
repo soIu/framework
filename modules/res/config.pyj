@@ -1,9 +1,0 @@
-import orm.models as models
-import orm.fields as fields
-class ResConfig(models.Model):
-    _name = 'res.config'
-
-    key = fields.Char(string="Config Key")
-    value = fields.Char(string="Config Value")
-
-ResConfig()

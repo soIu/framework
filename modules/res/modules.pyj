@@ -1,5 +1,0 @@
-import res.config
-import res.debug
-import res.users
-import res.partner
-import res.message
