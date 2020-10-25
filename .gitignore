@@ -1,10 +1,6 @@
-node_modules
-*.pyj-cached
-modules/modules.pyj
-modules/controllers.pyj
-modules/views.pyj
-app.conf
-main
-main.json
-main-*
-package-lock.json
+*node_modules
+*.pyc
+*package-lock.json
+client.js
+client.wasm
+server.wasm

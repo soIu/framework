@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test RPython</title>
+    <script src="https://unpkg.com/preact@10.5.5/dist/preact.min.js"></script>
+    <script src="https://unpkg.com/preact@10.5.5/hooks/dist/hooks.umd.js"></script>
+    <script src="https://unpkg.com/preact@10.5.5/compat/dist/compat.umd.js"></script>
+    <script>window.React = window.ReactDOM = window.preactCompat;</script>
+    <!--<script>
+original_create = window.React.createElement
+window.React.createElement = function (...args) {
+  console.log(args);
+  return original_create(...args);
+}
+    </script>-->
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="client.js"></script>
+</body>
+</html>
