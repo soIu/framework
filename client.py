@@ -1,5 +1,5 @@
 from react import Component, Text
-from javascript import JSON, Object, types, function, method
+from javascript import JSON, Object, types, function, method, asynchronous
 
 @Component
 class div:
@@ -7,10 +7,12 @@ class div:
     onClick = types.function
 
 @Component
-class input:
+class textarea:
     style = types.dict
     onChange = types.ref
     value = types.str
+
+input = textarea
 
 @function
 def onClickStyled(event):
@@ -37,6 +39,14 @@ class EditableText:
     def onChange(self, event):
         self.state.text = event['target']['value'].toString()
         return self.setState()
+
+    @asynchronous
+    def mount(self):
+        fetch = Object('window.fetch').toFunction()
+        page = fetch('/').wait()
+        text = page['text'].call().wait()
+        self.state.text = text.toRef()
+        self.setState()
 
     def render(self):
         return (

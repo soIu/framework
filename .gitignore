@@ -3,4 +3,5 @@
 *package-lock.json
 client.js
 client.wasm
+server.js
 server.wasm

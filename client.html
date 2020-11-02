@@ -7,13 +7,18 @@
     <script src="https://unpkg.com/preact@10.5.5/hooks/dist/hooks.umd.js"></script>
     <script src="https://unpkg.com/preact@10.5.5/compat/dist/compat.umd.js"></script>
     <script>window.React = window.ReactDOM = window.preactCompat;</script>
-    <!--<script>
-original_create = window.React.createElement
-window.React.createElement = function (...args) {
-  console.log(args);
-  return original_create(...args);
+    <script>
+var original_eval = window.eval;
+window.eval = function (...args) {
+  try {
+    return original_eval(...args);
+  }
+  catch (error) {
+    console.error(args[0]);
+    throw error;
+  }
 }
-    </script>-->
+    </script>
 </head>
 <body>
     <div id="app"></div>
