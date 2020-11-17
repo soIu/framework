@@ -37,7 +37,7 @@ class EditableText:
 
     @method
     def onChange(self, event):
-        self.state.text = event['target']['value'].toString()
+        self.state.text = event['target']['value'].toRef() #.toString()
         return self.setState()
 
     @asynchronous
