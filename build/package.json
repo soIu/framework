@@ -1,1 +1,5 @@
-{}
+{
+  "dependencies": {
+    "fastify": "^3.9.2"
+  }
+}
