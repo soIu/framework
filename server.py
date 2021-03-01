@@ -14,12 +14,20 @@ def login(request, response):
     password = None
     if params['login'].type == 'string':
        login = params['login'].toString()
-       if not login: return response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Username/email is empty'}))
-    else: return response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Username/email type is invalid'}))
+       if not login:
+          response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Username/email is empty'}))
+          return
+    else:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Username/email type is invalid'}))
+       return
     if params['password'].type == 'string':
        password = params['password'].toString()
-       if not password: return response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password is empty'}))
-    else: return response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password type is invalid'}))
+       if not password:
+          response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password is empty'}))
+          return
+    else:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password type is invalid'}))
+       return
     user_id = models.env['res.users'].search([('login', '=', login), ('password', '=', password)], limit=1).wait()
     response.send(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name})}))
 
