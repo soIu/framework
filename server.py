@@ -1,5 +1,5 @@
 from orm import models, http
-from orm.server import init
+from orm.server import init, init_compile
 from javascript import asynchronous
 
 @http.route('/', method=['GET', 'POST'], asynchronous=True)
@@ -40,4 +40,6 @@ def main(argv):
     start()
     return 0
 
-def target(*args): return main, None
+def target(*args):
+    init_compile()
+    return main, None

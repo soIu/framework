@@ -1,4 +1,5 @@
 from javascript import Object, JSON, Error, function
+from . import db
 import json
 
 args = function
@@ -25,7 +26,7 @@ def run(port, host=None):
     register = fastify['route'].toFunction()
     for path in routes:
         route = routes[path]
-        configuration = merge(JSON.fromDict({'path': route['path'], 'method': JSON.fromList(route['method']), 'handler': JSON.fromFunction(route['function'])), JSON.rawString(route['configuration']))
+        configuration = merge(JSON.fromDict({'path': route['path'], 'method': JSON.fromList(route['method']), 'handler': JSON.fromFunction(route['function'])}), JSON.rawString(route['configuration']))
         register(configuration.toRef())
     listen = fastify['listen'].toFunction()
     if host is None:
