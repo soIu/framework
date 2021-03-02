@@ -29,6 +29,9 @@ def login(request, response):
        response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password type is invalid'}))
        return
     user_id = models.env['res.users'].search([('login', '=', login), ('password', '=', password)], limit=1).wait()
+    if not user_id:
+       response.send(JSON.fromDict({'status': 'denied', 'message': 'Username/Password wrong'}))
+       return
     response.send(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name})}))
 
 @asynchronous
