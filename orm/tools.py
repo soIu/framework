@@ -1,4 +1,4 @@
-from .models import Model, env
+from .models import Model, Environment
 
 def merge(*objects, **options):
     reverse = options.get('reverse', False)
@@ -20,3 +20,4 @@ def register_models():
                fields[property] = value
                setattr(model, property, value['default'])
         model.fields = fields
+        Environment.models[model._name] = model
