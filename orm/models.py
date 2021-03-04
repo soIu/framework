@@ -15,6 +15,9 @@ class Model(object):
         self.env = env
         self.is_env = env
 
+    def read(self):
+        return Global()['Object'].new()
+
     def update(self, values):
         return self
 
@@ -36,11 +39,11 @@ def get_records(ids):
     Array = Global()['Array']
     array = Array.new()
     Promise = Global()['Promise']
-    promise = Promise.new(Object.createClosure(get_record_handle, Object.fromList(ids), array).toRef())
+    promise = Promise.new(Object.createClosure(get_records_handle, Object.fromList(ids), array).toRef())
     return promise
 
 @function
-def get_record_handle(ids, results, resolve, reject):
+def get_records_handle(ids, results, resolve, reject):
     db = get_db()
     length = ids['length']
     closure = Object.createClosure(append_record, resolve, reject, length, results)

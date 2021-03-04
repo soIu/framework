@@ -1,6 +1,6 @@
 from .models import Model, Environment
 from .fields import Char
-from javascript import Object
+from javascript import Object, JSON
 
 def merge(*objects, **options):
     reverse = options.get('reverse', False)
@@ -30,7 +30,7 @@ def register_models():
         Environment.models[model._name] = model
         configure_model(model)
 
-def adapt_type(type):
+def adapt_object_to_field(type):
     if type in ['char', 'text', 'selection']:
        return '.toString()'
     elif type == 'integer':
@@ -41,19 +41,28 @@ def adapt_type(type):
        return '.toBoolean()'
     #Relational fields, Date, and Datetime need research
 
+model_read_template = """
+def read(self):
+    values = Global()['Object'].new()
+"""
+
 model_update_template = """
 def update(self, values):
 """
 
 def configure_model(model):
-    template = model_update_template
+    read = model_read_template
+    update = model_update_template
     indent = ' ' * 4
     for key in model._fields:
         field = model._fields[key]
-        template += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_type(field['type']) + "if values['" + key + ("'].type %s else %s") % ("!= 'random'" if field['type'] in ['char', 'text', 'selection'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == integer else 0.0 if field['type'] == 'float' else None)
-    template += '\n' + indent + 'return self'
-    namespace = {}
-    exec(template, namespace)
+        read += '\n' + indent + "values['" + key + "'] = None if self." + key + (" is None else %s" % ('self.{}'.format(key) if field['type'] in ['char', 'text', 'selection'] else 'JSON.fromInteger({})'.format(key) if field['type'] == 'integer' else 'JSON.fromFloat({})'.format(key) if field['type'] == 'float' else 'JSON.fromBoolean({})'.format(key) if field['type'] == 'boolean' else None))
+        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == integer else 0.0 if field['type'] == 'float' else None))
+    read += '\n' + indent + 'return values'
+    update += '\n' + indent + 'return self'
+    namespace = {'Global': Global, 'JSON': JSON}
+    exec(read + '\n' + update, namespace)
+    model.read = namespace['read']
     model.update = namespace['update']
 
 class Cache:
