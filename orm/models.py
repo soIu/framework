@@ -1,6 +1,8 @@
 from . import get_db, tools
 from javascript import Object, asynchronous, function
 
+Global = tools.Global
+
 class Model(object):
     _name = None
     _inherit = False
@@ -22,7 +24,7 @@ class Model(object):
            raise Exception('You have to send either id or ids as the argument')
         singleton = id is not None
         uuids = [id] if ids is None else ids
-        records = get_record(uuids).wait()
+        records = get_records(uuids).wait()
         if singleton:
            record = self._model()
            record.id = id
@@ -30,10 +32,10 @@ class Model(object):
            record.update(records['0'])
         return self
 
-def get_record(ids):
-    Array = tools.get_global()['Array']
+def get_records(ids):
+    Array = Global()['Array']
     array = Array.new()
-    Promise = tools.get_global()['Promise']
+    Promise = Global()['Promise']
     promise = Promise.new(Object.createClosure(get_record_handle, Object.fromList(ids), array).toRef())
     return promise
 

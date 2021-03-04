@@ -74,3 +74,5 @@ def get_global():
     require = Object.get('require').toFunction()
     cache.global_object = require('./global.js').keep()
     return cache.global_object
+
+Global = get_global
