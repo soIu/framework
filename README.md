@@ -1,5 +1,5 @@
 # Solu Framework
-A full featured, ORM-backed, isomorphic framework using RPython, RxDB and React Native.
+A full featured, ORM-backed, isomorphic framework using RPython, Pouch/CouchDB and React Native.
 
 # Purpose of this project
 - Replacing or making an alternative to Odoo and Python's synchronous, I/O blocking design. Allowing us to develop asynchronous and performant ERP and IoT Apps.
@@ -12,7 +12,7 @@ A full featured, ORM-backed, isomorphic framework using RPython, RxDB and React 
 
 - Use RPython for readability and performance.
 
-# Transition to RPython and RxDB
+# Transition to RPython and New DB engine
 We are transitioning major parts of our framework namely the language (RapydScript) and the database (PouchDB/CouchDB). The reason we choose RPython is plenty, if not many. An example would be that RPython compiles directly to WebAssembly making it faster than Javascript and on-par with the hottest languages like Rust and Go, and it is a great language to apply compile-time computation, execution, and code refactoring as every global variables, function decorators, and any code that is called outside of the main function are evaluated at compile-time.
 
 # Difference from the old version
