@@ -26,36 +26,19 @@ class Model(object):
         if id is None and ids is None:
            raise Exception('You have to send either id or ids as the argument')
         singleton = id is not None
-        uuids = [id] if ids is None else ids
+        uuids = [tools.id_to_pouch_id(id, self._name)] if ids is None else [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
         if singleton:
            record = self._model()
            record.id = id
            record.ids = uuids
-           record.update(records['0'])
+           record.update(records['rows']['0']['doc'])
+           return record
         return self
 
 def get_records(ids):
-    Array = Global()['Array']
-    array = Array.new()
-    Promise = Global()['Promise']
-    promise = Promise.new(Object.createClosure(get_records_handle, Object.fromList(ids), array).toRef())
-    return promise
-
-@function
-def get_records_handle(ids, results, resolve, reject):
     db = get_db()
-    length = ids['length']
-    closure = Object.createClosure(append_record, resolve, reject, length, results)
-    for id in ids.toArray():
-        db.get(id.toRef()).once(closure.toRef())
-
-@function
-def append_record(resolve, reject, length, results, result):
-    if result['ok'].toBoolean():
-       results['push'].call(result.toRef())
-       if results['length'].toInteger() == length.toInteger():
-          resolve(results.toRef())
+    return db['allDocs'].call(JSON.fromDict({'keys': JSON.fromList(ids), 'include_docs': JSON.fromBoolean(True)}))
 
 class Environment:
     models = {}

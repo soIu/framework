@@ -3,7 +3,11 @@ from . import db, get_db, tools
 
 @asynchronous
 def init():
-    db.server = Object.get('require').call('fastify')['server'].keep()
+    require = Object.get('require').toFunction()
+    fastify = require('fastify')
+    fastify['register'].call(require('middie').toRef())
+    db.server = fastify #.keep()
+    #require middie here so db.server['use'] works
     get_db()
     return
 

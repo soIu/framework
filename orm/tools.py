@@ -85,3 +85,6 @@ def get_global():
     return cache.global_object
 
 Global = get_global
+
+def id_to_pouch_id(id, model):
+    return 'orm_records:' + model + ':' + id
