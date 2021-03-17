@@ -53,7 +53,7 @@ class Model(object):
         for row in records['rows'].toArray():
             doc = row['doc']
             record = self._model()
-            record.id = doc['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            record.id = doc['_id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
             record.ids = [record.id]
             record.update(doc)
             record._length = 1
@@ -78,14 +78,14 @@ class Model(object):
         for row in records['rows'].toArray():
             doc = row['doc']
             record = self._model()
-            record.id = doc['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            record.id = doc['_id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
             record.ids = [record.id]
             record.update(doc)
             record._length = 1
             recordset._records += [record]
         return recordset
 
-    @api.server(asynchronous=True)
+    @api.server(asynchronous=True, client=False)
     def search_ids(self, domain, limit=0, order=None):
         template = 'orm_index:%s:%s:%s'
         excepts = {}
@@ -122,6 +122,8 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
+                   elif object.type == 'string':
+                      object = Global()['encodeURIComponent'].call(object.toRef())
                    queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
             elif operator == 'not in':
                for object in value.toArray():
@@ -129,6 +131,8 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
+                   elif object.type == 'string':
+                      object = Global()['encodeURIComponent'].call(object.toRef())
                    excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
             elif operator in ['like', 'ilike']:
                index = template % (self._name, field, type) + ': ' + value.toString()
@@ -172,6 +176,68 @@ class Model(object):
             if limit and len(ids) == limit: break
         return ids
 
+    def create(self, values=None):
+        return self.create_server(values=values)
+
+    @api.server(asynchronous=True, client=False)
+    def create_server(self, values=None):
+        if values is None:
+           values = self.read()
+        else:
+           merge = Global()['Object']['assign'].toFunction()
+           current_values = self.read()
+           values = merge(current_values.toRef(), values.toRef())
+        is_array = values.type == 'array'
+        length = 1 if not is_array else values['length'].toInteger()
+        if not is_array:
+           values = Object.fromList([values.toRef()])
+        require = Object.get('require').toFunction()
+        indexes = []
+        ids = []
+        for value in values.toArray():
+            id = require('./utils/generate-pouch-id.js').call().toString()
+            for key in value:
+                object = value[key]
+                indexes += [set_index(self._name, key, object.type, object).keep()]
+            pouch_id = tools.id_to_pouch_id(id, self._name)
+            value['_id'] = pouch_id
+            ids += [id]
+        db = get_db()
+        db['bulkDocs'].call(values.toRef()).wait()
+        for index in indexes: index.release().call()
+        #Global()['Promise'].new(JSON.fromList([index.release().call() for index in indexes])).wait()
+        if length == 1:
+           record = self._model()
+           assert len(ids) >= 1
+           record.id = ids[0]
+           record.ids = ids
+           record.update(values['0'])
+           record._length = len(record.ids)
+           return record
+        recordset = self._model()
+        for value in values.toArray():
+            record = self._model()
+            record.id = value['_id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            record.ids = [record.id]
+            record.update(value)
+            record._length = 1
+            recordset._records += [record]
+        return recordset
+
+def get_records(ids):
+    get_local = Object.createClosure(get_records_local, Object.fromList(ids))
+    if db.server is not None: return get_local.call()
+    return get_records_server(ids)['then'].call(get_local.toRef())
+
+def get_records_server(ids):
+    db = get_db()
+    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
+
+@function
+def get_records_local(ids):
+    db = get_db()
+    return db['allDocs'].call(JSON.fromDict({'keys': ids.toRef(), 'include_docs': JSON.fromBoolean(True)}))
+
 def get_index(queries, mode='and', handle=True):
     db = get_db()
     Promise = Global()['Promise']
@@ -199,19 +265,18 @@ def get_index_handle(mode, results):
             if ids[id] == length: rows['push'].call(row.toRef())
     return new_result
 
-def get_records(ids):
-    get_local = Object.createClosure(get_records_local, Object.fromList(ids))
-    if db.server is not None: return get_local.call()
-    return get_records_server(ids)['then'].call(get_local.toRef())
-
-def get_records_server(ids):
-    db = get_db()
-    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
+def set_index(model, field, type, value, id):
+    if value.type == 'number':
+       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
+    elif value.type == 'string':
+       value = Global()['encodeURIComponent'].call(value.toRef())
+    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
+    return Object.createClosure(set_index_handle, index)
 
 @function
-def get_records_local(ids):
+def set_index_handle(index):
     db = get_db()
-    return db['allDocs'].call(JSON.fromDict({'keys': ids.toRef(), 'include_docs': JSON.fromBoolean(True)}))
+    return db['put'].call(JSON.fromDict({'_id': index.toRef()}))
 
 class Environment:
     models = {}
