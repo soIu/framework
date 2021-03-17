@@ -1,4 +1,5 @@
-from . import get_db, tools
+from . import db, get_db, tools
+from .. import configuration
 from javascript import Object, asynchronous, function
 
 Global = tools.Global
@@ -37,8 +38,18 @@ class Model(object):
         return self
 
 def get_records(ids):
+    get_local = Object.createClosure(get_records_local, Object.fromList(ids))
+    if db.server is not None: return get_local.call()
+    return get_records_server(ids)['then'].call(get_local.toRef())
+
+def get_records_server(ids):
     db = get_db()
-    return db['allDocs'].call(JSON.fromDict({'keys': JSON.fromList(ids), 'include_docs': JSON.fromBoolean(True)}))
+    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
+
+@function
+def get_records_local(ids):
+    db = get_db()
+    return db['allDocs'].call(JSON.fromDict({'keys': ids.toRef(), 'include_docs': JSON.fromBoolean(True)}))
 
 class Environment:
     models = {}
