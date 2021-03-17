@@ -32,7 +32,20 @@ class Model(object):
         if singleton:
            record = self._model()
            record.id = id
-           record.ids = uuids
+           record.ids = [id]
+           record.update(records['rows']['0']['doc'])
+           return record
+        return self
+
+    @asynchronous
+    def search(self, domain, limit=0, order=None):
+        ids = self.search_ids(domain=domain, limit=limit, order=order).wait()
+        singleton = True
+        records = get_records(uuids).wait()
+        if singleton:
+           record = self._model()
+           record.id = id
+           record.ids = [id]
            record.update(records['rows']['0']['doc'])
            return record
         return self
