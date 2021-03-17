@@ -74,7 +74,7 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   queries[field][index] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
+                   queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
             elif operator == 'not in':
                for object in value.toArray():
                    object = value[index]
@@ -88,7 +88,21 @@ class Model(object):
         db = get_db()
         get_indexes = None
         get_excepts = None
-        if len(queries): pass
+        if len(queries):
+           promises = Global()['Array'].new()
+           for field in queries:
+               query = queries[field]
+               if 'in_length' in query:
+                  in_query = []
+                  for index in range(int(query['in_length'])):
+                      value = query[str(index)]
+                      in_query += [{'>': value, '<': value + '\ufff0'}]
+                  promise = get_index(in_query, mode='or')
+                  promises['push'].call(promise.toRef())
+               else:
+                  promises['push'].call(get_index([query], handle=False)['0'].toRef())
+           mode = Object.fromString('and')
+           get_indexes = Global()['Promise']['all'].call(promises.toRef())['then'].call(Object.createClosure(get_index_handle, mode).toRef())
         else:
            key = 'orm_records:%s:' % (self._name)
            get_indexes = db['allDocs'].call(JSON.fromDict({'startkey': key, 'endkey': key + '\ufff0'}))
@@ -110,10 +124,12 @@ class Model(object):
             if limit and len(ids) == limit: break
         return ids
 
-def get_index(queries, mode='and'):
+def get_index(queries, mode='and', handle=True):
     db = get_db()
     Promise = Global()['Promise']
-    return Promise['all'].call(JSON.fromList([db['allDocs'].call(JSON.fromDict({'startkey': query['>'], 'endkey': query['<']})).toRef() for query in queries]))['then'].call(Object.createClosure(get_index_handle, Object.fromString(mode)).toRef())
+    promises = Object.fromList([db['allDocs'].call(JSON.fromDict({'startkey': query['>'], 'endkey': query['<']})).toRef() for query in queries])
+    if not handle: return promises
+    return Promise['all'].call(promises.toRef())['then'].call(Object.createClosure(get_index_handle, Object.fromString(mode)).toRef())
 
 @function
 def get_index_handle(mode, results):
