@@ -10,6 +10,7 @@ def route(path, method, asynchronous=False, **configuration):
     def wrapper(function):
         if path in routes: print "WARNING, there's already an http route for " + str(path)
         routes[path] = {'function': args(function) if not asynchronous else args(asynchronous=True)(function), 'path': path, 'method': method if type(method) == list else [method], 'configuration': json.dumps(configuration)}
+        return routes[path]['function']
     return wrapper
 
 @function
