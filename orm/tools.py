@@ -89,9 +89,17 @@ Global = get_global
 def id_to_pouch_id(id, model):
     return 'orm_records:' + model + ':' + id
 
-def check_server():
+def generate_static_closures():
+
     import os
-    return 'server.py' in os.getenv('RPYTHON_TARGET_FILE')
+    server = 'server.py' in os.getenv('RPYTHON_TARGET_FILE')
+
+    def check_server():
+        return server
+
+    return check_server
+
+check_server = generate_static_closures()
 
 def empty_promise():
     return Global()['Promise'].new(empty_promise_handle)

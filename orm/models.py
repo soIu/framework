@@ -116,9 +116,9 @@ class Model(object):
         except_ids = {}
         if excepts.type != 'undefined':
            for row in excepts['rows'].toArray():
-               except_ids[row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0']] = 0
+               except_ids[row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()] = 0
         for row in results['rows'].toArray():
-            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0']
+            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
             if id in except_ids: continue
             ids += [id]
             if limit and len(ids) == limit: break
@@ -134,13 +134,22 @@ def get_index(queries, mode='and', handle=True):
 @function
 def get_index_handle(mode, results):
     mode = mode.toString()
+    new_result = Global()['Object'].new()
+    new_result['rows'] = JSON.fromList([])
+    rows = new_result['rows']
     if mode == 'or':
-       new_result = Global()['Object'].new()
-       new_result['rows'] = JSON.fromList([])
-       rows = new_result['rows']
        for result in results.toArray():
            rows['push']['apply'].call(None, result['rows'].toRef())
        return new_result
+    length = results['length'].toInteger()
+    ids = {}
+    for result in results.toArray():
+        for row in result['rows'].toArray():
+            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            if id not in ids: ids[id] = 0
+            ids[id] += 1
+            if ids[id] == length: rows['push'].call(row.toRef())
+    return new_result
 
 def get_records(ids):
     get_local = Object.createClosure(get_records_local, Object.fromList(ids))
