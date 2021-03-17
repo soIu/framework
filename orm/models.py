@@ -15,6 +15,14 @@ class Model(object):
         self.ids = []
         self.env = env
         self.is_env = env
+        self._records = []
+        self._length = 0
+        #self._mapped_records = {}
+
+    def __iter__(self):
+        if self._length == 0: return iter([])
+        if self._length == 1: return iter([self])
+        return iter(self._records)
 
     def read(self):
         return Global()['Object'].new()
@@ -25,30 +33,57 @@ class Model(object):
     @asynchronous
     def browse(self, id=None, ids=None):
         if id is None and ids is None:
-           raise Exception('You have to send either id or ids as the argument')
+           #raise Exception('You have to send either id or ids as the argument')
+           record = self._model()
+           record._length = 1
+           return record
         singleton = id is not None
         uuids = [tools.id_to_pouch_id(id, self._name)] if ids is None else [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
+        length = records['rows']['length'].toInteger()
+        if not length: return self._model()
         if singleton:
            record = self._model()
            record.id = id
            record.ids = [id]
            record.update(records['rows']['0']['doc'])
+           record._length = 1
            return record
-        return self
+        recordset = self._model()
+        for row in records['rows'].toArray():
+            doc = row['doc']
+            record = self._model()
+            record.id = doc['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            record.ids = [record.id]
+            record.update(doc)
+            record._length = 1
+            recordset._records += [record]
+        return recordset
 
     @asynchronous
     def search(self, domain, limit=0, order=None):
         ids = self.search_ids(domain=domain, limit=limit, order=order).wait()
-        singleton = True
+        uuids = [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
-        if singleton:
+        length = records['rows']['length'].toInteger()
+        if not length: return self._model()
+        if limit == 1 or length == 1:
            record = self._model()
            record.id = id
            record.ids = [id]
            record.update(records['rows']['0']['doc'])
+           record._length = len(record.ids)
            return record
-        return self
+        recordset = self._model()
+        for row in records['rows'].toArray():
+            doc = row['doc']
+            record = self._model()
+            record.id = doc['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            record.ids = [record.id]
+            record.update(doc)
+            record._length = 1
+            recordset._records += [record]
+        return recordset
 
     @api.server(asynchronous=True)
     def search_ids(self, domain, limit=0, order=None):
