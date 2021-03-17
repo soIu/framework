@@ -40,7 +40,7 @@ class Model(object):
     @api.server(asynchronous=True)
     def search_ids(self, domain, limit=0, order=None):
         template = 'orm_index:%s:%s:%s'
-        excepts = []
+        excepts = {}
         queries = {}
         for field, operator, raw_value in domain:
             type = value.type
@@ -54,19 +54,19 @@ class Model(object):
                queries[field] = {'>': index, '<': index + '\ufff0'}
             elif operator == '!=':
                index = template % (self._name, field, type) + ': ' + value.toString()
-               excepts.append(index + ':')
+               excepts[index + ':'] = 0
             elif operator.startswith('>'):
                index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
                   queries[field] = {'<': template $ (self._name, field, type) + '\ufff0'}
                queries[field]['>'] = index
-               if operator != '>=': excepts.append(index + ':')
+               if operator != '>=': excepts[index + ':'] = 0
             elif operator.startswith('<'):
                index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
                   queries[field] = {'>': template % (self._name, field, type) + ': '}
                queries[field]['<'] = index
-               if operator != '<=': excepts.append(index + ':')
+               if operator != '<=': excepts[index + ':'] = 0
             elif operator == 'in':
                queries[field] = {'in_length': value['length'].toString()}
                for index in value:
@@ -81,10 +81,50 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   excepts.append(template % (self._name, field, object_type) + ': ' + object.toString() + ':')
+                   excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
             elif operator in ['like', 'ilike']:
                index = template % (self._name, field, type) + ': ' + value.toString()
                queries[field] = {'>': index, '<': index + '\ufff0'}
+        db = get_db()
+        get_indexes = None
+        get_excepts = None
+        if len(queries): pass
+        else:
+           key = 'orm_records:%s:' % (self._name)
+           get_indexes = db['allDocs'].call(JSON.fromDict({'startkey': key, 'endkey': key + '\ufff0'}))
+        if len(excepts):
+           get_excepts = get_index([{'>': key, '<': key + '\ufff0'} for key in excepts], mode='or')
+        else:
+           get_excepts = tools.empty_promise()
+        results = get_indexes.wait()
+        excepts = get_excepts.wait()
+        ids = []
+        except_ids = {}
+        if excepts.type != 'undefined':
+           for row in excepts['rows'].toArray():
+               except_ids[row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0']] = 0
+        for row in results['rows'].toArray():
+            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0']
+            if id in except_ids: continue
+            ids += [id]
+            if limit and len(ids) == limit: break
+        return ids
+
+def get_index(queries, mode='and'):
+    db = get_db()
+    Promise = Global()['Promise']
+    return Promise['all'].call(JSON.fromList([db['allDocs'].call(JSON.fromDict({'startkey': query['>'], 'endkey': query['<']})).toRef() for query in queries]))['then'].call(Object.createClosure(get_index_handle, Object.fromString(mode)).toRef())
+
+@function
+def get_index_handle(mode, results):
+    mode = mode.toString()
+    if mode == 'or':
+       new_result = Global()['Object'].new()
+       new_result['rows'] = JSON.fromList([])
+       rows = new_result['rows']
+       for result in results.toArray():
+           rows['push']['apply'].call(None, result['rows'].toRef())
+       return new_result
 
 def get_records(ids):
     get_local = Object.createClosure(get_records_local, Object.fromList(ids))

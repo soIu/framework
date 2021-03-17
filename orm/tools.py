@@ -92,3 +92,9 @@ def id_to_pouch_id(id, model):
 def check_server():
     import os
     return 'server.py' in os.getenv('RPYTHON_TARGET_FILE')
+
+def empty_promise():
+    return Global()['Promise'].new(empty_promise_handle)
+
+def empty_promise_handle(args):
+    args['0'].call()
