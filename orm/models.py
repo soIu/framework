@@ -47,23 +47,26 @@ class Model(object):
             value = Object(raw_value, safe_json=True)
             if value.type == 'number':
                value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
+            elif value.type == 'string':
+               value = Global()['encodeURIComponent'].call(value.toRef())
             if operator == '=':
-               queries[field] = {'=': template % (self._name, field, type) + ':' + value.toString()}
+               index = template % (self._name, field, type) + ': ' + value.toString() + ':'
+               queries[field] = {'>': index, '<': index + '\ufff0'}
             elif operator == '!=':
-               index = template % (self._name, field, type) + ':' + value.toString()
-               excepts.append(index)
+               index = template % (self._name, field, type) + ': ' + value.toString()
+               excepts.append(index + ':')
             elif operator.startswith('>'):
-               index = template % (self._name, field, type) + ':' + value.toString()
+               index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
-                  queries[field] = {}
+                  queries[field] = {'<': template $ (self._name, field, type) + '\ufff0'}
                queries[field]['>'] = index
-               if operator != '>=': excepts.append(index)
+               if operator != '>=': excepts.append(index + ':')
             elif operator.startswith('<'):
-               index = template % (self._name, field, type) + ':' + value.toString()
+               index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
-                  queries[field] = {}
+                  queries[field] = {'>': template % (self._name, field, type) + ': '}
                queries[field]['<'] = index
-               if operator != '<=': excepts.append(index)
+               if operator != '<=': excepts.append(index + ':')
             elif operator == 'in':
                queries[field] = {'in_length': value['length'].toString()}
                for index in value:
@@ -71,16 +74,17 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   queries[field][index] = template % (self._name, field, object_type) + ':' + object.toString()
+                   queries[field][index] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
             elif operator == 'not in':
                for object in value.toArray():
                    object = value[index]
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   excepts.append(template % (self._name, field, object_type) + ':' + object.toString())
+                   excepts.append(template % (self._name, field, object_type) + ': ' + object.toString() + ':')
             elif operator in ['like', 'ilike']:
-               queries[field] = {'ilike': template % (self._name, field, type) + ':' + value.toString()}
+               index = template % (self._name, field, type) + ': ' + value.toString()
+               queries[field] = {'>': index, '<': index + '\ufff0'}
 
 def get_records(ids):
     get_local = Object.createClosure(get_records_local, Object.fromList(ids))
