@@ -88,3 +88,7 @@ Global = get_global
 
 def id_to_pouch_id(id, model):
     return 'orm_records:' + model + ':' + id
+
+def check_server():
+    import os
+    return 'server.py' in os.getenv('RPYTHON_TARGET_FILE')
