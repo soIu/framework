@@ -8,3 +8,4 @@ server.wasm
 orm/configuration.py
 /*.c
 /*.h
+log.txt
