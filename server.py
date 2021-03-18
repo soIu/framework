@@ -1,6 +1,12 @@
-from orm import models, http
+from orm import models, http, configuration
 from orm.server import init, init_compile
-from javascript import asynchronous
+from javascript import JSON, Object, asynchronous
+
+import sys
+import orm
+sys.modules['orm'] = orm
+
+import modules
 
 @http.route('/', method=['GET', 'POST'], asynchronous=True)
 def login(request, response):
@@ -28,7 +34,7 @@ def login(request, response):
     else:
        response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Password type is invalid'}))
        return
-    user_id = models.env['res.users'].search([('login', '=', login), ('password', '=', password)], limit=1).wait()
+    user_id = models.env['res.users'].search([('login', '=', login), ('password', '=', password)], 1).wait()
     if not user_id:
        response['send'].call(JSON.fromDict({'status': 'denied', 'message': 'Username/Password wrong'}))
        return
@@ -37,7 +43,7 @@ def login(request, response):
 @asynchronous
 def start():
     init().wait()
-    http.run()
+    http.run(configuration.port)
 
 def main(argv):
     start()

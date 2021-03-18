@@ -1,8 +1,75 @@
-from . import db, get_db, api, tools
-from .. import configuration
+from . import db, get_db, api, tools, configuration
 from javascript import JSON, Object, asynchronous, function
 
 Global = tools.Global
+
+def get_records(ids):
+    get_local = Object.createClosure(get_records_local, Object.fromList(ids))
+    if tools.check_server(): return get_local.call()
+    return get_records_server(ids)['then'].call(get_local.toRef())
+
+def get_records_server(ids):
+    db = get_db()
+    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
+
+@function
+def get_records_local(ids):
+    db = get_db()
+    return db['allDocs'].call(JSON.fromDict({'keys': ids.toRef(), 'include_docs': JSON.fromBoolean(True)}))
+
+def get_index(queries, mode='and', handle=True):
+    db = get_db()
+    Promise = Global()['Promise']
+    promises = Object.fromList([db['allDocs'].call(JSON.fromDict({'startkey': query['>'], 'endkey': query['<']})).toRef() for query in queries])
+    if not handle: return promises
+    return Promise['all'].call(promises.toRef())['then'].call(Object.createClosure(get_index_handle, Object.fromString(mode)).toRef())
+
+@function
+def get_index_handle(mode, results):
+    mode = mode.toString()
+    new_result = Global()['Object'].new()
+    new_result['rows'] = JSON.fromList([])
+    rows = new_result['rows']
+    if mode == 'or':
+       for result in results.toArray():
+           rows['push']['apply'].call(None, result['rows'].toRef())
+       return new_result
+    length = results['length'].toInteger()
+    ids = {}
+    for result in results.toArray():
+        for row in result['rows'].toArray():
+            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+            if id not in ids: ids[id] = 0
+            ids[id] += 1
+            if ids[id] == length: rows['push'].call(row.toRef())
+    return new_result
+
+def set_index(model, field, type, value, id):
+    if value.type == 'number':
+       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
+    elif value.type == 'string':
+       value = Global()['encodeURIComponent'].call(value.toRef())
+    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
+    return Object.createClosure(set_index_handle, index)
+
+@function
+def set_index_handle(index):
+    db = get_db()
+    return db['put'].call(JSON.fromDict({'_id': index.toRef()}))
+
+def del_index(model, field, type, value, id):
+    if value.type == 'number':
+       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
+    elif value.type == 'string':
+       value = Global()['encodeURIComponent'].call(value.toRef())
+    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
+    db = get_db()
+    return db['get'].call(index)['then'].call(JSON.fromFunction(del_index_handle))
+
+@function
+def del_index_handle(doc):
+    db = get_db()
+    return db['remove'].call(doc.toRef())
 
 class Model(object):
     _name = None
@@ -62,16 +129,17 @@ class Model(object):
 
     @asynchronous
     def search(self, domain, limit=0, order=None):
-        ids = self.search_ids(domain=domain, limit=limit, order=order).wait()
+        ids = self.search_ids(domain, limit, order).wait()
         uuids = [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
         length = records['rows']['length'].toInteger()
         if not length: return self._model()
         if limit == 1 or length == 1:
+           doc = records['rows']['0']['doc']
            record = self._model()
-           record.id = id
-           record.ids = [id]
-           record.update(records['rows']['0']['doc'])
+           record.id = doc['_id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
+           record.ids = [record.id]
+           record.update(doc)
            record._length = len(record.ids)
            return record
         recordset = self._model()
@@ -91,22 +159,22 @@ class Model(object):
         excepts = {}
         queries = {}
         for field, operator, raw_value in domain:
-            type = value.type
             value = Object(raw_value, safe_json=True)
+            type = value.type
             if value.type == 'number':
                value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
             elif value.type == 'string':
                value = Global()['encodeURIComponent'].call(value.toRef())
             if operator == '=':
                index = template % (self._name, field, type) + ': ' + value.toString() + ':'
-               queries[field] = {'>': index, '<': index + '\ufff0'}
+               queries[field] = {'>': index, '<': index + tools.highest_char}
             elif operator == '!=':
                index = template % (self._name, field, type) + ': ' + value.toString()
                excepts[index + ':'] = 0
             elif operator.startswith('>'):
                index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
-                  queries[field] = {'<': template $ (self._name, field, type) + '\ufff0'}
+                  queries[field] = {'<': template % (self._name, field, type) + tools.highest_char}
                queries[field]['>'] = index
                if operator != '>=': excepts[index + ':'] = 0
             elif operator.startswith('<'):
@@ -127,7 +195,7 @@ class Model(object):
                    queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
             elif operator == 'not in':
                for object in value.toArray():
-                   object = value[index]
+                   #object = value[index]
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
@@ -136,7 +204,7 @@ class Model(object):
                    excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
             elif operator in ['like', 'ilike']:
                index = template % (self._name, field, type) + ': ' + value.toString()
-               queries[field] = {'>': index, '<': index + '\ufff0'}
+               queries[field] = {'>': index, '<': index + tools.highest_char}
         db = get_db()
         get_indexes = None
         get_excepts = None
@@ -148,7 +216,7 @@ class Model(object):
                   in_query = []
                   for index in range(int(query['in_length'])):
                       value = query[str(index)]
-                      in_query += [{'>': value, '<': value + '\ufff0'}]
+                      in_query += [{'>': value, '<': value + tools.highest_char}]
                   promise = get_index(in_query, mode='or')
                   promises['push'].call(promise.toRef())
                else:
@@ -157,17 +225,17 @@ class Model(object):
            get_indexes = Global()['Promise']['all'].call(promises.toRef())['then'].call(Object.createClosure(get_index_handle, mode).toRef())
         else:
            key = 'orm_records:%s:' % (self._name)
-           get_indexes = db['allDocs'].call(JSON.fromDict({'startkey': key, 'endkey': key + '\ufff0'}))
+           get_indexes = db['allDocs'].call(JSON.fromDict({'startkey': key, 'endkey': key + tools.highest_char}))
         if len(excepts):
-           get_excepts = get_index([{'>': key, '<': key + '\ufff0'} for key in excepts], mode='or')
+           get_excepts = get_index([{'>': key, '<': key + tools.highest_char} for key in excepts], mode='or')
         else:
            get_excepts = tools.empty_promise()
         results = get_indexes.wait()
-        excepts = get_excepts.wait()
+        exceptions = get_excepts.wait()
         ids = []
         except_ids = {}
-        if excepts.type != 'undefined':
-           for row in excepts['rows'].toArray():
+        if exceptions.type != 'undefined':
+           for row in exceptions['rows'].toArray():
                except_ids[row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()] = 0
         for row in results['rows'].toArray():
             id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
@@ -272,74 +340,6 @@ class Model(object):
             value = values[str(index)]
             record.update(value)
         return recordset
-
-def get_records(ids):
-    get_local = Object.createClosure(get_records_local, Object.fromList(ids))
-    if db.server is not None: return get_local.call()
-    return get_records_server(ids)['then'].call(get_local.toRef())
-
-def get_records_server(ids):
-    db = get_db()
-    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
-
-@function
-def get_records_local(ids):
-    db = get_db()
-    return db['allDocs'].call(JSON.fromDict({'keys': ids.toRef(), 'include_docs': JSON.fromBoolean(True)}))
-
-def get_index(queries, mode='and', handle=True):
-    db = get_db()
-    Promise = Global()['Promise']
-    promises = Object.fromList([db['allDocs'].call(JSON.fromDict({'startkey': query['>'], 'endkey': query['<']})).toRef() for query in queries])
-    if not handle: return promises
-    return Promise['all'].call(promises.toRef())['then'].call(Object.createClosure(get_index_handle, Object.fromString(mode)).toRef())
-
-@function
-def get_index_handle(mode, results):
-    mode = mode.toString()
-    new_result = Global()['Object'].new()
-    new_result['rows'] = JSON.fromList([])
-    rows = new_result['rows']
-    if mode == 'or':
-       for result in results.toArray():
-           rows['push']['apply'].call(None, result['rows'].toRef())
-       return new_result
-    length = results['length'].toInteger()
-    ids = {}
-    for result in results.toArray():
-        for row in result['rows'].toArray():
-            id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
-            if id not in ids: ids[id] = 0
-            ids[id] += 1
-            if ids[id] == length: rows['push'].call(row.toRef())
-    return new_result
-
-def set_index(model, field, type, value, id):
-    if value.type == 'number':
-       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
-    elif value.type == 'string':
-       value = Global()['encodeURIComponent'].call(value.toRef())
-    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
-    return Object.createClosure(set_index_handle, index)
-
-@function
-def set_index_handle(index):
-    db = get_db()
-    return db['put'].call(JSON.fromDict({'_id': index.toRef()}))
-
-def del_index(model, field, type, value, id):
-    if value.type == 'number':
-       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
-    elif value.type == 'string':
-       value = Global()['encodeURIComponent'].call(value.toRef())
-    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
-    db = get_db()
-    return db['get'].call(index)['then'].call(JSON.fromFunction(del_index_handle))
-
-@function
-def del_index_handle(doc):
-    db = get_db()
-    return db['remove'].call(doc.toRef())
 
 class Environment:
     models = {}

@@ -1,17 +1,22 @@
-from .models import Model, Environment
-from .fields import Char
 from javascript import Object, JSON
+
+import models as orm_models
+import fields as orm_fields
 
 def merge(*objects, **options):
     reverse = options.get('reverse', False)
-    if reverse: objects.reverse()
+    if reverse:
+       objects = list(objects)
+       objects.reverse()
     target = objects[0]
     for object in objects[1:]:
         target.update(object)
     return target
 
 def register_models():
-    models = Model.__subclasses__()
+    Char = orm_fields.Char
+    Environment = orm_models.Environment
+    models = orm_models.Model.__subclasses__()
     for model in models:
         fields = {}
         for property in model.__dict__:
@@ -57,7 +62,7 @@ def configure_model(model):
     for key in model._fields:
         field = model._fields[key]
         read += '\n' + indent + "values['" + key + "'] = None if self." + key + (" is None else %s" % ('self.{}'.format(key) if field['type'] in ['char', 'text', 'selection'] else 'JSON.fromInteger({})'.format(key) if field['type'] == 'integer' else 'JSON.fromFloat({})'.format(key) if field['type'] == 'float' else 'JSON.fromBoolean({})'.format(key) if field['type'] == 'boolean' else None))
-        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == integer else 0.0 if field['type'] == 'float' else None))
+        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == 'integer' else 0.0 if field['type'] == 'float' else None))
     read += '\n' + indent + 'return values'
     update += '\n' + indent + 'return self'
     namespace = {'Global': Global, 'JSON': JSON}
@@ -102,7 +107,10 @@ def generate_static_closures():
 check_server = generate_static_closures()
 
 def empty_promise():
-    return Global()['Promise'].new(empty_promise_handle)
+    return Global()['Promise'].new(JSON.fromFunction(empty_promise_handle))
 
 def empty_promise_handle(args):
-    args['0'].call()
+    assert len(args) >= 1
+    args[0].call()
+
+highest_char = '\xef\xbf\xb0'

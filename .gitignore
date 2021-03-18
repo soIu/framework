@@ -5,6 +5,6 @@ client.js
 client.wasm
 server.js
 server.wasm
-configuration.py
+orm/configuration.py
 /*.c
 /*.h

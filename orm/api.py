@@ -13,7 +13,7 @@ def server(method=None, asynchronous=False, client=True):
            return empty_server_method
     if not method and asynchronous:
        def async_wrapper(method):
-           if not client: return wrapper(method, client)
+           if not client and not tools.check_server(): return wrapper(method, client)
            return wrapper(asynchronous_function(method), client)
        return async_wrapper
     return wrapper(method)

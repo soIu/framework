@@ -1,5 +1,5 @@
-from javascript import Object, Error
-from .. import configuration
+from javascript import JSON, Object, Error
+from . import configuration
 
 class Database:
     #loaded = False
@@ -8,7 +8,7 @@ class Database:
 
 db = Database()
 
-def load_plugin(PouchDB):
+def load_plugin(require, PouchDB):
     #PouchDB['plugin'].call(require('pouchdb-find').toRef()) not required, maybe on client only
     PouchDB['plugin'].call(require('pouchdb-adapter-http').toRef())
     PouchDB['plugin'].call(require('pouchdb-adapter-memory').toRef())
@@ -18,7 +18,7 @@ def get_db():
     if db.server is not None:
        require = Object.get('require').toFunction()
        PouchDB = require('pouchdb-core')
-       load_plugin(PouchDB)
+       load_plugin(require, PouchDB)
        if configuration.server_db_custom_adapter:
           PouchDB['plugin'].call(require(configuration.server_db_custom_adapter).toRef())
        PouchDB['defaults'].call(JSON.fromDict({'adapter': configuration.server_db_adapter}))
