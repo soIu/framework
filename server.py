@@ -8,7 +8,7 @@ sys.modules['orm'] = orm
 
 import modules
 
-@http.route('/', method=['GET', 'POST'], asynchronous=True)
+@http.route('/api/login', method=['GET', 'POST'], asynchronous=True)
 def login(request, response):
     merge = Object('Object')['assign'].toFunction()
     params = Object('{}')
