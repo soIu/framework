@@ -1,6 +1,6 @@
 from . import db, get_db, api, tools
 from .. import configuration
-from javascript import Object, asynchronous, function
+from javascript import JSON, Object, asynchronous, function
 
 Global = tools.Global
 
@@ -224,6 +224,55 @@ class Model(object):
             recordset._records += [record]
         return recordset
 
+    def write(self, values=None):
+        return self.write_server(values=values)
+
+    @api.server(asynchronous=True, client=False)
+    def write_server(self, values=None):
+        if values is None:
+           values = self.read()
+        else:
+           merge = Global()['Object']['assign'].toFunction()
+           current_values = self.read()
+           values = merge(current_values.toRef(), values.toRef())
+        is_array = values.type == 'array'
+        length = 1 if not is_array else values['length'].toInteger()
+        if not is_array:
+           values = Object.fromList([values.toRef()])
+        require = Object.get('require').toFunction()
+        records = get_records([tools.id_to_pouch_id(id, self._name) for id in self.ids]).wait()
+        set_indexes = []
+        del_indexes = []
+        json = Global()['JSON']
+        for index in range(self._length):
+            value = values[str(index)]
+            record = records[str(index)]
+            for key in self._fields:
+                value_object = value[key]
+                record_object = record[key]
+                if value_object.type == 'undefined':
+                   value[key] = record_object.toRef()
+                   continue
+                if json['stringify'].call(value_object.toRef()).toString() != json['stringify'].call(record_object.toRef()).toString():
+                   set_indexes += [set_index(self._name, key, value_object.type, value_object).keep()]
+                   del_indexes += [del_index(self._name, key, value_object.type, value_object).toRef()]
+                   record[key] = value_object.toRef()
+        Global()['Promise']['all'].call(JSON.fromList(del_indexes)).wait()
+        #TODO
+        db = get_db()
+        db['bulkDocs'].call(values.toRef()).wait()
+        for index in set_indexes: index.release().call()
+        #Global()['Promise'].new(JSON.fromList([index.release().call() for index in indexes])).wait()
+        if self._length == 1:
+           record = self
+           record.update(values['0'])
+           return record
+        recordset = self._model()
+        for index, record in enumerate(self):
+            value = values[str(index)]
+            record.update(value)
+        return recordset
+
 def get_records(ids):
     get_local = Object.createClosure(get_records_local, Object.fromList(ids))
     if db.server is not None: return get_local.call()
@@ -277,6 +326,20 @@ def set_index(model, field, type, value, id):
 def set_index_handle(index):
     db = get_db()
     return db['put'].call(JSON.fromDict({'_id': index.toRef()}))
+
+def del_index(model, field, type, value, id):
+    if value.type == 'number':
+       value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
+    elif value.type == 'string':
+       value = Global()['encodeURIComponent'].call(value.toRef())
+    index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
+    db = get_db()
+    return db['get'].call(index)['then'].call(JSON.fromFunction(del_index_handle))
+
+@function
+def del_index_handle(doc):
+    db = get_db()
+    return db['remove'].call(doc.toRef())
 
 class Environment:
     models = {}
