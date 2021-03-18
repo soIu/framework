@@ -25,7 +25,7 @@ def handle(error, address):
 
 def run(port, host=None):
     require = Object('require').toFunction()
-    fastify = require('fastify').call()
+    fastify = db.server #require('fastify').call()
     fastify['register'].call(require('fastify-formbody').toRef())
     merge = Object('Object')['assign'].toFunction()
     register = fastify['route'].toFunction()
