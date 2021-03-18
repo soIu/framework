@@ -10,6 +10,7 @@ db = Database()
 
 def load_plugin(require, PouchDB):
     #PouchDB['plugin'].call(require('pouchdb-find').toRef()) not required, maybe on client only
+    PouchDB['plugin'].call(require('pouchdb-replication').toRef())
     PouchDB['plugin'].call(require('pouchdb-adapter-http').toRef())
     PouchDB['plugin'].call(require('pouchdb-adapter-memory').toRef())
 

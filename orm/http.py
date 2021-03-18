@@ -36,4 +36,5 @@ def run(port, host=None):
     listen = fastify['listen'].toFunction()
     if host is None:
        listen(JSON.fromInteger(port), JSON.fromFunction(handle))
+       return
     listen(JSON.fromDict({'port': JSON.fromInteger(port), 'host': host}), JSON.fromFunction(handle))
