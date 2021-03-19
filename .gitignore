@@ -9,3 +9,4 @@ orm/configuration.py
 /*.c
 /*.h
 log.txt
+main*

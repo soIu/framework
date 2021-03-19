@@ -250,7 +250,7 @@ class Model(object):
         return self.create_server(values)
 
     @api.server(asynchronous=True, client=False)
-    def create_server(self, values=None):
+    def create_server(self, values):
         if values is None:
            values = self.read()
         else:
@@ -272,7 +272,6 @@ class Model(object):
             pouch_id = tools.id_to_pouch_id(id, self._name)
             value['_id'] = pouch_id
             ids += [id]
-        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         db = get_db()
         db['bulkDocs'].call(values.toRef()).wait()
         for index in indexes: index.release().call()
@@ -296,10 +295,10 @@ class Model(object):
         return recordset
 
     def write(self, values=None):
-        return self.write_server(values=values)
+        return self.write_server(values)
 
     @api.server(asynchronous=True, client=False)
-    def write_server(self, values=None):
+    def write_server(self, values):
         if values is None:
            values = self.read()
         else:
@@ -329,7 +328,6 @@ class Model(object):
                    set_indexes += [set_index(self._name, key, value_object.type, value_object, id).keep()]
                    del_indexes += [del_index(self._name, key, value_object.type, value_object, id).toRef()]
                    record[key] = value_object.toRef()
-        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         Global()['Promise']['all'].call(JSON.fromList(del_indexes)).wait()
         #TODO
         db = get_db()

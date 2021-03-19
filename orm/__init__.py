@@ -15,16 +15,18 @@ def load_plugin(require, PouchDB):
     PouchDB['plugin'].call(require('pouchdb-adapter-memory').toRef())
 
 def get_db():
-    if db.pouchdb is not None: return db.pouchdb
+    if db.pouchdb is not None:
+       return Object.get('global', db.pouchdb.variable)
     if db.server is not None:
        require = Object.get('require').toFunction()
        PouchDB = require('pouchdb-core')
        load_plugin(require, PouchDB)
        if configuration.server_db_custom_adapter:
           PouchDB['plugin'].call(require(configuration.server_db_custom_adapter).toRef())
-       PouchDB['defaults'].call(JSON.fromDict({'adapter': configuration.server_db_adapter}))
+       options = JSON.fromDict({'adapter': configuration.server_db_adapter})
+       PouchDB['defaults'].call(options)
        db.server['use'].call('/db', require('express-pouchdb').call(PouchDB.toRef()).toRef())
-       db.pouchdb = PouchDB.new(configuration.server_db).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
+       db.pouchdb = PouchDB.new(configuration.server_db, options).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
        return db.pouchdb
     PouchDB = Object.get('window', 'PouchDB').call()
     db.pouchdb = PouchDB.new(configuration.client_db).keep()

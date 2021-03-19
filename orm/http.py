@@ -1,5 +1,5 @@
 from javascript import Object, JSON, Error, function
-from . import db
+from . import db, tools
 import json
 
 args = function
@@ -38,3 +38,13 @@ def run(port, host=None):
        listen(JSON.fromInteger(port), JSON.fromFunction(handle))
        return
     listen(JSON.fromDict({'port': JSON.fromInteger(port), 'host': host}), JSON.fromFunction(handle))
+
+@function
+def login_send(response, result):
+    response['result'] = result.toRef()
+    #response['sent'] = JSON.fromBoolean(True)
+
+@function
+def login_response():
+    response = tools.Global()['Object'].new()
+    
