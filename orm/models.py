@@ -75,7 +75,7 @@ class Model(object):
     _name = None
     _inherit = False
     _rec_name = 'name'
-    _fields = {}
+    _fields = []
 
     def __init__(self, env=False):
         self.id = None
@@ -99,8 +99,11 @@ class Model(object):
     def update(self, values):
         return self
 
-    @asynchronous
     def browse(self, id=None, ids=None):
+        return self.browse_async(id, ids)
+
+    @asynchronous
+    def browse_async(self, id=None, ids=None):
         if id is None and ids is None:
            #raise Exception('You have to send either id or ids as the argument')
            record = self._model()
@@ -338,11 +341,12 @@ class Model(object):
            record = self
            record.update(values['0'])
            return record
-        recordset = self._model()
-        for index, record in enumerate(self):
+        index = 0
+        for record in self:
             value = values[str(index)]
             record.update(value)
-        return recordset
+            index += 1
+        return self
 
 class Environment:
     models = {}

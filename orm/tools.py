@@ -34,6 +34,7 @@ def register_models():
         model._model = model
         Environment.models[model._name] = model
         configure_model(model)
+        model._fields = fields.keys()
 
 def adapt_object_to_field(type):
     if type in ['char', 'text', 'selection']:

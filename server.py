@@ -114,6 +114,43 @@ def create(request, response):
     records = models.env[model].create_server(params['values']).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
 
+@http.route('/api/write', method=['GET', 'POST'], asynchronous=True)
+def write(request, response):
+    login_response = http.login_response()
+    Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
+    result = login_response.wait()
+    if result['status'].toString() != 'success':
+       response['send'].call(result.toRef())
+       return
+    merge = Object('Object')['assign'].toFunction()
+    params = Object('{}')
+    query = request['query']
+    if query.type != 'undefined': params = merge(params.toRef(), query.toRef())
+    body = request['body']
+    if body.type != 'undefined': params = merge(params.toRef(), body.toRef())
+    if params['model'].type != 'string':
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Model type is invalid'}))
+       return
+    model = params['model'].toString()
+    if model not in models.env.models:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Model does not exist'}))
+       return
+    if params['ids'].type == 'string':
+       params['ids'] = tools.Global()['JSON']['stringify'].call(params['ids'].toRef()).toRef()
+    if params['ids'].type != 'array':
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'IDs type is invalid'}))
+       return
+    if params['values'].type == 'string':
+       params['values'] = tools.Global()['JSON']['stringify'].call(params['values'].toRef()).toRef()
+    if params['values'].type not in ['array', 'object']:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Values type is invalid'}))
+       return
+    params.log()
+    records = models.env[model].browse(ids=[id.toString() for id in params['ids'].toArray()]).wait()
+    print records._length
+    records.write_server(params['values']).wait()
+    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
+
 @asynchronous
 def start():
     init().wait()
