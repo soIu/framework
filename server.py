@@ -145,9 +145,7 @@ def write(request, response):
     if params['values'].type not in ['array', 'object']:
        response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Values type is invalid'}))
        return
-    params.log()
     records = models.env[model].browse(ids=[id.toString() for id in params['ids'].toArray()]).wait()
-    print records._length
     records.write_server(params['values']).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
 

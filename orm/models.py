@@ -91,7 +91,8 @@ class Model(object):
         if self._length == 1: return iter([self])
         return iter(self._records)
 
-    def __len__(self): return self._length
+    def __len__(self):
+        return len(self._records) or self._length
 
     def read(self):
         return Global()['Object'].new()
@@ -110,14 +111,16 @@ class Model(object):
            record._length = 1
            return record
         singleton = id is not None
-        uuids = [tools.id_to_pouch_id(id, self._name)] if ids is None else [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
+        if singleton:
+           ids = [id]
+        uuids = [tools.id_to_pouch_id(id, self._name)] if id is not None else [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
         length = records['rows']['length'].toInteger()
         if not length: return self._model()
-        if singleton:
+        if singleton or len(ids) == 1:
            record = self._model()
-           record.id = id
-           record.ids = [id]
+           record.id = ids[0]
+           record.ids = ids
            record.update(records['rows']['0']['doc'])
            record._length = 1
            return record
@@ -317,10 +320,11 @@ class Model(object):
         set_indexes = []
         del_indexes = []
         json = Global()['JSON']
+        recordsets = [record for record in self]
         for index in range(self._length):
             value = values[str(index)]
-            record = records[str(index)]
-            id = self._records[index].id
+            record = records['rows'][str(index)]['doc']
+            id = recordsets[index].id
             for key in self._fields:
                 value_object = value[key]
                 record_object = record[key]
@@ -329,7 +333,7 @@ class Model(object):
                    continue
                 if json['stringify'].call(value_object.toRef()).toString() != json['stringify'].call(record_object.toRef()).toString():
                    set_indexes += [set_index(self._name, key, value_object.type, value_object, id).keep()]
-                   del_indexes += [del_index(self._name, key, value_object.type, value_object, id).toRef()]
+                   del_indexes += [del_index(self._name, key, record_object.type, record_object, id).toRef()]
                    record[key] = value_object.toRef()
         Global()['Promise']['all'].call(JSON.fromList(del_indexes)).wait()
         #TODO
