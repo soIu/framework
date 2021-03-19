@@ -39,12 +39,12 @@ def run(port, host=None):
        return
     listen(JSON.fromDict({'port': JSON.fromInteger(port), 'host': host}), JSON.fromFunction(handle))
 
-@function
-def login_send(response, result):
-    response['result'] = result.toRef()
-    #response['sent'] = JSON.fromBoolean(True)
-
-@function
 def login_response():
     response = tools.Global()['Object'].new()
-    
+    promise = tools.Global()['Promise'].new(Object.createClosure(login_response_handle, response).toRef())
+    promise['send'] = response['send'].toRef()
+    return promise
+
+@function
+def login_response_handle(response, resolve):
+    response['send'] = resolve.toRef()
