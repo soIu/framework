@@ -273,7 +273,6 @@ class Model(object):
             value['_id'] = pouch_id
             ids += [id]
         db = get_db()
-        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         db['bulkDocs'].call(values.toRef()).wait()
         for index in indexes: index.release().call()
         #Global()['Promise'].new(JSON.fromList([index.release().call() for index in indexes])).wait()
@@ -311,7 +310,6 @@ class Model(object):
         if not is_array:
            values = Object.fromList([values.toRef()])
         require = Object.get('require').toFunction()
-        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         records = get_records([tools.id_to_pouch_id(id, self._name) for id in self.ids]).wait()
         set_indexes = []
         del_indexes = []
