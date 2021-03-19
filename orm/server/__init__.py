@@ -1,5 +1,5 @@
 from javascript import Object, asynchronous
-from .. import db, get_db, tools
+from .. import db, get_db, tools, data
 
 @asynchronous
 def init():
@@ -9,6 +9,7 @@ def init():
     db.server = fastify.keep()
     #require middie here so db.server['use'] works
     get_db()
+    data.run().wait()
     return
 
 def init_compile():

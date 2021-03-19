@@ -50,7 +50,7 @@ def set_index(model, field, type, value, id):
     elif value.type == 'string':
        value = Global()['encodeURIComponent'].call(value.toRef())
     index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
-    return Object.createClosure(set_index_handle, index)
+    return Object.createClosure(set_index_handle, Object.fromString(index))
 
 @function
 def set_index_handle(index):
@@ -247,7 +247,7 @@ class Model(object):
         return ids
 
     def create(self, values=None):
-        return self.create_server(values=values)
+        return self.create_server(values)
 
     @api.server(asynchronous=True, client=False)
     def create_server(self, values=None):
@@ -268,10 +268,11 @@ class Model(object):
             id = require('./utils/generate-pouch-id.js').call().toString()
             for key in value:
                 object = value[key]
-                indexes += [set_index(self._name, key, object.type, object).keep()]
+                indexes += [set_index(self._name, key, object.type, object, id).keep()]
             pouch_id = tools.id_to_pouch_id(id, self._name)
             value['_id'] = pouch_id
             ids += [id]
+        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         db = get_db()
         db['bulkDocs'].call(values.toRef()).wait()
         for index in indexes: index.release().call()
@@ -317,6 +318,7 @@ class Model(object):
         for index in range(self._length):
             value = values[str(index)]
             record = records[str(index)]
+            id = self._records[index].id
             for key in self._fields:
                 value_object = value[key]
                 record_object = record[key]
@@ -324,9 +326,10 @@ class Model(object):
                    value[key] = record_object.toRef()
                    continue
                 if json['stringify'].call(value_object.toRef()).toString() != json['stringify'].call(record_object.toRef()).toString():
-                   set_indexes += [set_index(self._name, key, value_object.type, value_object).keep()]
-                   del_indexes += [del_index(self._name, key, value_object.type, value_object).toRef()]
+                   set_indexes += [set_index(self._name, key, value_object.type, value_object, id).keep()]
+                   del_indexes += [del_index(self._name, key, value_object.type, value_object, id).toRef()]
                    record[key] = value_object.toRef()
+        values = values #TODO call keep for each of function argument if it is an instance of javascript.emscripten.Object
         Global()['Promise']['all'].call(JSON.fromList(del_indexes)).wait()
         #TODO
         db = get_db()
