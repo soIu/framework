@@ -48,7 +48,7 @@ def set_index(model, field, type, value, id):
     if value.type == 'number':
        value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
     elif value.type == 'string':
-       value = Global()['encodeURIComponent'].call(value.toRef())
+       value = Global()['encodeURIComponent'].call(value['toLowerCase'].call().toRef())
     index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
     return Object.createClosure(set_index_handle, Object.fromString(index))
 
@@ -61,7 +61,7 @@ def del_index(model, field, type, value, id):
     if value.type == 'number':
        value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
     elif value.type == 'string':
-       value = Global()['encodeURIComponent'].call(value.toRef())
+       value = Global()['encodeURIComponent'].call(value['toLowerCase'].call().toRef())
     index = 'orm_index:%s:%s:%s: %s:%s' % (model, field, type, value.toString(), id)
     db = get_db()
     return db['get'].call(index)['then'].call(JSON.fromFunction(del_index_handle))
@@ -166,7 +166,7 @@ class Model(object):
             if value.type == 'number':
                value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
             elif value.type == 'string':
-               value = Global()['encodeURIComponent'].call(value.toRef())
+               value = Global()['encodeURIComponent'].call(value['toLowerCase'].call().toRef())
             if operator == '=':
                index = template % (self._name, field, type) + ': ' + value.toString() + ':'
                queries[field] = {'>': index, '<': index + tools.highest_char}
@@ -193,7 +193,7 @@ class Model(object):
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
                    elif object.type == 'string':
-                      object = Global()['encodeURIComponent'].call(object.toRef())
+                      object = Global()['encodeURIComponent'].call(object['toLowerCase'].call().toRef())
                    queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
             elif operator == 'not in':
                for object in value.toArray():
@@ -202,7 +202,7 @@ class Model(object):
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
                    elif object.type == 'string':
-                      object = Global()['encodeURIComponent'].call(object.toRef())
+                      object = Global()['encodeURIComponent'].call(object['toLowerCase'].call().toRef())
                    excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
             elif operator in ['like', 'ilike']:
                index = template % (self._name, field, type) + ': ' + value.toString()

@@ -69,8 +69,11 @@ def search(request, response):
     if params['limit'].type == 'string':
        params['limit'] = tools.Global()['JSON']['stringify'].call(params['limit'].toRef()).toRef()
     if params['limit'].type != 'number':
-       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Limit type is invalid'}))
-       return
+       if params['limit'].type in ['null', 'undefined']:
+          params['limit'] = JSON.fromInteger(0)
+       else:
+          response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Limit type is invalid'}))
+          return
     #TODO params['order']
     domain = []
     for args in params['domain'].toArray():
@@ -81,6 +84,35 @@ def search(request, response):
     limit = params['limit'].toInteger()
     ids = models.env[model].search_ids(domain, limit, None).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(ids)}))
+
+@http.route('/api/create', method=['GET', 'POST'], asynchronous=True)
+def create(request, response):
+    login_response = http.login_response()
+    Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
+    result = login_response.wait()
+    if result['status'].toString() != 'success':
+       response['send'].call(result.toRef())
+       return
+    merge = Object('Object')['assign'].toFunction()
+    params = Object('{}')
+    query = request['query']
+    if query.type != 'undefined': params = merge(params.toRef(), query.toRef())
+    body = request['body']
+    if body.type != 'undefined': params = merge(params.toRef(), body.toRef())
+    if params['model'].type != 'string':
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Model type is invalid'}))
+       return
+    model = params['model'].toString()
+    if model not in models.env.models:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Model does not exist'}))
+       return
+    if params['values'].type == 'string':
+       params['values'] = tools.Global()['JSON']['stringify'].call(params['values'].toRef()).toRef()
+    if params['values'].type not in ['array', 'object']:
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Values type is invalid'}))
+       return
+    records = models.env[model].create_server(params['values']).wait()
+    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
 
 @asynchronous
 def start():
