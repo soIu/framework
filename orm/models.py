@@ -91,6 +91,8 @@ class Model(object):
         if self._length == 1: return iter([self])
         return iter(self._records)
 
+    def __len__(self): return self._length
+
     def read(self):
         return Global()['Object'].new()
 
