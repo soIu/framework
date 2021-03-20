@@ -156,6 +156,10 @@ class Model(object):
         else:
            search = call_server_orm('/api/search', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'limit': JSON.fromInteger(limit), 'order': order, 'domain': JSON.fromList([JSON.fromList([field, operator, raw_value]) for field, operator, raw_value in domain])}))
         ids = search.wait()
+        records = self.browse(ids=ids).wait()
+        return records
+
+    """
         uuids = [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
         length = records['rows']['length'].toInteger()
@@ -177,7 +181,7 @@ class Model(object):
             record.update(doc)
             record._length = 1
             recordset._records += [record]
-        return recordset
+        return recordset"""
 
     @api.server(asynchronous=True, client=False)
     def search_ids(self, domain, limit=0, order=None):
@@ -271,7 +275,20 @@ class Model(object):
         return ids
 
     def create(self, values=None):
+        if not tools.check_server(): return self.create_client(values)
         return self.create_server(values)
+
+    @api.client(asynchronous=True, server=False)
+    def create_client(self, values):
+        if values is None:
+           values = self.read()
+        else:
+           merge = Global()['Object']['assign'].toFunction()
+           current_values = self.read()
+           values = merge(current_values.toRef(), values.toRef())
+        ids = call_server_orm('/api/create', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'values': values.toRef()})).wait()
+        records = self.browse(ids=ids).wait()
+        return records
 
     @api.server(asynchronous=True, client=False)
     def create_server(self, values):
@@ -319,7 +336,20 @@ class Model(object):
         return recordset
 
     def write(self, values=None):
+        if not tools.check_server(): return self.write_client(values)
         return self.write_server(values)
+
+    @api.client(asynchronous=True, server=False)
+    def write_client(self, values):
+        if values is None:
+           values = self.read()
+        else:
+           merge = Global()['Object']['assign'].toFunction()
+           current_values = self.read()
+           values = merge(current_values.toRef(), values.toRef())
+        ids = call_server_orm('/api/write', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': JSON.fromList(self.ids), 'values': values.toRef()})).wait()
+        records = self.browse(ids=ids).wait()
+        return records
 
     @api.server(asynchronous=True, client=False)
     def write_server(self, values):
