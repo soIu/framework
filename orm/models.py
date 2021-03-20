@@ -104,6 +104,11 @@ class Model(object):
     def __len__(self):
         return len(self._records) or self._length
 
+    def new(self):
+        record = self._model()
+        record._length = 1
+        return record
+
     def read(self):
         return Global()['Object'].new()
 
@@ -118,7 +123,7 @@ class Model(object):
         if id is None and ids is None:
            #raise Exception('You have to send either id or ids as the argument')
            record = self._model()
-           record._length = 1
+           record._length = 1 #This is what it does on the old ORM API, maybe we'll drop this in favour of the new method
            return record
         singleton = id is not None
         if singleton:
