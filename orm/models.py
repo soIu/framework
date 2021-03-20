@@ -75,7 +75,7 @@ def del_index_handle(doc):
 def call_server_orm(path, json):
     stringify = Global()['JSON']['stringify'].toFunction()
     fetch = Global()['fetch'].toFunction()
-    response = fetch(configuration.server_url + path, JSON.fromDict({'body': stringify.call(json.toRef()), 'method': 'POST', 'headers': JSON.fromDict({'Content-Type': 'application/json'})})).wait()
+    response = fetch(configuration.server_url + path, JSON.fromDict({'body': stringify(json.toRef()).toRef(), 'method': 'POST', 'headers': JSON.fromDict({'Content-Type': 'application/json'})})).wait()
     result = response['json'].call().wait()
     if result['status'].toString() != 'success':
        Error(result['message'].toString())
@@ -87,19 +87,19 @@ class Model(object):
     _rec_name = 'name'
     _fields = []
 
-    def __init__(self, env=False):
+    def __init__(self, is_env=False):
         self.id = None
         self.ids = []
         self.env = env
-        self.is_env = env
+        self.is_env = is_env
         self._records = []
         self._length = 0
         #self._mapped_records = {}
 
     def __iter__(self):
-        if self._length == 0: return iter([])
+        if len(self._records): return iter(self._records)
         if self._length == 1: return iter([self])
-        return iter(self._records)
+        return iter([])
 
     def __len__(self):
         return len(self._records) or self._length
@@ -147,7 +147,9 @@ class Model(object):
             record.ids = [record.id]
             record.update(doc)
             record._length = 1
+            recordset._length += 1
             recordset._records += [record]
+            recordset.ids += [record.id]
         return recordset
 
     def search(self, domain, limit=0, order=None):
@@ -407,10 +409,9 @@ class Model(object):
 
 class Environment:
     models = {}
-    user = None
 
     def __getitem__(self, key):
         model = self.models[key]
-        return model(env=True)
+        return model(is_env=True)
 
 env = Environment()

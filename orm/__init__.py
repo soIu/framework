@@ -39,10 +39,9 @@ def get_db():
        if configuration.server_db_custom_adapter:
           PouchDB['plugin'].call(require(configuration.server_db_custom_adapter).toRef())
        options = JSON.fromDict({'adapter': configuration.server_db_adapter})
-       PouchDB['defaults'].call(options)
-       db.server['use'].call('/db', require('express-pouchdb').call(PouchDB.toRef()).toRef())
+       db.server['use'].call('/db', require('express-pouchdb').call(PouchDB['defaults'].call(options).toRef()).toRef())
        db.pouchdb = PouchDB.new(configuration.server_db, options).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
        return db.pouchdb
-    PouchDB = Object.get('window', 'PouchDB').call()
+    PouchDB = Object.get('window', 'PouchDB')
     db.pouchdb = PouchDB.new(configuration.client_db).keep()
     return db.pouchdb

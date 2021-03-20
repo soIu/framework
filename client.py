@@ -1,6 +1,7 @@
+
 from orm import models, tools, configuration
 from orm.client import init, init_compile
-from javascript import JSON, Object, function
+from javascript import JSON, Object, Error, function
 
 if not configuration.server_url: configuration.server_url = ''
 
@@ -25,14 +26,27 @@ def set_user(resolve, id, login, password):
     models.env.user.password = password.toString()
     resolve.call()
 
+@function(asynchronous=True)
+def search(domain_args):
+    domain = []
+    for args in domain_args.toArray():
+        if args['length'].toInteger() != 3:
+           Error('Not sufficient')
+        domain += [(args['0'].toString(), args['1'].toString(), args['2'].toRef())]
+    records = models.env['res.users'].search(domain).wait()
+    print len(records)
+    for record in records:
+        print record.name
+        record.read().log()
+
 def main(argv):
     url_promise, url_resolve = tools.create_promise()
     user_promise, user_resolve = tools.create_promise()
-    promise = tools.Global()['Promise']['all'].call(url_promise.toRef(), user_promise.toRef())
-    models.env.user = models.env['res.users'].new()
+    promise = tools.Global()['Promise']['all'].call(JSON.fromList([url_promise.toRef(), user_promise.toRef()]))
     ORM = tools.Global()['Object'].new()
     ORM['set_server_url'] = Object.createClosure(set_server_url, url_resolve).toRef()
     ORM['set_user'] = Object.createClosure(set_user, user_resolve).toRef()
+    ORM['search'] = JSON.fromFunction(search)
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
     init(promise)
@@ -40,4 +54,5 @@ def main(argv):
 
 def target(*args):
     init_compile()
+    models.env.user = models.env['res.users'].new()
     return main, None

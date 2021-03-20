@@ -2,7 +2,14 @@
 process.chdir(__dirname);
 
 const spawn_promise = require('util').promisify(require('child_process').spawn);
-const spawn = (command, args) => spawn_promise(command, args, {env: process.env, stdio: 'inherit'});
+const spawn = (command, args) => {
+  const result = spawn_promise(command, args, {env: process.env, stdio: 'inherit'});
+  const now = Date.now()
+  while (now === Date.now()) {
+    true;
+  }
+  return result
+}
 
 const default_configuration =
 `port = 8069
