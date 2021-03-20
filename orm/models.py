@@ -1,5 +1,5 @@
 from . import db, get_db, api, tools, configuration
-from javascript import JSON, Object, asynchronous, function
+from javascript import JSON, Object, Error, asynchronous, function
 
 Global = tools.Global
 
@@ -71,6 +71,16 @@ def del_index_handle(doc):
     db = get_db()
     return db['remove'].call(doc.toRef())
 
+@asynchronous
+def call_server_orm(path, json):
+    stringify = Global()['JSON']['stringify'].toFunction()
+    fetch = Global()['fetch'].toFunction()
+    response = fetch(configuration.server_url + path, JSON.fromDict({'body': stringify.call(json.toRef()), 'method': 'POST', 'headers': JSON.fromDict({'Content-Type': 'application/json'})})).wait()
+    result = response['json'].call().wait()
+    if result['status'].toString() != 'success':
+       Error(result['message'].toString())
+    return [id.toString() for id in result['result'].toArray()]
+
 class Model(object):
     _name = None
     _inherit = False
@@ -135,9 +145,17 @@ class Model(object):
             recordset._records += [record]
         return recordset
 
-    @asynchronous
     def search(self, domain, limit=0, order=None):
-        ids = self.search_ids(domain, limit, order).wait()
+        return self.search_async(domain, limit, order)
+
+    @asynchronous
+    def search_async(self, domain, limit=0, order=None):
+        search = None
+        if tools.check_server():
+           search = self.search_ids(domain, limit, order)
+        else:
+           search = call_server_orm('/api/search', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'limit': JSON.fromInteger(limit), 'order': order, 'domain': JSON.fromList([JSON.fromList([field, operator, raw_value]) for field, operator, raw_value in domain])}))
+        ids = search.wait()
         uuids = [tools.id_to_pouch_id(uuid, self._name) for uuid in ids]
         records = get_records(uuids).wait()
         length = records['rows']['length'].toInteger()

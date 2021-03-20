@@ -80,7 +80,7 @@ def search(request, response):
         if args['length'].toInteger() != 3:
            response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Domain type is invalid'}))
            return
-        domain += [(args['0'].toString(), args['1'].toString(), args['2'].toString())]
+        domain += [(args['0'].toString(), args['1'].toString(), args['2'].toRef())]
     limit = params['limit'].toInteger()
     ids = models.env[model].search_ids(domain, limit, None).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(ids)}))
