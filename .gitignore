@@ -10,3 +10,6 @@ configuration.py
 /*.h
 log.txt
 main*
+pouch*
+_replicator
+_users
