@@ -14,14 +14,14 @@ client_db = 'local'
 `;
 
 function create_configuration() {
-  require('fs').writeFileSync('./orm/configuration.py', default_configuration);
+  require('fs').writeFileSync('./configuration.py', default_configuration);
 }
 
 const server = ['server.py'].concat(process.argv.slice(2))
 const client = ['client.py'].concat(process.argv.slice(2))
 
 async function compile() {
-  if (!require('fs').existsSync('./orm/configuration.py')) create_configuration();
+  if (!require('fs').existsSync('./configuration.py')) create_configuration();
   if (process.argv.indexOf('--server') !== -1) return spawn('rpython', server);
   if (process.argv.indexOf('--client') !== -1) return spawn('rpython', client);
   process.env.CORE = require('os').cpus().filter((cpu) => cpu.speed).length;

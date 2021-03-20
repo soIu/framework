@@ -120,4 +120,14 @@ def empty_promise_handle(args):
     assert len(args) >= 1
     args[0].call()
 
+def create_promise():
+    object = Global()['Object'].new()
+    promise = Global()['Promise'].new(Object.createClosure(create_promise_handle, object).toRef())
+    return promise, object['resolve']
+
+def create_promise_handle(args):
+    assert len(args) >= 2
+    object = args[0]
+    object['resolve'] = args[1].toRef()
+
 highest_char = '\xef\xbf\xb0'
