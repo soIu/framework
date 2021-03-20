@@ -101,12 +101,17 @@ def generate_static_closures():
     import os
     server = 'server.py' in os.getenv('RPYTHON_TARGET_FILE')
 
-    def check_server():
+    def is_server():
         return server
 
-    return check_server
+    def is_client():
+        return not server
 
-check_server = generate_static_closures()
+    return is_server, is_client
+
+is_server, is_client = generate_static_closures()
+
+check_server = is_server
 
 def empty_promise():
     return Global()['Promise'].new(JSON.fromFunction(empty_promise_handle))

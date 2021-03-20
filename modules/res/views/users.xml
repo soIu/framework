@@ -1,0 +1,18 @@
+<view model="res.users">
+    <tree>
+        <field name="name"/>
+    </tree>
+</view>
+
+<view model="res.users">
+    <form>
+        <sheet>
+            <group>
+                <field name="name"/>
+            </group>
+            <group>
+                <field name="login"/>
+            </group>
+        </sheet>
+    </form>
+</view>

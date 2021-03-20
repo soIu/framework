@@ -1,4 +1,4 @@
-from orm import models, fields, tools, data
+from orm import models, fields, tools, views, data
 from javascript import Object, asynchronous
 
 class Users(models.Model):
@@ -8,7 +8,7 @@ class Users(models.Model):
     login = fields.Char(string="Login", required=True)
     password = fields.Char(string="Password")
 
-if tools.check_server():
+if tools.is_server():
    default_admin_login = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
    default_admin_password = '91c2271e5c57b60717b0ba057615173e3bdc9403fdb26832ff1c7dbe84760a3b'
 
@@ -19,3 +19,5 @@ if tools.check_server():
        models.env['res.users'].create(Object.fromDict({'name': 'Administrator', 'login': default_admin_login, 'password': default_admin_password})).wait()
 
    data.register(create_admin)
+
+views.add('views/users.xml')

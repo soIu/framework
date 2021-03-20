@@ -11,6 +11,8 @@ sys.modules['orm'] = orm
 import modules
 configuration.modules = modules
 
+modules.load()
+
 @function
 def set_server_url(url):
     configuration.server_url = url.toString()
