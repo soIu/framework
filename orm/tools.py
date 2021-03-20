@@ -1,4 +1,5 @@
 from javascript import Object, JSON
+from . import configuration
 
 import models as orm_models
 import fields as orm_fields

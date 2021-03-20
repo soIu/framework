@@ -407,6 +407,7 @@ class Model(object):
 
 class Environment:
     models = {}
+    user = None
 
     def __getitem__(self, key):
         model = self.models[key]

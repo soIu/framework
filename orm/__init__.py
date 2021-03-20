@@ -1,5 +1,20 @@
 from javascript import JSON, Object, Error
-from . import configuration
+
+class Configuration: pass
+
+configuration = Configuration()
+
+import os
+import imp
+
+def load_configuration():
+    configuration_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'configuration.py')
+    configuration_module = imp.load_source('orm_configuration', configuration_path)
+    for key in dir(configuration_module):
+        if key[0] == '_': continue
+        setattr(configuration, key, getattr(configuration_module, key))
+
+load_configuration()
 
 class Database:
     #loaded = False

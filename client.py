@@ -1,73 +1,35 @@
-from react import Component, Text
-from javascript import JSON, Object, types, function, method, asynchronous
+from orm import models, tools, configuration
+from orm.client import init, init_compile
+from javascript import JSON, Object, function
 
-@Component
-class div:
-    style = {}
-    onClick = types.function
+if not configuration.server_url: configuration.server_url = ''
 
-@Component
-class textarea:
-    style = types.dict
-    onChange = types.ref
-    value = types.str
+import sys
+import orm
+sys.modules['orm'] = orm
 
-input = textarea
+import modules
+configuration.modules = modules
 
 @function
-def onClickStyled(event):
-    alert = Object('alert')
-    alert.call(event['target']['outerHTML'].toRef())
+def set_server_url(url):
+    configuration.server_url = url.toString()
 
-def StyledText():
-    return (
-      div (style={}, onClick=onClickStyled, children=[
-        Text ('halo dari rpython'),
-      ])
-    )
-
-Method = JSON.fromMethod()
-
-class State:
-
-    text = 'input dari rpython'
-
-@Component(State=State)
-class EditableText:
-
-    @method
-    def onChange(self, event):
-        self.state.text = event['target']['value'].toRef() #.toString()
-        return self.setState()
-
-    @asynchronous
-    def mount(self):
-        fetch = Object('window.fetch').toFunction()
-        page = fetch('/').wait()
-        text = page['text'].call().wait()
-        self.state.text = text.toRef()
-        self.setState()
-
-    def render(self):
-        return (
-          input (onChange=Method(self.onChange), value=self.state.text)
-        )
-
-def App():
-    return (
-      div ([
-        #StyledText (),
-        EditableText (),
-        EditableText (),
-      ])
-    )
+@function
+def set_user(id, login, password):
+    models.env.user.id = id.toString()
+    models.env.user.login = login.toString()
+    models.env.user.password = password.toString()
 
 def main(argv):
-    #createElement = Object('window.React.createElement').toFunction()
-    render = Object('window.ReactDOM.render').toFunction()
-    app = Object("document.getElementById('app')").toRef()
-    render(App().toRef(), app)
+    models.env.user = models.env['res.users'].new()
+    ORM = tools.Global()['Object'].new()
+    ORM['set_server_url'] = JSON.fromFunction(set_server_url)
+    ORM['set_user'] = JSON.fromFunction(set_user)
+    Module = Object.get('Module')
+    Module['orm'] = ORM.toRef()
     return 0
 
 def target(*args):
+    init_compile()
     return main, None

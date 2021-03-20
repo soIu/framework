@@ -5,7 +5,7 @@ client.js
 client.wasm
 server.js
 server.wasm
-orm/configuration.py
+configuration.py
 /*.c
 /*.h
 log.txt

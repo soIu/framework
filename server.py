@@ -7,6 +7,7 @@ import orm
 sys.modules['orm'] = orm
 
 import modules
+configuration.modules = modules
 
 @http.route('/api/login', method=['GET', 'POST'], asynchronous=True)
 def login(request, response):
