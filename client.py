@@ -49,6 +49,7 @@ def main(argv):
     ORM['search'] = JSON.fromFunction(search)
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
+    Module['orm_resolve'].call()
     init(promise)
     return 0
 
