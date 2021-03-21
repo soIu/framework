@@ -19,7 +19,9 @@ def route(path, method, asynchronous=False, **configuration):
 
 @function
 def handle(error, address):
-    if error.toBoolean():
+    if error.toBoolean() or address.type == 'null':
+       print "There's an error"
+       error.log()
        Error(error['message'].toString())
     print "Listening on " + address.toString()
 
