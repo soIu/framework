@@ -1,6 +1,6 @@
 from orm import models, http, tools, configuration
 from orm.server import init, init_compile
-from javascript import JSON, Object, asynchronous
+from javascript import JSON, Object, asynchronous, function
 
 import sys
 import orm
@@ -164,6 +164,15 @@ def wasm(request, response):
     stream = Object.get('require').call('fs')['createReadStream'].call('./client.wasm')
     response['type'].call('application/wasm')['send'].call(stream.toRef())
 
+@function
+def transform_js(chunk, encoding, callback):
+    callback.call(None, chunk.toRef())
+
+@function
+def flush_js(stream, callback):
+    stream['push'].call('\nModule.orm_loaded = new Promise(function (resolve) {Module.orm_resolve = resolve;});')
+    callback.call()
+
 @http.route('/api/orm/js', method=['GET', 'POST'], asynchronous=True)
 def js(request, response):
     login_response = http.login_response()
@@ -172,8 +181,12 @@ def js(request, response):
     if result['status'].toString() != 'success':
        response['send'].call(result.toRef())
        return
-    stream = Object.get('require').call('fs')['createReadStream'].call('./client.js')
-    response['type'].call('application/js')['send'].call(stream.toRef())
+    require = Object.get('require').toFunction()
+    stream = require('fs')['createReadStream'].call('./client.js')
+    append = require('stream')['Transform'].new()
+    append['_transform'] = JSON.fromFunction(transform_js)
+    append['_flush'] = Object.createClosure(flush_js, append).toRef()
+    response['type'].call('application/js')['send'].call(stream['pipe'].call(append.toRef()).toRef())
 
 @asynchronous
 def start():
