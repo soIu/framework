@@ -13,8 +13,9 @@ modules.load()
 
 @http.route('/api/login', method=['GET', 'POST'], asynchronous=True)
 def login(request, response):
-    merge = Object('Object')['assign'].toFunction()
-    params = Object('{}')
+    Object = tools.Global()['Object']
+    merge = Object['assign'].toFunction()
+    params = Object.new()
     query = request['query']
     if query.type != 'undefined': params = merge(params.toRef(), query.toRef())
     body = request['body']
@@ -41,7 +42,7 @@ def login(request, response):
     if not len(user_id):
        response['send'].call(JSON.fromDict({'status': 'denied', 'message': 'Username/Password wrong'}))
        return
-    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name})}))
+    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name}), 'wasm': JSON.fromList(['/api/orm/wasm', '/api/orm/js'])}))
 
 @http.route('/api/search', method=['GET', 'POST'], asynchronous=True)
 def search(request, response):
@@ -151,6 +152,28 @@ def write(request, response):
     records = models.env[model].browse(ids=[id.toString() for id in params['ids'].toArray()]).wait()
     records.write_server(params['values']).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
+
+@http.route('/api/orm/wasm', method=['GET', 'POST'], asynchronous=True)
+def wasm(request, response):
+    login_response = http.login_response()
+    Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
+    result = login_response.wait()
+    if result['status'].toString() != 'success':
+       response['send'].call(result.toRef())
+       return
+    stream = Object.get('require').call('fs')['createReadStream'].call('./client.wasm')
+    response['type'].call('application/wasm')['send'].call(stream.toRef())
+
+@http.route('/api/orm/js', method=['GET', 'POST'], asynchronous=True)
+def js(request, response):
+    login_response = http.login_response()
+    Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
+    result = login_response.wait()
+    if result['status'].toString() != 'success':
+       response['send'].call(result.toRef())
+       return
+    stream = Object.get('require').call('fs')['createReadStream'].call('./client.js')
+    response['type'].call('application/js')['send'].call(stream.toRef())
 
 @asynchronous
 def start():
