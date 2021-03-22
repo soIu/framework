@@ -26,7 +26,8 @@ class Router: pass
 class BackButton: pass
 
 @Component(path='Module.components.Switch')
-class Switch: pass
+class Switch:
+    swipable = False
 
 @Component(path='Module.components.AnimatedStack')
 class AnimatedSwitch:
@@ -46,6 +47,7 @@ class ListExpand:
     expanded = types.bool
     title = types.str
     titleStyle = types.dict
+    onPress = types.ref
 
 @Component(path='Module.components.Drawer')
 class Drawer:
@@ -60,9 +62,10 @@ class Drawer:
     appbar = types.ref
     animationTime = types.int
 
-@Component(path='Module.components.AppBar')
+@Component(path='Module.components.Appbar')
 class AppBar:
     title = types.str
     navigation = types.str
     onNavigation = types.ref
     style = types.list
+    color = types.str

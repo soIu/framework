@@ -1,5 +1,5 @@
 
-from orm import models, tools, configuration
+from orm import models, tools, configuration, menu
 from orm.client import init, init_compile
 from javascript import JSON, Object, Error, function
 
@@ -13,6 +13,10 @@ import modules
 configuration.modules = modules
 
 modules.load()
+
+menu.check_menus()
+
+from react.components.App import App
 
 @function
 def set_server_url(resolve, url):
@@ -50,7 +54,7 @@ def main(argv):
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
     Module['orm_resolve'].call()
-    init(promise)
+    init(promise, App().toRef())
     return 0
 
 def target(*args):

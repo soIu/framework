@@ -1,4 +1,4 @@
-from javascript import Object, JSON
+from javascript import JSON, Object, Function
 from . import configuration
 
 import models as orm_models
@@ -116,8 +116,9 @@ check_server = is_server
 def empty_promise():
     return Global()['Promise'].new(JSON.fromFunction(empty_promise_handle))
 
+@Function
 def empty_promise_handle(args):
-    assert len(args) >= 1
+    assert args is not None and len(args) >= 1
     args[0].call()
 
 def create_promise():
@@ -125,8 +126,9 @@ def create_promise():
     promise = Global()['Promise'].new(Object.createClosure(create_promise_handle, object).toRef())
     return promise, object['resolve']
 
+@Function
 def create_promise_handle(args):
-    assert len(args) >= 2
+    assert args is not None and len(args) >= 2
     object = args[0]
     object['resolve'] = args[1].toRef()
 

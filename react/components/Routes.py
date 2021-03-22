@@ -1,15 +1,15 @@
 from react.components import View, Router, Route, Switch, AnimatedSwitch, BackButton
-from react.components.Pages import HomePage, TreePage, FormPage
-from javascript import JSON, function
+from react.components.Pages import HomePage #, TreePage, FormPage
+from javascript import JSON, Object, function
 
 def Routes():
     is_web = Object.get('Module', 'Native', 'Platform', 'OS').toString() == 'web'
-    Switch = Switch if is_web else AnimatedSwitch
+    Stack = Switch if is_web else AnimatedSwitch
     return (
         Router ([
             View ([
                 BackButton() if not is_web else None,
-                Switch ([
+                Stack (swipable=False, children=[
                     Route (exact=True, path='/', component=JSON.fromFunction(HomePage)),
                     #Route (exact=True, path='/tree/:model', component=JSON.fromFunction(TreePage)),
                     #Route (exact=True, path='/form/:model', component=JSON.fromFunction(FormPage)),
