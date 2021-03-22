@@ -8,6 +8,7 @@ server.wasm
 configuration.py
 /*.c
 /*.h
+/*.wasm.map
 log.txt
 main*
 pouch*
