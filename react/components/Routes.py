@@ -11,9 +11,9 @@ def Routes():
                 BackButton() if not is_web else None,
                 Switch ([
                     Route (exact=True, path='/', component=JSON.fromFunction(HomePage)),
-                    Route (exact=True, path='/tree/:model', component=JSON.fromFunction(TreePage)),
-                    Route (exact=True, path='/form/:model', component=JSON.fromFunction(FormPage)),
-                    Route (exact=True, path='/form/:model/:id', component=JSON.fromFunction(FormPage)),
+                    #Route (exact=True, path='/tree/:model', component=JSON.fromFunction(TreePage)),
+                    #Route (exact=True, path='/form/:model', component=JSON.fromFunction(FormPage)),
+                    #Route (exact=True, path='/form/:model/:id', component=JSON.fromFunction(FormPage)),
                     #Route (exact=True, path='/view/:view_id', component=None),
                     #Route (exact=True, path='/view/:view_id/:id', component=None),
                 ])
