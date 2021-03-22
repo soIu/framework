@@ -18,6 +18,8 @@ server_db = 'main'
 server_db_adapter = 'memory'
 server_db_custom_adapter = False
 client_db = 'local'
+appbar_color = '#875A7B'
+theme_color = '#009688'
 `;
 
 function create_configuration() {
