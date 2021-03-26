@@ -1,14 +1,14 @@
 # Solu Framework
-A full featured, ORM-backed, isomorphic framework using RPython, Pouch/CouchDB and React Native.
+A full featured, ORM-backed, isomorphic framework using RPython, Pouch/CouchDB and React.
 
 # Purpose of this project
 - Replacing or making an alternative to Odoo and Python's synchronous, I/O blocking design. Allowing us to develop asynchronous and performant ERP and IoT Apps.
 
 - Support some parallel programming paradigms consisting of Threads/Worker, Async-Await, Promises, [Promise.all](https://medium.freecodecamp.org/promise-all-in-javascript-with-example-6c8c5aea3e32), [Serverless](https://en.m.wikipedia.org/wiki/Serverless_computing), and Micro Services.
 
-- Support hardware interfacing and IoT on the Client (Desktop/Phone) and Server, using technologies like WebBluetooth, WebUSB, <del>Cordova, Cordova/</del>Node.js General Purpose I/O, React Native Modules, and we planned to support Microcontrollers or SBCs too
+- Support hardware interfacing and IoT on the Client (Desktop/Phone) and Server, using technologies like WebBluetooth, WebUSB, Cordova, Cordova/Node.js General Purpose I/O, React Native Modules, and we planned to support Microcontrollers or SBCs too
 
-- Build a React Native client app for major platforms (Android, iOS, [Web](https://docs.expo.io/workflow/web/), and [Desktop](https://microsoft.github.io/react-native-windows/))
+- Build a React client app for major platforms
 
 - Use RPython for readability and performance.
 
