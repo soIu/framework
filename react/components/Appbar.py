@@ -1,7 +1,9 @@
 from react import check_is_mobile
 from react.components import AppBar
+from react.components.UserMenu import UserMenu
 from javascript import JSON, Object, function
 from orm import configuration
+from orm.menu import get_menus
 from orm.tools import Global
 
 @function
@@ -11,13 +13,27 @@ def Appbar(props):
     location = props['location']
     history = props['history']
     history['match'] = match.toRef()
-    router = Global()['Object'].new()
-    router['history'] = history.toRef()
-    Object.get('Module')['router'] = router.toRef()
+    #router['history'] = history.toRef()
+    #Object.get('Module')['router'] = JSON.fromDict(
     hideMenu = check_is_mobile() and location['pathname'].toString() != '/'
-    return AppBar(color=configuration.appbar_color, title='Home', navigation='menu' if not hideMenu else 'arrow-back', onNavigation=Object.createClosure(onNavigation, Object.fromBoolean(hideMenu), props, history).toRef(), style=[JSON.fromDict({'boxShadow': 'none'}), JSON.fromDict({'zIndex': JSON.fromInteger(1000), 'borderRadius': JSON.fromInteger(0)})]).toObject() #TODO title
+    title = ''
+    if props['title'].type not in ['null', 'undefined']:
+       title = props['title'].toString()
+    menus = get_menus(map=True)
+    menu = None
+    parent_menu = None
+    print props['menu_id'].type
+    if props['menu_id'].type != 'null':
+       menu = menus[props['menu_id'].toString()]
+       title = menu['string'].toString()
+       print title
+       if menu['parent'].type != 'null':
+          parent_menu = menus[menu['parent'].toString()]
+          title = parent_menu['string'].toString()
+          print title
+    return AppBar(color=configuration.appbar_color, title=title, navigation='menu' if not hideMenu else 'arrow-back', onNavigation=Object.createClosure(onNavigation, location, props, history).toRef(), style=[JSON.fromDict({'boxShadow': 'none'}), JSON.fromDict({'zIndex': JSON.fromInteger(1000), 'borderRadius': JSON.fromInteger(0)})], actionItems=[UserMenu().toRef()]).toObject()
 
 @function
-def onNavigation(hideMenu, props, history):
-    if not hideMenu.toBoolean(): return props['toggleDrawer'].call()
+def onNavigation(location, props, history):
+    if not (check_is_mobile() and location['pathname'].toString() != '/'): return props['toggleDrawer'].call()
     return history['goBack'].call()

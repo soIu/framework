@@ -19,22 +19,3 @@ def check_is_mobile():
     width = cache.dimensions_get.call('window')['width'].toInteger()
     if width <= mobile_breakpoint: return True
     return False
-
-def initial_state(initial, current, id):
-    initial = JSON.parse_rpy_json(initial)
-    current = JSON.parse_rpy_json(current)
-    ORM = Object.get('Module', 'orm')
-    print initial
-    print current
-    if initial != current:
-       promise, resolve = tools.create_promise()
-       wait_initial_state(promise)
-       ORM['react_initial_state_resolve_' + str(id)] = resolve.toRef()
-    else:
-       ORM['react_initial_state_resolve_' + str(id)].call()
-
-from rlib.objectmodel import current_object_addr_as_int as component_id
-
-@asynchronous
-def wait_initial_state(promise):
-    promise.wait()

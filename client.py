@@ -1,7 +1,7 @@
 
-from orm import models, tools, configuration, menu
+from orm import models, tools, configuration, menu, data
 from orm.client import init, init_compile
-from javascript import JSON, Object, Error, function
+from javascript import JSON, Object, Error, asynchronous, function
 
 if not configuration.server_url: configuration.server_url = ''
 
@@ -23,12 +23,19 @@ def set_server_url(resolve, url):
     configuration.server_url = url.toString()
     resolve.call()
 
-@function
+@function(asynchronous=True)
 def set_user(resolve, id, login, password):
     models.env.user.id = id.toString()
     models.env.user.login = login.toString()
     models.env.user.password = password.toString()
     resolve.call()
+
+@asynchronous
+def get_user_name():
+    user_id = models.env['res.users'].browse(models.env.user.id).wait()
+    models.env.user.name = user_id.name
+
+data.register(get_user_name)
 
 @function(asynchronous=True)
 def search(domain_args):
@@ -43,7 +50,17 @@ def search(domain_args):
         print record.name
         record.read().log()
 
+css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/transition.css'])
+
+def mount_css():
+    document = Object.get('window', 'document')
+    style = document['createElement'].call('style')
+    style['innerHTML'] = css
+    document['querySelector'].call('head')['append'].call(style.toRef())
+
 def main(argv):
+    if Object.get('Module', 'Native', 'Platform', 'OS').toString() == 'web':
+       mount_css()
     url_promise, url_resolve = tools.create_promise()
     user_promise, user_resolve = tools.create_promise()
     promise = tools.Global()['Promise']['all'].call(JSON.fromList([url_promise.toRef(), user_promise.toRef()]))
@@ -54,7 +71,7 @@ def main(argv):
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
     Module['orm_resolve'].call()
-    init(promise, App().toRef())
+    init(promise, App().toObject())
     return 0
 
 def target(*args):

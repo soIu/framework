@@ -7,7 +7,7 @@ import os
 
 views = {}
 
-def add(file=None, model=None, type=None, id=None, arch=None):
+def add(file=None, model=None, type=None, id=None, string=None, arch=None):
     if tools.check_server(): return
     if file:
        dir = os.path.dirname(os.path.realpath(inspect.stack()[1][1]))
@@ -23,3 +23,9 @@ def add(file=None, model=None, type=None, id=None, arch=None):
               views[model + '.' + view.tag] = view
     elif not arch: raise Exception("Can't find XML")
     #TODO Parse XML from string with arch argument
+
+
+def get_view(id):
+    if id in views: return views[id]
+    print "View with id %s doesn't exist" % id
+    return None

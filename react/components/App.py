@@ -7,7 +7,7 @@ def App():
     is_web = Object.get('Module', 'Native', 'Platform', 'OS').toString() == 'web'
     return (
         View (style={'flex': JSON.fromInteger(1)}, children=[
-            BreadProvider (value={'primary': JSON.fromDict({'main': configuration.theme_color}), 'text': JSON.fromDict({'fontFamily': '"Gotham-Book", "Helvetica Neue", Helvetica, Arial, sans-serif'} if is_web else {})}, children=[
+            BreadProvider (value={'primary': JSON.fromDict({'main': configuration.theme_color}), 'text': JSON.fromDict({'fontFamily': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif'} if is_web else {})}, children=[
                 SafeAreaView (style={'flex': JSON.fromInteger(1)}, children=[
                     Routes()
                 ])

@@ -1,0 +1,43 @@
+.rpython-page-enter {
+  opacity: 0;
+  transform: scale(1.1);
+}
+
+.rpython-page-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.rpython-page-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.rpython-page-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 200ms, transform 200ms;
+}
+
+div[data-focusable=true][data-testid=mb-ripple] {
+  cursor: pointer;
+}
+
+/*.rpython-page-enter {
+  transform: translate3d(100%, 0, 0);
+  transition: 200ms;
+}
+
+.rpython-page-enter-active {
+  transform: translate3d(0, 0, 0);
+}
+
+.rpython-page-exit {
+  transform: translate3d(0, 0, 0);
+  transition: 200ms;
+}
+
+.rpython-page-exit-active {
+  transform: translate3d(100%, 0, 0);
+}*/
