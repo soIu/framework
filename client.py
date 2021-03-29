@@ -1,6 +1,6 @@
-from orm import models, tools, configuration, menu
+from orm import models, tools, configuration, menu, data
 from orm.client import init, init_compile
-from javascript import JSON, Object, Error, function
+from javascript import JSON, Object, Error, asynchronous, function
 
 if not configuration.server_url: configuration.server_url = ''
 
@@ -30,6 +30,13 @@ def set_user(resolve, id, login, password):
     models.env.user.password = password.toString()
     resolve.call()
 
+@asynchronous
+def get_user_name():
+    user_id = models.env['res.users'].browse(models.env.user.id).wait()
+    models.env.user.name = user_id.name
+
+data.register(get_user_name)
+
 @function(asynchronous=True)
 def search(domain_args):
     domain = []
@@ -54,7 +61,7 @@ def main(argv):
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
     Module['orm_resolve'].call()
-    init(promise, div([text('hello')]).toRef())
+    init(promise, div([text('hello')]).toObject())
     return 0
 
 def target(*args):

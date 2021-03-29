@@ -6,7 +6,7 @@ def init(promise, app):
     get_db()
     promise.wait()
     data.run().wait()
-    Object.get('Module', 'mount_component').call(app)
+    Object.get('Module', 'mount_component').call(app.toRef())
     return
 
 def init_compile():

@@ -1,16 +1,39 @@
-from react.components import View, SafeAreaView, BreadProvider
-from react.components.Routes import Routes
+from react.components import Admin, Resource
 from javascript import JSON, Object, function
-from orm import configuration
+from orm import get_db, tools, configuration
+
+import json
+
+material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}})
 
 def App():
-    is_web = Object.get('Module', 'Native', 'Platform', 'OS').toString() == 'web'
+    theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
     return (
-        View (style={'flex': JSON.fromInteger(1)}, children=[
-            BreadProvider (value={'primary': JSON.fromDict({'main': configuration.theme_color}), 'text': JSON.fromDict({'fontFamily': '"Gotham-Book", "Helvetica Neue", Helvetica, Arial, sans-serif'} if is_web else {})}, children=[
-                SafeAreaView (style={'flex': JSON.fromInteger(1)}, children=[
-                    Routes()
-                ])
-            ])
-        ])
+      Admin (theme=theme.toRef(), authProvider=authProvider.toRef(), dataProvider=dataProvider.toRef(), children=[
+      ])
     )
+
+@function
+def checkError(): return tools.Global()['Promise']['resolve'].call() #Need to setup dataProvider errors first
+
+@function
+def checkAuth(): return tools.Global()['Promise']['resolve'].call() #Pretty much useless anyway, we will just utilize checkError
+
+@function
+def login(): return tools.Global()['Promise']['resolve'].call() #Already configured at webclient
+
+@function
+def logout():
+    promise, resolve = tools.create_promise()
+    logout_async(resolve)
+    return promise
+
+@async
+def logout_async(resolve):
+    session_db = Object.get('window', 'PouchDB').new('session')
+    local_db = get_db()
+    error = Object.get('window', 'console', 'error').toRef()
+    wait([session_db['destroy'].call()['catch'].call(error), local_db['destroy'].call()['catch'].call(error)])
+    Object.get('window', 'localStorage', 'removeItem').call('orm_server_url') #TODO We need __del__ in Object
+    Object.get('window', 'location', 'reload').call()
+    resolve()

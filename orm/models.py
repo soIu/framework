@@ -10,7 +10,7 @@ def get_records(ids):
 
 def get_records_server(ids):
     db = get_db()
-    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)}))
+    return db['replicate']['from'].call(configuration.server_url + '/db/' + configuration.server_db, JSON.fromDict({'live': JSON.fromBoolean(False), 'doc_ids': JSON.fromList(ids)})) #['catch'].call(Global()['console']['error'].toRef())
 
 @function
 def get_records_local(ids):
@@ -110,6 +110,13 @@ class Model(object):
         return record
 
     def read(self):
+        if len(self) < 2: return self.read_singleton()
+        array = Global()['Array'].new()
+        for record in self:
+            array['push'].call(record.read().toRef())
+        return array
+
+    def read_singleton(self):
         return Global()['Object'].new()
 
     def update(self, values):

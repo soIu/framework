@@ -14,6 +14,10 @@ def merge(*objects, **options):
         target.update(object)
     return target
 
+class Field:
+    def __init__(self, kwargs):
+        self.__dict__ = kwargs
+
 def register_models():
     Char = orm_fields.Char
     Environment = orm_models.Environment
@@ -36,6 +40,9 @@ def register_models():
         Environment.models[model._name] = model
         configure_model(model)
         model._fields = fields.keys()
+        model._fields_object = {}
+        for field in fields:
+            model._fields_object[field] = Field(fields[field])
 
 def adapt_object_to_field(type):
     if type in ['char', 'text', 'selection']:
@@ -49,8 +56,9 @@ def adapt_object_to_field(type):
     #Relational fields, Date, and Datetime need research
 
 model_read_template = """
-def read(self):
+def read_singleton(self):
     values = Global()['Object'].new()
+    values['id'] = self.id
 """
 
 model_update_template = """
@@ -69,7 +77,7 @@ def configure_model(model):
     update += '\n' + indent + 'return self'
     namespace = {'Global': Global, 'JSON': JSON}
     exec(read + '\n' + update, namespace)
-    model.read = namespace['read']
+    model.read_singleton = namespace['read_singleton']
     model.update = namespace['update']
 
 class Cache:

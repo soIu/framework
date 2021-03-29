@@ -1,4 +1,4 @@
-from orm import models, fields, tools, views, data
+from orm import models, fields, tools, views, menu, data
 from javascript import Object, asynchronous
 
 class Users(models.Model):
@@ -21,3 +21,5 @@ if tools.is_server():
    data.register(create_admin)
 
 views.add('views/users.xml')
+
+menu.add(id='users', string='Users', model='res.users', parent='settings', sequence=1)
