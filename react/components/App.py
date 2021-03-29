@@ -60,3 +60,99 @@ def getListAsync(model, option, resolve):
     for record in records:
         record['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
+
+@function
+def getOne(model, option):
+    promise, resolve = tools.create_promise()
+    getOneAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def getOneAsync(model, option, resolve):
+    if model not in models.env.models: return
+    record = models.env[model].browse(option['id'].toString()).wait()
+    result = Object.fromDict({'data': record.read().toRef()})
+    #for record in records:
+    #    record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
+
+@function
+def getMany(model, option):
+    promise, resolve = tools.create_promise()
+    getOneAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def getManyAsync(model, option, resolve):
+    if model not in models.env.models: return
+    records = models.env[model].browse(ids=[id.toString() for id in option['ids'].toArray()]).wait()
+    result = Object.fromDict({'data': JSON.fromList([])})
+    for record in records:
+        record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
+
+@function
+def getManyReference(model, option):
+    promise, resolve = tools.create_promise()
+    getManyReferenceAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def getManyReferenceAsync(model, option, resolve):
+    if model not in models.env.models: return
+    args = [(option['target'].toString(), '=', option['id'].toString())]
+    filter = option['filter']
+    for key in filter:
+        args += [(key, '=', filter[key].toRef())]
+    records = models.env[model].search(args, limit=option['pagination']['perPage'].toInteger(), pagination=option['pagination']['page'].toInteger(), order=option['sort']['field'].toString() + ' ' + option['sort']['order'].toString().lower()).wait()
+    result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
+    for record in records:
+        record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
+
+@function
+def create(model, option):
+    promise, resolve = tools.create_promise()
+    createAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def createAsync(model, option, resolve):
+    if model not in models.env.models: return
+    record = models.env[model].create(values=option['data']).wait()
+    result = Object.fromDict({'data': record.read().toRef()})
+    #for record in records:
+    #    record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
+
+@function
+def update(model, option):
+    promise, resolve = tools.create_promise()
+    updateAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def updateAsync(model, option, resolve):
+    if model not in models.env.models: return
+    record = models.env[model].browse(option['id'].toString()).wait()
+    new_record = record.write(values=option['data']).wait()
+    result = Object.fromDict({'data': new_record.read().toRef()})
+    #for record in records:
+    #    record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
+
+@function
+def updateMany(model, option):
+    promise, resolve = tools.create_promise()
+    updateManyAsync(model, option, resolve)
+    return promise
+
+@asynchronous
+def updateManyAsync(model, option, resolve):
+    if model not in models.env.models: return
+    old_records = models.env[model].browse(ids=[id.toString() for id in option['ids'].toArray()]).wait()
+    records = old_records.write(values=option['data']).wait()
+    result = Object.fromDict({'data': JSON.fromList([])})
+    for record in records:
+        record['data']['push'].call(record.read().toRef())
+    resolve.call(result.toRef())
