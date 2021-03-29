@@ -154,5 +154,6 @@ def updateManyAsync(model, option, resolve):
     records = old_records.write(values=option['data']).wait()
     result = Object.fromDict({'data': JSON.fromList([])})
     for record in records:
-        record['data']['push'].call(record.read().toRef())
+        record['data']['push'].call(record.id)
+        #record['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
