@@ -1,6 +1,6 @@
 from react.components import Admin, Resource
 from javascript import JSON, Object, function
-from orm import get_db, tools, configuration
+from orm import get_db, models, tools, configuration
 
 import json
 
@@ -37,3 +37,7 @@ def logout_async(resolve):
     Object.get('window', 'localStorage', 'removeItem').call('orm_server_url') #TODO We need __del__ in Object
     Object.get('window', 'location', 'reload').call()
     resolve()
+
+@function
+def getIdentity():
+    return Object.get('window', 'Promise', 'resolve').call(JSON.fromDict({'id': models.env.user.id, 'fullName': models.env.user.name}))
