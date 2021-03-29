@@ -79,7 +79,7 @@ def call_server_orm(path, json):
     result = response['json'].call().wait()
     if result['status'].toString() != 'success':
        Error(result['message'].toString())
-    return [id.toString() for id in result['result'].toArray()]
+    return [id.toString() for id in result['result'].toArray()], result['search_total'].toInteger() if path == '/api/search' else 0
 
 class Model(object):
     _name = None
@@ -159,17 +159,18 @@ class Model(object):
             recordset.ids += [record.id]
         return recordset
 
-    def search(self, domain, limit=0, order=None):
-        return self.search_async(domain, limit, order)
+    def search(self, domain, limit=0, pagination=0, order=None):
+        return self.search_async(domain, limit, pagination, order)
 
     @asynchronous
-    def search_async(self, domain, limit=0, order=None):
+    def search_async(self, domain, limit=0, pagination, order=None):
         search = None
         if tools.check_server():
-           search = self.search_ids(domain, limit, order)
+           search = self.search_ids(domain, limit, pagination, order)
         else:
-           search = call_server_orm('/api/search', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'limit': JSON.fromInteger(limit), 'order': order, 'domain': JSON.fromList([JSON.fromList([field, operator, raw_value]) for field, operator, raw_value in domain])}))
-        ids = search.wait()
+           search = call_server_orm('/api/search', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'limit': JSON.fromInteger(limit), 'order': order, 'pagination': JSON.fromInteger(pagination), 'domain': JSON.fromList([JSON.fromList([field, operator, raw_value]) for field, operator, raw_value in domain])}))
+        search_ids = search.wait()
+        ids, total = search_ids
         records = self.browse(ids=ids).wait()
         return records
 
@@ -198,7 +199,7 @@ class Model(object):
         return recordset"""
 
     @api.server(asynchronous=True, client=False)
-    def search_ids(self, domain, limit=0, order=None):
+    def search_ids(self, domain, limit=0, pagination=0, order=None):
         template = 'orm_index:%s:%s:%s'
         excepts = {}
         queries = {}
@@ -281,12 +282,24 @@ class Model(object):
         if exceptions.type != 'undefined':
            for row in exceptions['rows'].toArray():
                except_ids[row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()] = 0
-        for row in results['rows'].toArray():
+        rows = results['rows'].toArray() #if not pagination or not limit else results['rows']['slice'].call(JSON.fromInteger((pagination - 1) * limit), JSON.fromInteger(pagination * limit)).toArray()
+        for row in rows:
             id = row['id']['split'].call(':')['slice'].call(JSON.fromInteger(-1))['0'].toString()
             if id in except_ids: continue
             ids += [id]
-            if limit and len(ids) == limit: break
-        return ids
+            #if limit and len(ids) == limit: break
+        search_total = len(ids)
+        if limit:
+           if not pagination:
+              assert limit >= 0
+              ids = ids[0:limit]
+           else:
+              start = limit * (pagination - 1)
+              end = limit * pagination
+              assert start >= 0
+              assert end >= 0
+              ids = ids[start:end]
+        return ids, search_total
 
     def create(self, values=None):
         if not tools.check_server(): return self.create_client(values)
@@ -300,7 +313,8 @@ class Model(object):
            merge = Global()['Object']['assign'].toFunction()
            current_values = self.read()
            values = merge(current_values.toRef(), values.toRef())
-        ids = call_server_orm('/api/create', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'values': values.toRef()})).wait()
+        call = call_server_orm('/api/create', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'values': values.toRef()})).wait()
+        ids, total = call
         records = self.browse(ids=ids).wait()
         return records
 
@@ -357,11 +371,25 @@ class Model(object):
     def write_client(self, values):
         if values is None:
            values = self.read()
-        else:
+        """else:
            merge = Global()['Object']['assign'].toFunction()
-           current_values = self.read()
-           values = merge(current_values.toRef(), values.toRef())
-        ids = call_server_orm('/api/write', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': JSON.fromList(self.ids), 'values': values.toRef()})).wait()
+           is_array = False
+           if Global()['Array']['isArray'].call(values.toRef()):
+              is_array = True
+              if len(self) == 1:
+                 values = values['0']
+           if len(self) > 1:
+              index = 0
+              new_values = Global()['Array'].new()
+              for record in self:
+                  new_values[str(index)] = merge(record.read().toRef(), values[str(index)].toRef() if is_array else values.toRef())
+                  index += 1
+              values = new_values
+           else:
+              current_values = self.read()
+              values = merge(current_values.toRef(), values.toRef())"""
+        call = call_server_orm('/api/write', Object.fromDict({'login': self.env.user.login, 'password': self.env.user.password, 'model': self._name, 'ids': JSON.fromList(self.ids), 'values': values.toRef()})).wait()
+        ids, total = call
         records = self.browse(ids=ids).wait()
         return records
 
@@ -371,8 +399,21 @@ class Model(object):
            values = self.read()
         else:
            merge = Global()['Object']['assign'].toFunction()
-           current_values = self.read()
-           values = merge(current_values.toRef(), values.toRef())
+           is_array = False
+           if Global()['Array']['isArray'].call(values.toRef()):
+              is_array = True
+              if len(self) == 1:
+                 values = values['0']
+           if len(self) > 1:
+              index = 0
+              new_values = Global()['Array'].new()
+              for record in self:
+                  new_values[str(index)] = merge(record.read().toRef(), values[str(index)].toRef() if is_array else values.toRef())
+                  index += 1
+              values = new_values
+           else:
+              current_values = self.read()
+              values = merge(current_values.toRef(), values.toRef())
         is_array = values.type == 'array'
         length = 1 if not is_array else values['length'].toInteger()
         if not is_array:

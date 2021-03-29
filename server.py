@@ -84,6 +84,19 @@ def search(request, response):
        else:
           response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Limit type is invalid'}))
           return
+    if params['pagination'].type != 'number':
+       if params['pagination'].type in ['null', 'undefined']:
+          params['pagination'] = JSON.fromInteger(0)
+       else:
+          response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Pagination type is invalid'}))
+          return
+    order = None
+    if params['order'].type != 'string':
+       if params['order'].type not in ['null', 'undefined']:
+          response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Limit type is invalid'}))
+          return
+    else:
+       order = params['order'].toString()
     #TODO params['order']
     domain = []
     for args in params['domain'].toArray():
@@ -92,8 +105,10 @@ def search(request, response):
            return
         domain += [(args['0'].toString(), args['1'].toString(), args['2'].toRef())]
     limit = params['limit'].toInteger()
-    ids = models.env[model].search_ids(domain, limit, None).wait()
-    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(ids)}))
+    pagination = params['pagination'].toInteger()
+    search = models.env[model].search_ids(domain, limit, pagination, order).wait()
+    ids, total = search
+    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(ids), 'search_total': JSON.fromInteger(total)}))
 
 @http.route('/api/create', method=['GET', 'POST'], asynchronous=True)
 def create(request, response):
