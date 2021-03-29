@@ -8,8 +8,10 @@ material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme
 
 def App():
     theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
+    authProvider = JSON.fromDict({function.function_name: function for function in [checkError, checkAuth, login, logout, getIdentity]})
+    dataProvider = JSON.fromDict({function.function_name: function for function in [getList, getOne, getMany, getManyReference, create, update, updateMany]})
     return (
-      Admin (theme=theme.toRef(), authProvider=authProvider.toRef(), dataProvider=dataProvider.toRef(), children=[
+      Admin (theme=theme.toRef(), authProvider=authProvider, dataProvider=dataProvider, children=[
       ])
     )
 
