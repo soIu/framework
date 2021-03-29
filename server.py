@@ -11,6 +11,12 @@ configuration.modules = modules
 
 modules.load()
 
+python_version = sys.version
+
+@http.route('/api/check', method=['GET', 'POST'])
+def check(request, response):
+    response['send'].call(JSON.fromDict({'status': 'success', 'orm_compiler_python_version': python_version}))
+
 @http.route('/api/login', method=['GET', 'POST'], asynchronous=True)
 def login(request, response):
     Object = tools.Global()['Object']
