@@ -3,9 +3,9 @@ from javascript import types
 
 @Component(path='Module.Admin.Admin')
 class Admin:
-    theme = types.dict
-    authProvider = types.dict
-    dataProvider = types.dict
+    theme = types.ref
+    authProvider = types.ref
+    dataProvider = types.ref
 
 @Component(path='Module.Admin.Resource')
 class Resource:

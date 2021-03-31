@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 process.chdir(__dirname);
 
+const sleep = (duration) => new Promise(resolve => setTimeout(() => resolve(), duration));
 const spawn_promise = require('util').promisify(require('child_process').spawn);
-const spawn = (command, args) => {
+const spawn = async (command, args) => {
   const result = spawn_promise(command, args, {env: process.env, stdio: 'inherit'});
-  const now = Date.now()
+  /*const now = Date.now()
   while (now === Date.now()) {
     true;
-  }
+  }*/
   return result
 }
 
@@ -36,7 +37,9 @@ async function compile() {
   process.env.CORE = require('os').cpus().filter((cpu) => cpu.speed).length;
   if (!process.env.CORE) process.env.CORE = parseInt(child_process.execSync('nproc').toString().trim());
   process.env.CORE = (process.env.CORE / 2).toString();
-  await Promise.all([spawn('rpython', server), spawn('rpython', client)]);
+  const server_promise = spawn('rpython', server);
+  await sleep(0);
+  await Promise.all([server_promise, spawn('rpython', client)]);
 }
 
 compile().catch(console.error)

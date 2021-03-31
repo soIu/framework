@@ -1,5 +1,5 @@
 from react.components import Admin, Resource
-from javascript import JSON, Object, function
+from javascript import JSON, Object, function, asynchronous
 from orm import get_db, models, tools, configuration
 
 import json
@@ -8,10 +8,12 @@ material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme
 
 def App():
     theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
-    authProvider = JSON.fromDict({function.function_name: function for function in [checkError, checkAuth, login, logout, getIdentity]})
-    dataProvider = JSON.fromDict({function.function_name: function for function in [getList, getOne, getMany, getManyReference, create, update, updateMany]})
+    authProvider = JSON.fromDict({'checkError': JSON.fromFunction(checkError), 'checkAuth': JSON.fromFunction(checkAuth), 'login': JSON.fromFunction(login), 'logout': JSON.fromFunction(logout), 'getIdentity': JSON.fromFunction(getIdentity), 'getPermissions': JSON.fromFunction(getPermissions)})
+    dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
+    ListGuesser = Object.get('Module', 'Admin', 'ListGuesser').toRef()
     return (
       Admin (theme=theme.toRef(), authProvider=authProvider, dataProvider=dataProvider, children=[
+        Resource (name='res.users', list=ListGuesser, options={'label': 'Users'})
       ])
     )
 
@@ -45,13 +47,18 @@ def getIdentity():
     return Object.get('window', 'Promise', 'resolve').call(JSON.fromDict({'id': models.env.user.id, 'fullName': models.env.user.name}))
 
 @function
+def getPermissions():
+    return Object.get('window', 'Promise', 'resolve').call()
+
+@function
 def getList(model, option):
     promise, resolve = tools.create_promise()
     getListAsync(model, option, resolve)
     return promise
 
 @asynchronous
-def getListAsync(model, option, resolve):
+def getListAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     args = []
     filter = option['filter']
@@ -60,7 +67,7 @@ def getListAsync(model, option, resolve):
     records = models.env[model].search(args, limit=option['pagination']['perPage'].toInteger(), pagination=option['pagination']['page'].toInteger(), order=option['sort']['field'].toString() + ' ' + option['sort']['order'].toString().lower()).wait()
     result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
     for record in records:
-        record['data']['push'].call(record.read().toRef())
+        result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -70,12 +77,13 @@ def getOne(model, option):
     return promise
 
 @asynchronous
-def getOneAsync(model, option, resolve):
+def getOneAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     record = models.env[model].browse(option['id'].toString()).wait()
     result = Object.fromDict({'data': record.read().toRef()})
     #for record in records:
-    #    record['data']['push'].call(record.read().toRef())
+    #    result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -85,12 +93,13 @@ def getMany(model, option):
     return promise
 
 @asynchronous
-def getManyAsync(model, option, resolve):
+def getManyAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     records = models.env[model].browse(ids=[id.toString() for id in option['ids'].toArray()]).wait()
     result = Object.fromDict({'data': JSON.fromList([])})
     for record in records:
-        record['data']['push'].call(record.read().toRef())
+        result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -100,7 +109,8 @@ def getManyReference(model, option):
     return promise
 
 @asynchronous
-def getManyReferenceAsync(model, option, resolve):
+def getManyReferenceAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     args = [(option['target'].toString(), '=', option['id'].toString())]
     filter = option['filter']
@@ -109,7 +119,7 @@ def getManyReferenceAsync(model, option, resolve):
     records = models.env[model].search(args, limit=option['pagination']['perPage'].toInteger(), pagination=option['pagination']['page'].toInteger(), order=option['sort']['field'].toString() + ' ' + option['sort']['order'].toString().lower()).wait()
     result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
     for record in records:
-        record['data']['push'].call(record.read().toRef())
+        result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -119,12 +129,13 @@ def create(model, option):
     return promise
 
 @asynchronous
-def createAsync(model, option, resolve):
+def createAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     record = models.env[model].create(values=option['data']).wait()
     result = Object.fromDict({'data': record.read().toRef()})
     #for record in records:
-    #    record['data']['push'].call(record.read().toRef())
+    #    result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -134,13 +145,14 @@ def update(model, option):
     return promise
 
 @asynchronous
-def updateAsync(model, option, resolve):
+def updateAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     record = models.env[model].browse(option['id'].toString()).wait()
     new_record = record.write(values=option['data']).wait()
     result = Object.fromDict({'data': new_record.read().toRef()})
     #for record in records:
-    #    record['data']['push'].call(record.read().toRef())
+    #    result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())
 
 @function
@@ -150,12 +162,13 @@ def updateMany(model, option):
     return promise
 
 @asynchronous
-def updateManyAsync(model, option, resolve):
+def updateManyAsync(model_object, option, resolve):
+    model = model_object.toString()
     if model not in models.env.models: return
     old_records = models.env[model].browse(ids=[id.toString() for id in option['ids'].toArray()]).wait()
     records = old_records.write(values=option['data']).wait()
     result = Object.fromDict({'data': JSON.fromList([])})
     for record in records:
-        record['data']['push'].call(record.id)
-        #record['data']['push'].call(record.read().toRef())
+        result['data']['push'].call(record.id)
+        #result['data']['push'].call(record.read().toRef())
     resolve.call(result.toRef())

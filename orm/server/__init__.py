@@ -10,7 +10,7 @@ def init():
     db.server = fastify.keep()
     get_db()
     data.run().wait()
-    return
+    #return
 
 def init_compile():
     tools.register_models()

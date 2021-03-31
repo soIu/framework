@@ -15,8 +15,8 @@ modules.load()
 
 menu.check_menus()
 
-#from react.components.App import App
-from react.elements import div, text
+from react.components.App import App
+#from react.elements import div, text
 
 @function
 def set_server_url(resolve, url):
@@ -50,7 +50,16 @@ def search(domain_args):
         print record.name
         record.read().log()
 
+css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css'])
+
+def mount_css():
+    document = Object.get('window', 'document')
+    style = document['createElement'].call('style')
+    style['innerHTML'] = css
+    document['querySelector'].call('head')['append'].call(style.toRef())
+
 def main(argv):
+    mount_css()
     url_promise, url_resolve = tools.create_promise()
     user_promise, user_resolve = tools.create_promise()
     promise = tools.Global()['Promise']['all'].call(JSON.fromList([url_promise.toRef(), user_promise.toRef()]))
@@ -61,7 +70,7 @@ def main(argv):
     Module = Object.get('Module')
     Module['orm'] = ORM.toRef()
     Module['orm_resolve'].call()
-    init(promise, div([text('hello')]).toObject())
+    init(promise, App().toObject()) #div([text('hello')]).toObject())
     return 0
 
 def target(*args):

@@ -94,6 +94,7 @@ class Model(object):
         self.is_env = is_env
         self._records = []
         self._length = 0
+        self._search_total = 0
         #self._mapped_records = {}
 
     def __iter__(self):
@@ -163,7 +164,7 @@ class Model(object):
         return self.search_async(domain, limit, pagination, order)
 
     @asynchronous
-    def search_async(self, domain, limit=0, pagination, order=None):
+    def search_async(self, domain, limit=0, pagination=0, order=None):
         search = None
         if tools.check_server():
            search = self.search_ids(domain, limit, pagination, order)
@@ -172,6 +173,7 @@ class Model(object):
         search_ids = search.wait()
         ids, total = search_ids
         records = self.browse(ids=ids).wait()
+        records._search_total = total
         return records
 
     """
@@ -408,7 +410,7 @@ class Model(object):
               index = 0
               new_values = Global()['Array'].new()
               for record in self:
-                  new_values[str(index)] = merge(record.read().toRef(), values[str(index)].toRef() if is_array else values.toRef())
+                  new_values[str(index)] = merge(record.read().toRef(), values[str(index)].toRef() if is_array else values.toRef()).toRef()
                   index += 1
               values = new_values
            else:
