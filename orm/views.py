@@ -18,6 +18,8 @@ def add(file=None, model=None, type=None, id=None, string=None, arch=None):
            if 'model' in view.attrib: model = model = view.attrib['model']
            if 'id' in view.attrib: id = view.attrib['id']
            view = view._children[0]
+           if model:
+              view.attrib['model'] = model
            if id: views[id] = view
            if model:
               views[model + '.' + view.tag] = view

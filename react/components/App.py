@@ -1,20 +1,59 @@
 from react.components import Admin, Resource
+from react.components.Tree import Tree
+from react.components.TreeField import Field as TreeField
 from javascript import JSON, Object, function, asynchronous
-from orm import get_db, models, tools, configuration
+from orm import get_db, models, tools, configuration, views, menu
 
 import json
 
 material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}})
 
+tree_components = {component.__name__: component for component in [Tree, TreeField]}
+components = {}
+
+def recurseView(view, tree=False, model=None):
+    if tree:
+       components = tree_components
+       if view.tag == 'tree' and 'model' in view.attrib:
+          model = view.attrib['model']
+    component = None
+    component_name = view.tag[0].upper() + view.tag.lower()[1:]
+    if component_name in components:
+       component = components[component_name]
+    if component is None and view.tag in components:
+       component = components[view.tag]
+       component_name = view.tag
+    if component is None: return component
+    if model: view.attrib['model'] = model
+    #return component(props=view.attrib, children=[recurseView(children) for children in view._children])
+    children = [recurseView(children, tree=tree, model=model) for children in view._children]
+    return component(props=view.attrib, children=[child for child in children if child is not None])
+
+compiled_views = {}
+
+for view in views.views:
+    if view.endswith('.tree'):
+       compiled_views[view] = recurseView(views.views[view], True)
+
+def get_compiled_component(view_id):
+    return Object.createClosure(handle_compiled_component, Object.fromString(view_id))
+
+@function
+def handle_compiled_component(view_id, props):
+    component = compiled_views[view]
+    for key in props:
+        component.native_props[key] = props[key].toRef()
+    return component.toObject()
+
 def App():
     theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
     authProvider = JSON.fromDict({'checkError': JSON.fromFunction(checkError), 'checkAuth': JSON.fromFunction(checkAuth), 'login': JSON.fromFunction(login), 'logout': JSON.fromFunction(logout), 'getIdentity': JSON.fromFunction(getIdentity), 'getPermissions': JSON.fromFunction(getPermissions)})
     dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
-    ListGuesser = Object.get('Module', 'Admin', 'ListGuesser').toRef()
+    #ListGuesser = Object.get('Module', 'Admin', 'ListGuesser').toRef()
     return (
       Admin (theme=theme.toRef(), authProvider=authProvider, dataProvider=dataProvider, children=[
-        Resource (name='res.users', list=ListGuesser, options={'label': 'Users'})
-      ])
+        Resource (name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree').toRef(), options={'label': parent_menu['string'].toString()})
+      for parent_menu in menu.get_menus().toArray()])
     )
 
 @function
