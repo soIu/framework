@@ -15,6 +15,8 @@ modules.load()
 
 menu.check_menus()
 
+tools.register_models()
+
 from react.components.App import App
 #from react.elements import div, text
 
@@ -50,7 +52,7 @@ def search(domain_args):
         print record.name
         record.read().log()
 
-css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css'])
+css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css', './react/styles/list.css'])
 
 def mount_css():
     document = Object.get('window', 'document')

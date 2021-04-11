@@ -1,21 +1,43 @@
-from react.components import Admin, Resource
+from react import Component
+from react.components import Admin, Resource, Filter, Route
+#from react.components.Inbox import Inbox
 from react.components.Tree import Tree
 from react.components.TreeField import Field as TreeField
+from react.components.FormField import Field as FormField
 from javascript import JSON, Object, function, asynchronous
 from orm import get_db, models, tools, configuration, views, menu
 
 import json
 
-material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}})
+material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}, 'shape': {'borderRadius': '10px'}})
 
 tree_components = {component.__name__: component for component in [Tree, TreeField]}
 components = {}
 
-def recurseView(view, tree=False, model=None):
-    if tree:
+def recurseView(view, tree=False, model=None, components=components, parent=None):
+    filters = None
+    if view.tag == 'tree':
        components = tree_components
-       if view.tag == 'tree' and 'model' in view.attrib:
+       if tree and 'model' in view.attrib:
           model = view.attrib['model']
+          fields = [FormField (props=tools.merge(children.attrib, {'model': model, 'alwaysOn': JSON.fromBoolean(True)} if index == 0 else {'model': model})) for index, children in enumerate(view._children)]
+          class State: pass
+          @Component(State=State)
+          class Filters:
+              def render(self):
+                  props = {}
+                  for key in self.props:
+                      props[key] = self.props[key].toRef()
+                  return (
+                      Filter (props=props, children=fields)
+                  )
+          filters = Filters()
+       if not tree:
+          parent_model = parent.view.attrib['model']
+          parent_field = parent.view.attrib['name']
+          field = models.env[parent_model]._fields_object[parent_field]
+          if not hasattr(field, 'relation'): raise Exception("Tree inside a form view must be a relational field")
+          model = field.relation
     component = None
     component_name = view.tag[0].upper() + view.tag.lower()[1:]
     if component_name in components:
@@ -25,9 +47,12 @@ def recurseView(view, tree=False, model=None):
        component_name = view.tag
     if component is None: return component
     if model: view.attrib['model'] = model
+    if tree: view.attrib['is_tree_view'] = JSON.fromBoolean(True)
     #return component(props=view.attrib, children=[recurseView(children) for children in view._children])
-    children = [recurseView(children, tree=tree, model=model) for children in view._children]
-    return component(props=view.attrib, children=[child for child in children if child is not None])
+    children = [recurseView(children, tree=tree, model=model, components=components, parent=view) for children in view._children]
+    result = component(props=view.attrib, children=[child for child in children if child is not None])
+    if filters: result.filters = filters
+    return result
 
 compiled_views = {}
 
@@ -49,9 +74,12 @@ def App():
     theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
     authProvider = JSON.fromDict({'checkError': JSON.fromFunction(checkError), 'checkAuth': JSON.fromFunction(checkAuth), 'login': JSON.fromFunction(login), 'logout': JSON.fromFunction(logout), 'getIdentity': JSON.fromFunction(getIdentity), 'getPermissions': JSON.fromFunction(getPermissions)})
     dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
+    customRoutes = [] #Route(exact=True, path='/inbox', component=Inbox().toRef()).toRef()]
     #ListGuesser = Object.get('Module', 'Admin', 'ListGuesser').toRef()
     return (
-      Admin (theme=theme.toRef(), authProvider=authProvider, dataProvider=dataProvider, children=[
+      Admin (theme=theme.toRef(), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
+        #Resource (name='inbox')
+        ] + [
         Resource (name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree').toRef(), options={'label': parent_menu['string'].toString()})
       for parent_menu in menu.get_menus().toArray()])
     )
@@ -102,11 +130,14 @@ def getListAsync(model_object, option, resolve):
     args = []
     filter = option['filter']
     for key in filter:
-        args += [(key, '=', filter[key].toRef())]
+        value = filter[key]
+        type = value.type
+        args += [(key, 'ilike' if type == 'string' and key != 'id' else '=' if type != 'array' else 'in', value.toRef())]
     records = models.env[model].search(args, limit=option['pagination']['perPage'].toInteger(), pagination=option['pagination']['page'].toInteger(), order=option['sort']['field'].toString() + ' ' + option['sort']['order'].toString().lower()).wait()
     result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
     for record in records:
         result['data']['push'].call(record.read().toRef())
+    result.log()
     resolve.call(result.toRef())
 
 @function
@@ -128,7 +159,7 @@ def getOneAsync(model_object, option, resolve):
 @function
 def getMany(model, option):
     promise, resolve = tools.create_promise()
-    getOneAsync(model, option, resolve)
+    getManyAsync(model, option, resolve)
     return promise
 
 @asynchronous

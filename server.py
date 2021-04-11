@@ -48,7 +48,7 @@ def login(request, response):
     if not len(user_id):
        response['send'].call(JSON.fromDict({'status': 'denied', 'message': 'Username/Password wrong'}))
        return
-    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name}), 'wasm': JSON.fromList(['/api/orm/wasm', '/api/orm/js'])}))
+    response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromDict({'id': user_id.id, 'name': user_id.name}), 'custom_js': '\nModule.orm_loaded = new Promise(function (resolve) {Module.orm_resolve = resolve;});', 'wasm': JSON.fromList(['/api/orm/wasm', '/api/orm/js'])}))
 
 @http.route('/api/search', method=['GET', 'POST'], asynchronous=True)
 def search(request, response):
@@ -182,17 +182,18 @@ def wasm(request, response):
     if result['status'].toString() != 'success':
        response['send'].call(result.toRef())
        return
-    stream = Object.get('require').call('fs')['createReadStream'].call('./client.wasm')
-    response['type'].call('application/wasm')['send'].call(stream.toRef())
+    response['sendFile'].call('client.wasm', Object.get('get_dirname').call().toString());
+    #stream = Object.get('require').call('fs')['createReadStream'].call('./client.wasm')
+    #response['type'].call('application/wasm')['send'].call(stream.toRef())
 
-@function
-def transform_js(chunk, encoding, callback):
-    callback.call(None, chunk.toRef())
+#@function
+#def transform_js(chunk, encoding, callback):
+#    callback.call(None, chunk.toRef())
 
-@function
-def flush_js(stream, callback):
-    stream['push'].call('\nModule.orm_loaded = new Promise(function (resolve) {Module.orm_resolve = resolve;});')
-    callback.call()
+#@function
+#def flush_js(stream, callback):
+#    stream['push'].call('\nModule.orm_loaded = new Promise(function (resolve) {Module.orm_resolve = resolve;});')
+#    callback.call()
 
 @http.route('/api/orm/js', method=['GET', 'POST'], asynchronous=True)
 def js(request, response):
@@ -202,12 +203,15 @@ def js(request, response):
     if result['status'].toString() != 'success':
        response['send'].call(result.toRef())
        return
-    require = Object.get('require').toFunction()
-    stream = require('fs')['createReadStream'].call('./client.js')
-    append = require('stream')['Transform'].new()
-    append['_transform'] = JSON.fromFunction(transform_js)
-    append['_flush'] = Object.createClosure(flush_js, append).toRef()
-    response['type'].call('application/js')['send'].call(stream['pipe'].call(append.toRef()).toRef())
+    response['sendFile'].call('client.js', Object.get('get_dirname').call().toString());
+    #require = Object.get('require').toFunction()
+    #stream = require('fs')['createReadStream'].call('./client.js')
+    #append = require('stream')['Transform'].new()
+    #append['_transform'] = JSON.fromFunction(transform_js)
+    #append['_flush'] = Object.createClosure(flush_js, append).toRef()
+    #response['type'].call('application/js')['send'].call(stream['pipe'].call(append.toRef()).toRef())
+
+tools.register_models()
 
 @asynchronous
 def start():

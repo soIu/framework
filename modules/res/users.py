@@ -7,6 +7,8 @@ class Users(models.Model):
     name = fields.Char(string="Name", required=True)
     login = fields.Char(string="Login", required=True)
     password = fields.Char(string="Password")
+    email = fields.Char(string="Email")
+    phone = fields.Char(string="Phone")
 
 if tools.is_server():
    default_admin_login = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'

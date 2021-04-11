@@ -26,9 +26,11 @@ def handle(error, address):
     print "Listening on " + address.toString()
 
 def run(port, host=None):
+    dirname = Object.get('global', 'get_dirname').call().toString()
     require = Object('require').toFunction()
     fastify = db.server #require('fastify').call()
     fastify['register'].call(require('fastify-formbody').toRef())
+    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef()}))
     merge = Object('Object')['assign'].toFunction()
     register = fastify['route'].toFunction()
     for path in routes:

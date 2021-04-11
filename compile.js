@@ -38,7 +38,7 @@ async function compile() {
   if (!process.env.CORE) process.env.CORE = parseInt(child_process.execSync('nproc').toString().trim());
   process.env.CORE = (process.env.CORE / 2).toString();
   const server_promise = spawn('rpython', server);
-  await sleep(0);
+  await sleep(500);
   await Promise.all([server_promise, spawn('rpython', client)]);
 }
 

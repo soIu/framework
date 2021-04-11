@@ -1,0 +1,8 @@
+[class*='RaBulkActionsToolbar-'] {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.MuiTableCell-sizeSmall.MuiTableCell-paddingCheckbox {
+  height: 48px;
+}

@@ -210,14 +210,18 @@ class Model(object):
             type = value.type
             if value.type == 'number':
                value = Object.get('require').call('./utils/indexable-number.js').call(value.toRef())
-            elif value.type == 'string':
+            elif value.type == 'string' and field != 'id':
                value = Global()['encodeURIComponent'].call(value['toLowerCase'].call().toRef())
             if operator == '=':
                index = template % (self._name, field, type) + ': ' + value.toString() + ':'
+               if field == 'id':
+                  index = 'orm_records:%s:%s' % (self._name, value.toString())
                queries[field] = {'>': index, '<': index + tools.highest_char}
             elif operator == '!=':
-               index = template % (self._name, field, type) + ': ' + value.toString()
-               excepts[index + ':'] = 0
+               index = template % (self._name, field, type) + ': ' + value.toString() + ':'
+               if field == 'id':
+                  index = 'orm_records:%s:%s' % (self._name, value.toString())
+               excepts[index] = 0
             elif operator.startswith('>'):
                index = template % (self._name, field, type) + ': ' + value.toString()
                if field not in queries:
@@ -237,18 +241,20 @@ class Model(object):
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   elif object.type == 'string':
+                   elif object.type == 'string' and field != 'id':
                       object = Global()['encodeURIComponent'].call(object['toLowerCase'].call().toRef())
-                   queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
+                   if field != 'id': queries[field][str(index)] = template % (self._name, field, object_type) + ': ' + object.toString() + ':'
+                   else: queries[field][str(index)] = 'orm_records:%s:%s' % (self._name, object.toString())
             elif operator == 'not in':
                for object in value.toArray():
                    #object = value[index]
                    object_type = object.type
                    if object.type == 'number':
                       object = Object.get('require').call('./utils/indexable-number.js').call(object.toRef())
-                   elif object.type == 'string':
+                   elif object.type == 'string' and field != 'id':
                       object = Global()['encodeURIComponent'].call(object['toLowerCase'].call().toRef())
-                   excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
+                   if field != 'id': excepts[template % (self._name, field, object_type) + ': ' + object.toString() + ':'] = 0
+                   else: excepts['orm_records:%s:%s' % (self._name, object.toString())] = 0
             elif operator in ['like', 'ilike']:
                index = template % (self._name, field, type) + ': ' + value.toString()
                queries[field] = {'>': index, '<': index + tools.highest_char}

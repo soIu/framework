@@ -10,5 +10,5 @@ def init(promise, app):
     return
 
 def init_compile():
-    tools.register_models()
+    #tools.register_models()
     return

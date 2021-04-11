@@ -1,3 +1,3 @@
-[class^='RaAppBar-toolbar-'] > [class^='RaLoadingIndicator-'] {
+[class*='RaAppBar-toolbar-'] > [class*='RaLoadingIndicator-'] {
   display: none;
 }

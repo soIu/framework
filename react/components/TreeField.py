@@ -1,11 +1,11 @@
 from react import Component
-from react.components import TextField, NumberField, BooleanField, DateField, SelectField, ReferenceField
+from react.components import TextField, NumberField, BooleanField, DateField, DateTimeField, SelectField, ReferenceField
 from javascript import JSON
 from orm import models
 
 class State: pass
 
-@Component(State=State)
+@Component(State=State, Pure=True)
 class Field:
 
     def render(self):
@@ -25,7 +25,8 @@ class Field:
         return (
             NumberField (source=name, label=string) if field.type in ['integer', 'float'] else
             BooleanField (source=name, label=string) if field.type == 'boolean' else
-            DateField (source=name, label=string) if field.type in ['date', 'datetime'] else
+            DateField (source=name, label=string) if field.type == 'date' else
+            DateTimeField (source=name, label=string) if field.type == 'datetime' else
             SelectField (source=name, label=string, choices=[JSON.fromDict({'id': id, 'name': name}) for id, name in field.selection()]) if field.type == 'selection' else
             #TODO ReferenceField
             TextField (source=name, label=string)
