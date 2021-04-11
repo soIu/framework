@@ -1,13 +1,12 @@
+from orm import configuration
+
 light_theme = {
   "palette": {
     "primary": {
-      "main": "#4f3cc9"
+      "main": configuration.theme_color
     },
     "secondary": {
-      "light": "#5f5fc4",
-      "main": "#283593",
-      "dark": "#001064",
-      "contrastText": "#fff"
+      "main": configuration.appbar_color
     },
     "background": {
       "default": "#fcfcfe"
@@ -22,7 +21,7 @@ light_theme = {
         "borderLeft": "3px solid #fff"
       },
       "active": {
-        "borderLeft": "3px solid #4f3cc9"
+        "borderLeft": "3px solid " + configuration.theme_color
       }
     },
     "MuiPaper": {
@@ -59,8 +58,9 @@ light_theme = {
     },
     "MuiAppBar": {
       "colorSecondary": {
-        "color": "#808080",
-        "backgroundColor": "#fff"
+        #"color": "#808080",
+        #"backgroundColor": "#fff"
+        "border": "none"
       }
     },
     "MuiLinearProgress": {

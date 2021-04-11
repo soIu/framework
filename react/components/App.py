@@ -1,5 +1,6 @@
 from react import Component
 from react.components import Admin, Resource, Filter, Route
+from react.components.Theme import light_theme #, dark_theme
 #from react.components.Inbox import Inbox
 from react.components.Tree import Tree
 from react.components.TreeField import Field as TreeField
@@ -9,7 +10,8 @@ from orm import get_db, models, tools, configuration, views, menu
 
 import json
 
-material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}, 'shape': {'borderRadius': '10px'}})
+#material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}, 'shape': {'borderRadius': '10px'}})
+light_theme = json.dumps(light_theme)
 
 tree_components = {component.__name__: component for component in [Tree, TreeField]}
 components = {}
@@ -71,7 +73,7 @@ def handle_compiled_component(view_id, props):
     return component.toObject()
 
 def App():
-    theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(material_theme))
+    theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(light_theme))
     authProvider = JSON.fromDict({'checkError': JSON.fromFunction(checkError), 'checkAuth': JSON.fromFunction(checkAuth), 'login': JSON.fromFunction(login), 'logout': JSON.fromFunction(logout), 'getIdentity': JSON.fromFunction(getIdentity), 'getPermissions': JSON.fromFunction(getPermissions)})
     dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
     customRoutes = [] #Route(exact=True, path='/inbox', component=Inbox().toRef()).toRef()]
