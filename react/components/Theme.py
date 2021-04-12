@@ -36,7 +36,7 @@ light_theme = {
     "MuiButton": {
       "contained": {
         "backgroundColor": "#fff",
-        "color": "#4f3cc9",
+        #"color": "#4f3cc9",
         "boxShadow": "none"
       }
     },

@@ -1,4 +1,4 @@
-from react import Component
+from react import Component, get_component
 from react.components import Admin, Resource, Filter, Route
 from react.components.Theme import light_theme #, dark_theme
 #from react.components.Inbox import Inbox
@@ -41,13 +41,14 @@ def recurseView(view, tree=False, model=None, components=components, parent=None
           if not hasattr(field, 'relation'): raise Exception("Tree inside a form view must be a relational field")
           model = field.relation
     component = None
-    component_name = view.tag[0].upper() + view.tag.lower()[1:]
+    component_name = view.tag[0].upper() + view.tag.lower()[1:] if '-' not in view.tag else "".join([word[0].upper() + word.lower()[1:] for word in view.tag.split('-')])
     if component_name in components:
        component = components[component_name]
     if component is None and view.tag in components:
        component = components[view.tag]
        component_name = view.tag
-    if component is None: return component
+    #if component is None: return component
+    if not component: component = get_component(view.tag)
     if model: view.attrib['model'] = model
     if tree: view.attrib['is_tree_view'] = JSON.fromBoolean(True)
     #return component(props=view.attrib, children=[recurseView(children) for children in view._children])
