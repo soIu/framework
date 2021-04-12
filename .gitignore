@@ -14,3 +14,4 @@ main*
 pouch*
 _replicator
 _users
+*.DS_Store
