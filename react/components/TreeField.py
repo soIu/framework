@@ -2,6 +2,7 @@ from react import Component
 from react.components import TextField, NumberField, BooleanField, DateField, DateTimeField, SelectField, ReferenceField
 from javascript import JSON
 from orm import models
+from orm.tools import SelectionField
 
 class State: pass
 
@@ -27,7 +28,7 @@ class Field:
             BooleanField (source=name, label=string) if field.type == 'boolean' else
             DateField (source=name, label=string) if field.type == 'date' else
             DateTimeField (source=name, label=string) if field.type == 'datetime' else
-            SelectField (source=name, label=string, choices=[JSON.fromDict({'id': id, 'name': name}) for id, name in field.selection()]) if field.type == 'selection' else
+            SelectField (source=name, label=string, choices=[JSON.fromDict({'id': id, 'name': name}) for id, name in field.selection()]) if isinstance(field, SelectionField) else
             #TODO ReferenceField
             TextField (source=name, label=string)
         )

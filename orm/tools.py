@@ -18,6 +18,11 @@ class Field:
     def __init__(self, kwargs):
         self.__dict__ = kwargs
 
+class SelectionField(Field):
+
+    def selection(self):
+        return []
+
 def register_models():
     Char = orm_fields.Char
     Environment = orm_models.Environment
@@ -42,7 +47,8 @@ def register_models():
         model._fields = fields.keys()
         model._fields_object = {}
         for field in fields:
-            model._fields_object[field] = Field(fields[field])
+            FieldClass = SelectionField if fields[field]['type'] == 'selection' else Field
+            model._fields_object[field] = FieldClass(fields[field])
 
 def adapt_object_to_field(type):
     if type in ['char', 'text', 'selection', 'many2one', 'one2one']:
