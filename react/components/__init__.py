@@ -10,6 +10,7 @@ class Route:
 @Component(path='Module.Admin.Admin')
 class Admin:
     theme = types.ref
+    layout = types.ref
     authProvider = types.ref
     dataProvider = types.ref
     customRoutes = types.list
@@ -22,6 +23,32 @@ class Resource:
     edit = types.ref
     show = types.ref
     options = types.dict
+
+@Component(path='Module.Core.Typography')
+class Typography:
+    variant = types.str
+    color = types.str
+    id = types.str
+    className = types.ref
+
+@Component(path='Module.Core.Menu')
+class Menu:
+    id = types.str
+    anchorEl = types.ref
+    keepMounted = types.bool
+    open = types.bool
+    onClose = types.ref
+
+@Component(path='Module.Core.MenuItem')
+class MenuItem:
+    onClick = types.ref
+
+@Component(path='Module.Core.IconButton')
+class IconButton:
+    onClick = types.ref
+
+@Component(path='Module.Icons.MoreVert')
+class MoreVertical: pass
 
 @Component(path='Module.Admin.List')
 class List:

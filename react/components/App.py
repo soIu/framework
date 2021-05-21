@@ -1,12 +1,13 @@
 from react import Component, get_component
 from react.components import Admin, Resource, Filter, Route
 from react.components.Theme import light_theme #, dark_theme
+from react.components.Layout import Layout
 #from react.components.Inbox import Inbox
 from react.components.Tree import Tree
 from react.components.TreeField import Field as TreeField
 from react.components.FormField import Field as FormField
 from javascript import JSON, Object, function, asynchronous
-from orm import get_db, models, tools, configuration, views, menu
+from orm import get_db, models, tools, configuration, views, menu as menu_orm
 
 import json
 
@@ -63,11 +64,12 @@ for view in views.views:
     if view.endswith('.tree'):
        compiled_views[view] = recurseView(views.views[view], True)
 
-def get_compiled_component(view_id):
-    return Object.createClosure(handle_compiled_component, Object.fromString(view_id))
+def get_compiled_component(view_id, menu):
+    return Object.createClosure(handle_compiled_component, Object.fromString(view_id), menu)
 
 @function
-def handle_compiled_component(view_id, props):
+def handle_compiled_component(view_id, menu, props):
+    Object.get('Module')['orm_active_menu'] = menu.toRef()
     component = compiled_views[view]
     for key in props:
         component.native_props[key] = props[key].toRef()
@@ -79,12 +81,21 @@ def App():
     dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
     customRoutes = [] #Route(exact=True, path='/inbox', component=Inbox().toRef()).toRef()]
     #ListGuesser = Object.get('Module', 'Admin', 'ListGuesser').toRef()
+    menus = []
+    for parent_menu in menu_orm.get_menus().toArray():
+        if parent_menu['childs']['length'].toInteger():
+           menus += [{'name': parent_menu['childs']['0']['model'].toString(), 'list': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.tree', parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
+           for menu in parent_menu['childs']['slice'].call(JSON.fromInteger(1)).toArray():
+               menus += [{'name': menu['model'].toString(), 'list': get_compiled_component(menu['model'].toString() + '.tree', parent_menu).toRef(), 'label': menu['string'].toString()}]
+               Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('beforeend', "<style>.MuiDrawer-root a[href^='#/" + menu['model'].toString() + "'] {display: none}</style>")
+        else:
+           menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
     return (
-      Admin (theme=theme.toRef(), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
+      Admin (theme=theme.toRef(), layout=JSON.fromFunction(Layout), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
         #Resource (name='inbox')
         ] + [
-        Resource (name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree').toRef(), options={'label': parent_menu['string'].toString()})
-      for parent_menu in menu.get_menus().toArray()])
+        Resource (name=menu['name'], list=menu['list'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
+      for menu in menus]) #().toArray()])
     )
 
 @function
