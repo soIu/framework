@@ -12,7 +12,7 @@ class Tree:
             props[key] = self.props[key].toRef()
         grid = Datagrid (self.children)
         # self.props['is_tree_view']
-        props['filters'] = self.filters.toRef()
+        props['filters'] = self.filters()
         return (
             List (title=self.props['title'].toString(), props=props, children=[
                 grid

@@ -34,7 +34,8 @@ def recurseView(view, tree=False, model=None, components=components, parent=None
                   return (
                       Filter (props=props, children=fields)
                   )
-          filters = Filters()
+          filters_object = Filters()
+          def filters(): return filters_object.toRef()
        if not tree:
           parent_model = parent.view.attrib['model']
           parent_field = parent.view.attrib['name']
@@ -70,7 +71,7 @@ def get_compiled_component(view_id, menu):
 @function
 def handle_compiled_component(view_id, menu, props):
     Object.get('Module')['orm_active_menu'] = menu.toRef()
-    component = compiled_views[view]
+    component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
     return component.toObject()

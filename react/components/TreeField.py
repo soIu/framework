@@ -15,7 +15,7 @@ class Field:
         if self.props['model'].type == 'string':
            model = self.props['model'].toString()
         if model is None or model not in models.env.models:
-           string = name[0].upper() + name[0:]
+           string = name[0].upper() + name[1:]
            if self.props['string'].type == 'string': string = self.props['string'].toString()
            return (
                TextField (source=name, label=string)
