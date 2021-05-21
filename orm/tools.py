@@ -45,7 +45,7 @@ def register_models():
             model._fields_object[field] = Field(fields[field])
 
 def adapt_object_to_field(type):
-    if type in ['char', 'text', 'selection']:
+    if type in ['char', 'text', 'selection', 'many2one', 'one2one']:
        return '.toString()'
     elif type == 'integer':
        return '.toInteger()'
