@@ -26,7 +26,6 @@ class Form:
         props = {}
         for key in self.props:
             props[key] = self.props[key].toRef()
-        self.props.log()
         fragment = Fragment (children=self.children).toObject()
         render = Object.createClosure(self.render_form, fragment).toRef()
         return (

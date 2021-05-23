@@ -66,17 +66,34 @@ styles = json.dumps({
 
 @function
 def Appbar(props):
-    classes = Object.get('Module', 'Core', 'makeStyles').call(JSON.rawString(styles)).call()
+    #classes = Object.get('Module', 'Core', 'makeStyles').call(JSON.rawString(styles)).call()
     new_props = {} #key: props[key].toRef() for key in props}
     for key in props:
         new_props[key] = props[key].toRef()
+    cached_title = Object.get('global', 'cached_react_admin_title')
     return (
         AppBar (props=new_props, elevation=1, children=[
-            Typography (variant='h6', color='inherit', id='react-admin-title', className=classes['title'].toRef()),
+            Typography (style={'flex': JSON.fromInteger(1)}, variant='h6', color='inherit', id='react-admin-title-fix', children=[] if not cached_title.toBoolean() else [Text(cached_title.toString())]), #, className=classes['title'].toRef()),
+            Typography (style={'flex': JSON.fromInteger(1), 'display': 'none'}, variant='h6', color='inherit', id='react-admin-title', ref=JSON.fromFunction(fix_title)), #, className=classes['title'].toRef()),
             #span (className=classes['spacer'].toRef()),
             Submenu ()
         ])
     ).toObject()
+
+@function
+def fix_title(element):
+    if element.type == 'null': return
+    cache = Object.fromDict({})
+    observer = Object.get('window', 'MutationObserver').new(Object.createClosure(check_empty_title, element, cache).toRef())
+    cache['observer'] = observer.toRef()
+    observer['observe'].call(element.toRef(), JSON.fromDict({'characterData': JSON.fromBoolean(False), 'attributes': JSON.fromBoolean(False), 'childList': JSON.fromBoolean(True)}))
+
+@function
+def check_empty_title(element, cache):
+    if not element['children']['length'].toInteger(): return
+    cache['observer']['disconnect'].call()
+    Object.get('window', 'document', 'getElementById').call('react-admin-title-fix')['innerHTML'] = element['innerHTML'].toRef()
+    Object.get('global')['cached_react_admin_title'] = element['children']['0']['innerText'].toRef()
 
 def AdminLayout(props, appBar):
     Layout = Object.get('Module', 'Admin', 'Layout')

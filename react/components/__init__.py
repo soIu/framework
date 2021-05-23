@@ -15,7 +15,9 @@ class Typography:
     variant = types.str
     color = types.str
     id = types.str
+    ref = types.ref
     className = types.ref
+    style = types.dict
 
 @Component(path='Module.Core.Menu')
 class Menu:
