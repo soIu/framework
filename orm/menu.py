@@ -23,6 +23,9 @@ def check_menus():
            if tree not in views.views: raise Exception("Menu %s doesn't have a tree view" % id)
            view = views.views[model + '.tree']
            if not view.attrib.get('title'): view.attrib['title'] = string
+           form = views.views.get(model + '.form')
+           if form:
+              if not form.attrib.get('title'): form.attrib['title'] = string
            view.attrib['orm_menu_id'] = id
         if view_id:
            if view_id not in views.views: raise Exception("Menu %s uses view_id %s but it doesn't exist" % (id, view_id))

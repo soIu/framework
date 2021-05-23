@@ -73,8 +73,7 @@ def Appbar(props):
     return (
         AppBar (props=new_props, elevation=1, children=[
             Typography (variant='h6', color='inherit', id='react-admin-title', className=classes['title'].toRef()),
-            span (className=classes['spacer'].toRef()),
-            #TODO Menu
+            #span (className=classes['spacer'].toRef()),
             Submenu ()
         ])
     ).toObject()

@@ -52,7 +52,7 @@ def search(domain_args):
         print record.name
         record.read().log()
 
-css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css', './react/styles/list.css'])
+css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css', './react/styles/list.css', './react/styles/form.css'])
 
 def mount_css():
     document = Object.get('window', 'document')

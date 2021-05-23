@@ -1,0 +1,11 @@
+[class*='RaLabeled-value-'] .MuiFilledInput-inputMarginDense {
+  padding-top: 12px;
+}
+
+.MuiFormLabel-root {
+  font-size: 20px!important;
+}
+
+[class*='RaToolbar-spacer-'] {
+  display: none;
+}

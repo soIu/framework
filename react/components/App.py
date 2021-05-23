@@ -5,7 +5,10 @@ from react.components.Layout import Layout
 #from react.components.Inbox import Inbox
 from react.components.Tree import Tree
 from react.components.TreeField import Field as TreeField
-from react.components.FormField import Field as FormField
+from react.components.Form import Form
+from react.components.FormField import Field as FormField, InputField
+from react.components.Sheet import Sheet
+from react.components.Group import Group
 from javascript import JSON, Object, function, asynchronous
 from orm import get_db, models, tools, configuration, views, menu as menu_orm
 
@@ -15,15 +18,15 @@ import json
 light_theme = json.dumps(light_theme)
 
 tree_components = {component.__name__: component for component in [Tree, TreeField]}
-components = {}
+components = {component.__name__: component for component in [Form, FormField, Sheet, Group]}
 
-def recurseView(view, tree=False, model=None, components=components, parent=None):
+def recurseView(view, tree=False, form=False, model=None, components=components, parent=None):
     filters = None
     if view.tag == 'tree':
        components = tree_components
        if tree and 'model' in view.attrib:
           model = view.attrib['model']
-          fields = [FormField (props=tools.merge(children.attrib, {'model': model, 'alwaysOn': JSON.fromBoolean(True)} if index == 0 else {'model': model})) for index, children in enumerate(view._children)]
+          fields = [InputField (props=tools.merge(children.attrib, {'model': model, 'is_filter': JSON.fromBoolean(True)})) for index, children in enumerate(view._children)]
           class State: pass
           @Component(State=State)
           class Filters:
@@ -42,6 +45,9 @@ def recurseView(view, tree=False, model=None, components=components, parent=None
           field = models.env[parent_model]._fields_object[parent_field]
           if not hasattr(field, 'relation'): raise Exception("Tree inside a form view must be a relational field")
           model = field.relation
+    elif view.tag == 'form':
+       form = []
+       if 'model' in view.attrib: model = view.attrib['model']
     component = None
     component_name = view.tag[0].upper() + view.tag.lower()[1:] if '-' not in view.tag else "".join([word[0].upper() + word.lower()[1:] for word in view.tag.split('-')])
     if component_name in components:
@@ -54,8 +60,12 @@ def recurseView(view, tree=False, model=None, components=components, parent=None
     if model: view.attrib['model'] = model
     if tree: view.attrib['is_tree_view'] = JSON.fromBoolean(True)
     #return component(props=view.attrib, children=[recurseView(children) for children in view._children])
-    children = [recurseView(children, tree=tree, model=model, components=components, parent=view) for children in view._children]
+    children = [recurseView(children, tree=tree, form=form, model=model, components=components, parent=view) for children in view._children]
     result = component(props=view.attrib, children=[child for child in children if child is not None])
+    if component == Form:
+       for child in form:
+           child.form = result
+    elif form and component == FormField: form.append(result)
     if filters: result.filters = filters
     return result
 
@@ -64,13 +74,28 @@ compiled_views = {}
 for view in views.views:
     if view.endswith('.tree'):
        compiled_views[view] = recurseView(views.views[view], True)
+    else:
+       compiled_views[view] = recurseView(views.views[view])
 
-def get_compiled_component(view_id, menu):
-    return Object.createClosure(handle_compiled_component, Object.fromString(view_id), menu)
+def get_compiled_component(view_id, model, menu=None):
+    return Object.createClosure(handle_compiled_component, Object.fromString(view_id), model, menu if menu is not None else Object.fromDict(None))
 
 @function
-def handle_compiled_component(view_id, menu, props):
+def handle_compiled_component(view_id, model, menu, props):
     Object.get('Module')['orm_active_menu'] = menu.toRef()
+    #if '#/' + model.toString() + '/create' in Object.get('window', 'location', 'hash').toString():
+    #   
+    #el
+    component = compiled_views[view_id.toString()]
+    if props['match']['path'].toString() == '/' + model.toString() + '/:id':
+       props['component'] = 'div'
+       return Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'Edit').toRef(), Object.get('window', 'Object', 'assign').call(JSON.fromDict({'component': 'div', 'title': component.native_props['title'] if 'title' in component.native_props else ""}), props.toRef()).toRef(), Object.get('window', 'React', 'createElement').call(Object.createClosure(handle_edit_create, view_id).toRef()).toRef())
+    for key in props:
+        component.native_props[key] = props[key].toRef()
+    return component.toObject()
+
+@function
+def handle_edit_create(view_id, props):
     component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
@@ -85,17 +110,17 @@ def App():
     menus = []
     for parent_menu in menu_orm.get_menus().toArray():
         if parent_menu['childs']['length'].toInteger():
-           menus += [{'name': parent_menu['childs']['0']['model'].toString(), 'list': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.tree', parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
+           menus += [{'name': parent_menu['childs']['0']['model'].toString(), 'list': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.tree', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'edit': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.form', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
            for menu in parent_menu['childs']['slice'].call(JSON.fromInteger(1)).toArray():
-               menus += [{'name': menu['model'].toString(), 'list': get_compiled_component(menu['model'].toString() + '.tree', parent_menu).toRef(), 'label': menu['string'].toString()}]
+               menus += [{'name': menu['model'].toString(), 'list': get_compiled_component(menu['model'].toString() + '.tree', menu['model'], parent_menu).toRef(), 'edit': get_compiled_component(menu['model'].toString() + '.form', menu['model'], parent_menu).toRef(), 'label': menu['string'].toString()}]
                Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('beforeend', "<style>.MuiDrawer-root a[href^='#/" + menu['model'].toString() + "'] {display: none}</style>")
         else:
-           menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
+           menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu['model'], parent_menu).toRef(), 'edit': get_compiled_component(parent_menu['model'].toString() + '.form', parent_menu['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
     return (
       Admin (theme=theme.toRef(), layout=JSON.fromFunction(Layout), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
         #Resource (name='inbox')
         ] + [
-        Resource (name=menu['name'], list=menu['list'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
+        Resource (name=menu['name'], list=menu['list'], edit=menu['edit'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
       for menu in menus]) #().toArray()])
     )
 
@@ -152,7 +177,6 @@ def getListAsync(model_object, option, resolve):
     result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
     for record in records:
         result['data']['push'].call(record.read().toRef())
-    result.log()
     resolve.call(result.toRef())
 
 @function

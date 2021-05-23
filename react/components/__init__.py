@@ -1,28 +1,14 @@
 from react import Component, Text
 from javascript import types
 
+@Component(path='window.React.Fragment')
+class Fragment: pass
+
 @Component(path='Module.Router.Route')
 class Route:
     exact = types.bool
     path = types.str
     component = types.ref
-
-@Component(path='Module.Admin.Admin')
-class Admin:
-    theme = types.ref
-    layout = types.ref
-    authProvider = types.ref
-    dataProvider = types.ref
-    customRoutes = types.list
-
-@Component(path='Module.Admin.Resource')
-class Resource:
-    name = types.str
-    list = types.ref
-    create = types.ref
-    edit = types.ref
-    show = types.ref
-    options = types.dict
 
 @Component(path='Module.Core.Typography')
 class Typography:
@@ -47,15 +33,50 @@ class MenuItem:
 class IconButton:
     onClick = types.ref
 
+@Component(path='Module.Core.Grid')
+class Grid:
+    xs = types.int
+    spacing = types.int
+    item = types.bool
+    container = types.bool
+    style = types.dict
+
+@Component(path='Module.Core.Box')
+class Box: pass
+
+@Component(path='Module.Core.Card')
+class Card: pass
+
+@Component(path='Module.Core.CardContent')
+class CardContent: pass
+
 @Component(path='Module.Icons.MoreVert')
 class MoreVertical: pass
+
+@Component(path='Module.Admin.Admin')
+class Admin:
+    theme = types.ref
+    layout = types.ref
+    authProvider = types.ref
+    dataProvider = types.ref
+    customRoutes = types.list
+
+@Component(path='Module.Admin.Resource')
+class Resource:
+    name = types.str
+    list = types.ref
+    create = types.ref
+    edit = types.ref
+    show = types.ref
+    options = types.dict
 
 @Component(path='Module.Admin.List')
 class List:
     title = types.str
 
 @Component(path='Module.Admin.Datagrid')
-class Datagrid: pass
+class Datagrid:
+    rowClick = types.str
 
 @Component(path='Module.Admin.TextField')
 class TextField:
@@ -100,36 +121,40 @@ class Filter: pass
 @Component(path='Module.Admin.TextInput')
 class TextInput:
     source = types.str
-    label = types.str
 
 @Component(path='Module.Admin.DateInput')
 class DateInput:
     source = types.str
-    label = types.str
 
 @Component(path='Module.Admin.DateTimeInput')
 class DateTimeInput:
     source = types.str
-    label = types.str
 
 @Component(path='Module.Admin.NumberInput')
 class NumberInput:
     source = types.str
-    label = types.str
 
 @Component(path='Module.Admin.BooleanInput')
 class BooleanInput:
     source = types.str
-    label = types.str
 
 @Component(path='Module.Admin.SelectInput')
 class SelectInput:
     source = types.str
-    label = types.str
     choices = types.list
 
 @Component(path='Module.Admin.ReferenceInput')
 class ReferenceInput:
     source = types.str
-    label = types.str
     reference = types.str
+
+@Component(path='Module.Admin.Labeled')
+class Labeled:
+    label = types.str
+
+@Component(path='Module.Admin.FormWithRedirect')
+class FormWithRedirect:
+    render = types.ref
+
+@Component(path='Module.Admin.Toolbar')
+class Toolbar: pass

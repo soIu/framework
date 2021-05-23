@@ -13,7 +13,8 @@
                 <field name="name"/>
             </group>
             <group>
-                <field name="login"/>
+                <field name="email"/>
+                <field name="phone"/>
             </group>
         </sheet>
     </form>
