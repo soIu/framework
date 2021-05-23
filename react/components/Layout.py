@@ -73,8 +73,8 @@ def Appbar(props):
     cached_title = Object.get('global', 'cached_react_admin_title')
     return (
         AppBar (props=new_props, elevation=1, children=[
-            Typography (style={'flex': JSON.fromInteger(1)}, variant='h6', color='inherit', id='react-admin-title-fix', children=[] if not cached_title.toBoolean() else [Text(cached_title.toString())]), #, className=classes['title'].toRef()),
-            Typography (style={'flex': JSON.fromInteger(1), 'display': 'none'}, variant='h6', color='inherit', id='react-admin-title', ref=JSON.fromFunction(fix_title)), #, className=classes['title'].toRef()),
+            Typography (style={'width': '100%'}, variant='h6', color='inherit', id='react-admin-title-fix', children=[] if not cached_title.toBoolean() else [Text(cached_title.toString())]), #, className=classes['title'].toRef()),
+            Typography (style={'display': 'none'}, variant='h6', color='inherit', id='react-admin-title', ref=JSON.fromFunction(fix_title)), #, className=classes['title'].toRef()),
             #span (className=classes['spacer'].toRef()),
             Submenu ()
         ])
