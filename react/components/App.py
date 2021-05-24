@@ -135,8 +135,8 @@ def iOSNotch():
     document['querySelector'].call('head')['append'].call(style.toRef())
     return (
         Fragment ([
-            div (props={'style': JSON.fromDict({'height': '20px'})}),
-            div (props={'style': JSON.fromDict({'height': '21px'}), 'className': 'MuiPaper-root MuiAppBar-root MuiAppBar-positionFixed MuiAppBar-colorSecondary mui-fixed'})
+            div (props={'id': 'ios-notch-statusbar-main', 'style': JSON.fromDict({'height': '20px'})}),
+            div (props={'id': 'ios-notch-statusbar-sticky', 'style': JSON.fromDict({'height': '21px'}), 'className': 'MuiPaper-root MuiAppBar-root MuiAppBar-positionFixed MuiAppBar-colorSecondary mui-fixed'})
         ])
     )
 
