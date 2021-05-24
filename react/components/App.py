@@ -1,5 +1,5 @@
 from react import Component, get_component
-from react.components import Admin, Resource, Filter, Route
+from react.components import Fragment, Admin, Resource, Filter, Route
 from react.components.Theme import light_theme #, dark_theme
 from react.components.Layout import Layout
 #from react.components.Inbox import Inbox
@@ -117,11 +117,27 @@ def App():
         else:
            menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu['model'], parent_menu).toRef(), 'edit': get_compiled_component(parent_menu['model'].toString() + '.form', parent_menu['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
     return (
-      Admin (theme=theme.toRef(), layout=JSON.fromFunction(Layout), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
-        #Resource (name='inbox')
-        ] + [
-        Resource (name=menu['name'], list=menu['list'], edit=menu['edit'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
-      for menu in menus]) #().toArray()])
+        Fragment (children=([iOSNotch()] if Object.get('window', 'navigator', 'standalone').toBoolean() else []) + [
+            Admin (theme=theme.toRef(), layout=JSON.fromFunction(Layout), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
+                #Resource (name='inbox')
+                ] + [
+                Resource (name=menu['name'], list=menu['list'], edit=menu['edit'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
+            for menu in menus]) #().toArray()])
+        ])
+    )
+
+div = get_component('div')
+
+def iOSNotch():
+    document = Object.get('window', 'document')
+    style = document['createElement'].call('style')
+    style['innerHTML'] = 'header.MuiAppBar-positionFixed {top: 20px!important;}'
+    document['querySelector'].call('head')['append'].call(style.toRef())
+    return (
+        Fragment ([
+            div (props={'style': JSON.fromDict({'height': '20px'})}),
+            div (props={'style': JSON.fromDict({'height': '21px'}), 'className': 'MuiPaper-root MuiAppBar-root MuiAppBar-positionFixed MuiAppBar-colorSecondary mui-fixed'})
+        ])
     )
 
 @function
