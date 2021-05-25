@@ -1,5 +1,5 @@
-from react import Component
-from react.components import Grid
+from react import Component, Text
+from react.components import Grid, Typography
 
 class Props: pass
 
@@ -7,6 +7,11 @@ class Props: pass
 class Group:
 
     def render(self):
+        string = self.props['string']
         return (
-            Grid (item=True, xs=6, style={'minWidth': '200px', 'display': 'grid'}, children=self.children)
+            Grid (className='solu-group-flexbox', item=True, xs=12, sm=6, style={'minWidth': '200px', 'display': 'flex', 'flexFlow': 'column'}, children=[
+                Typography (style={} if string.type == 'string' else {'visibility': 'hidden'}, variant='h6', gutterBottom=True, children=[
+                    Text (string.toString() if string.type == 'string' else 'Separator')
+                ])
+            ] + self.children)
         )

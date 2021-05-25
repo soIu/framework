@@ -1,6 +1,7 @@
 from react import Component
 from react.components import TextInput, NumberInput, BooleanInput, DateInput, DateTimeInput, SelectInput, ReferenceInput, Labeled
-from javascript import JSON
+from react.components.TreeField import Field as ShowField
+from javascript import JSON, Object
 from orm import models
 from orm.tools import SelectionField
 
@@ -39,7 +40,7 @@ class InputField:
 
 class Props: pass
 
-@Component(Props=Props)
+@Component(Props=Props) #, Pure=True)
 class Field:
 
     form = None
@@ -48,8 +49,15 @@ class Field:
         props = {}
         for key in self.props:
             props[key] = self.props[key].toRef()
-        if self.form is not None:
-           props['record'] = self.form.native_props['record']
+        show_only = self.props['is_show_view'].toBoolean()
+        if show_only:
+           props['string'] = ""
+           props['field_props'] = JSON.fromDict({'record': self.props['record'].toRef()})
+        #if self.form is not None:
+           #props['record'] = self.form.native_props['record']
+           #show_only = Object.fromDict(self.form.native_props)['is_show_view'].toBoolean()
+           #print show_only
+           #if show_only: props['string'] = ""
         model = None
         name = self.props['name'].toString()
         if self.props['model'].type == 'string':
@@ -58,7 +66,7 @@ class Field:
            string = name[0].upper() + name[1:]
            return (
                Labeled (label=string, children=[
-                   InputField (props=props)
+                   InputField (props=props) if not show_only else ShowField (props=props)
                ])
            )
         field = models.env[model]._fields_object[name]
@@ -66,6 +74,6 @@ class Field:
         if self.props['string'].type == 'string': string = self.props['string'].toString()
         return (
             Labeled (label=string, children=[
-                InputField (props=props)
+                InputField (props=props) if not show_only else ShowField (props=props)
             ])
         )

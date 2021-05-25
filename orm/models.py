@@ -402,13 +402,14 @@ class Model(object):
         return records
 
     @api.server(asynchronous=True, client=False)
-    def write_server(self, values):
+    def write_server(self, write_values):
+        values = write_values
         if values is None:
            values = self.read()
         else:
            merge = Global()['Object']['assign'].toFunction()
            is_array = False
-           if Global()['Array']['isArray'].call(values.toRef()):
+           if values.type == 'array': #Global()['Array']['isArray'].call(values.toRef()):
               is_array = True
               if len(self) == 1:
                  values = values['0']
@@ -434,8 +435,11 @@ class Model(object):
         recordsets = [record for record in self]
         for index in range(self._length):
             value = values[str(index)]
+            #row = records['rows'][str(index)]
             record = records['rows'][str(index)]['doc']
             id = recordsets[index].id
+            value['_id'] = record['_id'].toRef()
+            value['_rev'] = record['_rev'].toRef()
             for key in self._fields:
                 value_object = value[key]
                 record_object = record[key]
@@ -445,7 +449,7 @@ class Model(object):
                 if json['stringify'].call(value_object.toRef()).toString() != json['stringify'].call(record_object.toRef()).toString():
                    set_indexes += [set_index(self._name, key, value_object.type, value_object, id).keep()]
                    del_indexes += [del_index(self._name, key, record_object.type, record_object, id).toRef()]
-                   record[key] = value_object.toRef()
+                   #record[key] = value_object.toRef()
         Global()['Promise']['all'].call(JSON.fromList(del_indexes)).wait()
         #TODO
         db = get_db()

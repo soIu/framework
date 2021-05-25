@@ -63,9 +63,12 @@ def recurseView(view, tree=False, form=False, model=None, components=components,
     children = [recurseView(children, tree=tree, form=form, model=model, components=components, parent=view) for children in view._children]
     result = component(props=view.attrib, children=[child for child in children if child is not None])
     if component == Form:
-       for child in form:
-           child.form = result
-    elif form and component == FormField: form.append(result)
+       #for child in form:
+       #    child.form = result
+       result.fields = form
+       #result.fields_count = len(form)
+    elif form is not None and component == FormField:
+       form.append(result)
     if filters: result.filters = filters
     return result
 
@@ -87,18 +90,29 @@ def handle_compiled_component(view_id, model, menu, props):
     #   
     #el
     component = compiled_views[view_id.toString()]
-    if props['match']['path'].toString() == '/' + model.toString() + '/:id':
+    create = '#/' + model.toString() + '/create' in Object.get('window', 'location', 'hash').toString()
+    edit = props['match']['path'].toString() == '/' + model.toString() + '/:id'
+    show = props['match']['path'].toString() == '/' + model.toString() + '/:id/show'
+    if create or edit or show: #props['match']['path'].toString() == '/' + model.toString() + '/:id':
        props['component'] = 'div'
-       return Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'Edit').toRef(), Object.get('window', 'Object', 'assign').call(JSON.fromDict({'component': 'div', 'title': component.native_props['title'] if 'title' in component.native_props else ""}), props.toRef()).toRef(), Object.get('window', 'React', 'createElement').call(Object.createClosure(handle_edit_create, view_id).toRef()).toRef())
+       return Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'Create' if create else 'Edit' if edit else 'Show').toRef(), Object.get('window', 'Object', 'assign').call(JSON.fromDict({'component': 'div', 'title': component.native_props['title'] if 'title' in component.native_props else ""}), props.toRef()).toRef(), Object.get('window', 'React', 'createElement').call(Object.createClosure(handle_create_edit_show, view_id, Object.fromBoolean(True if show else False)).toRef()).toRef())
     for key in props:
         component.native_props[key] = props[key].toRef()
     return component.toObject()
 
 @function
-def handle_edit_create(view_id, props):
+def handle_create_edit_show(view_id, is_show, props):
     component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
+    if isinstance(component, Form.Component) and is_show.toBoolean():
+       if component.fields is not None:
+          for field in component.fields:
+          #for index in range(component.fields_count):
+              #field = component.fields[index]
+              field.native_props['is_show_view'] = is_show.toRef()
+              field.native_props['record'] = props['record'].toRef()
+    component.native_props['is_show_view'] = is_show.toRef()
     return component.toObject()
 
 def App():
@@ -110,18 +124,18 @@ def App():
     menus = []
     for parent_menu in menu_orm.get_menus().toArray():
         if parent_menu['childs']['length'].toInteger():
-           menus += [{'name': parent_menu['childs']['0']['model'].toString(), 'list': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.tree', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'edit': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.form', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
+           menus += [{'name': parent_menu['childs']['0']['model'].toString(), 'list': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.tree', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'form': get_compiled_component(parent_menu['childs']['0']['model'].toString() + '.form', parent_menu['childs']['0']['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
            for menu in parent_menu['childs']['slice'].call(JSON.fromInteger(1)).toArray():
-               menus += [{'name': menu['model'].toString(), 'list': get_compiled_component(menu['model'].toString() + '.tree', menu['model'], parent_menu).toRef(), 'edit': get_compiled_component(menu['model'].toString() + '.form', menu['model'], parent_menu).toRef(), 'label': menu['string'].toString()}]
+               menus += [{'name': menu['model'].toString(), 'list': get_compiled_component(menu['model'].toString() + '.tree', menu['model'], parent_menu).toRef(), 'form': get_compiled_component(menu['model'].toString() + '.form', menu['model'], parent_menu).toRef(), 'label': menu['string'].toString()}]
                Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('beforeend', "<style>.MuiDrawer-root a[href^='#/" + menu['model'].toString() + "'] {display: none}</style>")
         else:
-           menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu['model'], parent_menu).toRef(), 'edit': get_compiled_component(parent_menu['model'].toString() + '.form', parent_menu['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
+           menus += [{'name': parent_menu['model'].toString(), 'list': get_compiled_component(parent_menu['model'].toString() + '.tree', parent_menu['model'], parent_menu).toRef(), 'form': get_compiled_component(parent_menu['model'].toString() + '.form', parent_menu['model'], parent_menu).toRef(), 'label': parent_menu['string'].toString()}]
     return (
         Fragment (children=([iOSNotch()] if Object.get('window', 'navigator', 'standalone').toBoolean() else []) + [
             Admin (theme=theme.toRef(), layout=JSON.fromFunction(Layout), customRoutes=customRoutes, authProvider=authProvider, dataProvider=dataProvider, children=[
                 #Resource (name='inbox')
                 ] + [
-                Resource (name=menu['name'], list=menu['list'], edit=menu['edit'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
+                Resource (name=menu['name'], list=menu['list'], create=menu['form'], edit=menu['form'], show=menu['form'], options={'label': menu['label']}) #(name=parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString(), list=get_compiled_component((parent_menu['childs']['0']['model'].toString() if parent_menu['childs']['length'].toInteger() else parent_menu['model'].toString()) + '.tree', parent_menu).toRef(), options={'label': parent_menu['string'].toString()})
             for menu in menus]) #().toArray()])
         ])
     )
@@ -131,7 +145,7 @@ div = get_component('div')
 def iOSNotch():
     document = Object.get('window', 'document')
     style = document['createElement'].call('style')
-    style['innerHTML'] = 'header.MuiAppBar-positionFixed {top: 20px!important;}'
+    style['innerHTML'] = 'header.MuiAppBar-positionFixed {top: 20px;}'
     document['querySelector'].call('head')['append'].call(style.toRef())
     return (
         Fragment ([

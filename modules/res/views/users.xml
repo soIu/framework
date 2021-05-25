@@ -9,7 +9,7 @@
 <view model="res.users">
     <form>
         <sheet>
-            <group>
+            <group string="Profile">
                 <field name="name"/>
             </group>
             <group>

@@ -9,3 +9,11 @@
 [class*='RaToolbar-spacer-'] {
   display: none;
 }
+
+div[class*='RaLabeled-value-'] {
+  padding-top: 4px;
+}
+
+div[class*='RaTopToolbar-root-'] > a[aria-label='Show'] {
+  display: none;
+}

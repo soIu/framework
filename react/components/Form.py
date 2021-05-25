@@ -1,5 +1,5 @@
 from react import Component, component_from_object
-from react.components import Box, Card, CardContent, Toolbar, FormWithRedirect, Fragment
+from react.components import Box, Card, CardContent, Toolbar, Form as FormDefault, FormWithRedirect, Fragment
 from javascript import JSON, Object, function
 
 class Props: pass
@@ -7,8 +7,10 @@ class Props: pass
 @Component(Props=Props)
 class Form:
 
+    fields = None
+
     @function
-    def render_form(component, formProps):
+    def render_form(is_show_view, model, component, formProps):
         #Maybe needs to refactor this to support TabbedForm (notebook -> page) and Wizards
         return (
             Box ([
@@ -16,18 +18,21 @@ class Form:
                     CardContent ([
                         component_from_object(component)
                     ]),
-                    Toolbar (props={'record': formProps['record'].toRef(), 'basePath': formProps['basePath'].toRef(), 'undoable': JSON.fromBoolean(True), 'invalid': formProps['invalid'].toRef(), 'handleSubmit': formProps['handleSubmit'].toRef(), 'saving': formProps['saving'].toRef(), 'resource': 'commands'})
+                    Toolbar (props={'redirect': 'list', 'record': formProps['record'].toRef(), 'basePath': formProps['basePath'].toRef(), 'undoable': JSON.fromBoolean(False), 'invalid': formProps['invalid'].toRef(), 'handleSubmitWithRedirect': formProps['handleSubmitWithRedirect'].toRef(), 'save': formProps['save'].toRef(), 'saving': formProps['saving'].toRef(), 'resource': model.toRef()}) if not is_show_view.toBoolean() else None
                 ])
             ])
         ).toObject()
 
     def render(self):
-        
-        props = {}
+        props = {} #'redirect': 'show'}
         for key in self.props:
             props[key] = self.props[key].toRef()
         fragment = Fragment (children=self.children).toObject()
-        render = Object.createClosure(self.render_form, fragment).toRef()
+        render = Object.createClosure(self.render_form, self.props['is_show_view'], self.props['model'], fragment) #.toRef()
+        if self.props['is_show_view'].toBoolean():
+           #return Fragment (children=[component_from_object(render.call(self.props.toRef()))])
+           return component_from_object(render.call(self.props.toRef()))
+        FormComponent = FormWithRedirect #if not self.props['is_show_view'].toBoolean() else FormDefault
         return (
-            FormWithRedirect (render=render, props=props)
+            FormComponent (render=render.toRef(), props=props)
         )
