@@ -1,3 +1,7 @@
 [class*='RaMenu-closed-'] {
   visibility: hidden;
 }
+
+[class*='.RaLogout-menuItem-'] {
+  display: none;
+}
