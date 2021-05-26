@@ -121,6 +121,9 @@ class ReferenceField:
     label = types.str
     reference = types.str
 
+@Component(path='Module.Admin.AutocompleteField')
+class AutocompleteField: pass
+
 @Component(path='Module.Admin.Filter')
 class Filter: pass
 
@@ -153,6 +156,9 @@ class SelectInput:
 class ReferenceInput:
     source = types.str
     reference = types.str
+
+@Component(path='Module.Admin.AutocompleteInput')
+class AutocompleteInput: pass
 
 @Component(path='Module.Admin.Labeled')
 class Labeled:

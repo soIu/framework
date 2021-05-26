@@ -271,6 +271,7 @@ def create(model, option):
 def createAsync(model_object, option, resolve):
     model = model_object.toString()
     if model not in models.env.models: return
+    option.log()
     record = models.env[model].create(values=option['data']).wait()
     result = Object.fromDict({'data': record.read().toRef()})
     #for record in records:
@@ -288,6 +289,7 @@ def updateAsync(model_object, option, resolve):
     model = model_object.toString()
     if model not in models.env.models: return
     record = models.env[model].browse(option['id'].toString()).wait()
+    option.log()
     new_record = record.write(values=option['data']).wait()
     result = Object.fromDict({'data': new_record.read().toRef()})
     #for record in records:
@@ -305,6 +307,7 @@ def updateManyAsync(model_object, option, resolve):
     model = model_object.toString()
     if model not in models.env.models: return
     old_records = models.env[model].browse(ids=[id.toString() for id in option['ids'].toArray()]).wait()
+    option.log()
     records = old_records.write(values=option['data']).wait()
     result = Object.fromDict({'data': JSON.fromList([])})
     for record in records:

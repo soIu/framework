@@ -23,6 +23,17 @@ class SelectionField(Field):
     def selection(self):
         return []
 
+class RelationalField(Field):
+
+    relation = ''
+    ondelete = ''
+
+class InversedRelationalField(Field):
+
+    relation = ''
+    ondelete = ''
+    inverse = ''
+
 def register_models():
     Char = orm_fields.Char
     Environment = orm_models.Environment
@@ -47,7 +58,7 @@ def register_models():
         model._fields = fields.keys()
         model._fields_object = {}
         for field in fields:
-            FieldClass = SelectionField if fields[field]['type'] == 'selection' else Field
+            FieldClass = SelectionField if fields[field]['type'] == 'selection' else RelationalField if fields[field]['type'] in ['many2one', 'one2one', 'many2many'] else InversedRelationalField if fields[field]['type'] == 'one2many' else Field
             model._fields_object[field] = FieldClass(fields[field])
 
 def adapt_object_to_field(type):
@@ -59,6 +70,8 @@ def adapt_object_to_field(type):
        return '.toFloat()'
     elif type == 'boolean':
        return '.toBoolean()'
+    elif type in ['date', 'datetime']:
+       return "['toISOString'].call().toString()"
     #Relational fields, Date, and Datetime need research
 
 model_read_template = """
@@ -77,8 +90,9 @@ def configure_model(model):
     indent = ' ' * 4
     for key in model._fields:
         field = model._fields[key]
-        read += '\n' + indent + "values['" + key + "'] = None if self." + key + (" is None else %s" % ('self.{}'.format(key) if field['type'] in ['char', 'text', 'selection'] else 'JSON.fromInteger({})'.format(key) if field['type'] == 'integer' else 'JSON.fromFloat({})'.format(key) if field['type'] == 'float' else 'JSON.fromBoolean({})'.format(key) if field['type'] == 'boolean' else None))
-        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == 'integer' else 0.0 if field['type'] == 'float' else None))
+        read += '\n' + indent + "values['" + key + "'] = None if self." + key + (" is None else %s" % ('self.{}'.format(key) if field['type'] in ['char', 'text', 'selection', 'many2one', 'one2one', 'date', 'datetime'] else 'JSON.fromInteger({})'.format(key) if field['type'] == 'integer' else 'JSON.fromFloat({})'.format(key) if field['type'] == 'float' else 'JSON.fromBoolean({})'.format(key) if field['type'] == 'boolean' else None))
+        if field['type'] in ['one2many', 'many2many']: continue
+        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection', 'many2one', 'one2one'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "== 'object' and values['" + key + "']['toISOString'].type == 'function'" if field['type'] in ['date', 'datetime'] else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == 'integer' else 0.0 if field['type'] == 'float' else "values['" + key + "'].toString() if values['" + key + "'].type == 'string' else None" if field['type'] in ['date', 'datetime'] else None))
     read += '\n' + indent + 'return values'
     update += '\n' + indent + 'return self'
     namespace = {'Global': Global, 'JSON': JSON}
