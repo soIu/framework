@@ -2,7 +2,7 @@ from react import Component
 from react.components import TextField, NumberField, BooleanField, DateField, DateTimeField, SelectField, ReferenceField
 from javascript import JSON
 from orm import models
-from orm.tools import SelectionField, RelationalField, InversedRelationalField
+from orm.tools import SelectionField, RelationalField, InversedRelationalField, merge
 
 class State: pass
 
@@ -33,7 +33,7 @@ class Field:
             DateField (source=name, label=string, props=props) if field.type == 'date' else
             DateTimeField (source=name, label=string, props=props) if field.type == 'datetime' else
             SelectField (source=name, label=string, props=props, choices=[JSON.fromDict({'id': id, 'name': name}) for id, name in field.selection()]) if isinstance(field, SelectionField) else
-            ReferenceField (source=name, reference=field.relation, props=props, children=[
+            ReferenceField (source=name, label=string, link='show', reference=field.relation, props=merge(props, {'resource': model, 'basePath': '/' + field.relation}), children=[
                 TextField (source=models.env[field.relation]._rec_name if field.relation in models.env.models else 'name')
             ]) if field.type in ['many2one', 'one2one'] and isinstance(field, RelationalField) else
             #TODO ReferenceField

@@ -52,10 +52,10 @@ class Field:
         props = {}
         for key in self.props:
             props[key] = self.props[key].toRef()
-        show_only = self.props['is_show_view'].toBoolean()
+        show_only = '/show' in Object.get('window', 'location', 'hash').toString() #self.props['is_show_view'].toBoolean()
         if show_only:
            props['string'] = ""
-           props['field_props'] = JSON.fromDict({'record': self.props['record'].toRef()})
+           #props['field_props'] = self.props['field_props'].toRef() #JSON.fromDict({'record': self.props['record'].toRef()})
         #if self.form is not None:
            #props['record'] = self.form.native_props['record']
            #show_only = Object.fromDict(self.form.native_props)['is_show_view'].toBoolean()

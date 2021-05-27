@@ -4,11 +4,18 @@ from . import configuration
 import models as orm_models
 import fields as orm_fields
 
-def merge(*objects, **options):
+def merge_compile(*objects, **options):
     reverse = options.get('reverse', False)
     if reverse:
        objects = list(objects)
        objects.reverse()
+    target = objects[0]
+    for object in objects[1:]:
+        target.update(object)
+    return target
+
+def merge(*items):
+    objects = list(items)
     target = objects[0]
     for object in objects[1:]:
         target.update(object)

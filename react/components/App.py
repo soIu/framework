@@ -95,7 +95,7 @@ def handle_compiled_component(view_id, model, menu, props):
     show = props['match']['path'].toString() == '/' + model.toString() + '/:id/show'
     if create or edit or show: #props['match']['path'].toString() == '/' + model.toString() + '/:id':
        props['component'] = 'div'
-       return Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'Create' if create else 'Edit' if edit else 'Show').toRef(), Object.get('window', 'Object', 'assign').call(JSON.fromDict({'component': 'div', 'title': component.native_props['title'] if 'title' in component.native_props else ""}), props.toRef()).toRef(), Object.get('window', 'React', 'createElement').call(Object.createClosure(handle_create_edit_show, view_id, Object.fromBoolean(True if show else False)).toRef()).toRef())
+       return Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'Create' if create else 'Edit' if edit else 'Edit').toRef(), Object.get('window', 'Object', 'assign').call(JSON.fromDict({'component': 'div', 'title': component.native_props['title'] if 'title' in component.native_props else ""}), props.toRef(), JSON.fromDict({} if not show else {'actions': Object.get('window', 'React', 'createElement').call(Object.get('Module', 'Admin', 'ShowActions').toRef()).toRef()})).toRef(), Object.get('window', 'React', 'createElement').call(Object.createClosure(handle_create_edit_show, view_id, Object.fromBoolean(True if show else False)).toRef()).toRef())
     for key in props:
         component.native_props[key] = props[key].toRef()
     return component.toObject()
@@ -105,13 +105,13 @@ def handle_create_edit_show(view_id, is_show, props):
     component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
-    if isinstance(component, Form.Component) and is_show.toBoolean():
-       if component.fields is not None:
-          for field in component.fields:
+    #if isinstance(component, Form.Component) and is_show.toBoolean():
+       #if component.fields is not None:
+          #for field in component.fields:
           #for index in range(component.fields_count):
               #field = component.fields[index]
-              field.native_props['is_show_view'] = is_show.toRef()
-              field.native_props['record'] = props['record'].toRef()
+              #field.native_props['is_show_view'] = is_show.toRef()
+              #field.native_props['field_props'] = JSON.fromDict({'record': props['record'].toRef(), 'basePath': props['basePath'].toRef()}) #props.toRef()
     component.native_props['is_show_view'] = is_show.toRef()
     return component.toObject()
 

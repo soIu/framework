@@ -119,6 +119,7 @@ class SelectField:
 class ReferenceField:
     source = types.str
     label = types.str
+    link = types.str
     reference = types.str
 
 @Component(path='Module.Admin.AutocompleteField')

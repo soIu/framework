@@ -1,5 +1,6 @@
 from react import Component
 from react.components import List, Datagrid
+from javascript import JSON
 
 class State: pass
 
@@ -10,6 +11,7 @@ class Tree:
         props = {}
         for key in self.props:
             props[key] = self.props[key].toRef()
+        props['empty'] = JSON.fromBoolean(False)
         grid = Datagrid (rowClick='show', children=self.children)
         # self.props['is_tree_view']
         props['filters'] = self.filters()

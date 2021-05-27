@@ -29,9 +29,8 @@ class Form:
             props[key] = self.props[key].toRef()
         fragment = Fragment (children=self.children).toObject()
         render = Object.createClosure(self.render_form, self.props['is_show_view'], self.props['model'], fragment) #.toRef()
-        if self.props['is_show_view'].toBoolean():
-           #return Fragment (children=[component_from_object(render.call(self.props.toRef()))])
-           return component_from_object(render.call(self.props.toRef()))
+        #if self.props['is_show_view'].toBoolean():
+        #   return component_from_object(render.call(self.props.toRef()))
         FormComponent = FormWithRedirect #if not self.props['is_show_view'].toBoolean() else FormDefault
         return (
             FormComponent (render=render.toRef(), props=props)
