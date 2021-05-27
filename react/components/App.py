@@ -105,13 +105,13 @@ def handle_create_edit_show(view_id, is_show, props):
     component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
-    #if isinstance(component, Form.Component) and is_show.toBoolean():
-       #if component.fields is not None:
-          #for field in component.fields:
+    if isinstance(component, Form.Component) and is_show.toBoolean():
+       if component.fields is not None:
+          for field in component.fields:
           #for index in range(component.fields_count):
               #field = component.fields[index]
               #field.native_props['is_show_view'] = is_show.toRef()
-              #field.native_props['field_props'] = JSON.fromDict({'record': props['record'].toRef(), 'basePath': props['basePath'].toRef()}) #props.toRef()
+              field.native_props['field_props'] = JSON.fromDict({'record': props['record'].toRef(), 'resource': props['resource'].toRef(), 'basePath': props['basePath'].toRef()}) #props.toRef()
     component.native_props['is_show_view'] = is_show.toRef()
     return component.toObject()
 
@@ -202,6 +202,7 @@ def getListAsync(model_object, option, resolve):
     for key in filter:
         value = filter[key]
         type = value.type
+        if key == 'q' and 'q' not in models.env[model]._fields: key = models.env[model]._rec_name
         args += [(key, 'ilike' if type == 'string' and key != 'id' else '=' if type != 'array' else 'in', value.toRef())]
     records = models.env[model].search(args, limit=option['pagination']['perPage'].toInteger(), pagination=option['pagination']['page'].toInteger(), order=option['sort']['field'].toString() + ' ' + option['sort']['order'].toString().lower()).wait()
     result = Object.fromDict({'data': JSON.fromList([]), 'total': JSON.fromInteger(records._search_total)})
