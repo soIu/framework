@@ -29,7 +29,7 @@ class Submenu:
     @function
     def onMenu(setElement, menu):
         setElement.call(None)
-        Object.get('window', 'location')['hash'] = '#/' + menu['model'].toString()
+        #Object.get('window', 'location')['hash'] = '#/' + menu['model'].toString()
 
     def render(self):
         menu = Object.get('Module')['orm_active_menu']
@@ -43,7 +43,7 @@ class Submenu:
                     MoreVertical ()
                 ]),
                 Menu (id=id, anchorEl=element.toRef(), keepMounted=True, open=element.toBoolean(), onClose=Object.createClosure(self.onClose, setElement).toRef(), children=[
-                    MenuItem (onClick=Object.createClosure(self.onMenu, setElement, child).toRef(), children=[
+                    MenuItem (props={'component': 'a', 'href': '#/' + child['model'].toString()}, onClick=Object.createClosure(self.onMenu, setElement, child).toRef(), children=[
                         Text (child['string'].toString())
                     ])
                 for child in menu['childs'].toArray()])
