@@ -122,6 +122,16 @@ class ReferenceField:
     link = types.str
     reference = types.str
 
+@Component(path='Module.Admin.ReferenceArrayField')
+class ReferenceArrayField:
+    source = types.str
+    reference = types.str
+
+@Component(path='Module.Admin.ReferenceManyField')
+class ReferenceManyField:
+    target = types.str
+    reference = types.str
+
 @Component(path='Module.Admin.AutocompleteField')
 class AutocompleteField: pass
 

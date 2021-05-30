@@ -1,5 +1,5 @@
 from react import Component
-from react.components import TextInput, NumberInput, BooleanInput, DateInput, DateTimeInput, SelectInput, ReferenceInput, AutocompleteInput, Labeled
+from react.components import TextInput, NumberInput, BooleanInput, DateInput, DateTimeInput, SelectInput, ReferenceInput, AutocompleteInput, Labeled, ReferenceManyField, ReferenceArrayField
 from react.components.TreeField import Field as ShowField
 from javascript import JSON, Object
 from orm import models
@@ -37,7 +37,9 @@ class InputField:
             ReferenceInput (source=name, reference=field.relation, props=merge(props, {'allowEmpty': JSON.fromBoolean(True)}), children=[
                 AutocompleteInput (props={'optionText': models.env[field.relation]._rec_name if field.relation in models.env.models else 'name'})
             ]) if field.type in ['many2one', 'one2one'] and isinstance(field, RelationalField) else
-            #TODO ReferenceArrayInput
+            ReferenceArrayField (source=name, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'many2many' and isinstance(field, RelationalField) else
+            ReferenceManyField (target=field.inverse, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'one2many' and isinstance(field, InversedRelationalField) else
+            #TODO SelectArrayInput (RA doesn't support one2many dropdown select but it does support many2many)
             TextInput (source=name, props=props)
         )
 
@@ -77,6 +79,6 @@ class Field:
         if self.props['string'].type == 'string': string = self.props['string'].toString()
         return (
             Labeled (label=string, children=[
-                InputField (props=props) if not show_only else ShowField (props=props)
+                InputField (props=props, children=self.children) if not show_only else ShowField (props=props, children=self.children)
             ])
         )

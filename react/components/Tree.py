@@ -13,7 +13,7 @@ class Tree:
             props[key] = self.props[key].toRef()
         props['empty'] = JSON.fromBoolean(False)
         grid = Datagrid (rowClick='show', children=self.children)
-        # self.props['is_tree_view']
+        if not self.props['is_tree_view'].toBoolean(): return grid
         props['filters'] = self.filters()
         return (
             List (title=self.props['title'].toString(), props=props, children=[

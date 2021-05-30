@@ -1,5 +1,5 @@
 from react import Component
-from react.components import TextField, NumberField, BooleanField, DateField, DateTimeField, SelectField, ReferenceField
+from react.components import TextField, NumberField, BooleanField, DateField, DateTimeField, SelectField, ReferenceField, ReferenceArrayField, ReferenceManyField
 from javascript import JSON
 from orm import models
 from orm.tools import SelectionField, RelationalField, InversedRelationalField, merge
@@ -36,6 +36,8 @@ class Field:
             ReferenceField (source=name, label=string, link='show', reference=field.relation, props=merge(props, {'resource': model, 'basePath': '/' + field.relation}), children=[
                 TextField (source=models.env[field.relation]._rec_name if field.relation in models.env.models else 'name')
             ]) if field.type in ['many2one', 'one2one'] and isinstance(field, RelationalField) else
+            ReferenceArrayField (source=name, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'many2many' and isinstance(field, RelationalField) else
+            ReferenceManyField (target=field.inverse, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'one2many' and isinstance(field, InversedRelationalField) else
             #TODO ReferenceField
             TextField (source=name, label=string, props=props)
         )
