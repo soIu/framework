@@ -5,7 +5,7 @@ class Users(models.Model):
     _name = 'res.users'
 
     name = fields.Char(string="Name", required=True)
-    login = fields.Char(string="Login", required=True)
+    login = fields.Char(string="Login")
     password = fields.Char(string="Password")
     email = fields.Char(string="Email")
     phone = fields.Char(string="Phone")

@@ -18,14 +18,21 @@ class InputField:
         name = self.props['name'].toString()
         if self.props['model'].type == 'string':
            model = self.props['model'].toString()
+        if self.props['required'].toString() in ['True', 'true']: props['validate'] = JSON.fromList([Object.get('Module', 'Admin', 'required').call().toRef()])
+        elif self.props['required'].toString() in ['False', 'false']: props['validate'] = JSON.fromList([])
         if model is None or model not in models.env.models:
            string = name[0].upper() + name[1:]
            if self.props['string'].type == 'string': string = self.props['string'].toString()
            if self.props['is_filter'].type == 'boolean': props['label'] = string
+           if self.props['readonly'].toString() in ['True', 'true']: props['disabled'] = JSON.fromBoolean(True)
            return (
                TextInput (source=name, props=props)
            )
         field = models.env[model]._fields_object[name]
+        if field.required and 'validate' not in props: props['validate'] = JSON.fromList([Object.get('Module', 'Admin', 'required').call().toRef()])
+        if field.readonly or self.props['readonly'].toString() in ['True', 'true']: props['disabled'] = JSON.fromBoolean(True)
+        if 'disabled' in props and self.props['readonly'].toString() in ['False', 'false']:
+           del props['disabled']
         string = field.string
         if self.props['string'].type == 'string': string = self.props['string'].toString()
         if self.props['is_filter'].type == 'boolean': props['label'] = string
@@ -35,7 +42,7 @@ class InputField:
             DateInput (source=name, props=props) if field.type == 'date' else
             DateTimeInput (source=name, props=props) if field.type == 'datetime' else
             SelectInput (source=name, props=props, choices=[JSON.fromDict({'id': id, 'name': name}) for id, name in field.selection()]) if isinstance(field, SelectionField) else
-            ReferenceInput (source=name, reference=field.relation, props=merge(props, {'allowEmpty': JSON.fromBoolean(True)}), children=[
+            ReferenceInput (source=name, reference=field.relation, props=merge(props, {'resettable': JSON.fromBoolean(True)}), children=[
                 AutocompleteInput (props={'optionText': models.env[field.relation]._rec_name if field.relation in models.env.models else 'name'})
             ]) if field.type in ['many2one', 'one2one'] and isinstance(field, RelationalField) else
             ReferenceArrayField (source=name, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999), 'basePath': '/' + field.relation}), children=self.children) if len(self.children) > 0 and field.type == 'many2many' and isinstance(field, RelationalField) else
