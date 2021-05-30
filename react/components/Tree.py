@@ -12,7 +12,7 @@ class Tree:
         for key in self.props:
             props[key] = self.props[key].toRef()
         props['empty'] = JSON.fromBoolean(False)
-        grid = Datagrid (rowClick='show', children=self.children)
+        grid = Datagrid (rowClick='show', props={'hasBulkActions': JSON.fromBoolean(True)}, children=self.children)
         if not self.props['is_tree_view'].toBoolean(): return grid
         props['filters'] = self.filters()
         return (

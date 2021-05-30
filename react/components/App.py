@@ -40,8 +40,8 @@ def recurseView(view, tree=False, form=False, model=None, components=components,
           filters_object = Filters()
           def filters(): return filters_object.toRef()
        if not tree:
-          parent_model = parent.view.attrib['model']
-          parent_field = parent.view.attrib['name']
+          parent_model = parent.attrib['model']
+          parent_field = parent.attrib['name']
           field = models.env[parent_model]._fields_object[parent_field]
           if not hasattr(field, 'relation'): raise Exception("Tree inside a form view must be a relational field")
           model = field.relation
@@ -105,13 +105,13 @@ def handle_create_edit_show(view_id, is_show, props):
     component = compiled_views[view_id.toString()]
     for key in props:
         component.native_props[key] = props[key].toRef()
-    if isinstance(component, Form.Component) and is_show.toBoolean():
+    if isinstance(component, Form.Component): #and is_show.toBoolean():
        if component.fields is not None:
           for field in component.fields:
           #for index in range(component.fields_count):
               #field = component.fields[index]
               #field.native_props['is_show_view'] = is_show.toRef()
-              field.native_props['field_props'] = JSON.fromDict({'record': props['record'].toRef(), 'resource': props['resource'].toRef(), 'basePath': props['basePath'].toRef()}) #props.toRef()
+              field.native_props['field_props' if is_show.toBoolean() else 'tree_props'] = JSON.fromDict({'record': props['record'].toRef(), 'resource': props['resource'].toRef(), 'basePath': props['basePath'].toRef()}) #props.toRef()
     component.native_props['is_show_view'] = is_show.toRef()
     return component.toObject()
 

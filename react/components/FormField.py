@@ -14,6 +14,7 @@ class InputField:
         model = None
         props = {'label': ""}
         if self.props['record'].type == 'object': props['record'] = self.props['record'].toRef()
+        if self.props['tree_props'].type == 'object': props['record'] = self.props['tree_props']['record'].toRef()
         name = self.props['name'].toString()
         if self.props['model'].type == 'string':
            model = self.props['model'].toString()
@@ -37,8 +38,8 @@ class InputField:
             ReferenceInput (source=name, reference=field.relation, props=merge(props, {'allowEmpty': JSON.fromBoolean(True)}), children=[
                 AutocompleteInput (props={'optionText': models.env[field.relation]._rec_name if field.relation in models.env.models else 'name'})
             ]) if field.type in ['many2one', 'one2one'] and isinstance(field, RelationalField) else
-            ReferenceArrayField (source=name, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'many2many' and isinstance(field, RelationalField) else
-            ReferenceManyField (target=field.inverse, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999)}), children=self.children) if len(self.children) > 0 and field.type == 'one2many' and isinstance(field, InversedRelationalField) else
+            ReferenceArrayField (source=name, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999), 'basePath': '/' + field.relation}), children=self.children) if len(self.children) > 0 and field.type == 'many2many' and isinstance(field, RelationalField) else
+            ReferenceManyField (target=field.inverse, reference=field.relation, props=merge(props, {'perPage': JSON.fromInteger(999999999), 'basePath': '/' + field.relation}), children=self.children) if len(self.children) > 0 and field.type == 'one2many' and isinstance(field, InversedRelationalField) else
             #TODO SelectArrayInput (RA doesn't support one2many dropdown select but it does support many2many)
             TextInput (source=name, props=props)
         )
@@ -58,6 +59,7 @@ class Field:
         if show_only:
            props['string'] = ""
            props['field_props'] = self.props['field_props'].toRef() #JSON.fromDict({'record': self.props['record'].toRef()})
+        elif len(self.children) > 0: props['tree_props'] = self.props['tree_props'].toRef()
         #if self.form is not None:
            #props['record'] = self.form.native_props['record']
            #show_only = Object.fromDict(self.form.native_props)['is_show_view'].toBoolean()
@@ -77,8 +79,8 @@ class Field:
         field = models.env[model]._fields_object[name]
         string = field.string
         if self.props['string'].type == 'string': string = self.props['string'].toString()
+        component = InputField (props=props, children=self.children) if not show_only else ShowField (props=props, children=self.children)
+        if len(self.children) > 0: return component
         return (
-            Labeled (label=string, children=[
-                InputField (props=props, children=self.children) if not show_only else ShowField (props=props, children=self.children)
-            ])
+            Labeled (label=string, children=[component])
         )
