@@ -30,13 +30,13 @@ def run(port, host=None):
     require = Object('require').toFunction()
     fastify = db.server #require('fastify').call()
     fastify['register'].call(require('fastify-formbody').toRef())
-    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef()}))
     merge = Object('Object')['assign'].toFunction()
     register = fastify['route'].toFunction()
     for path in routes:
         route = routes[path]
         configuration = merge(JSON.fromDict({'path': route.path, 'method': JSON.fromList(route.method), 'handler': JSON.fromFunction(route.function)}), JSON.rawString(route.configuration))
         register(configuration.toRef())
+    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef()}))
     listen = fastify['listen'].toFunction()
     if host is None:
        listen(JSON.fromInteger(port), JSON.fromFunction(handle))
