@@ -116,6 +116,7 @@ def handle_create_edit_show(view_id, is_show, props):
     return component.toObject()
 
 def App():
+    themeColor()
     theme = Object.get('Module', 'Styles', 'createMuiTheme').call(JSON.rawString(light_theme))
     authProvider = JSON.fromDict({'checkError': JSON.fromFunction(checkError), 'checkAuth': JSON.fromFunction(checkAuth), 'login': JSON.fromFunction(login), 'logout': JSON.fromFunction(logout), 'getIdentity': JSON.fromFunction(getIdentity), 'getPermissions': JSON.fromFunction(getPermissions)})
     dataProvider = JSON.fromDict({'getList': JSON.fromFunction(getList), 'getOne': JSON.fromFunction(getOne), 'getMany': JSON.fromFunction(getMany), 'getManyReference': JSON.fromFunction(getManyReference), 'create': JSON.fromFunction(create), 'update': JSON.fromFunction(update), 'updateMany': JSON.fromFunction(updateMany)})
@@ -141,6 +142,9 @@ def App():
     )
 
 div = get_component('div')
+
+def themeColor():
+    Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('afterbegin', '<meta name="theme=color" content="%s">' % configuration.appbar_color)
 
 def iOSNotch():
     document = Object.get('window', 'document')
