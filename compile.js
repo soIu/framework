@@ -2,7 +2,7 @@
 process.chdir(__dirname);
 
 const is_building = process.argv.indexOf('--build') !== -1;
-if (is_bulding) process.env.SOLU_ENV = 'building';
+if (is_building) process.env.SOLU_ENV = 'building';
 
 const sleep = (duration) => new Promise(resolve => setTimeout(() => resolve(), duration));
 const spawn_promise = require('util').promisify(require('child_process').spawn);
@@ -49,4 +49,4 @@ let does_throws = false;
 
 compile().catch((error) => console.error(does_throws = error));
 
-process.on('exit', () => !does_throws && is_bulding && require('child_process').execSync('cp -r server.js server.wasm client.js client.wasm global.js web utils build/'));
+process.on('exit', () => !does_throws && is_building && require('child_process').execSync('cp -r server.js server.wasm client.js client.wasm global.js web utils build/'));
