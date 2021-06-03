@@ -174,8 +174,19 @@ def write(request, response):
     records.write_server(params['values']).wait()
     response['send'].call(JSON.fromDict({'status': 'success', 'result': JSON.fromList(records.ids)}))
 
-@http.route('/api/orm/wasm', method=['GET', 'POST'], asynchronous=True)
+@http.route('/api/orm/wasm', method=['GET'], asynchronous=True)
 def wasm(request, response):
+    authorization = request['headers']['authorization']
+    if authorization.type != 'string':
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Authorization headers is required'}))
+       return
+    atobed = Object.get('require').call('buffer')['Buffer']['from'].call(authorization['split'].call(' ')['1'].toRef(), 'base64')['toString'].call('binary').toString().split('|:|')
+    assert len(atobed) >= 2
+    username = atobed[0]
+    password = atobed[1]
+    query = request['query']
+    query['login'] = username
+    query['password'] = password
     login_response = http.login_response()
     Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
     result = login_response.wait()
@@ -195,8 +206,19 @@ def wasm(request, response):
 #    stream['push'].call('\nModule.orm_loaded = new Promise(function (resolve) {Module.orm_resolve = resolve;});')
 #    callback.call()
 
-@http.route('/api/orm/js', method=['GET', 'POST'], asynchronous=True)
+@http.route('/api/orm/js', method=['GET', 'PUT', 'POST'], asynchronous=True)
 def js(request, response):
+    authorization = request['headers']['authorization']
+    if authorization.type != 'string':
+       response['send'].call(JSON.fromDict({'status': 'error', 'message': 'Authorization headers is required'}))
+       return
+    atobed = Object.get('require').call('buffer')['Buffer']['from'].call(authorization['split'].call(' ')['1'].toRef(), 'base64')['toString'].call('binary').toString().split('|:|')
+    assert len(atobed) >= 2
+    username = atobed[0]
+    password = atobed[1]
+    query = request['query']
+    query['login'] = username
+    query['password'] = password
     login_response = http.login_response()
     Object.fromFunction(login).call(request.toRef(), login_response.toRef()) #.wait()
     result = login_response.wait()
@@ -216,7 +238,8 @@ tools.register_models()
 @asynchronous
 def start():
     init().wait()
-    http.run(configuration.port)
+    env = Object.get('require').call('process')['env']
+    http.run(configuration.port if env['PORT'].type in ['undefined', 'null'] else env['PORT'].toInteger(), host=env['HOST'].toString() if env['HOST'].type == 'string' else '0.0.0.0' if env['PORT'].type not in ['undefined', 'null'] else None)
 
 def main(argv):
     start()

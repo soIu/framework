@@ -1,4 +1,5 @@
 {
+  "main": "server.js",
   "dependencies": {
     "express-pouchdb": "^4.2.0",
     "fastify": "^3.9.2",
@@ -9,6 +10,7 @@
     "pouchdb-adapter-http": "^7.2.2",
     "pouchdb-adapter-memory": "^7.2.2",
     "pouchdb-core": "^7.2.2",
-    "pouchdb-replication": "^7.2.2"
+    "pouchdb-replication": "^7.2.2",
+    "svg-captcha": "^1.4.0"
   }
 }

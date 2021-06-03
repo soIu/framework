@@ -16,6 +16,11 @@ def load_configuration():
 
 load_configuration()
 
+if configuration.server_db_adapter == 'http':
+   url = os.path.split(configuration.server_db)
+   configuration.server_db = next(route for route in url[::-1] if route)
+   configuration.server_db_url = url[0]
+
 class Database:
     #loaded = False
     server = None
@@ -38,7 +43,7 @@ def get_db():
        load_plugin(require, PouchDB)
        if configuration.server_db_custom_adapter:
           PouchDB['plugin'].call(require(configuration.server_db_custom_adapter).toRef())
-       options = JSON.fromDict({'adapter': configuration.server_db_adapter})
+       options = JSON.fromDict({'prefix': configuration.server_db_url if configuration.server_db_adapter == 'http' else "", 'adapter': configuration.server_db_adapter})
        db.server['use'].call('/db', require('express-pouchdb').call(PouchDB['defaults'].call(options).toRef(), JSON.fromDict({'inMemoryConfig': JSON.fromBoolean(True), 'mode': 'custom', 'overrideMode': JSON.fromDict({'include': JSON.fromList(['routes/all-docs', 'routes/changes', 'routes/db', 'routes/documents'])})})).toRef())
        db.pouchdb = PouchDB.new(configuration.server_db, options).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
        return db.pouchdb

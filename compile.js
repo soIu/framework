@@ -38,8 +38,12 @@ async function compile() {
   if (!process.env.CORE) process.env.CORE = parseInt(child_process.execSync('nproc').toString().trim());
   process.env.CORE = (process.env.CORE / 2).toString();
   const server_promise = spawn('rpython', server);
-  await sleep(500);
+  await sleep(750);
   await Promise.all([server_promise, spawn('rpython', client)]);
 }
 
-compile().catch(console.error)
+let does_throws = false;
+
+compile().catch((error) => console.error(does_throws = error));
+
+process.on('exit', () => !does_throws && process.argv.indexOf('--build') !== -1 && require('child_process').execSync('cp -r server.js server.wasm client.js client.wasm global.js web utils build/'));
