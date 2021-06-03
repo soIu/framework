@@ -76,7 +76,11 @@ def main(argv):
     return 0
 
 def target(*args):
-    configuration.server_db_url = ""
+    if configuration.server_db.startswith('http'):
+       import os
+       url = os.path.split(configuration.server_db)
+       configuration.server_db = next(route for route in url[::-1] if route)
+       configuration.server_db_url = ""
     init_compile()
     models.env.user = models.env['res.users'].new()
     return main, None
