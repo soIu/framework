@@ -149,8 +149,6 @@ is_server, is_client = generate_static_closures()
 check_server = is_server
 check_client = is_client
 
-if is_client() and configuration.server_db_adapter == 'http': configuration.server_db_url = ""
-
 def empty_promise():
     return Global()['Promise'].new(JSON.fromFunction(empty_promise_handle))
 

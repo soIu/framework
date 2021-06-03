@@ -76,6 +76,7 @@ def main(argv):
     return 0
 
 def target(*args):
+    configuration.server_db_url = ""
     init_compile()
     models.env.user = models.env['res.users'].new()
     return main, None

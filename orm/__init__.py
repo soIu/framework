@@ -16,11 +16,6 @@ def load_configuration():
 
 load_configuration()
 
-if configuration.server_db_adapter == 'http':
-   url = os.path.split(configuration.server_db)
-   configuration.server_db = next(route for route in url[::-1] if route)
-   configuration.server_db_url = url[0]
-
 class Database:
     #loaded = False
     server = None
