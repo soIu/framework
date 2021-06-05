@@ -9,6 +9,7 @@ from react.components.Form import Form
 from react.components.FormField import Field as FormField, InputField
 from react.components.Sheet import Sheet
 from react.components.Group import Group
+from react.components.Footer import Footer
 from javascript import JSON, Object, function, asynchronous
 from orm import get_db, models, tools, configuration, views, menu as menu_orm
 
@@ -18,7 +19,7 @@ import json
 light_theme = json.dumps(light_theme)
 
 tree_components = {component.__name__: component for component in [Tree, TreeField]}
-components = {component.__name__: component for component in [Form, FormField, Sheet, Group]}
+components = {component.__name__: component for component in [Form, FormField, Sheet, Group, Footer]}
 
 def recurseView(view, tree=False, form=False, model=None, components=components, parent=None):
     filters = None

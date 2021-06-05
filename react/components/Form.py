@@ -15,9 +15,10 @@ class Form:
         return (
             Box ([
                 Card ([
-                    CardContent ([
-                        component_from_object(component)
-                    ]),
+                    #CardContent ([
+                    #    component_from_object(component)
+                    #]),
+                    component_from_object(component),
                     Toolbar (props={'redirect': 'list', 'record': formProps['record'].toRef(), 'basePath': formProps['basePath'].toRef(), 'undoable': JSON.fromBoolean(False), 'invalid': formProps['invalid'].toRef(), 'handleSubmitWithRedirect': formProps['handleSubmitWithRedirect'].toRef(), 'save': formProps['save'].toRef(), 'saving': formProps['saving'].toRef(), 'resource': model.toRef()}) if not is_show_view.toBoolean() else None
                 ])
             ])

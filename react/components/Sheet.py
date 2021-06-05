@@ -1,5 +1,5 @@
 from react import Component
-from react.components import Box, Card, CardContent, Grid
+from react.components import CardContent, Grid
 from javascript import JSON
 
 class Props: pass
@@ -9,5 +9,7 @@ class Sheet:
 
     def render(self):
         return (
-            Grid (container=True, spacing=1, children=self.children)
+            CardContent ([
+                Grid (container=True, spacing=1, children=self.children)
+            ])
         )
