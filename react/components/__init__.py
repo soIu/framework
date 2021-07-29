@@ -36,6 +36,12 @@ class MenuItem:
 class IconButton:
     onClick = types.ref
 
+@Component(path='Module.Core.Button')
+class Button:
+    variant = types.str
+    type = types.type
+    onClick = types.ref
+
 @Component(path='Module.Core.Grid')
 class Grid:
     xs = types.int
