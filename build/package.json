@@ -1,5 +1,8 @@
 {
   "main": "server.js",
+  "scripts": {
+    "compress": "gzip -k -f client.js client.wasm & brotli -f client.js client.wasm"
+  },
   "dependencies": {
     "express-pouchdb": "^4.2.0",
     "fastify": "^3.9.2",
