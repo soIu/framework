@@ -39,7 +39,7 @@ class IconButton:
 @Component(path='Module.Core.Button')
 class Button:
     variant = types.str
-    type = types.type
+    type = types.str
     onClick = types.ref
 
 @Component(path='Module.Core.Grid')

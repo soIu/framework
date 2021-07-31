@@ -1,10 +1,10 @@
 *node_modules
 *.pyc
 *package-lock.json
-/client.js
-/client.wasm
-/server.js
-/server.wasm
+/client.js*
+/client.wasm*
+/server.js*
+/server.wasm*
 /configuration.py
 /*.c
 /*.h

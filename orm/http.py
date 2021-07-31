@@ -36,7 +36,7 @@ def run(port, host=None):
         route = routes[path]
         configuration = merge(JSON.fromDict({'path': route.path, 'method': JSON.fromList(route.method), 'handler': JSON.fromFunction(route.function)}), JSON.rawString(route.configuration))
         register(configuration.toRef())
-    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef()}))
+    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef(), 'preCompressed': JSON.fromBoolean(True)}))
     listen = fastify['listen'].toFunction()
     if host is None:
        listen(JSON.fromInteger(port), JSON.fromFunction(handle))
