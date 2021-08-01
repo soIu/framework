@@ -54,6 +54,9 @@ def search(domain_args):
 
 css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css', './react/styles/list.css', './react/styles/form.css'])
 
+if not configuration.appbar_color:
+   css += "\n[class*='RaAppBar-toolbar-'] {padding-right: 50px!important}"
+
 def mount_css():
     document = Object.get('window', 'document')
     style = document['createElement'].call('style')

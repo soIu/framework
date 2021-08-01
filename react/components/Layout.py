@@ -1,6 +1,7 @@
 from react import Component, Text
 from react.components import Typography, IconButton, MoreVertical, Menu, MenuItem
 from javascript import JSON, Object, function, types
+from orm import configuration
 
 @Component(path='Module.Admin.AppBar')
 class AppBar:
@@ -12,6 +13,14 @@ class span:
 
 @Component
 class div: pass
+
+@Component
+class a:
+    style = types.dict
+
+@Component
+class img:
+    src = types.str
 
 class Props: pass
 
@@ -76,7 +85,10 @@ def Appbar(props):
             Typography (style={'width': '100%'}, variant='h6', color='inherit', id='react-admin-title-fix', children=[] if not cached_title.toBoolean() else [Text(cached_title.toString())]), #, className=classes['title'].toRef()),
             Typography (style={'display': 'none'}, variant='h6', color='inherit', id='react-admin-title', ref=JSON.fromFunction(fix_title)), #, className=classes['title'].toRef()),
             #span (className=classes['spacer'].toRef()),
-            Submenu ()
+            Submenu (),
+            a (props={'href': 'https://solu.js.org', 'target': '_blank'}, style={'position': 'absolute', 'right': JSON.fromInteger(0), 'margin': '15px'}, children=[
+                img (props={'height': '28px'}, src='logo192.png')
+            ]) if not configuration.appbar_color else None
         ])
     ).toObject()
 

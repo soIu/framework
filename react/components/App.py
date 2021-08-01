@@ -15,7 +15,7 @@ from orm import get_db, models, tools, configuration, views, menu as menu_orm
 
 import json
 
-#material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color}}, 'shape': {'borderRadius': '10px'}})
+#material_theme = json.dumps({'palette': {'primary': {'main': configuration.theme_color}, 'secondary': {'main': configuration.appbar_color or configuration.theme_color}}, 'shape': {'borderRadius': '10px'}})
 light_theme = json.dumps(light_theme)
 
 tree_components = {component.__name__: component for component in [Tree, TreeField]}
@@ -144,10 +144,13 @@ def App():
 
 div = get_component('div')
 
+statusbar_color = configuration.appbar_color or '#fff'
+
 def themeColor():
-    Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('afterbegin', '<meta name="theme=color" content="%s">' % configuration.appbar_color)
+    Object.get('window', 'document', 'head', 'insertAdjacentHTML').call('afterbegin', '<meta name="theme=color" content="%s">' % statusbar_color)
 
 def iOSNotch():
+    return None #Currently disable artificial statusbar as we are transitioning to light theme
     document = Object.get('window', 'document')
     style = document['createElement'].call('style')
     style['innerHTML'] = 'header.MuiAppBar-positionFixed {top: 20px;}'

@@ -6,10 +6,10 @@ light_theme = {
       "main": configuration.theme_color
     },
     "secondary": {
-      "main": configuration.appbar_color
+      "main": configuration.appbar_color or configuration.theme_color
     },
     "background": {
-      "default": "#fcfcfe"
+      "default": "#fff" #"#fcfcfe"
     }
   },
   "shape": {
@@ -57,10 +57,9 @@ light_theme = {
       }
     },
     "MuiAppBar": {
-      "colorSecondary": {
-        #"color": "#808080",
-        #"backgroundColor": "#fff"
-        "border": "none"
+      "colorSecondary": {'border': 'none'} if configuration.appbar_color else {
+        "color": "#5f6367",
+        "backgroundColor": "#fff"
       }
     },
     "MuiLinearProgress": {

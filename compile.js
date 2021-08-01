@@ -17,7 +17,7 @@ const spawn = async (command, args) => {
     if (!does_use_wasm) require('fs').closeSync(require('fs').openSync({'server.py': './server.wasm', 'client.py': './client.wasm'}[args[0]], 'w'));
     if (args[0] !== 'client.py') return;
     try {
-      require('fs').writeFileSync('./client.js', require('uglify-js').minify(require('fs').readFileSync('./client.js').toString(), {compress: false, mangle: true}).code.toString());
+      //require('fs').writeFileSync('./client.js', require('uglify-js').minify(require('fs').readFileSync('./client.js').toString(), {compress: false, mangle: false}).code.toString());
     }
     catch (error) {
       console.error(error);
@@ -38,8 +38,8 @@ server_db = 'main'
 server_db_adapter = 'memory'
 server_db_custom_adapter = False
 client_db = 'local'
-appbar_color = '#875A7B'
-theme_color = '#009688'
+appbar_color = False
+theme_color = '#00A09D'
 `;
 
 function create_configuration() {
