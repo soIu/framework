@@ -55,7 +55,7 @@ def search(domain_args):
 css = '\n'.join(open(file, 'r').read() for file in ['./react/styles/menu.css', './react/styles/appbar.css', './react/styles/list.css', './react/styles/form.css'])
 
 if not configuration.appbar_color:
-   css += "\n[class*='RaAppBar-toolbar-'] {padding-right: 50px!important}"
+   css += "\n[class*='RaAppBar-toolbar-'] {padding-right: 50px!important}\n[class*='RaLayout-appFrame-'] > header.MuiAppBar-root {border-top: none; border-right: none; border-left: none;}"
 
 def mount_css():
     document = Object.get('window', 'document')
