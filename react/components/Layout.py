@@ -86,7 +86,7 @@ def Appbar(props):
             Typography (style={'display': 'none'}, variant='h6', color='inherit', id='react-admin-title', ref=JSON.fromFunction(fix_title)), #, className=classes['title'].toRef()),
             #span (className=classes['spacer'].toRef()),
             Submenu (),
-            a (props={'href': 'https://solu.js.org', 'target': '_blank'}, style={'position': 'absolute', 'right': JSON.fromInteger(0), 'top': JSON.fromIntger(0), 'margin': '15px'}, children=[
+            a (props={'id': 'soly-appbar-icon', 'href': 'https://solu.js.org', 'target': '_blank'}, style={'visibility': 'hidden', 'position': 'absolute', 'right': JSON.fromInteger(0), 'top': JSON.fromIntger(0), 'margin': '15px'}, children=[
                 img (props={'height': '28px'}, src='logo192.png')
             ]) if not configuration.appbar_color else None
         ])
