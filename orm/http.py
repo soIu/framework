@@ -1,4 +1,5 @@
 from javascript import Object, JSON, Error, function
+from typing import Object, String, Function
 from . import db, tools
 import json
 
@@ -17,36 +18,46 @@ def route(path, method, asynchronous=False, **configuration):
         return routes[path].function
     return wrapper
 
+ErrorMessage = Object({
+  'message': String,
+})
+
 @function
 def handle(error, address):
     if error.toBoolean() or address.type == 'null':
        print "There's an error"
        error.log()
-       Error(error['message'].toString())
+       Error(ErrorMessage(error).message)
     print "Listening on " + address.toString()
 
+Path = Object({
+  'join': Function,
+})
+
 def run(port, host=None):
-    dirname = Object.get('global', 'get_dirname').call().toString()
+    dirname = tools.Global().get_dirname()
     require = Object('require').toFunction()
     fastify = db.server #require('fastify').call()
-    fastify['register'].call(require('fastify-formbody').toRef())
-    merge = Object('Object')['assign'].toFunction()
-    register = fastify['route'].toFunction()
+    fastify.register(require('fastify-formbody').toRef())
+    merge = Object('Object.assign').toFunction()
     for path in routes:
         route = routes[path]
         configuration = merge(JSON.fromDict({'path': route.path, 'method': JSON.fromList(route.method), 'handler': JSON.fromFunction(route.function)}), JSON.rawString(route.configuration))
-        register(configuration.toRef())
-    fastify['register'].call(require('fastify-static').toRef(), JSON.fromDict({'root': require('path')['join'].call(dirname, 'web').toRef(), 'preCompressed': JSON.fromBoolean(True)}))
-    listen = fastify['listen'].toFunction()
+        fastify.route(configuration.toRef())
+    fastify.register(require('fastify-static').toRef(), JSON.fromDict({'root': Path(require('path')).join(dirname, 'web').toRef(), 'preCompressed': JSON.fromBoolean(True)}))
     if host is None:
-       listen(JSON.fromInteger(port), JSON.fromFunction(handle))
+       fastify.listen(JSON.fromInteger(port), JSON.fromFunction(handle))
        return
-    listen(JSON.fromDict({'port': JSON.fromInteger(port), 'host': host}), JSON.fromFunction(handle))
+    fastify.listen(JSON.fromDict({'port': JSON.fromInteger(port), 'host': host}), JSON.fromFunction(handle))
+
+Response = Object({
+  'send': Object,
+})
 
 def login_response():
-    response = tools.Global()['Object'].new()
-    promise = tools.Global()['Promise'].new(Object.createClosure(login_response_handle, response).toRef())
-    promise['send'] = response['send'].toRef()
+    response = Response(tools.Global().Object.new())
+    promise = tools.Global().Promise.newObject(Object.createClosure(login_response_handle, response.toObject()).toRef())
+    promise['send'] = response.send.toRef()
     return promise
 
 @function

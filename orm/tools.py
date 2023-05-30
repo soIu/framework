@@ -1,4 +1,5 @@
-from javascript import JSON, Object, Function
+from javascript import JSON, Object, Function as JSFunction
+from typing import Object, Function
 from . import configuration
 
 import models as orm_models
@@ -112,19 +113,36 @@ class Cache:
 
 cache = Cache()
 
+Globals = Object({
+  'fetch': Function,
+  'console': Object({
+    'log': Function,
+    'error': Object,
+  }),
+  'Promise': Object({
+    'all': Function,
+  }),
+  'Object': Object,
+  'Array': Object,
+  'JSON': Object({
+    'stringify': Function,
+  }),
+  'encodeURIComponent': Function,
+  'get_dirname': Function,
+})
+
 def get_global():
-    if cache.global_object is not None: return cache.global_object
+    if cache.global_object is not None: return Globals(cache.global_object)
     window = Object.get('window')
-    if window.type != 'undefined':
-       cache.global_object = window.keep()
-       return window
     self = Object.get('self')
-    if self.type != 'undefined':
-       cache.global_object = self.keep()
-       return self
-    require = Object.get('require').toFunction()
-    cache.global_object = require('./global.js').keep()
-    return cache.global_object
+    if window.type != 'undefined':
+        cache.global_object = window.keep()
+    elif self.type != 'undefined':
+        cache.global_object = self.keep()
+    else:
+        require = Object.get('require').toFunction()
+        cache.global_object = require('./global.js').keep()
+    return Globals(cache.global_object)
 
 Global = get_global
 
@@ -150,19 +168,23 @@ check_server = is_server
 check_client = is_client
 
 def empty_promise():
-    return Global()['Promise'].new(JSON.fromFunction(empty_promise_handle))
+    return Global().Promise.newObject(JSON.fromFunction(empty_promise_handle))
 
-@Function
+@JSFunction
 def empty_promise_handle(args):
     assert args is not None and len(args) >= 1
     args[0].call()
 
-def create_promise():
-    object = Global()['Object'].new()
-    promise = Global()['Promise'].new(Object.createClosure(create_promise_handle, object).toRef())
-    return promise, object['resolve']
+Args = Object({
+  'resolve': Object
+})
 
-@Function
+def create_promise():
+    object = Global().Object.new()
+    promise = Global().Promise.newObject(Object.createClosure(create_promise_handle, object).toRef())
+    return promise, Args(object).resolve
+
+@JSFunction
 def create_promise_handle(args):
     assert args is not None and len(args) >= 2
     object = args[0]

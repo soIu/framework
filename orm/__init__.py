@@ -1,4 +1,5 @@
-from javascript import JSON, Object, Error
+from javascript import JSON, Error
+from typing import Object, Function, Dict
 
 class Configuration: pass
 
@@ -23,25 +24,47 @@ class Database:
 
 db = Database()
 
+Pouch = Object({
+  'plugin': Function,
+  'defaults': Function,
+})
+
+Window = Object({
+  'PouchDB': Pouch,
+})
+
 def load_plugin(require, PouchDB):
-    #PouchDB['plugin'].call(require('pouchdb-find').toRef()) not required, maybe on client only
-    PouchDB['plugin'].call(require('pouchdb-replication').toRef())
-    PouchDB['plugin'].call(require('pouchdb-adapter-http').toRef())
-    PouchDB['plugin'].call(require('pouchdb-adapter-memory').toRef())
+    #PouchDB.plugin(require('pouchdb-find').toRef()) not required, maybe on client only
+    PouchDB.plugin(require('pouchdb-replication').toRef())
+    PouchDB.plugin(require('pouchdb-adapter-http').toRef())
+    PouchDB.plugin(require('pouchdb-adapter-memory').toRef())
+
+DB = Object({
+  'replicate': Dict,
+  'allDocs': Function,
+  'bulkDocs': Function,
+  'get': Function,
+  'put': Function,
+  'remove': Function,
+})
+
+Fastify = Object({
+  'use': Function,
+})
 
 def get_db():
     if db.pouchdb is not None:
-       return Object.get('global', db.pouchdb.variable)
+       return DB(db.pouchdb) #Object.get('global', db.pouchdb.variable)
     if db.server is not None:
        require = Object.get('require').toFunction()
-       PouchDB = require('pouchdb-core')
+       PouchDB = Pouch(require('pouchdb-core'))
        load_plugin(require, PouchDB)
        if configuration.server_db_custom_adapter:
-          PouchDB['plugin'].call(require(configuration.server_db_custom_adapter).toRef())
+          PouchDB.plugin(require(configuration.server_db_custom_adapter).toRef())
        options = JSON.fromDict({'prefix': configuration.server_db_url if configuration.server_db_adapter == 'http' else "", 'adapter': configuration.server_db_adapter})
-       db.server['use'].call('/db', require('express-pouchdb').call(PouchDB['defaults'].call(options).toRef(), JSON.fromDict({'inMemoryConfig': JSON.fromBoolean(True), 'mode': 'custom', 'overrideMode': JSON.fromDict({'include': JSON.fromList(['routes/all-docs', 'routes/changes', 'routes/db', 'routes/documents'])})})).toRef())
-       db.pouchdb = PouchDB.new(configuration.server_db, options).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
-       return db.pouchdb
-    PouchDB = Object.get('window', 'PouchDB')
-    db.pouchdb = PouchDB.new(configuration.client_db).keep()
-    return db.pouchdb
+       Fastify(db.server).use('/db', require('express-pouchdb').call(PouchDB.defaults(options).toRef(), JSON.fromDict({'inMemoryConfig': JSON.fromBoolean(True), 'mode': 'custom', 'overrideMode': JSON.fromDict({'include': JSON.fromList(['routes/all-docs', 'routes/changes', 'routes/db', 'routes/documents'])})})).toRef())
+       db.pouchdb = PouchDB.newObject(configuration.server_db, options).keep() #, JSON.fromDict({'adapter': configuration.server_db_adapter})).keep()
+       return DB(db.pouchdb)
+    PouchDB = Window(Object.get('window')).PouchDB
+    db.pouchdb = PouchDB.newObject(configuration.client_db).keep()
+    return DB(db.pouchdb)
