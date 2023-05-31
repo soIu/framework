@@ -118,7 +118,7 @@ def search(request_object, response_object):
        params.toObject()['limit'] = tools.Global().JSON.stringify(params.limit.toRef()).toRef()
     if params.limit.type != 'number':
        if params.limit.type in ['null', 'undefined']:
-          params['limit'] = JSON.fromInteger(0)
+          params.toObject()['limit'] = JSON.fromInteger(0)
        else:
           response.send(JSON.fromDict({'status': 'error', 'message': 'Limit type is invalid'}))
           return

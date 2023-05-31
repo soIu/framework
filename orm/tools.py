@@ -84,7 +84,7 @@ def adapt_object_to_field(type):
 
 model_read_template = """
 def read_singleton(self):
-    values = Global()['Object'].new()
+    values = Global().Object.new()
     values['id'] = self.id
 """
 
@@ -100,7 +100,7 @@ def configure_model(model):
         field = model._fields[key]
         read += '\n' + indent + "values['" + key + "'] = None if self." + key + (" is None else %s" % ('self.{}'.format(key) if field['type'] in ['char', 'text', 'selection', 'many2one', 'one2one', 'date', 'datetime'] else 'JSON.fromInteger({})'.format(key) if field['type'] == 'integer' else 'JSON.fromFloat({})'.format(key) if field['type'] == 'float' else 'JSON.fromBoolean({})'.format(key) if field['type'] == 'boolean' else None))
         if field['type'] in ['one2many', 'many2many']: continue
-        update += '\n' + indent + "if values['" + key  + "'].type != 'undefined': self." + key + ' = ' + "values['" + key + "']" + adapt_object_to_field(field['type']) + "if values['" + key + ("'].type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection', 'many2one', 'one2one'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "== 'object' and values['" + key + "']['toISOString'].type == 'function'" if field['type'] in ['date', 'datetime'] else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == 'integer' else 0.0 if field['type'] == 'float' else "values['" + key + "'].toString() if values['" + key + "'].type == 'string' else None" if field['type'] in ['date', 'datetime'] else None))
+        update += '\n' + indent + "if values.unsafe_get_item('" + key  + "').type != 'undefined': self." + key + ' = ' + "values.unsafe_get_item('" + key + "')" + adapt_object_to_field(field['type']) + "if values.unsafe_get_item('" + key + ("').type %s else %s" % ("!= 'random'" if field['type'] in ['char', 'text', 'selection', 'many2one', 'one2one'] else "== 'number'" if field['type'] in ['integer', 'float'] else "== 'boolean'" if field['type'] == 'boolean' else "== 'object' and values.unsafe_get_item('" + key + "').unsafe_get_item('toISOString').type == 'function'" if field['type'] in ['date', 'datetime'] else "!= 'random'", field['default'] if field['type'] == 'boolean' else 0 if field['type'] == 'integer' else 0.0 if field['type'] == 'float' else "values.unsafe_get_item('" + key + "').toString() if values['" + key + "'].type == 'string' else None" if field['type'] in ['date', 'datetime'] else None))
     read += '\n' + indent + 'return values'
     update += '\n' + indent + 'return self'
     namespace = {'Global': Global, 'JSON': JSON}
