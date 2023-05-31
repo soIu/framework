@@ -50,6 +50,9 @@ DB = Object({
 
 Fastify = Object({
   'use': Function,
+  'register': Function,
+  'route': Function,
+  'listen': Function,
 })
 
 def get_db():

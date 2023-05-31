@@ -1,6 +1,6 @@
-from javascript import Object, JSON, Error, function
+from javascript import Object as JSObject, JSON, Error, function
 from typing import Object, String, Function
-from . import db, tools
+from . import db, tools, Fastify
 import json
 
 args = function
@@ -36,15 +36,15 @@ Path = Object({
 
 def run(port, host=None):
     dirname = tools.Global().get_dirname()
-    require = Object('require').toFunction()
-    fastify = db.server #require('fastify').call()
+    require = Object.get('require').toFunction()
+    fastify = Fastify(db.server) #require('fastify').call()
     fastify.register(require('fastify-formbody').toRef())
-    merge = Object('Object.assign').toFunction()
+    merge = JSObject('Object.assign').toFunction()
     for path in routes:
         route = routes[path]
         configuration = merge(JSON.fromDict({'path': route.path, 'method': JSON.fromList(route.method), 'handler': JSON.fromFunction(route.function)}), JSON.rawString(route.configuration))
         fastify.route(configuration.toRef())
-    fastify.register(require('fastify-static').toRef(), JSON.fromDict({'root': Path(require('path')).join(dirname, 'web').toRef(), 'preCompressed': JSON.fromBoolean(True)}))
+    fastify.register(require('fastify-static').toRef(), JSON.fromDict({'root': Path(require('path')).join(dirname.toRef(), 'web').toRef(), 'preCompressed': JSON.fromBoolean(True)}))
     if host is None:
        fastify.listen(JSON.fromInteger(port), JSON.fromFunction(handle))
        return
@@ -55,9 +55,9 @@ Response = Object({
 })
 
 def login_response():
-    response = Response(tools.Global().Object.new())
-    promise = tools.Global().Promise.newObject(Object.createClosure(login_response_handle, response.toObject()).toRef())
-    promise['send'] = response.send.toRef()
+    response = tools.Global().Object.new()
+    promise = tools.Global().Promise.newObject(Object.createClosure(login_response_handle, response).toRef())
+    promise['send'] = Response(response).send.toRef()
     return promise
 
 @function

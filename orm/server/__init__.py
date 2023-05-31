@@ -1,13 +1,6 @@
 from javascript import JSON, asynchronous
 from typing import Object, Function
-from .. import db, get_db, tools, data
-
-Fastify = Object({
-  'use': Function,
-  'register': Function,
-  'route': Function,
-  'listen': Function,
-})
+from .. import db, get_db, tools, data, Fastify
 
 @asynchronous
 def init():

@@ -134,6 +134,11 @@ Records = Object({
   })],
 })
 
+Record = Object({
+  '_id': Object,
+  '_rev': Object,
+})
+
 Doc = Object({
   '_id': Object({
     'split': Function,
@@ -276,7 +281,7 @@ class Model(object):
                queries[field]['<'] = index
                if operator != '<=': excepts[index + ':'] = 0
             elif operator == 'in':
-               queries[field] = {'in_length': value['length'].toString()}
+               queries[field] = {'in_length': str(len(value.toArray()))}
                for index, object in enumerate(value.toList()):
                    #object = value[index]
                    object_type = object.type
@@ -456,22 +461,24 @@ class Model(object):
         records = get_records([tools.id_to_pouch_id(id, self._name) for id in self.ids]).wait()
         set_indexes = []
         del_indexes = []
-        JSON = Global().JSON
         recordsets = [record for record in self]
+        array_values = values.toArray()
         for index in range(self._length):
-            value = values[str(index)]
+            value = array_values[index]
             #row = records['rows'][str(index)]
-            record = records['rows'][str(index)]['doc']
+            record = Record(Records(records).rows[index].doc)
             id = recordsets[index].id
-            value['_id'] = record['_id'].toRef()
-            value['_rev'] = record['_rev'].toRef()
+            value['_id'] = record._id.toRef()
+            value['_rev'] = record._rev.toRef()
+            record_dict = record.toObject().toDict()
+            value_dict = value.toDict()
             for key in self._fields:
-                value_object = value[key]
-                record_object = record[key]
+                value_object = value_dict[key]
+                record_object = record_dict[key]
                 if value_object.type == 'undefined':
                    value[key] = record_object.toRef()
                    continue
-                if JSON.stringify(value_object.toRef()).toString() != JSON.stringify(record_object.toRef()).toString():
+                if Global().JSON.stringify(value_object.toRef()).toString() != Global().JSON.stringify(record_object.toRef()).toString():
                    set_indexes += [set_index(self._name, key, value_object.type, value_object, id).keep()]
                    del_indexes += [del_index(self._name, key, record_object.type, record_object, id).toRef()]
                    #record[key] = value_object.toRef()
@@ -487,7 +494,7 @@ class Model(object):
            return record
         index = 0
         for record in self:
-            value = values[str(index)]
+            value = array_values[index]
             record.update(value)
             index += 1
         return self
