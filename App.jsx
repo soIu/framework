@@ -1,6 +1,6 @@
 'use client';
 
-import { StyleSheet, Text, View, Button } from 'react-native-web';
+import { StyleSheet, Text, View, Button } from 'react-native';
 import log from './test.js';
 
 export default function App() {
