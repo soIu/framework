@@ -1,19 +1,13 @@
 import { StrictMode } from 'react';
-import { createRoot, hydrateRoot } from 'react-dom/client';
-import { Router } from 'waku/router/client';
-
-import { ErrorBoundary } from './components/error-boundary.js';
+import { createRoot } from 'react-dom/client';
+import { Root, Slot } from 'waku/client';
 
 const rootElement = (
   <StrictMode>
-    <ErrorBoundary fallback={(error) => <h1>{String(error)}</h1>}>
-      <Router />
-    </ErrorBoundary>
+    <Root>
+      <Slot id="App" />
+    </Root>
   </StrictMode>
 );
 
-if (import.meta.env.WAKU_HYDRATE) {
-  hydrateRoot(document.body, rootElement);
-} else {
-  createRoot(document.body).render(rootElement);
-}
+createRoot(document as any).render(rootElement);

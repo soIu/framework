@@ -1,25 +1,19 @@
-import { createPages } from 'waku';
+import { lazy } from 'react';
+import { defineEntries } from 'waku/server';
 
-import { RootLayout } from './templates/root-layout.js';
-import { HomePage } from './templates/home-page.js';
-import { AboutPage } from './templates/about-page.js';
+const App = lazy(() => import('./components/App.js'));
 
-export default createPages(async ({ createPage, createLayout }) => {
-  /*createLayout({
-    render: 'dynamic',
-    path: '/',
-    component: RootLayout,
-  });*/
-
-  createPage({
-    render: 'dynamic',
-    path: '/',
-    component: HomePage,
-  });
-
-  createPage({
-    render: 'dynamic',
-    path: '/about',
-    component: AboutPage,
-  });
-});
+export default defineEntries(
+  // renderEntries
+  async (input) => {
+    return {
+      App: <App name={input || 'Waku'} />,
+    };
+  },
+  // getBuildConfig
+  async () => [{ pathname: '/', entries: [{ input: '' }] }],
+  // getSsrConfig
+  () => {
+    throw new Error('SSR is should not be used in this test.');
+  },
+);
