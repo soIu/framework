@@ -5,6 +5,8 @@ import { ServerProvider } from './ServerAction/Server.js';
 import { ClientActionsConsumer } from './ServerAction/Client.js';
 import AppExpo from '../../App.jsx';
 
+console.log(AppExpo);
+
 const App = async ({ name }: { name: string }) => {
   return (
     <html>
@@ -26,4 +28,4 @@ const App = async ({ name }: { name: string }) => {
   );
 };
 
-export default App;
+module.exports = App;

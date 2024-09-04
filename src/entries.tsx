@@ -3,7 +3,24 @@ import { defineEntries } from 'waku/server';
 
 const App = lazy(() => import('./components/App.js'));
 
-export default defineEntries(
+const plugins = [
+  'python',
+  ["module-resolver", {
+    "alias": {
+      "^react-native$": "react-native-web"
+    }
+  }],
+]
+
+/*const moduleAlias = require("module-alias");
+moduleAlias.addAliases({
+  "react-native": require.resolve("react-native-web"),
+});
+moduleAlias();*/
+
+require('@babel/register')({plugins, ignore: []});
+
+module.exports = defineEntries(
   // renderEntries
   async (input) => {
     return {
