@@ -28,4 +28,4 @@ const App = async ({ name }: { name: string }) => {
   );
 };
 
-module.exports = App;
+export default App;

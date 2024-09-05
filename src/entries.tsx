@@ -20,7 +20,7 @@ moduleAlias();*/
 
 require('@babel/register')({plugins, ignore: []});
 
-module.exports = defineEntries(
+export default defineEntries(
   // renderEntries
   async (input) => {
     return {

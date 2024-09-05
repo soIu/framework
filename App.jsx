@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   },
 });
 
-module.exports = App;
+export default App;

@@ -9,4 +9,4 @@ View = pyrex['default'].component(
 def Another():
     return div ()
 
-module.exports = Another
+__default__ = 'Another'

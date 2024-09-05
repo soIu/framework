@@ -29,5 +29,4 @@ def Client():
         ])
     )
 
-module.exports = Client
-module.exports['default'] = Client
+__default__ = 'Client'
