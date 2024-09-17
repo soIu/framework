@@ -4,10 +4,10 @@ import { ServerBox } from './Box.js';
 import { ServerProvider } from './ServerAction/Server.js';
 import { ClientActionsConsumer } from './ServerAction/Client.js';
 import AppExpo from '../../App.jsx';
-
-console.log(AppExpo);
+import utils from '../utils';
 
 const App = async ({ name }: { name: string }) => {
+  console.log(utils.getRequest());
   return (
     <html>
       <head>
