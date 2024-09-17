@@ -1,11 +1,3 @@
-const utils = {};
-
-const context = {};
-
-utils.setCurrentRequest = function (request) {
-  context.currentRequest = request;
-}
-
-utils.getRequest = () => context.currentRequest;
+const utils = typeof window !== 'undefined' ? (await import('./helpers.client.js')).default : (await import('./helpers.server.js')).default;
 
 export default utils;

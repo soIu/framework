@@ -5,6 +5,9 @@ import log from './test.jsx';
 import AppPy from './Client.py';
 import { componentFromServer } from './server.py';
 //import componentFromServer from './test.js';
+import utils from './src/utils';
+
+console.log(utils);
 
 console.log('hulu');
 

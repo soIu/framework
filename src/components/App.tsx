@@ -6,8 +6,10 @@ import { ClientActionsConsumer } from './ServerAction/Client.js';
 import AppExpo from '../../App.jsx';
 import utils from '../utils';
 
+console.log(utils);
+
 const App = async ({ name }: { name: string }) => {
-  console.log(utils.getRequest());
+  console.log(process.env.solu_middleware_path);
   return (
     <html>
       <head>
@@ -17,7 +19,7 @@ const App = async ({ name }: { name: string }) => {
         <AppExpo/>
         <ServerBox>
           <p data-testid="app-name">{JSON.stringify(await require('fs').promises.readdir('./'))}</p>
-          <ClientCounter />
+          {utils.getComponentEndpoint() === '/' && <ClientCounter />}
           <ServerPing />
           <ServerProvider>
             <ClientActionsConsumer />

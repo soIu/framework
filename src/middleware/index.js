@@ -1,8 +1,7 @@
-import utils from '../utils';
-
 const customMiddleware = () => {
   return async (ctx, next) => {
-    utils.setCurrentRequest(ctx.req);
+    process.env.solu_middleware_path = ctx.req.headers.referer ? new URL(ctx.req.headers.referer).pathname : '/';
+    process.env.solu_middleware_cookie = ctx.req.headers.cookie || '';
     await next();
   };
 };
