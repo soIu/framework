@@ -11,6 +11,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.2.7",
     "@expo/metro-runtime": "~3.2.3",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
