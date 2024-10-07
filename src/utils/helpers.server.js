@@ -5,7 +5,7 @@ const utils = {};
 
 const checkSession = React.cache((cookies) => {
   const session = cookie.parse(cookies);
-}
+});
 
 //This helper function should be called inside a Server Component
 utils.getComponentEndpoint = () => process.env.solu_middleware_path;
