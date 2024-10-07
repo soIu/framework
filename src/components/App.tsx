@@ -1,16 +1,19 @@
 import utils from '../utils';
-
-console.log(utils);
+import Home from './Home';
+import Dashboard from './dashboard/App';
 
 const App = async ({ name }: { name: string }) => {
-  console.log(process.env.solu_middleware_path);
   return (
     <html>
       <head>
-        <title>Waku example</title>
+        <title>{utils.getTitle()}</title>
       </head>
       <body>
         {/* Start the development here */}
+        {utils.getComponentEndpoint() === '/dashboard' ?
+          <Dashboard/> :
+          <Home/>
+        }
       </body>
     </html>
   );
