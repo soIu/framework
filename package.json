@@ -20,7 +20,7 @@
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-python": "^1.0.13",
     "babel-plugin-transform-commonjs": "https://github.com/soIu/babel-plugin-transform-commonjs/archive/refs/heads/master.tar.gz",
-    "cookie": "^0.6.0",
+    "cookie": "^0.7.0",
     "expo": "~51.0.28",
     "expo-status-bar": "~1.12.1",
     "module-alias": "^2.2.3",
