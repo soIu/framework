@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 //import commonjs from 'vite-plugin-commonjs'
@@ -32,6 +33,6 @@ export default defineConfig({
     //commonjs({advanced: {importRules: 'namedFirst'}}),
   ],
   resolve: {
-    alias: {'react-native': 'react-native-web'},
+    alias: {'react-native': 'react-native-web', orm: path.resolve(__dirname, './orm/')},
   },
 })

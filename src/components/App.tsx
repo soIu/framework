@@ -1,6 +1,9 @@
-import utils from '../utils';
 import Home from './Home';
 import Dashboard from './dashboard/App';
+
+import utils from '../utils';
+import modules from '../../modules';
+modules;
 
 const App = async ({ name }: { name: string }) => {
   return (
