@@ -141,8 +141,8 @@ class Model:
 
     def map(self, fn):
         results = []
-        for record in self:
-            results.push(fn(record))
+        for value in self._values:
+            results.push(fn(self._new(value)))
         return results
 
 def __iter__():
