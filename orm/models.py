@@ -35,7 +35,7 @@ class Model:
             field.name = key
             self._fields[key] = field
             del self[key]
-            Object.defineProperty(self, key, {'get': lambda: self._getattr(field), 'set': lambda value: self._setattr(field, value)})
+            Object.defineProperty(self, key, {'get': lambda: self._getattr(key), 'set': lambda value: self._setattr(key, value)})
             if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(field)
 
     def __len__(self):
