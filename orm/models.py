@@ -139,6 +139,12 @@ class Model:
         await self._exec(delete_from.where(expressions.inArray(self.env[self._name]._db_orm_table.id, ids)).toSQL())
         return None
 
+    def map(self, fn):
+        results = []
+        for record in self:
+            results.push(fn(record))
+        return results
+
 def __iter__():
     #self = None
     #JS('self = this')
