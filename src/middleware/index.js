@@ -1,4 +1,4 @@
-require('./update_modules.js');
+require('./update_modules.mjs');
 
 const customMiddleware = () => {
   return async (ctx, next) => {
