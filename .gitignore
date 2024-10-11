@@ -34,6 +34,7 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+package-lock.json
 
 __pycache__
 
