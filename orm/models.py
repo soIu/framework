@@ -29,13 +29,13 @@ class Model:
         self._values = []
         self._db_worker = self.env[self._name]._db_worker
         self._table_name = self._name.split('.').join('_')
-        for key in Object.getOwnPropertyNames(self):
+        for key in Object.getOwnPropertyNames(self.constructor.prototype):
             field = self[key]
             if not isinstance(field, fields.Field): continue
             field.name = key
             self._fields[key] = field
             del self[key]
-            Object.defineProperty(self, field, {'get': lambda: self._getattr(field), 'set': lambda value: self._setattr(field, value)})
+            Object.defineProperty(self, key, {'get': lambda: self._getattr(field), 'set': lambda value: self._setattr(field, value)})
             if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(field)
 
     def __len__(self):
@@ -87,7 +87,7 @@ class Model:
     async def write(self, values):
         if not values:
             promises = []
-            for record in self:
+            for record in iter(self):
                 promises.push(record.write(values=record._values[0].data))
             await Promise.all(promises)
             return self
