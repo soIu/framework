@@ -3,9 +3,15 @@ import Dashboard from './dashboard/App';
 
 import utils from '../utils';
 import modules from '../../modules';
+import * as orm from '../../orm';
 modules;
 
+process.on('uncaughtException', (error) => console.error(error));
+
+const wait_tasks = orm.data.load();
+
 const App = async ({ name }: { name: string }) => {
+  await wait_tasks;
   return (
     <html>
       <head>

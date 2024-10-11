@@ -1,6 +1,6 @@
 import drizzle__orm.pg__core.expressions as expressions
 from drizzle__orm.sql import sql
-from drizzle__orm.pg__core import QueryBuilder, pgTable, uuid, jsonb
+from drizzle__orm.pg__core import QueryBuilder, PgDialect, pgTable, uuid, jsonb
 from drizzle__orm.pglite.driver import drizzle
 from ..database.main import createLocalWorker
 fields = require('./fields.py')
@@ -38,6 +38,9 @@ class Model:
             Object.defineProperty(self, field, {'get': lambda: self._getattr(field), 'set': lambda value: self._setattr(field, value)})
             if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(field)
 
+    def __len__(self):
+        return len(self._values)
+
     @property
     def _is_singleton(self):
         if self._values.length == 1: return True
@@ -57,7 +60,7 @@ class Model:
     def _new(self, values):
         records = new (self.constructor())
         if not Array.isArray(values): values = [values]
-        self._values = values
+        records._values = values
         return records
 
     def _prebrowse(self, ids):
@@ -66,8 +69,9 @@ class Model:
         self._values = [{'id': id, 'data': {}} for id in ids]
         return records
 
-    def _exec(self, query):
-        return self._db_worker.pglite.query(query)
+    async def _exec(self, query):
+        result =  await self._db_worker.pglite.query(query.sql, query.params)
+        return result.rows
 
     async def create(self, values):
         create_date = new (Date()).toISOString()
@@ -75,10 +79,9 @@ class Model:
         for value in values:
             value.create_date = create_date
             del value.id
-        #records = await self._exec(query.insert(__('${self._table_name}', sql)).values([{'data': __('${JSON.stringify(value)}::jsonb', sql)} for value in values]).returning().toSQL())
         insert = self.env[self._name]._db_orm.insert(self.env[self._name]._db_orm_table)
-        records = await self._exec(insert.values([{'data': __('${JSON.stringify(value)}::jsonb', sql)} for value in values]).returning().toSQL())
-        recordset = self._new(recordset)
+        records = await self._exec(insert.values([{'data': sql.raw(f"'{JSON.stringify(value)}'::jsonb")} for value in values]).returning({'*': __('*', sql)}).toSQL())
+        recordset = self._new(records)
         return recordset
 
     async def write(self, values):
@@ -90,22 +93,21 @@ class Model:
             return self
         ids = self.ids
         update = self.env[self._name]._db_orm.update(self.env[self._name]._db_orm_table)
-        records = await self._exec(update.set(values).where(expressions.inArray(self.env[self._name]._db_orm_table.id, ids)).returning().toSQL())
-        recordset = self._new(recordset)
+        records = await self._exec(update.set(values).where(expressions.inArray(sql.raw(f'id'), ids)).returning({'*': __('*', sql)}).toSQL())
+        recordset = self._new(records)
         return recordset
 
     async def browse(self, ids):
         if not Array.isArray(ids): ids = [ids]
         query = new (QueryBuilder())
-        records = await self._exec(query.select({'*': __('*', sql)})['from'](__('${self._table_name}', sql)).where(expressions.inArray(self.env[self._name]._db_orm_table.id, ids)).toSQL())
-        recordset = self._new(recordset)
+        records = await self._exec(query.select({'*': __('*', sql)})['from'](sql.raw(f'{self._table_name}')).where(expressions.inArray(self.env[self._name]._db_orm_table.id, ids)).toSQL())
+        recordset = self._new(records)
         return recordset
 
     async def search(self, domain, **params): #limit=100, page=1, order=''):
         limit = params.limit or 0
         page = params.page or 1
         order = params.order or ''
-        db = data.get_db()
         offset = params.offset or ((page - 1) * limit)
         query = {}
         start_or = False
@@ -113,23 +115,23 @@ class Model:
         table = self.env[self._name]._db_orm_table
         for args in domain:
             field, operator, value = args
-            if operator == '=': conditions.push(expressions.eq(table[field], value))
-            elif operator == '!=': conditions.push(expressions.neq(table[field], value))
-            elif operator == 'in': conditions.push(expressions.inArray(table[field], value))
-            elif operator == 'not in': conditions.push(expressions.notInArray(table[field], value))
-            elif operator == '>': conditions.push(expressions.gt(table[field], value))
-            elif operator == '>=': conditions.push(expressions.gte(table[field], value))
-            elif operator == '<': conditions.push(expressions.lt(table[field], value))
-            elif operator == '<=': conditions.push(expressions.lte(table[field], value))
-            elif operator == 'like': conditions.push(expressions.like(table[field], ('%' + value + '%') if value.includes('%') else value))
-            elif operator == 'ilike': conditions.push(expressions.ilike(table[field], ('%' + value + '%') if value.includes('%') else value))
+            if operator == '=': conditions.push(expressions.eq(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == '!=': conditions.push(expressions.neq(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == 'in': conditions.push(expressions.inArray(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == 'not in': conditions.push(expressions.notInArray(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == '>': conditions.push(expressions.gt(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == '>=': conditions.push(expressions.gte(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == '<': conditions.push(expressions.lt(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == '<=': conditions.push(expressions.lte(sql.raw(f"data->'{field}'"), sql.raw(f"'{JSON.stringify(value)}'::jsonb")))
+            elif operator == 'like': conditions.push(expressions.like(sql.raw(f"data->>'{field}'"), ('%' + value + '%') if not value.includes('%') else value))
+            elif operator == 'ilike': conditions.push(expressions.ilike(sql.raw(f"data->>'{field}'"), ('%' + value + '%') if not value.includes('%') else value))
         query = new (QueryBuilder())
-        query = query.select({'*': __('*', sql)})['from'](__('${self._table_name}', sql))
+        query = query.select({'*': __('*', sql)})['from'](sql.raw(f'{self._table_name}'))
         if conditions.length:
             condition = conditions[0] if conditions.length == 1 else expressions['and'](*conditions)
             query = query.where(condition)
         records = await self._exec(query.toSQL())
-        recordset = self._new(recordset)
+        recordset = self._new(records)
         return recordset
 
     async def unlink(self, ids):
@@ -153,6 +155,7 @@ env = {}
 def register(model_class):
     #Instantiate them once to make them registered
     new (model_class())
+
 
 sql.expressions = expressions
 
