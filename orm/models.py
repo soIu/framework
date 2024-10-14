@@ -9,8 +9,6 @@ class Model:
     _name = 'base.base'
     _is_env = False
 
-    id = fields.Char(string="ID (UUID)", required=True)
-
     @property
     def ids(self):
         return [value.id for value in self._values]
@@ -29,7 +27,11 @@ class Model:
         self._values = []
         self._db_worker = self.env[self._name]._db_worker
         self._table_name = self._name.split('.').join('_')
+        self._fields.id = fields.Char(string="ID (UUID)", required=True)
         for key in Object.getOwnPropertyNames(self.constructor.prototype):
+            if key == 'id':
+                del self[key]
+                continue
             field = self[key]
             if not isinstance(field, fields.Field): continue
             field.name = key
@@ -37,6 +39,7 @@ class Model:
             del self[key]
             Object.defineProperty(self, key, {'get': lambda: self._getattr(key), 'set': lambda value: self._setattr(key, value)})
             if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(field)
+        Object.defineProperty(self, 'id', {'get': lambda: self._getattr('id'), 'set': lambda value: self._setattr('id', value)})
 
     def __len__(self):
         return len(self._values)
