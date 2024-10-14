@@ -145,6 +145,14 @@ class Model:
             results.push(fn(self._new(value)))
         return results
 
+    def toJSON(self):
+        if not self.length: return None
+        values = []
+        for record in iter(self):
+            values.push(Object.assign({'id': record.id}, record._values))
+        if self.length == 1: return values[0]
+        return values
+
 def __iter__():
     #self = None
     #JS('self = this')
