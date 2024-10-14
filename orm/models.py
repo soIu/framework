@@ -28,6 +28,7 @@ class Model:
         self._db_worker = self.env[self._name]._db_worker
         self._table_name = self._name.split('.').join('_')
         self._fields.id = fields.Char(string="ID (UUID)", required=True)
+        self._fields.id.name = 'id'
         for key in Object.getOwnPropertyNames(self.constructor.prototype):
             if key == 'id':
                 del self[key]
@@ -47,15 +48,16 @@ class Model:
     @property
     def _is_singleton(self):
         if self._values.length == 1: return True
+        return False
 
     def _getattr(self, field):
-        if not self._values: raise new (Error('Expected singleton, but instead got an empty recordset'))
+        if not self._values.length: raise new (Error('Expected singleton, but instead got an empty recordset'))
         if not self._is_singleton: raise new (Error('Expected singleton, but instead got a set of records'))
-        if field == 'id': self._values[0].id
+        if field == 'id': return self._values[0].id
         return self._values[0].data[field]
 
     def _setattr(self, field, value):
-        if not self._values: raise new (Error('Expected singleton, but instead got an empty recordset'))
+        if not self._values.length: raise new (Error('Expected singleton, but instead got an empty recordset'))
         if not self._is_singleton: raise new (Error('Expected singleton, but instead got a set of records'))
         if field == 'id': raise new (Error('Cannot set ID'))
         self._values[0].data[field] = value
