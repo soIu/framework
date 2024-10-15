@@ -39,7 +39,7 @@ class Model:
             self._fields[key] = field
             del self[key]
             Object.defineProperty(self, key, {'get': lambda: self._getattr(key), 'set': lambda value: self._setattr(key, value)})
-            if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(field)
+            if self._is_env and field.index and field.name != 'id': self._db_worker.createIndex(key)
         Object.defineProperty(self, 'id', {'get': lambda: self._getattr('id'), 'set': lambda value: self._setattr('id', value)})
 
     def __len__(self):
