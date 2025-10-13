@@ -1,1 +1,0 @@
-require('./res/users.py')
